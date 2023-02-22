@@ -62,7 +62,7 @@ public final class JSAndroid {
         if (null != item.getUri()) {
             final Uri uri = item.getUri();
             final String url = uri.toString();
-            if (url.startsWith("http://127.0.0.1:6806/assets/")) {
+            if (url.startsWith("http://127.0.0.1:58131/assets/")) {
                 final int idx = url.indexOf("/assets/");
                 final String asset = url.substring(idx);
                 String name = asset.substring(asset.lastIndexOf("/") + 1);
@@ -82,7 +82,7 @@ public final class JSAndroid {
     @JavascriptInterface
     public void writeImageClipboard(final String uri) {
         final ClipboardManager clipboard = (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
-        final ClipData clip = ClipData.newUri(activity.getContentResolver(), "Copied img from SiYuan", Uri.parse("http://127.0.0.1:6806/" + uri));
+        final ClipData clip = ClipData.newUri(activity.getContentResolver(), "Copied img from SiYuan", Uri.parse("http://127.0.0.1:58131/" + uri));
         clipboard.setPrimaryClip(clip);
     }
 
@@ -112,10 +112,10 @@ public final class JSAndroid {
         }
 
         if (url.startsWith("assets/")) {
-            url = "http://127.0.0.1:6806/" + url;
+            url = "http://127.0.0.1:58131/" + url;
         }
         if (url.startsWith("/")) {
-            url = "http://127.0.0.1:6806" + url;
+            url = "http://127.0.0.1:58131" + url;
         }
 
         final Uri uri = Uri.parse(url);

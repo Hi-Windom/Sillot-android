@@ -4,14 +4,21 @@ plugins {
 
 android {
     compileSdkVersion 33
-    buildToolsVersion "33.0.1"
+    buildToolsVersion '33.0.2'
 
     defaultConfig {
-        applicationId "org.b3log.siyuan"
-        minSdkVersion 24
+        applicationId "sc.windom.sillot"
+        minSdk 29
         targetSdkVersion 33
-        versionCode 139
-        versionName "2.7.6"
+        versionCode 100000000
+        versionName "0.8.5"
+    }
+
+    // 自定义打包名称
+    android.applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "Sillot-v${versionName}_${genDateTime()}.apk"
+        }
     }
 
     buildTypes {
@@ -29,8 +36,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 
     packagingOptions {
@@ -50,8 +57,12 @@ android {
         abortOnError false
     }
     namespace 'org.b3log.siyuan'
+    ndkVersion '25.2.9519653'
 }
 
+def genDateTime() {
+    return new Date().format("yyyyMMdd")
+}
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.0'
     implementation 'com.google.android.material:material:1.8.0'

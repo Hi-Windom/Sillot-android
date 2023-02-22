@@ -203,9 +203,10 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         ws.setTextZoom(100);
         ws.setUseWideViewPort(true);
         ws.setLoadWithOverviewMode(true);
-        ws.setUserAgentString("SiYuan/" + version + " https://b3log.org/siyuan " + ws.getUserAgentString());
+        ws.setUserAgentString("Sillot-SiYuan/" + version + " https://b3log.org/siyuan " + ws.getUserAgentString());
         waitFotKernelHttpServing();
-        webView.loadUrl("http://127.0.0.1:6806/appearance/boot/index.html");
+        webView.setWebContentsDebuggingEnabled(true);
+        webView.loadUrl("http://127.0.0.1:58131/appearance/boot/index.html");
 
         new Thread(this::keepLive).start();
     }
@@ -450,7 +451,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             final OkHttpClient client = new OkHttpClient();
             final RequestBody body = RequestBody.create(null, new JSONObject().
                     put("mobileSwitch", true).toString());
-            final Request request = new Request.Builder().url("http://127.0.0.1:6806/api/sync/performSync").method("POST", body).build();
+            final Request request = new Request.Builder().url("http://127.0.0.1:58131/api/sync/performSync").method("POST", body).build();
             final Response response = client.newCall(request).execute();
             response.close();
         } catch (final Throwable e) {
