@@ -11,7 +11,7 @@ android {
         minSdk 29
         targetSdkVersion 33
         versionCode 100000000
-        versionName "0.8.5"
+        versionName "0.8.6"
     }
 
     // 自定义打包名称
