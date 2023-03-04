@@ -58,8 +58,12 @@ public class KeepLiveService extends Service {
     }
 
     private final String[] words = new String[]{
-            "动机也只有一种名字那叫做欲望",
+            "月影清秋，雾影成花",
             "身未动，心已远",
+            "翻过九十九页诗篇，穿过九十九场烟雨",
+            "荣耀加冕，追梦不休",
+            "居安思危，自强不息",
+            "文章千古事，得失寸心知",
     };
 
     private Random random = new Random();
