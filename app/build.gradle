@@ -9,10 +9,10 @@ android {
 
     defaultConfig {
         applicationId "sc.windom.sillot"
-        minSdk 29
+        minSdk 30
         targetSdkVersion 33
-        versionCode 10100203
-        versionName "0.10.3"
+        versionCode 10100400
+        versionName "0.10.4"
 
         ndk {
             //选择要添加的对应 cpu 类型的 .so 库。

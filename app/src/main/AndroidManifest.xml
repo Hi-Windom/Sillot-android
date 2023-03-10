@@ -2,27 +2,72 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.INTERNET" /> <!-- 允许程序访问网络连接 -->
+    <uses-permission android:name="android.permission.ACCEPT_HANDOVER" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_LOCATION_EXTRA_COMMANDS" />
+    <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.BODY_SENSORS" />
+    <uses-permission android:name="android.permission.BROADCAST_STICKY" />
+    <uses-permission android:name="android.permission.CALL_COMPANION_APP" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
-    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/> <!--  允许程序改变网络连接状态 -->
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/> <!--  允许获取网络信息状态 -->
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/> <!-- 允许获取当前WiFi接入的状态以及WLAN热点的信息  -->
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/> <!-- 允许程序改变Wi-Fi连接状态  -->
-    <uses-permission android:name="android.permission.BLUETOOTH"/> <!-- 允许程序连接到已配对的蓝牙设备  -->
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/> <!--  允许应用程序发现和配对蓝牙设备 -->
-    <uses-permission android:name="com.android.alarm.permission.SET_ALARM"/> <!-- 允许程序设置闹铃提醒  -->
-    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT"/> <!-- 允许应用程序创建快捷方式  -->
-    <uses-permission android:name="android.permission.EXPAND_STATUS_BAR"/> <!-- 允许程序扩展或收缩状态栏  -->
-    <uses-permission android:name="android.permission.VIBRATE"/> <!-- 允许访问振动设备  -->
-    <uses-permission android:name="android.permission.WAKE_LOCK"/> <!-- 允许程序在手机屏幕关闭后后台进程仍然运行（唤醒锁定）  -->
+    <uses-permission android:name="android.permission.GET_PACKAGE_SIZE" />
+    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.REQUEST_PASSWORD_COMPLEXITY" />
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.WRITE_CALENDAR" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
 
-    <!-- 以下运行时权限注册后仍需要动态申请 -->
-    <uses-permission android:name="android.permission.READ_CALENDAR"/> <!-- 允许程序读取用户日历数据  -->
-    <uses-permission android:name="android.permission.WRITE_CALENDAR"/> <!-- 允许一个程序写入但不读取用户日历数据  -->
-    <uses-permission android:name="android.permission.RECORD_AUDIO"/> <!-- 允许程序录制音频，通过手机或耳机的麦克  -->
-    <uses-permission android:name="android.permission.CAMERA"/> <!-- 允许程序访问摄像头进行拍照  -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/> <!--  允许应用程序读取设备外部存储空间的文件 -->
+
+<!--    <uses-permission android:name="android.permission.INTERNET" />-->
+<!--    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />-->
+<!--    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>-->
+<!--    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>-->
+<!--    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>-->
+<!--    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>-->
+<!--    <uses-permission android:name="android.permission.BLUETOOTH"/>-->
+<!--    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>-->
+<!--    <uses-permission android:name="com.android.alarm.permission.SET_ALARM"/>-->
+<!--    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT"/>-->
+<!--    <uses-permission android:name="android.permission.EXPAND_STATUS_BAR"/>-->
+<!--    <uses-permission android:name="android.permission.VIBRATE"/>-->
+<!--    <uses-permission android:name="android.permission.WAKE_LOCK"/>-->
+<!--    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"-->
+<!--        tools:ignore="QueryAllPackagesPermission" />-->
+
+
+<!--    &lt;!&ndash; 以下运行时权限注册后仍需要动态申请 &ndash;&gt;-->
+<!--    <uses-permission android:name="android.permission.READ_CALENDAR"/>-->
+<!--    <uses-permission android:name="android.permission.WRITE_CALENDAR"/>-->
+<!--    <uses-permission android:name="android.permission.RECORD_AUDIO"/>-->
+<!--    <uses-permission android:name="android.permission.CAMERA"/>-->
+<!--    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>-->
 
     <application
         android:name=".App"
@@ -55,6 +100,26 @@
                 <category android:name="sc.windom.sillot" />
             </intent-filter>
         </receiver>
+
+        <activity android:name=".permission.Battery"
+            android:exported="true"
+            android:launchMode="singleInstance">
+            <intent-filter>
+                <action android:name="sc.windom.sillot.intent.permission.Battery" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".permission.InitActivity"
+            android:exported="true"
+            android:launchMode="singleInstance">
+            <intent-filter>
+                <action android:name="sc.windom.sillot.intent.permission.InitActivity" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name=".BootActivity"

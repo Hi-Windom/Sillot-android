@@ -272,7 +272,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             try {
                 final Intent intent = new Intent(MainActivity.this, KeepLiveService.class);
                 ContextCompat.startForegroundService(this, intent);
-                sleep(45 * 1000);
+                sleep(31 * 1000);
                 stopService(intent);
             } catch (final Throwable t) {
             }

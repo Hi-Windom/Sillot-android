@@ -34,6 +34,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.net.URISyntaxException;
 
 /**
  * 引导启动.
@@ -52,7 +53,9 @@ public class BootActivity extends AppCompatActivity {
 
         if (isFirstRun()) {
             // 首次运行弹窗提示用户隐私条款和使用授权
+            Log.e("首次运行弹窗提示用户隐私条款和使用授权","n\n\n\n\n\n\n\n");
             showAgreements();
+
             return;
         }
 
