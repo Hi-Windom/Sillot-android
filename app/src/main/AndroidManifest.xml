@@ -1,24 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:tools="http://schemas.android.com/tools"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:name=".App"
+        android:appCategory="productivity"
+        android:debuggable="true"
         android:extractNativeLibs="true"
+        android:hardwareAccelerated="true"
+        android:hasFragileUserData="true"
         android:icon="@drawable/icon"
         android:label="@string/app_name"
+        android:persistent="true"
         android:roundIcon="@drawable/icon"
         android:supportsRtl="true"
         android:theme="@style/Theme.SiYuan"
-        android:appCategory="productivity"
-        android:hasFragileUserData="true"
-        android:persistent="true"
-        android:debuggable="true"
         android:usesCleartextTraffic="true"
         tools:ignore="HardcodedDebugMode">
+        <receiver
+            android:name=".jpush.JReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="cn.jpush.android.intent.RECEIVE_MESSAGE" />
+                <action android:name="cn.jpush.android.intent.REGISTRATION" />
+                <action android:name="cn.jpush.android.intent.MESSAGE_RECEIVED" />
+                <action android:name="cn.jpush.android.intent.NOTIFICATION_RECEIVED" />
+                <action android:name="cn.jpush.android.intent.NOTIFICATION_OPENED" />
+                <action android:name="cn.jpush.android.intent.NOTIFICATION_CLICK_ACTION" />
+                <action android:name="cn.jpush.android.intent.CONNECTION" />
+
+                <category android:name="sc.windom.sillot" />
+            </intent-filter>
+        </receiver>
 
         <activity
             android:name=".BootActivity"
@@ -29,9 +46,9 @@
             android:launchMode="singleInstance">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -43,15 +60,74 @@
                 <data android:scheme="sisi" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".MainActivity"
             android:autoRemoveFromRecents="true"
             android:configChanges="keyboard|keyboardHidden|screenLayout|uiMode|orientation|screenSize|smallestScreenSize"
             android:hardwareAccelerated="true"
-            android:launchMode="singleInstance"></activity>
+            android:launchMode="singleInstance" /> <!-- 若您的业务中有使用极光富媒体功能，需要把此 Activity 的 exported 修改成 true 覆盖 mavenCentral 上的组件。 -->
+        <activity
+            android:name="cn.jpush.android.ui.PopWinActivity"
+            android:exported="true"
+            android:theme="@style/MyDialogStyle"
+            tools:node="replace">
+            <intent-filter>
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <action android:name="cn.jpush.android.ui.PopWinActivity" />
+
+                <category android:name="${applicationId}" />
+            </intent-filter>
+        </activity> <!-- 若您的业务中有使用极光富媒体功能，需要把此 Activity 的 exported 修改成 true 覆盖 mavenCentral 上的组件。 -->
+        <activity
+            android:name="cn.jpush.android.ui.PushActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:exported="true"
+            android:theme="@android:style/Theme.NoTitleBar"
+            tools:node="replace">
+            <intent-filter>
+                <action android:name="cn.jpush.android.ui.PushActivity" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="${applicationId}" />
+            </intent-filter>
+        </activity>
+        <!-- 点击通知时，要打开的 activity -->
+        <activity
+            android:name=".jpush.OpenClickActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <action android:name="com.example.jpushdemo.OpenClickActivity" />
+            </intent-filter>
+        </activity>
 
         <service android:name=".KeepLiveService" />
+        <service
+            android:name=".common.UserService"
+            android:process=":pushcore"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="cn.jiguang.user.service.action" />
+            </intent-filter>
+        </service>
+        <!-- For test only JPush 测试的主程序-->
+        <activity
+            android:name=".jpush.PushActivity"
+            android:exported="false"/>
+        <!-- Since JCore2.0.0 Required SDK核心功能 -->
+        <!-- 可配置android:process参数将Service放在其他进程中；android:enabled属性不能是false -->
+        <!-- 这个是自定义Service，要继承极光JCommonService，可以在更多手机平台上使得推送通道保持的更稳定 -->
+        <service
+            android:name=".jpush.XService"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":pushcore">
+            <intent-filter>
+                <action android:name="cn.jiguang.user.service.action" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

@@ -18,7 +18,7 @@
 package org.b3log.siyuan;
 
 import android.app.Application;
-
+import cn.jpush.android.api.JPushInterface;
 import com.blankj.utilcode.util.Utils;
 
 /**
@@ -34,5 +34,7 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         Utils.init(this);
+        JPushInterface.setDebugMode(true);
+        JPushInterface.init(this);
     }
 }

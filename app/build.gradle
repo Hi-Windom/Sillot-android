@@ -10,9 +10,23 @@ android {
         applicationId "sc.windom.sillot"
         minSdk 29
         targetSdkVersion 33
-        versionCode 100000000
-        versionName "0.8.18"
+        versionCode 10100203
+        versionName "0.10.3"
+
+        ndk {
+            //选择要添加的对应 cpu 类型的 .so 库。
+            abiFilters 'arm64-v8a'
+        }
+
+        manifestPlaceholders = [
+                JPUSH_PKGNAME : applicationId,
+                //JPush 上注册的包名对应的 Appkey.
+                JPUSH_APPKEY : "737a606890201619d17999c7",
+                //暂时填写默认值即可.
+                JPUSH_CHANNEL : "developer-default",
+        ]
     }
+
 
     // 自定义打包名称
     android.applicationVariants.all { variant ->
@@ -75,4 +89,10 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.9.3")
     implementation 'com.gitee.zackratos:UltimateBarX:0.8.0'
     implementation 'com.blankj:utilcodex:1.31.1'
+
+//    极光推送
+    implementation 'cn.jiguang.sdk:jcore:4.1.0'
+    implementation 'cn.jiguang.sdk:jpush:4.9.0'
+
+    implementation 'com.tencent:mmkv:1.2.15'
 }
