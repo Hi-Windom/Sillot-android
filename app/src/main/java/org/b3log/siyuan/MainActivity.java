@@ -68,6 +68,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import pub.devrel.easypermissions.EasyPermissions;
 
 /**
  * 主程序.
@@ -122,6 +123,14 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         KeyboardUtils.fixAndroidBug5497(this);
 
         boot();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        // Forward results to EasyPermissions
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
     }
 
     private void initUIElements() {

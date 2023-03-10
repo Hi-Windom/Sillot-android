@@ -95,4 +95,10 @@ dependencies {
     implementation 'cn.jiguang.sdk:jpush:4.9.0'
 
     implementation 'com.tencent:mmkv:1.2.15'
+
+    // For developers using AndroidX in their applications
+    implementation 'pub.devrel:easypermissions:3.0.0'
+
+    // For developers using the Android Support Library
+    implementation 'pub.devrel:easypermissions:2.0.1'
 }

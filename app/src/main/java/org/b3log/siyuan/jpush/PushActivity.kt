@@ -1,74 +1,62 @@
-package org.b3log.siyuan.jpush;
+package org.b3log.siyuan.jpush
 
-import android.app.Dialog;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.os.Bundle;
-import android.view.View;
-import android.widget.TextView;
-import android.widget.ToggleButton;
-
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import com.tencent.mmkv.MMKV;
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.Bundle
+import android.view.View
+import android.widget.TextView
+import android.widget.ToggleButton
+import androidx.appcompat.app.AppCompatActivity
+import cn.jpush.android.api.JPushInterface
+import com.tencent.mmkv.MMKV
 
 //import cn.jiguang.demo.R;
 //import cn.jiguang.demo.baselibrary.ClipUtils;
 //import cn.jiguang.demo.baselibrary.ScreenUtils;
 //import cn.jiguang.demo.baselibrary.ToastHelper;
-import cn.jpush.android.api.JPushInterface;
-
 /**
  * Copyright(c) 2020 极光
  * Description
  */
-public class PushActivity extends AppCompatActivity implements View.OnClickListener {
-
-
-    private ToggleButton toggle;
-    private TextView tvOnline;
-    private TextView tvAppKey;
-
-    @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        String rootDir = MMKV.initialize(this);
-        System.out.println("mmkv root: " + rootDir);
-//        setContentView(R.layout.jpush_demo_activity_push);
+class PushActivity : AppCompatActivity(), View.OnClickListener {
+    private val toggle: ToggleButton? = null
+    private val tvOnline: TextView? = null
+    private val tvAppKey: TextView? = null
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val rootDir = MMKV.initialize(this)
+        println("mmkv root: $rootDir")
+        //        setContentView(R.layout.jpush_demo_activity_push);
 //        ScreenUtils.setStatusBarTransparent(getWindow());
 //        initView();
-        registerReceiver(reciver, new IntentFilter("com.jiguang.demo.message"));
+        registerReceiver(reciver, IntentFilter("com.jiguang.demo.message"))
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        unregisterReceiver(reciver);
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(reciver)
     }
 
-//    private void initView() {
-//        findViewById(R.id.tv_notify).setOnClickListener(this);
-//        findViewById(R.id.tv_adv).setOnClickListener(this);
-//        findViewById(R.id.iv_info).setOnClickListener(this);
-//        findViewById(R.id.iv_back).setOnClickListener(this);
-//        toggle = findViewById(R.id.toggle);
-//        toggle.setOnClickListener(this);
-//        boolean checked = MMKV.defaultMMKV().getBoolean("PushOnline", true);
-//        toggle.setChecked(checked);
-//
-//        tvOnline = findViewById(R.id.tv_online);
-//        updateStatu();
-//        tvAppKey = findViewById(R.id.tv_appKey_desc);
-//
-//        String registrationID = JPushInterface.getRegistrationID(getApplicationContext());
-//        tvAppKey.setText(registrationID);
-//    }
-
-    @Override
-    public void onClick(View v) {
+    //    private void initView() {
+    //        findViewById(R.id.tv_notify).setOnClickListener(this);
+    //        findViewById(R.id.tv_adv).setOnClickListener(this);
+    //        findViewById(R.id.iv_info).setOnClickListener(this);
+    //        findViewById(R.id.iv_back).setOnClickListener(this);
+    //        toggle = findViewById(R.id.toggle);
+    //        toggle.setOnClickListener(this);
+    //        boolean checked = MMKV.defaultMMKV().getBoolean("PushOnline", true);
+    //        toggle.setChecked(checked);
+    //
+    //        tvOnline = findViewById(R.id.tv_online);
+    //        updateStatu();
+    //        tvAppKey = findViewById(R.id.tv_appKey_desc);
+    //
+    //        String registrationID = JPushInterface.getRegistrationID(getApplicationContext());
+    //        tvAppKey.setText(registrationID);
+    //    }
+    override fun onClick(v: View) {
 //        int id = v.getId();
 //        if (id == R.id.iv_back) {
 //            onBackPressed();
@@ -93,7 +81,7 @@ public class PushActivity extends AppCompatActivity implements View.OnClickListe
 //        }
     }
 
-    private void pushPermissionDialog() {
+    private fun pushPermissionDialog() {
 //        AlertDialog.Builder builder = new AlertDialog.Builder(this);
 //        View dv = View.inflate(this, R.layout.d_dialog_two_button, null);
 //        TextView tvOk = (TextView) dv.findViewById(R.id.btn_ok);
@@ -116,9 +104,8 @@ public class PushActivity extends AppCompatActivity implements View.OnClickListe
 //        });
     }
 
-    private final BroadcastReceiver reciver =  new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
+    private val reciver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
 //            AlertDialog.Builder builder = new AlertDialog.Builder(context);
 //            View dv = View.inflate(context, R.layout.d_dialog_msg, null);
 //            TextView tvOk = (TextView) dv.findViewById(R.id.btn_ok);
@@ -134,16 +121,16 @@ public class PushActivity extends AppCompatActivity implements View.OnClickListe
 //                }
 //            });
         }
-    };
+    }
 
-    private void updateStatu(){
-        boolean checked = toggle.isChecked();
-        tvOnline.setText(checked ? "接收" : "不接收");
-        if(checked){
-            JPushInterface.resumePush(this);
-        }else{
-            JPushInterface.stopPush(this);
+    private fun updateStatu() {
+        val checked = toggle!!.isChecked
+        tvOnline!!.text = if (checked) "接收" else "不接收"
+        if (checked) {
+            JPushInterface.resumePush(this)
+        } else {
+            JPushInterface.stopPush(this)
         }
-        MMKV.defaultMMKV().putBoolean("PushOnline", checked);
+        MMKV.defaultMMKV().putBoolean("PushOnline", checked)
     }
 }

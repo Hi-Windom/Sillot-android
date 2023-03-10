@@ -2,8 +2,27 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.INTERNET" /> <!-- 允许程序访问网络连接 -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/> <!--  允许程序改变网络连接状态 -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/> <!--  允许获取网络信息状态 -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/> <!-- 允许获取当前WiFi接入的状态以及WLAN热点的信息  -->
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/> <!-- 允许程序改变Wi-Fi连接状态  -->
+    <uses-permission android:name="android.permission.BLUETOOTH"/> <!-- 允许程序连接到已配对的蓝牙设备  -->
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/> <!--  允许应用程序发现和配对蓝牙设备 -->
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM"/> <!-- 允许程序设置闹铃提醒  -->
+    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT"/> <!-- 允许应用程序创建快捷方式  -->
+    <uses-permission android:name="android.permission.EXPAND_STATUS_BAR"/> <!-- 允许程序扩展或收缩状态栏  -->
+    <uses-permission android:name="android.permission.VIBRATE"/> <!-- 允许访问振动设备  -->
+    <uses-permission android:name="android.permission.WAKE_LOCK"/> <!-- 允许程序在手机屏幕关闭后后台进程仍然运行（唤醒锁定）  -->
+
+    <!-- 以下运行时权限注册后仍需要动态申请 -->
+    <uses-permission android:name="android.permission.READ_CALENDAR"/> <!-- 允许程序读取用户日历数据  -->
+    <uses-permission android:name="android.permission.WRITE_CALENDAR"/> <!-- 允许一个程序写入但不读取用户日历数据  -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/> <!-- 允许程序录制音频，通过手机或耳机的麦克  -->
+    <uses-permission android:name="android.permission.CAMERA"/> <!-- 允许程序访问摄像头进行拍照  -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/> <!--  允许应用程序读取设备外部存储空间的文件 -->
 
     <application
         android:name=".App"
@@ -65,7 +84,7 @@
             android:autoRemoveFromRecents="true"
             android:configChanges="keyboard|keyboardHidden|screenLayout|uiMode|orientation|screenSize|smallestScreenSize"
             android:hardwareAccelerated="true"
-            android:launchMode="singleInstance" /> <!-- 若您的业务中有使用极光富媒体功能，需要把此 Activity 的 exported 修改成 true 覆盖 mavenCentral 上的组件。 -->
+            android:launchMode="singleInstance" />
         <activity
             android:name="cn.jpush.android.ui.PopWinActivity"
             android:exported="true"
