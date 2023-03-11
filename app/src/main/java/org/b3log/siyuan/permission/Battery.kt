@@ -1,21 +1,31 @@
 package org.b3log.siyuan.permission
 
+import android.Manifest
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
 import android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS
+import androidx.core.app.ActivityCompat
+import org.b3log.siyuan.andapi.Toast
 
 class Battery: Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)) {
+            // 用户拒绝过这个权限了，应该提示用户，为什么需要这个权限。
+            var mContext: Context = applicationContext
+            Toast.Show(mContext,"伺服体验不完整")
+        } else {
+        }
         if (!isIgnoringBatteryOptimizations()) {
             //未加入电池优化的白名单 则弹出系统弹窗供用户选择(这个弹窗也是一个页面)
             requestIgnoreBatteryOptimizations();
         }else{
-            //已加入电池优化的白名单 则进入耗电优化页面
+            //已加入电池优化的白名单 则进入耗电优化页面进一步设置
             // 还不知道怎么判断是否关闭了耗电优化，后面放在软件设置中通过按钮手动跳转
 //            val powerUsageIntent = Intent(ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
 //            val resolveInfo = packageManager.resolveActivity(powerUsageIntent, 0)

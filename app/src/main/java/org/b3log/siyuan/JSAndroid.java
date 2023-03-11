@@ -17,6 +17,7 @@
  */
 package org.b3log.siyuan;
 
+import android.Manifest;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -29,6 +30,8 @@ import android.webkit.JavascriptInterface;
 import com.blankj.utilcode.util.BarUtils;
 import com.blankj.utilcode.util.StringUtils;
 import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
+
+import org.b3log.siyuan.andapi.Toast;
 
 /**
  * JavaScript 接口.
@@ -43,6 +46,22 @@ public final class JSAndroid {
     public JSAndroid(final MainActivity activity) {
         this.activity = activity;
     }
+
+    // Sillot extend start
+    @JavascriptInterface
+    public boolean requestPermission(final String id) {
+        if(true){
+            Intent battery = new Intent("sc.windom.sillot.intent.permission.Battery");
+            battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            activity.startActivity(battery);
+            Context mContext = activity.getApplicationContext();
+            Toast.INSTANCE.Show(mContext,"请手动重启应用");
+            return true;
+        }
+        return false;
+    }
+
+    // Sillot extend end
 
     @JavascriptInterface
     public String getBlockURL() {

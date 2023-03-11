@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="sc.windom.sillot.permission.JOPERATE_MESSAGE" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -108,18 +109,19 @@
                 <action android:name="sc.windom.sillot.intent.permission.Battery" />
 
                 <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="${applicationId}" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".permission.InitActivity"
-            android:exported="true"
-            android:launchMode="singleInstance">
-            <intent-filter>
-                <action android:name="sc.windom.sillot.intent.permission.InitActivity" />
+<!--        <activity android:name=".permission.InitActivity"-->
+<!--            android:exported="true"-->
+<!--            android:launchMode="singleInstance">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="sc.windom.sillot.intent.permission.InitActivity" />-->
 
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
+<!--                <category android:name="android.intent.category.DEFAULT" />-->
+<!--            </intent-filter>-->
+<!--        </activity>-->
 
         <activity
             android:name=".BootActivity"

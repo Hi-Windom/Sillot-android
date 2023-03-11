@@ -49,9 +49,9 @@ class BootActivity : AppCompatActivity() {
             // 首次运行弹窗提示用户隐私条款和使用授权
             Log.e("首次运行弹窗提示用户隐私条款和使用授权", "\n\n\n\n\n\n\n")
             showAgreements()
-            val initActivity = Intent("sc.windom.sillot.intent.permission.InitActivity")
-            initActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            startActivity(initActivity)
+//            val initActivity = Intent("sc.windom.sillot.intent.permission.InitActivity")
+//            initActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+//            startActivity(initActivity)
             return
         }
 
