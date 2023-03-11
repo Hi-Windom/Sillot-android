@@ -128,8 +128,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        // Forward results to EasyPermissions
+        // Forward results to EasyPermissions https://github.com/googlesamples/easypermissions
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
     }
 

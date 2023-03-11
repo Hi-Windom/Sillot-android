@@ -2,7 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.ACCEPT_HANDOVER" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -31,8 +30,11 @@
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
     <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="android.permission.READ_CALENDAR" />
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.REQUEST_COMPANION_RUN_IN_BACKGROUND"/>
+    <uses-permission android:name="android.permission.REQUEST_COMPANION_USE_DATA_IN_BACKGROUND"/>
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.REQUEST_PASSWORD_COMPLEXITY" />
@@ -41,33 +43,11 @@
     <uses-permission android:name="android.permission.WRITE_CALENDAR" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.MANAGE_DOCUMENTS"
+        tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
 
-
-<!--    <uses-permission android:name="android.permission.INTERNET" />-->
-<!--    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />-->
-<!--    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>-->
-<!--    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>-->
-<!--    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>-->
-<!--    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>-->
-<!--    <uses-permission android:name="android.permission.BLUETOOTH"/>-->
-<!--    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>-->
-<!--    <uses-permission android:name="com.android.alarm.permission.SET_ALARM"/>-->
-<!--    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT"/>-->
-<!--    <uses-permission android:name="android.permission.EXPAND_STATUS_BAR"/>-->
-<!--    <uses-permission android:name="android.permission.VIBRATE"/>-->
-<!--    <uses-permission android:name="android.permission.WAKE_LOCK"/>-->
-<!--    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"-->
-<!--        tools:ignore="QueryAllPackagesPermission" />-->
-
-
-<!--    &lt;!&ndash; 以下运行时权限注册后仍需要动态申请 &ndash;&gt;-->
-<!--    <uses-permission android:name="android.permission.READ_CALENDAR"/>-->
-<!--    <uses-permission android:name="android.permission.WRITE_CALENDAR"/>-->
-<!--    <uses-permission android:name="android.permission.RECORD_AUDIO"/>-->
-<!--    <uses-permission android:name="android.permission.CAMERA"/>-->
-<!--    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>-->
 
     <application
         android:name=".App"
@@ -84,6 +64,26 @@
         android:theme="@style/Theme.SiYuan"
         android:usesCleartextTraffic="true"
         tools:ignore="HardcodedDebugMode">
+
+        <activity
+            android:name=".producer.MainPro"
+            android:screenOrientation="fullSensor"
+            android:exported="true">
+<!-- ref https://blog.csdn.net/qq_36009027/article/details/94627156 -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="file"/>
+                <data android:scheme="content"/>
+                <data android:scheme="http"/>
+                <data android:scheme="https"/>
+                <data android:mimeType="*/*" /> <!-- 先统一注册，业务成熟后收缩 -->
+            </intent-filter>
+
+        </activity>
+
+
         <receiver
             android:name=".jpush.JReceiver"
             android:enabled="true"

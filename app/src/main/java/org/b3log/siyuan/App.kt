@@ -69,10 +69,6 @@ class App : Application() {
 
         })
 
-        val initActivity = Intent("sc.windom.sillot.intent.permission.InitActivity")
-        initActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        startActivity(initActivity)
-
 
     }
 }
