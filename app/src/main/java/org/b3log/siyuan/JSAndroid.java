@@ -51,11 +51,11 @@ public final class JSAndroid {
     @JavascriptInterface
     public boolean requestPermission(final String id) {
         if(true){
+            Context mContext = activity.getApplicationContext();
+            Toast.INSTANCE.Show(mContext,"注意：后台稳定伺服会消耗额外电量");
             Intent battery = new Intent("sc.windom.sillot.intent.permission.Battery");
             battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             activity.startActivity(battery);
-            Context mContext = activity.getApplicationContext();
-            Toast.INSTANCE.Show(mContext,"请手动重启应用");
             return true;
         }
         return false;

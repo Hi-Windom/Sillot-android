@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.PowerManager
@@ -34,8 +35,11 @@ class Battery: Activity() {
 //                startActivity(powerUsageIntent)
 //            }
         }
-        finish()
+        var mContext: Context = applicationContext
+        Toast.Show(mContext,"请手动重启应用")
+        finish() // 完成当前 activity
     }
+
 
     private fun isIgnoringBatteryOptimizations(): Boolean {
         var isIgnoring = false
@@ -49,6 +53,8 @@ class Battery: Activity() {
             val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
             intent.data = Uri.parse("package:$packageName")
             startActivity(intent)
+            var mContext: Context = applicationContext
+            Toast.Show(mContext,"后台稳定伺服需要额外权限，请允许")
         } catch (e: Exception) {
             e.printStackTrace()
         }
