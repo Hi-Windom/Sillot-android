@@ -211,7 +211,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         ws.setTextZoom(100);
         ws.setUseWideViewPort(true);
         ws.setLoadWithOverviewMode(true);
-        ws.setUserAgentString("Sillot-SiYuan/" + version + " https://b3log.org/siyuan " + ws.getUserAgentString());
+        ws.setUserAgentString("SiYuan-Sillot/" + version + " https://b3log.org/siyuan " + ws.getUserAgentString());
         waitFotKernelHttpServing();
         webView.setWebContentsDebuggingEnabled(true);
         webView.loadUrl("http://127.0.0.1:58131/appearance/boot/index.html");

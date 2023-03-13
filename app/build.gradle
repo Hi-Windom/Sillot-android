@@ -15,7 +15,7 @@ android {
         versionName "0.10.5"
 
         ndk {
-            //选择要添加的对应 cpu 类型的 .so 库。
+            //只接入对应 cpu 类型的 .so 库。
             abiFilters 'arm64-v8a'
         }
 
@@ -100,6 +100,9 @@ dependencies {
     implementation 'cn.jiguang.sdk:jpush:4.9.0'
 
     implementation 'com.tencent:mmkv:1.2.15'
+    implementation 'com.tencent.wcdb:wcdb-android:1.0.8'
+    annotationProcessor 'android.arch.persistence.room:compiler:1.1.1'
+    // Don't forget to include Room annotation compiler from Google.
 
     // For developers using AndroidX in their applications
     implementation 'pub.devrel:easypermissions:3.0.0'
