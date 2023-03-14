@@ -19,11 +19,11 @@ package org.b3log.siyuan
 
 import android.app.Activity
 import android.app.Application
-import android.content.Intent
 import android.os.Bundle
 import cn.jpush.android.api.JPushInterface
 import com.blankj.utilcode.util.Utils
 import org.b3log.siyuan.common.ForegroundPushManager
+
 
 /**
  * SiYuan Application.
