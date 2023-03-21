@@ -86,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     private final String version = BuildConfig.VERSION_NAME;
     private ValueCallback<Uri[]> uploadMessage;
     private static final int REQUEST_SELECT_FILE = 100;
+    private long exitTime;
 
     @Override
     public void onNewIntent(final Intent intent) {
@@ -345,7 +346,16 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     public void onBackPressed() {
-        webView.evaluateJavascript("javascript:window.goBack()", null);
+//        webView.evaluateJavascript("javascript:window.goBack()", null);
+//        https://github.com/Hi-Windom/Sillot/issues/305
+        if ((System.currentTimeMillis() - exitTime) > 2000) {
+            Toast.makeText(getApplicationContext(), "再按一次退出程序", Toast.LENGTH_SHORT).show();
+            exitTime = System.currentTimeMillis();
+        } else {
+//            finish();
+//            System.exit(0);
+            exit();
+        }
     }
 
     @Override
