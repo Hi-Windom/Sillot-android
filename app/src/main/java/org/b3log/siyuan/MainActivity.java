@@ -353,8 +353,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             exitTime = System.currentTimeMillis();
         } else {
 //            finish();
-//            System.exit(0);
             exit();
+            System.exit(0);
         }
     }
 
