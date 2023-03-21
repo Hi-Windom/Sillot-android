@@ -11,7 +11,7 @@ android {
         applicationId "sc.windom.sillot"
         minSdk 30
         targetSdkVersion 33
-        versionCode 10110100
+        versionCode 10110101
         versionName "0.11.1"
 
         ndk {
@@ -83,14 +83,15 @@ def genDateTime() {
     return new Date().format("yyyyMMdd")
 }
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.0'
+    // Sillot 仅需兼容 Android 11+ ，放心升级，无需理会下面的不要升级警告
+    implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.8.0'
-    implementation 'androidx.lifecycle:lifecycle-process:2.5.1'
-    implementation 'androidx.work:work-runtime:2.7.1'
+    implementation 'androidx.lifecycle:lifecycle-process:2.6.0'
+    implementation 'androidx.work:work-runtime:2.8.0'
 
     implementation(name: 'kernel', ext: 'aar')
-    implementation("commons-io:commons-io:2.5") // 不要升级，否则无法兼容 Android 7
-    implementation("com.squareup.okhttp3:okhttp:4.9.3") // 不要升级，否则无法兼容 Android 7
+    implementation("commons-io:commons-io:2.11.0") // 不要升级v2.5+，否则无法兼容 Android 7
+    implementation("com.squareup.okhttp3:okhttp:4.9.3") // 不要升级v4.9+，否则无法兼容 Android 7
     implementation 'com.gitee.zackratos:UltimateBarX:0.8.0'
     implementation 'com.blankj:utilcodex:1.31.1'
 
