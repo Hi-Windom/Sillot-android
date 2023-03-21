@@ -32,7 +32,7 @@ android {
     // 自定义打包名称
     android.applicationVariants.all { variant ->
         variant.outputs.all {
-            outputFileName = "Sillot-v${versionName}_${genDateTime()}.apk"
+            outputFileName = "Sillot-v${versionCode}_${genDateTime()}.apk"
         }
     }
 
