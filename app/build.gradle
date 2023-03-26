@@ -11,8 +11,8 @@ android {
         applicationId "sc.windom.sillot"
         minSdk 30
         targetSdkVersion 33
-        versionCode 10110101
-        versionName "0.11.1"
+        versionCode 10121001
+        versionName "0.12.10"
 
         ndk {
             //只接入对应 cpu 类型的 .so 库。
@@ -79,15 +79,15 @@ android {
     ndkVersion '25.2.9519653'
 }
 
-def genDateTime() {
+static def genDateTime() {
     return new Date().format("yyyyMMdd")
 }
 dependencies {
     // Sillot 仅需兼容 Android 11+ ，放心升级，无需理会下面的不要升级警告
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.8.0'
-    implementation 'androidx.lifecycle:lifecycle-process:2.6.0'
-    implementation 'androidx.work:work-runtime:2.8.0'
+    implementation 'androidx.lifecycle:lifecycle-process:2.6.1'
+    implementation 'androidx.work:work-runtime:2.8.1'
 
     implementation(name: 'kernel', ext: 'aar')
     implementation("commons-io:commons-io:2.11.0") // 不要升级v2.5+，否则无法兼容 Android 7
