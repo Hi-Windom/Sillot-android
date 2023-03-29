@@ -17,7 +17,7 @@ docmap = {
 }
 
 
-def generate_msg_from_repo(repo_name, tag_name, lastestRelease):
+def generate_msg_from_repo(repo_name, tag_name):
     """Generate changelog messages from repository and tag name.
 
     Envs:
