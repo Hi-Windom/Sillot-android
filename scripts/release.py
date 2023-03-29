@@ -62,10 +62,7 @@ def find_milestone(repo, title):
     version = ".".join(pat.group(1).split(".")[:2])
     print(f'''
 ---
-<p align="center">
-<a href="https://github.com/Hi-Windom/Sillot/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Hi-Windom/Sillot/ci.yml?event=push&label=ci.yml%20Action&logo=github" style="cursor:pointer;height: 30px;margin: 3px auto;"/></a>
-<a href="https://github.com/Hi-Windom/Sillot/releases/{thisRelease}/"><img src="https://img.shields.io/github/downloads/Hi-Windom/Sillot/{thisRelease}/total?logo=github" style="cursor:pointer;height: 30px;margin: 3px auto;"/></a>
-</p>
+## https://github.com/Hi-Windom/Sillot/releases/tag/{thisRelease}
 
 ⚠️ 这是自动构建的开发者版本！数据无价，请勿用于生产环节
 ❤️ 欢迎共建汐洛 694357845@qq.com
