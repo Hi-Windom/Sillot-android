@@ -11,8 +11,8 @@ android {
         applicationId "sc.windom.sillot"
         minSdk 30
         targetSdkVersion 33
-        versionCode 10140201
-        versionName "0.14.2"
+        versionCode 10140501
+        versionName "0.14.5"
 
         ndk {
             //只接入对应 cpu 类型的 .so 库。
