@@ -458,7 +458,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         // Android check WebView version 75+ https://github.com/siyuan-note/siyuan/issues/7840
         final String ua = ws.getUserAgentString();
         if (ua.contains("Chrome/")) {
-            final int minVer = 75;
+            final int minVer = 95;
             try {
                 final String chromeVersion = ua.split("Chrome/")[1].split(" ")[0];
                 if (chromeVersion.contains(".")) {
