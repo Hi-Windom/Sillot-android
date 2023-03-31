@@ -464,7 +464,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 if (chromeVersion.contains(".")) {
                     final String[] chromeVersionParts = chromeVersion.split("\\.");
                     if (Integer.parseInt(chromeVersionParts[0]) < minVer) {
-                        Toast.makeText(this, "WebView version [" + chromeVersion + "] is too low, please upgrade to " + minVer + "+", Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, "WebView version " + chromeVersionParts[0] + " is too low, please upgrade to " + minVer + "+", Toast.LENGTH_LONG).show();
                     }
                 }
             } catch (final Exception e) {
