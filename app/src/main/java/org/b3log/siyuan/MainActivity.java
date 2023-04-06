@@ -55,6 +55,7 @@ import com.blankj.utilcode.util.StringUtils;
 import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
 
 import org.apache.commons.io.FileUtils;
+import org.b3log.siyuan.appUtils.HWs;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
@@ -357,6 +358,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             exitTime = System.currentTimeMillis();
         } else {
 //            finish();
+
+            HWs.getInstance().vibratorForLollipop(this, new long[]{0, 17, 186, 70});
             exit();
             System.exit(0);
         }
