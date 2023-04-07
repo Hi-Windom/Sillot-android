@@ -359,8 +359,9 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         } else {
 //            finish();
 
-            HWs.getInstance().vibratorForLollipop(this, new long[]{0, 17, 186, 70});
+            HWs.getInstance().vibratorWaveform(this, new long[]{0, 30, 25, 40, 25, 10}, new int[]{2,4,3,2,2,2}, -1);
             exit();
+            sleep(200);
             System.exit(0);
         }
     }

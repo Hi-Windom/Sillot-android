@@ -17,6 +17,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.PowerManager;
+import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -380,7 +381,7 @@ public class HWs {
         PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP |
                 PowerManager.SCREEN_DIM_WAKE_LOCK, "bright");
         //点亮屏幕
-        wl.acquire();
+        wl.acquire(10*60*1000L /*10 minutes*/);
         //释放
         wl.release();
     }
@@ -396,24 +397,49 @@ public class HWs {
         Vibrator vibrator = (Vibrator) context.getSystemService(Service.VIBRATOR_SERVICE);
         vibrator.vibrate(vibrationPattern, -1);
     }
-
     /**
-     * 震动 适配6.0以上
+     * 创建一次性振动 Android 8.0+
+     * 一次性振动将以指定的振幅在指定的时间段内持续振动，然后停止。
+     * milliseconds：振动的毫秒数。这必须是一个正数。
+     * amplitude：振动的强度。它必须是1到255之间的值，或 DEFAULT_AMPLITUDE（-1）。
      *
-     * @param context
-     * @param pattern 第二参数表示从哪里开始循环，比如这里的0表示这个数组在第一次循环完之后会从下标0开始循环到最后，这里的如果是-1表示不循环。
      */
-    public void vibratorForLollipop(Context context, long[] pattern) {
+    public void vibratorOneShot(Context context, long milliseconds, int amplitude) {
         Vibrator mVibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+        VibrationEffect mEffect = VibrationEffect.createOneShot(milliseconds, amplitude);
+//
+//        VibrationEffect.DEFAULT_AMPLITUDE = -1 默认效果
+//        VibrationEffect.EFFECT_CLICK = 0 点击效果
+//        VibrationEffect.EFFECT_DOUBLE_CLICK = 1 双击效果
+//        VibrationEffect.EFFECT_HEAVY_CLICK = 5 震动效果更强
+//        VibrationEffect.EFFECT_TICK = 2 滴水效果
+//
+
         AudioAttributes audioAttributes = null;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            audioAttributes = new AudioAttributes.Builder()
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .setUsage(AudioAttributes.USAGE_ALARM) //key
-                    .build();
-            mVibrator.vibrate(pattern, -1, audioAttributes);
-        } else {
-            mVibrator.vibrate(pattern, -1);
-        }
+        audioAttributes = new AudioAttributes.Builder()
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .setUsage(AudioAttributes.USAGE_ALARM) //key
+                .build();
+        mVibrator.vibrate(mEffect, audioAttributes);
+    }
+    /**
+     * 创建波形振动 Android 8.0+
+     */
+    public void vibratorWaveform(Context context, long[] timings, int[] amplitudes, int repeat) {
+        Vibrator mVibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+        VibrationEffect mEffect = VibrationEffect.createWaveform(timings, amplitudes, repeat);
+//
+//        createWaveform(long[] timings, int[] amplitudes, int repeat)
+//        timings:震动替换倒计时，从停止开始，依次为停->震->停->震……，比如 {10000，20000，30000，40000} 表示 停10秒 震20秒 停30秒 震40秒
+//        amplitudes：震动幅度，数值0 - 255 ，0表示不震动，255震感最强，数组长度与timings一致
+//        repeat：引索，-1表示震动一次，其他表示重复震动
+//        repeat这个值有点特别，repeat = -1时会依次震动一次，repeat = 0 时不停重复震动，其他值时，会先从0-引索间跳过停止时间仅保留震动时长，并且在引索后不停重复，比如：timings = {10000，20000，30000，40000}，repeat = 2表示先震动20秒，再重复30秒->40秒
+
+        AudioAttributes audioAttributes = null;
+        audioAttributes = new AudioAttributes.Builder()
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .setUsage(AudioAttributes.USAGE_ALARM) //key
+                .build();
+        mVibrator.vibrate(mEffect, audioAttributes);
     }
 }
