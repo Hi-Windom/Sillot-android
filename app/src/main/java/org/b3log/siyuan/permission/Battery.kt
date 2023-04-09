@@ -4,12 +4,10 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
-import android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS
 import androidx.core.app.ActivityCompat
 import org.b3log.siyuan.andapi.Toast
 
@@ -18,7 +16,7 @@ class Battery: Activity() {
         super.onCreate(savedInstanceState)
         if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)) {
             // 用户拒绝过这个权限了，应该提示用户，为什么需要这个权限。
-            var mContext: Context = applicationContext
+            val mContext: Context = applicationContext
             Toast.Show(mContext,"伺服体验不完整")
         } else {
         }
@@ -35,7 +33,7 @@ class Battery: Activity() {
 //                startActivity(powerUsageIntent)
 //            }
         }
-        var mContext: Context = applicationContext
+        val mContext: Context = applicationContext
         Toast.Show(mContext,"请手动重启应用")
         finish() // 完成当前 activity
     }
@@ -53,8 +51,8 @@ class Battery: Activity() {
             val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
             intent.data = Uri.parse("package:$packageName")
             startActivity(intent)
-            var mContext: Context = applicationContext
-            Toast.Show(mContext,"后台稳定伺服需要额外权限，请允许")
+//            var mContext: Context = applicationContext
+//            Toast.Show(mContext,"后台稳定伺服需要额外权限，请允许")
         } catch (e: Exception) {
             e.printStackTrace()
         }
