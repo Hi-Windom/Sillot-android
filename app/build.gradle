@@ -109,5 +109,5 @@ dependencies {
 
     // For developers using the Android Support Library
     implementation 'pub.devrel:easypermissions:3.0.0'
-    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'androidx.core:core-ktx:1.10.0'
 }
