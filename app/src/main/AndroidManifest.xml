@@ -66,7 +66,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SiYuan"
         android:usesCleartextTraffic="true"
-        android:enableOnBackInvokedCallback="true"
+        android:enableOnBackInvokedCallback="false"
         tools:ignore="HardcodedDebugMode"
         tools:targetApi="tiramisu">
         <!-- Required: set your sentry.io project identifier (DSN) -->
