@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id "io.sentry.android.gradle" version "3.5.0"
 }
 
 android {
@@ -11,8 +12,8 @@ android {
         applicationId "sc.windom.sillot"
         minSdk 30
         targetSdkVersion 33
-        versionCode 10180105
-        versionName "0.18.1"
+        versionCode 10180406
+        versionName "0.18.4"
 
         ndk {
             //只接入对应 cpu 类型的 .so 库。
@@ -101,7 +102,7 @@ dependencies {
 
     implementation 'com.tencent:mmkv:1.2.15'
     implementation 'com.tencent.wcdb:wcdb-android:1.0.8'
-    annotationProcessor 'androidx.room:room-compiler:2.0.0'
+    annotationProcessor 'androidx.room:room-compiler:2.5.1'
     // Don't forget to include Room annotation compiler from Google.
 
     // For developers using AndroidX in their applications
