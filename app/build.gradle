@@ -12,8 +12,8 @@ android {
         applicationId "sc.windom.sillot"
         minSdk 30
         targetSdkVersion 33
-        versionCode 10180406
-        versionName "0.18.4"
+        versionCode 10180502
+        versionName "0.18.5"
 
         ndk {
             //只接入对应 cpu 类型的 .so 库。
@@ -97,8 +97,8 @@ dependencies {
     implementation 'com.blankj:utilcodex:1.31.1'
 
 //    极光推送
-    implementation 'cn.jiguang.sdk:jcore:4.1.0'
-    implementation 'cn.jiguang.sdk:jpush:4.9.0'
+    implementation 'cn.jiguang.sdk:jcore:4.2.0'
+    implementation 'cn.jiguang.sdk:jpush:5.0.0'
 
     implementation 'com.tencent:mmkv:1.2.15'
     implementation 'com.tencent.wcdb:wcdb-android:1.0.8'
