@@ -69,6 +69,20 @@
         android:enableOnBackInvokedCallback="true"
         tools:ignore="HardcodedDebugMode"
         tools:targetApi="tiramisu">
+        <!-- Required: set your sentry.io project identifier (DSN) -->
+        <meta-data android:name="io.sentry.dsn" android:value="https://d84d2390d8f44288a5db4178466beb0d@o4504894929829888.ingest.sentry.io/4504994288435200" />
+
+        <!-- enable automatic breadcrumbs for user interactions (clicks, swipes, scrolls) -->
+        <meta-data android:name="io.sentry.traces.user-interaction.enable" android:value="true" />
+        <!-- enable screenshot for crashes -->
+        <meta-data android:name="io.sentry.attach-screenshot" android:value="true" />
+        <!-- enable view hierarchy for crashes -->
+        <meta-data android:name="io.sentry.attach-view-hierarchy" android:value="true" />
+
+        <!-- enable the performance API by setting a sample-rate, adjust in production env -->
+        <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
+        <!-- enable profiling when starting transactions, adjust in production env -->
+        <meta-data android:name="io.sentry.traces.profiling.sample-rate" android:value="1.0" />
 
         <activity
             android:name=".producer.MainPro"
@@ -92,7 +106,9 @@
         <receiver
             android:name=".jpush.JReceiver"
             android:enabled="true"
-            android:exported="true">
+            android:exported="true"
+            android:permission="TODO"
+            tools:ignore="ExportedReceiver">
             <intent-filter>
                 <action android:name="cn.jpush.android.intent.RECEIVE_MESSAGE" />
                 <action android:name="cn.jpush.android.intent.REGISTRATION" />
