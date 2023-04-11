@@ -121,6 +121,13 @@ public final class JSAndroid {
     }
 
     @JavascriptInterface
+    public void exitSillotAndroid() {
+        activity.finishAffinity();
+        activity.finishAndRemoveTask();
+        System.exit(0);
+    }
+
+    @JavascriptInterface
     public void openExternal(String url) {
         if (StringUtils.isEmpty(url)) {
             return;

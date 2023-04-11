@@ -351,19 +351,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     public void onBackPressed() {
-//        webView.evaluateJavascript("javascript:window.goBack()", null);
-//        https://github.com/Hi-Windom/Sillot/issues/305
-        if ((System.currentTimeMillis() - exitTime) > 2000) {
-            Toast.makeText(getApplicationContext(), "再按一次退出程序", Toast.LENGTH_SHORT).show();
-            exitTime = System.currentTimeMillis();
-        } else {
-//            finish();
-
-            HWs.getInstance().vibratorWaveform(this, new long[]{0, 30, 25, 40, 25, 10}, new int[]{2,4,3,2,2,2}, -1);
-            exit();
-            sleep(200);
-            System.exit(0);
-        }
+        webView.evaluateJavascript("javascript:window.goBack()", null);
+        HWs.getInstance().vibratorWaveform(this, new long[]{0, 30, 25, 40, 25}, new int[]{9,2,1,7,2}, -1);
     }
 
     @Override
