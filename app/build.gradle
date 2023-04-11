@@ -11,8 +11,8 @@ android {
         applicationId "sc.windom.sillot"
         minSdk 30
         targetSdkVersion 33
-        versionCode 10170501
-        versionName "0.17.5"
+        versionCode 10180105
+        versionName "0.18.1"
 
         ndk {
             //只接入对应 cpu 类型的 .so 库。
@@ -101,7 +101,7 @@ dependencies {
 
     implementation 'com.tencent:mmkv:1.2.15'
     implementation 'com.tencent.wcdb:wcdb-android:1.0.8'
-    annotationProcessor 'android.arch.persistence.room:compiler:1.1.1'
+    annotationProcessor 'androidx.room:room-compiler:2.0.0'
     // Don't forget to include Room annotation compiler from Google.
 
     // For developers using AndroidX in their applications
