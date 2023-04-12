@@ -185,20 +185,20 @@
 
                 <category android:name="${applicationId}" />
             </intent-filter>
-        </activity> <!-- 【有问题，先屏蔽，不影响接收推送 https://hi-windom.sentry.io/issues/4080563353/events/06ef70c92c95463ca546ca939f6c36ef/】若您的业务中有使用极光富媒体功能，需要把此 Activity 的 exported 修改成 true 覆盖 mavenCentral 上的组件。 -->
-<!--        <activity-->
-<!--            android:name="cn.jpush.android.ui.PushActivity"-->
-<!--            android:configChanges="orientation|keyboardHidden"-->
-<!--            android:exported="true"-->
-<!--            android:theme="@android:style/Theme.NoTitleBar"-->
-<!--            tools:node="replace">-->
-<!--            <intent-filter>-->
-<!--                <action android:name="cn.jpush.android.ui.PushActivity" />-->
+        </activity> <!-- 若您的业务中有使用极光富媒体功能，需要把此 Activity 的 exported 修改成 true 覆盖 mavenCentral 上的组件。 -->
+        <activity
+            android:name="cn.jpush.android.ui.PushActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:exported="true"
+            android:theme="@android:style/Theme.NoTitleBar"
+            tools:node="replace">
+            <intent-filter>
+                <action android:name="cn.jpush.android.ui.PushActivity" />
 
-<!--                <category android:name="android.intent.category.DEFAULT" />-->
-<!--                <category android:name="${applicationId}" />-->
-<!--            </intent-filter>-->
-<!--        </activity>-->
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="${applicationId}" />
+            </intent-filter>
+        </activity>
         <!-- 点击通知时，要打开的 activity -->
         <activity
             android:name=".jpush.OpenClickActivity"

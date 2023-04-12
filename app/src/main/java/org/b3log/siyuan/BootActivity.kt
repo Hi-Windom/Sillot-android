@@ -67,7 +67,7 @@ class BootActivity : AppCompatActivity() {
     }
 
     private val blockURL: String
-        private get() {
+        get() {
             var ret = ""
             try {
                 val intent = intent
@@ -82,7 +82,7 @@ class BootActivity : AppCompatActivity() {
             return ret
         }
     private val isFirstRun: Boolean
-        private get() {
+        get() {
             val dataDir = filesDir.absolutePath
             val appDir = "$dataDir/app"
             val appDirFile = File(appDir)
