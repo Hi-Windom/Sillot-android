@@ -178,12 +178,12 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             }
 
             @Override
-            public void onPermissionRequest(final PermissionRequest request) {
+            public void onPermissionRequest(final PermissionRequest request) { // 当网页请求其他权限时，会回调此方法以询问用户是否允许
                 request.grant(request.getResources());
             }
 
             @Override
-            public void onProgressChanged(WebView webView, int progress) {
+            public void onProgressChanged(WebView webView, int progress) { // 当 WebView 加载页面时，会多次回调此方法以报告加载进度
                 // 增加Javascript异常监控
                 CrashReport.setJavascriptMonitor(webView, true);
                 super.onProgressChanged(webView, progress);
@@ -226,7 +226,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
                 if (uri.getScheme().toLowerCase().startsWith("http")) {
                     final Intent i = new Intent(Intent.ACTION_VIEW, uri);
-                    startActivity(i);
+                    startActivity(i); // 从 Android 12 开始，经过验证的链接现在会自动在相应的应用中打开，以获得更简化、更快速的用户体验。谷歌还更改了未经Android应用链接验证或用户手动批准的链接的默认处理方式。谷歌表示，Android 12将始终在默认浏览器中打开此类未经验证的链接，而不是向您显示应用程序选择对话框。
                     return true;
                 }
                 return true;
