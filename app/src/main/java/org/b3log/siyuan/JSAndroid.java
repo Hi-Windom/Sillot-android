@@ -137,9 +137,9 @@ public final class JSAndroid {
             return;
         }
 
-        if (url.startsWith("assets/")) {
-            url = "http://127.0.0.1:58131/" + url;
-        }
+//        if (url.startsWith("assets/")) {
+//            url = "http://127.0.0.1:58131/" + url;
+//        }
         if (url.startsWith("/")) {
             url = "http://127.0.0.1:58131" + url;
         }
