@@ -52,6 +52,7 @@ import androidx.core.content.ContextCompat;
 import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.KeyboardUtils;
 import com.blankj.utilcode.util.StringUtils;
+import com.tencent.bugly.crashreport.CrashReport;
 import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
 
 import org.apache.commons.io.FileUtils;
@@ -123,6 +124,9 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             InitActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(InitActivity);
         }
+
+        CrashReport.initCrashReport(getApplicationContext(), "26ae2b5fb4", true);
+
         // 初始化 UI 元素
         initUIElements();
 
@@ -176,6 +180,13 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             @Override
             public void onPermissionRequest(final PermissionRequest request) {
                 request.grant(request.getResources());
+            }
+
+            @Override
+            public void onProgressChanged(WebView webView, int progress) {
+                // 增加Javascript异常监控
+                CrashReport.setJavascriptMonitor(webView, true);
+                super.onProgressChanged(webView, progress);
             }
 
         });
