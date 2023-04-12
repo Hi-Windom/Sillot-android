@@ -1,20 +1,36 @@
 package org.b3log.siyuan.permission
 
-import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
-import android.widget.Toast
+import android.os.SystemClock.sleep
+import android.util.Log
+import android.view.View
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import kotlin.system.exitProcess
 
 
 class InitActivity: Activity() {
 
     var works = 0
+    // 创建一个权限列表，把需要使用而没用授权的的权限存放在这里
+    var permissionList: MutableList<String> = ArrayList()
+    fun onApplyButtonClick(view: View) {
+        if(works == 0){
+            finish()
+        } else {
+            doApply()
+        }
+    }
+    fun onCloseButtonClick(view: View) {
+        finish()
+    }
+
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -25,19 +41,13 @@ class InitActivity: Activity() {
             1002 -> {
                 if(grantResults.isNotEmpty()){
                     grantResults.forEachIndexed { _, it ->
-                       if( it != PackageManager.PERMISSION_DENIED)
+                       if(it == PackageManager.PERMISSION_GRANTED)
                         works --
                     }
 
                     if(works == 0){
-                        //打开本应用信息界面
-//                        val intent = Intent("android.settings.APPLICATION_DETAILS_SETTINGS")
-//                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-//                        intent.data = Uri.parse("package:$packageName")
-//                        startActivity(intent)
 
-
-
+                        finish() // 完成当前 activity
 
                     }
                 }
@@ -45,23 +55,21 @@ class InitActivity: Activity() {
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
-        finish() // 完成当前 activity
-        val battery = Intent("sc.windom.sillot.intent.permission.Battery")
-        battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        startActivity(battery)
+        // 点击空白处将中断权限申请
+//        finish()
 
     }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        Log.i("InitActivity", "create InitActivity activity")
         super.onCreate(savedInstanceState)
-        var mContext: Context = applicationContext
-        org.b3log.siyuan.andapi.Toast.Show(mContext,"你好，汐洛")
-        // 创建一个权限列表，把需要使用而没用授权的的权限存放在这里
+        val contentViewId = intent.getIntExtra("contentViewId", 0)
+        setContentView(contentViewId)
+//        window.setBackgroundDrawable(null)
 
-        // 创建一个权限列表，把需要使用而没用授权的的权限存放在这里
-        val permissionList: MutableList<String> = ArrayList()
 
+        val mContext: Context = applicationContext
         // 判断权限是否已经授予，没有就把该权限添加到列表中
         Ps.PG_Core.forEach {
             if (ContextCompat.checkSelfPermission(mContext, it)
@@ -74,6 +82,29 @@ class InitActivity: Activity() {
                 println(it)
             }
         }
+        if (Build.VERSION.SDK_INT >= 33) {
+            Ps.useAPI33.forEach {
+                if (ContextCompat.checkSelfPermission(mContext, it)
+                    != PackageManager.PERMISSION_GRANTED
+                ) {
+                    permissionList.add(it)
+                    works++
+                } else {
+
+                    println(it)
+                }
+            }
+        }
+        doApply()
+
+    }
+
+    override fun onDestroy() {
+        Log.i("InitActivity", "destroy InitActivity activity")
+        super.onDestroy()
+    }
+
+    private fun doApply() {
 
 
 
@@ -83,13 +114,20 @@ class InitActivity: Activity() {
         // int requestCode: 会在回调onRequestPermissionsResult()时返回，用来判断是哪个授权申请的回调。
         println(permissionList)
         if (permissionList.isNotEmpty()) {
-                    permissionList.forEach {
-                        if (ActivityCompat.shouldShowRequestPermissionRationale(this, it)) {
-                            // 用户拒绝过这个权限了，应该提示用户，为什么需要这个权限。
-
-                        } else {
-                        }
-                    }
+            permissionList.forEach {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, it)) {
+                    // 用户拒绝过这个权限了，应该提示用户，为什么需要这个权限。
+                    val mContext: Context = applicationContext
+                    org.b3log.siyuan.andapi.Toast.Show(mContext,"必要权限被拒绝申请，请手动授权！")
+                    //打开本应用信息界面
+                    val intent = Intent("android.settings.APPLICATION_DETAILS_SETTINGS")
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    intent.data = Uri.parse("package:$packageName")
+                    startActivity(intent)
+                    finish()
+                } else {
+                }
+            }
 
             // 申请授权。
             ActivityCompat.requestPermissions(
@@ -97,68 +135,9 @@ class InitActivity: Activity() {
                 permissionList.toTypedArray(), 1002
             )
         } else {
-//            Toast.makeText(mContext, "你好，汐洛", Toast.LENGTH_LONG).show()
-            finish()
+//            finish()
+            exitProcess(-1)
         }
-        // android 12 / api 31
-//        arrayListOf(
-//            Manifest.permission.ACCESS_BLOBS_ACROSS_USERS,
-//            Manifest.permission.BIND_COMPANION_DEVICE_SERVICE,
-//            Manifest.permission.BIND_COMPANION_DEVICE_SERVICE,
-//            Manifest.permission.BLUETOOTH_ADVERTISE,
-//            Manifest.permission.BLUETOOTH_CONNECT,
-//            Manifest.permission.BLUETOOTH_SCAN,
-//            Manifest.permission.REQUEST_COMPANION_START_FOREGROUND_SERVICES_FROM_BACKGROUND,
-//            Manifest.permission.START_FOREGROUND_SERVICES_FROM_BACKGROUND,
-//            Manifest.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION,
-//        ).forEach {
-//                if (ContextCompat.checkSelfPermission(mContext, it)
-//                    != PackageManager.PERMISSION_GRANTED
-//                ) {
-//                    permissionList.add(it)
-//                }
-//            }
-
-        // system app only, can not use in any api level
-
-//           arrayListOf(
-//           Manifest.permission.ACCESS_CHECKIN_PROPERTIES,
-//            Manifest.permission.ACCOUNT_MANAGER,
-//            Manifest.permission.BATTERY_STATS,
-//            Manifest.permission.BIND_ACCESSIBILITY_SERVICE,
-//            Manifest.permission.BIND_*,
-//            Manifest.permission.BLUETOOTH_PRIVILEGED,
-//            Manifest.permission.BROADCAST_PACKAGE_REMOVED,
-//            Manifest.permission.BROADCAST_SMS,
-//            Manifest.permission.BROADCAST_WAP_PUSH,
-//            Manifest.permission.CALL_PRIVILEGED,
-//            Manifest.permission.CAPTURE_AUDIO_OUTPUT,
-//            Manifest.permission.CHANGE_COMPONENT_ENABLED_STATE,
-//            Manifest.permission.CHANGE_CONFIGURATION,
-//            Manifest.permission.CLEAR_APP_CACHE,
-//            Manifest.permission.CONTROL_LOCATION_UPDATES,
-//            Manifest.permission.DELETE_CACHE_FILES,
-//            Manifest.permission.DUMP,
-//            Manifest.permission.GLOBAL_SEARCH,
-//            Manifest.permission.INSTALL_LOCATION_PROVIDER,
-//            Manifest.permission.INSTALL_PACKAGES,
-//            Manifest.permission.INSTANT_APP_FOREGROUND_SERVICE,
-//            Manifest.permission.MEDIA_CONTENT_CONTROL,
-//            Manifest.permission.MODIFY_PHONE_STATE,
-//            Manifest.permission.STATUS_BAR,
-//            Manifest.permission.WRITE_SETTINGS,
-//            Manifest.permission.BIND_CONTROLS,
-//            Manifest.permission.BIND_QUICK_ACCESS_WALLET_SERVICE,
-//            Manifest.permission.QUERY_ALL_PACKAGES,
-//        )
-
-
-        // 由于requestPermissions方法是异步的，移到回调完成finish
-//                finish()
-//        do {
-//            sleep(200)
-//        } while (works != 0)
-//        finish()
     }
 
 }

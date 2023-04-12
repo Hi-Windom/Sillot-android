@@ -62,6 +62,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.TimeZone;
 
 import mobile.Mobile;
@@ -90,6 +91,13 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     private static final int REQUEST_SELECT_FILE = 100;
     private long exitTime;
 
+    private boolean isFirstRun() {
+        final String dataDir = getFilesDir().getAbsolutePath();
+        final String appDir = dataDir + "/app";
+        final File appDirFile = new File(appDir);
+        return !appDirFile.exists();
+    }
+
     @Override
     public void onNewIntent(final Intent intent) {
         super.onNewIntent(intent);
@@ -109,6 +117,12 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
         setContentView(R.layout.activity_main);
 
+        if (isFirstRun()) {
+            Intent InitActivity = new Intent(this, org.b3log.siyuan.permission.InitActivity.class);
+            InitActivity.putExtra("contentViewId", R.layout.init_activity);
+            InitActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(InitActivity);
+        }
         // 初始化 UI 元素
         initUIElements();
 
@@ -219,7 +233,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         ws.setLoadWithOverviewMode(true);
         ws.setUserAgentString("SiYuan-Sillot/" + version + " https://b3log.org/siyuan " + ws.getUserAgentString());
         waitFotKernelHttpServing();
-        webView.setWebContentsDebuggingEnabled(true);
+        WebView.setWebContentsDebuggingEnabled(true);
         webView.loadUrl("http://127.0.0.1:58131/appearance/boot/index.html");
 
         new Thread(this::keepLive).start();
@@ -332,6 +346,12 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         final Message msg = new Message();
         msg.setData(b);
         bootHandler.sendMessage(msg);
+
+
+//        Intent InitActivity = new Intent(this, org.b3log.siyuan.permission.InitActivity.class);
+//        InitActivity.putExtra("contentViewId", R.layout.init_activity);
+//        InitActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+//        startActivity(InitActivity);
     }
 
     private void setBootProgress(final String text, final int progressPercent) {

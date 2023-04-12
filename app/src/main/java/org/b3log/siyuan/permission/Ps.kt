@@ -1,6 +1,8 @@
 package org.b3log.siyuan.permission
 
 import android.Manifest
+import android.os.Build
+import androidx.annotation.RequiresApi
 
 object Ps { // 权限组
     val useLocation = mutableListOf(
@@ -51,6 +53,7 @@ object Ps { // 权限组
     )
     val useData = mutableListOf(
         Manifest.permission.GET_PACKAGE_SIZE, // 允许应用程序找出任何包使用的空间。
+        Manifest.permission.READ_EXTERNAL_STORAGE,
     )
     val useConvenient = mutableListOf(
         Manifest.permission.EXPAND_STATUS_BAR, // 允许程序扩展或收缩状态栏
@@ -64,9 +67,51 @@ object Ps { // 权限组
     val useSafe = mutableListOf(
         Manifest.permission.REQUEST_PASSWORD_COMPLEXITY, // 允许应用程序请求屏幕锁定复杂性，并提示用户将屏幕锁定更新到特定的复杂性级别。
     )
+    // minSdk 30 ，无需判断
     val useAPI30 = mutableListOf(// android 11 / api 30
         Manifest.permission.MANAGE_EXTERNAL_STORAGE, // 允许应用程序广泛访问作用域存储中的外部存储。
         Manifest.permission.MANAGE_DOCUMENTS, // 允许应用程序通常作为文档选择器的一部分来管理对文档的访问。 ProtectedPermissions
     )
-    val PG_Core = useNet + useCom // 核心权限组，应当在首次安装时申请
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    val useAPI33 = mutableListOf(// android 13 / api 33
+        Manifest.permission.POST_NOTIFICATIONS, // 发送通知
+        Manifest.permission.READ_MEDIA_IMAGES,
+        Manifest.permission.READ_MEDIA_VIDEO,
+        Manifest.permission.READ_MEDIA_AUDIO,
+    )
+    val PG_Core = useAPI30 + useNet + useCom + useData + useMedia + useConvenient + useNotification // 核心权限组，一般无需额外申请
+
+    // system app only, can not use in any api level
+
+//           arrayListOf(
+//           Manifest.permission.ACCESS_CHECKIN_PROPERTIES,
+//            Manifest.permission.ACCOUNT_MANAGER,
+//            Manifest.permission.BATTERY_STATS,
+//            Manifest.permission.BIND_ACCESSIBILITY_SERVICE,
+//            Manifest.permission.BIND_*,
+//            Manifest.permission.BLUETOOTH_PRIVILEGED,
+//            Manifest.permission.BROADCAST_PACKAGE_REMOVED,
+//            Manifest.permission.BROADCAST_SMS,
+//            Manifest.permission.BROADCAST_WAP_PUSH,
+//            Manifest.permission.CALL_PRIVILEGED,
+//            Manifest.permission.CAPTURE_AUDIO_OUTPUT,
+//            Manifest.permission.CHANGE_COMPONENT_ENABLED_STATE,
+//            Manifest.permission.CHANGE_CONFIGURATION,
+//            Manifest.permission.CLEAR_APP_CACHE,
+//            Manifest.permission.CONTROL_LOCATION_UPDATES,
+//            Manifest.permission.DELETE_CACHE_FILES,
+//            Manifest.permission.DUMP,
+//            Manifest.permission.GLOBAL_SEARCH,
+//            Manifest.permission.INSTALL_LOCATION_PROVIDER,
+//            Manifest.permission.INSTALL_PACKAGES,
+//            Manifest.permission.INSTANT_APP_FOREGROUND_SERVICE,
+//            Manifest.permission.MEDIA_CONTENT_CONTROL,
+//            Manifest.permission.MODIFY_PHONE_STATE,
+//            Manifest.permission.STATUS_BAR,
+//            Manifest.permission.WRITE_SETTINGS,
+//            Manifest.permission.BIND_CONTROLS,
+//            Manifest.permission.BIND_QUICK_ACCESS_WALLET_SERVICE,
+//            Manifest.permission.QUERY_ALL_PACKAGES,
+//        )
+
 }

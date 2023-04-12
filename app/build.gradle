@@ -8,12 +8,16 @@ android {
     compileSdkVersion 33
     buildToolsVersion '33.0.2'
 
+//    buildFeatures {
+//        dataBinding true // 数据绑定
+//    }
+
     defaultConfig {
         applicationId "sc.windom.sillot"
         minSdk 30
         targetSdkVersion 33
-        versionCode 10180502
-        versionName "0.18.5"
+        versionCode 10180606
+        versionName "0.18.6"
 
         ndk {
             //只接入对应 cpu 类型的 .so 库。
@@ -118,4 +122,6 @@ dependencies {
     // (see https://github.com/ReactiveX/RxJava/releases for latest 3.x.x version)
     implementation 'io.reactivex.rxjava3:rxjava:3.1.5'
     implementation "io.reactivex.rxjava3:rxkotlin:3.0.1"
+
+//    annotationProcessor 'com.android.databinding:compiler:3.1.4' // 数据绑定
 }

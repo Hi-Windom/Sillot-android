@@ -143,15 +143,16 @@
             </intent-filter>
         </activity>
 
-<!--        <activity android:name=".permission.InitActivity"-->
-<!--            android:exported="true"-->
-<!--            android:launchMode="singleInstance">-->
-<!--            <intent-filter>-->
-<!--                <action android:name="sc.windom.sillot.intent.permission.InitActivity" />-->
+        <activity android:name=".permission.InitActivity"
+            android:exported="true"
+            android:configChanges="orientation|screenSize"
+            android:launchMode="singleInstance">
+            <intent-filter>
+                <action android:name="sc.windom.sillot.intent.permission.InitActivity" />
 
-<!--                <category android:name="android.intent.category.DEFAULT" />-->
-<!--            </intent-filter>-->
-<!--        </activity>-->
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name=".BootActivity"

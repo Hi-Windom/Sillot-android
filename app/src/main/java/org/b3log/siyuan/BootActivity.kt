@@ -18,13 +18,9 @@
 package org.b3log.siyuan
 
 import android.app.AlertDialog
-import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.os.Message
+import android.os.*
 import android.text.Html
 import android.text.method.ScrollingMovementMethod
 import android.util.Log
@@ -49,9 +45,6 @@ class BootActivity : AppCompatActivity() {
             // 首次运行弹窗提示用户隐私条款和使用授权
             Log.e("首次运行弹窗提示用户隐私条款和使用授权", "\n\n\n\n\n\n\n")
             showAgreements()
-//            val initActivity = Intent("sc.windom.sillot.intent.permission.InitActivity")
-//            initActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-//            startActivity(initActivity)
             return
         }
 
