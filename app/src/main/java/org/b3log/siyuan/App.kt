@@ -21,6 +21,8 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import cn.jpush.android.api.JPushInterface
+import com.baidu.android.pushservice.PushConstants
+import com.baidu.android.pushservice.PushManager
 import com.blankj.utilcode.util.Utils
 import org.b3log.siyuan.common.ForegroundPushManager
 
@@ -37,8 +39,11 @@ class App : Application() {
         var refCount = 0
         super.onCreate()
         Utils.init(this)
+        xcrash.XCrash.init(this)
         JPushInterface.setDebugMode(true)
         JPushInterface.init(this)
+        // 初始化PUSH
+        PushManager.startWork(applicationContext, PushConstants.LOGIN_TYPE_API_KEY,"6Ef26UV3UyM5b7NyiwiGAnM0");
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityPaused(activity: Activity) {
             }

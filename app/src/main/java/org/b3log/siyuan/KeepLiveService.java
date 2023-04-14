@@ -51,11 +51,7 @@ public class KeepLiveService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startMyOwnForeground();
-        } else {
-            startForeground(1, new Notification());
-        }
+        startMyOwnForeground();
     }
 
     private final String[] words = new String[]{
@@ -69,7 +65,6 @@ public class KeepLiveService extends Service {
 
     private Random random = new Random();
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     private void startMyOwnForeground() {
         final Intent resultIntent = new Intent(this, MainActivity.class).
                 setAction(Intent.ACTION_MAIN).setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);

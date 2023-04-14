@@ -16,8 +16,8 @@ android {
         applicationId "sc.windom.sillot"
         minSdk 30
         targetSdkVersion 33
-        versionCode 10180901
-        versionName "0.18.9"
+        versionCode 10200501
+        versionName "0.20.5"
 
         ndk {
             //只接入对应 cpu 类型的 .so 库。
@@ -95,6 +95,8 @@ dependencies {
     implementation 'androidx.work:work-runtime:2.8.1'
 
     implementation(name: 'kernel', ext: 'aar')
+    implementation(name: 'baidu-push-sdk-8.2.9.3', ext: 'aar')
+
     implementation("commons-io:commons-io:2.11.0") // 不要升级v2.5+，否则无法兼容 Android 7
     implementation("com.squareup.okhttp3:okhttp:4.9.3") // 不要升级v4.9+，否则无法兼容 Android 7
     implementation 'com.gitee.zackratos:UltimateBarX:0.8.0'
@@ -126,4 +128,5 @@ dependencies {
 //    annotationProcessor 'com.android.databinding:compiler:3.1.4' // 数据绑定
 
     implementation 'com.tencent.bugly:crashreport:latest.release'
+    implementation 'com.iqiyi.xcrash:xcrash-android-lib:3.1.0'
 }

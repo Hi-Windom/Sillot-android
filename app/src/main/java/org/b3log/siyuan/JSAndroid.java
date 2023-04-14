@@ -65,8 +65,7 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public String getBlockURL() {
-        final String blockURL = activity.getIntent().getStringExtra("blockURL");
-        return blockURL;
+        return activity.getIntent().getStringExtra("blockURL");
     }
 
     @JavascriptInterface
