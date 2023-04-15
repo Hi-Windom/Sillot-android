@@ -16,7 +16,7 @@ android {
         applicationId "sc.windom.sillot"
         minSdk 30
         targetSdkVersion 33
-        versionCode 10200501
+        versionCode 10200502
         versionName "0.20.5"
 
         ndk {
@@ -37,7 +37,7 @@ android {
     // 自定义打包名称
     android.applicationVariants.all { variant ->
         variant.outputs.all {
-            outputFileName = "Sillot-v${versionCode}_${genDateTime()}.apk"
+            outputFileName = "Sillot-v${versionName}_${genDateTime()}.apk"
         }
     }
 
