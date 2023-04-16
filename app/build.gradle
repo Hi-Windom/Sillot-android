@@ -38,17 +38,17 @@ android {
     android.applicationVariants.all { variant ->
         variant.outputs.all {
             def versionType = variant.buildType.name
-            if (versionType.equalsIgnoreCase("debug")) {
-                outputFileName = "Sillot.apk"
-            } else if (versionType.equalsIgnoreCase("release")) {
+            if (versionType.equalsIgnoreCase("release")) {
                 outputFileName = "Sillot-v${versionName}_${genDate()}_syv2.8.5.apk"
+            } else {
+                outputFileName = "Sillot.apk"
             }
         }
     }
 
 
     buildTypes {
-        debug {
+        action { // 防止第三方库debug模式导致action失败
 //            applicationIdSuffix ".debug"
             versionNameSuffix ".${genDateTime()}"
             resValue "string","app_name","汐洛测试版"
@@ -60,6 +60,7 @@ android {
             minifyEnabled true
             shrinkResources true
             zipAlignEnabled true
+            matchingFallbacks = ['release'] // 第三方库处理
         }
         release {
             minifyEnabled true
