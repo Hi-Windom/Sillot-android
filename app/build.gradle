@@ -16,8 +16,8 @@ android {
         applicationId "sc.windom.sillot"
         minSdk 30
         targetSdkVersion 33
-        versionCode 10220102
-        versionName "0.22.1"
+        versionCode 10220103
+        versionName "0.22.2"
 
         ndk {
             //只接入对应 cpu 类型的 .so 库。
@@ -37,18 +37,29 @@ android {
     // 自定义打包名称
     android.applicationVariants.all { variant ->
         variant.outputs.all {
-            outputFileName = "Sillot-v${versionName}_${genDateTime()}_syv2.8.5.apk"
+            def versionType = variant.buildType.name
+            if (versionType.equalsIgnoreCase("debug")) {
+                outputFileName = "Sillot.apk"
+            } else if (versionType.equalsIgnoreCase("release")) {
+                outputFileName = "Sillot-v${versionName}_${genDate()}_syv2.8.5.apk"
+            }
         }
     }
 
+
     buildTypes {
         debug {
-            applicationIdSuffix ".debug"
-//            versionNameSuffix "-beta"
+//            applicationIdSuffix ".debug"
+            versionNameSuffix ".${genDateTime()}"
             resValue "string","app_name","汐洛测试版"
             manifestPlaceholders = [
                     provider_name : "sc.windom.sillot.app.provider.debug",  // 暂时用不上
             ]
+            jniDebuggable false
+            renderscriptDebuggable true
+            minifyEnabled true
+            shrinkResources true
+            zipAlignEnabled true
         }
         release {
             minifyEnabled true
@@ -97,8 +108,11 @@ android {
     ndkVersion '25.2.9519653'
 }
 
-static def genDateTime() {
+static def genDate() {
     return new Date().format("yyyyMMdd")
+}
+static def genDateTime() {
+    return new Date().format("yyMMddHHmm")
 }
 dependencies {
     // Sillot 仅需兼容 Android 11+ ，放心升级，无需理会下面的不要升级警告
