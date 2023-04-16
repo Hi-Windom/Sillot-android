@@ -120,7 +120,7 @@ dependencies {
     implementation 'cn.jiguang.sdk:jpush:5.0.0'
 
     implementation 'com.tencent:mmkv:1.2.15'
-    implementation 'com.tencent.wcdb:wcdb-android:1.0.8'
+    implementation 'com.tencent.wcdb:wcdb-android:1.1-19'
     annotationProcessor 'androidx.room:room-compiler:2.5.1'
     // Don't forget to include Room annotation compiler from Google.
 
@@ -135,11 +135,11 @@ dependencies {
     // Because RxAndroid releases are few and far between, it is recommended you also
     // explicitly depend on RxJava's latest version for bug fixes and new features.
     // (see https://github.com/ReactiveX/RxJava/releases for latest 3.x.x version)
-    implementation 'io.reactivex.rxjava3:rxjava:3.1.5'
+    implementation 'io.reactivex.rxjava3:rxjava:3.1.6'
     implementation "io.reactivex.rxjava3:rxkotlin:3.0.1"
 
 //    annotationProcessor 'com.android.databinding:compiler:3.1.4' // 数据绑定
 
-    implementation 'com.tencent.bugly:crashreport:latest.release'
+    implementation 'com.tencent.bugly:crashreport:4.1.9.2'
     implementation 'com.iqiyi.xcrash:xcrash-android-lib:3.1.0'
 }
