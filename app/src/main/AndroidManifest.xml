@@ -60,7 +60,7 @@
         android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" android:minSdkVersion="33"/> <!-- https://developer.android.google.cn/guide/topics/ui/notifiers/notification-permission?hl=zh-cn -->
 
-
+    <!-- ignore @string/app_name error -->
     <application
         android:name=".App"
         android:appCategory="productivity"
@@ -93,6 +93,7 @@
         <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
         <!-- enable profiling when starting transactions, adjust in production env -->
         <meta-data android:name="io.sentry.traces.profiling.sample-rate" android:value="1.0" />
+        <meta-data android:name="io.sentry.anr.enable" android:value="true" />
 
         <activity
             android:name=".producer.MainPro"
