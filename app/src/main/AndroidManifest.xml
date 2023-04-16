@@ -99,6 +99,7 @@
             android:screenOrientation="fullSensor"
             android:exported="true">
 <!-- ref https://blog.csdn.net/qq_36009027/article/details/94627156 -->
+            <!--在其他应用打开-->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -108,6 +109,13 @@
                 <data android:scheme="http"/>
                 <data android:scheme="https"/>
                 <data android:mimeType="*/*" /> <!-- 先统一注册，业务成熟后收缩 -->
+            </intent-filter>
+            <!--分享/发送-->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <action android:name="android.intent.action.SEND_MULTIPLE"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="*/*" />
             </intent-filter>
 
         </activity>
