@@ -4,6 +4,8 @@ plugins {
     id "io.sentry.android.gradle" version "3.5.0"
 }
 
+final int vC = 10220403
+
 android {
     compileSdkVersion 33
     buildToolsVersion '33.0.2'
@@ -16,8 +18,8 @@ android {
         applicationId "sc.windom.sillot"
         minSdk 30
         targetSdkVersion 33
-        versionCode 10220303
-        versionName "0.22.3"
+        versionCode vC
+        versionName "0.22"
 
         ndk {
             //只接入对应 cpu 类型的 .so 库。
@@ -50,7 +52,7 @@ android {
     buildTypes {
         action { // 防止第三方库debug模式导致action失败
 //            applicationIdSuffix ".debug"
-            versionNameSuffix ".${genDateTime()}" // versionCode 一样也可以更新
+            versionNameSuffix ".${vC}${genDateTime()}" // versionCode 一样也可以更新
             resValue "string","app_name","汐洛测试版"
             manifestPlaceholders = [
                     provider_name : "sc.windom.sillot.app.provider.debug",  // 暂时用不上
@@ -66,6 +68,7 @@ android {
             minifyEnabled true
             shrinkResources true
             zipAlignEnabled true
+            versionNameSuffix ".${vC}"
             resValue "string","app_name","汐洛"
             manifestPlaceholders = [
                     provider_name : "sc.windom.sillot.app.provider.release",  // 暂时用不上
