@@ -4,7 +4,7 @@ plugins {
     id "io.sentry.android.gradle" version "3.5.0"
 }
 
-final int vC = 10002
+final int vC = 10003
 
 android {
     compileSdkVersion 33
@@ -63,6 +63,10 @@ android {
             shrinkResources true
             zipAlignEnabled true
             matchingFallbacks = ['release'] // 第三方库处理
+        }
+        debug {
+            versionNameSuffix ".${vC}${genDateTime()}" // versionCode 一样也可以更新
+            resValue "string","app_name","汐洛测试版"
         }
         release {
             minifyEnabled true
@@ -160,4 +164,7 @@ dependencies {
 
     implementation 'com.tencent.bugly:crashreport:4.1.9.2'
     implementation 'com.iqiyi.xcrash:xcrash-android-lib:3.1.0'
+
+//    implementation 'com.microsoft.clarity:clarity:1.2.2'
+//    存在 Duplicate class bug，等新版修复再使用
 }
