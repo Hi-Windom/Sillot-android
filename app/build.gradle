@@ -4,7 +4,7 @@ plugins {
     id "io.sentry.android.gradle" version "3.5.0"
 }
 
-final int vC = 10220403
+final int vC = 10001
 
 android {
     compileSdkVersion 33
