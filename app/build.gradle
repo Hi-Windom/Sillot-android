@@ -4,7 +4,7 @@ plugins {
     id "io.sentry.android.gradle" version "3.5.0"
 }
 
-final int vC = 10003
+final int vC = 10004
 
 android {
     compileSdkVersion 33
@@ -123,11 +123,11 @@ static def genDateTime() {
     return new Date().format("yyMMddHHmm")
 }
 dependencies {
-    // Sillot 仅需兼容 Android 11+ ，放心升级，无需理会下面的不要升级警告
+    // Sillot 仅需兼容 Android 11+ ，放心升级，无需理会下面的不要升级警告（仅针对 Android 版本）
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.8.0'
     implementation 'androidx.lifecycle:lifecycle-process:2.6.1'
-    implementation 'androidx.work:work-runtime:2.8.1'
+    implementation 'androidx.work:work-runtime:2.7.1' // com.microsoft.clarity:clarity:1.2.2 要求 2.7.1 ，升级到 2.8.1 将冲突
 
     implementation(name: 'kernel', ext: 'aar')
     implementation(name: 'baidu-push-sdk-8.2.9.3', ext: 'aar')
@@ -165,6 +165,6 @@ dependencies {
     implementation 'com.tencent.bugly:crashreport:4.1.9.2'
     implementation 'com.iqiyi.xcrash:xcrash-android-lib:3.1.0'
 
-//    implementation 'com.microsoft.clarity:clarity:1.2.2'
+    implementation 'com.microsoft.clarity:clarity:1.2.2'
 //    存在 Duplicate class bug，等新版修复再使用
 }

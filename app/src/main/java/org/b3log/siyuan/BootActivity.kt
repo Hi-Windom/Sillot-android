@@ -26,8 +26,9 @@ import android.text.method.ScrollingMovementMethod
 import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-//import com.microsoft.clarity.Clarity
-//import com.microsoft.clarity.ClarityConfig
+import com.microsoft.clarity.Clarity
+import com.microsoft.clarity.ClarityConfig
+import com.microsoft.clarity.models.LogLevel
 import org.apache.commons.io.FileUtils
 import java.io.File
 
@@ -52,8 +53,8 @@ class BootActivity : AppCompatActivity() {
             return
         }
 
-//        val configClarity = ClarityConfig("gqgzluae5t")
-//        Clarity.initialize(this, configClarity)
+        val configClarity = ClarityConfig(projectId="gqgzluae5t",logLevel= LogLevel.Verbose)
+        Clarity.initialize(this, configClarity)
 
         // 获取可能存在的 block URL（通过 siyuan://blocks/xxx 打开应用时传递的）
         val blockURL = blockURL
