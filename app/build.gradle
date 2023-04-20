@@ -4,7 +4,7 @@ plugins {
     id "io.sentry.android.gradle" version "3.5.0"
 }
 
-final int vC = 10004
+final int vC = 10005
 
 android {
     compileSdkVersion 33
@@ -19,7 +19,7 @@ android {
         minSdk 30
         targetSdkVersion 33
         versionCode vC
-        versionName "0.23"
+        versionName "0.1024"
 
         ndk {
             //只接入对应 cpu 类型的 .so 库。
