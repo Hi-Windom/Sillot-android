@@ -131,11 +131,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
         // 这段代码并不会直接导致高刷率的生效，它只是在获取支持的显示模式中寻找高刷率最大的模式，并将其设置为首选模式。
         Display display = null;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            display = this.getDisplay(); // 等效于 getApplicationContext().getDisplay() 因为Activity已经实现了Context接口，所以用 this 替换
-        } else {
-            display = getWindowManager().getDefaultDisplay(); // deprecated as of API 30: Android 11.0 (R)
-        }
+        display = this.getDisplay(); // 等效于 getApplicationContext().getDisplay() 因为Activity已经实现了Context接口，所以用 this 替换
         if (display != null) {
             Display.Mode[] modes = display.getSupportedModes();
             Display.Mode preferredMode = modes[0];
