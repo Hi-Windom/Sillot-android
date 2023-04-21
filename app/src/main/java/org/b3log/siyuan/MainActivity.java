@@ -477,6 +477,16 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         startSyncData();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
     private void exit() {
         finishAffinity();
         finishAndRemoveTask();
