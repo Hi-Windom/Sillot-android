@@ -70,6 +70,8 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.TimeZone;
@@ -237,45 +239,16 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
             @Override
             public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle("提示").setMessage(message).setPositiveButton("确定", null).show();
-                result.confirm();
-                return true;
-            }
+                Date date = new Date();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA);
+                String formattedDate = sdf.format(date);
 
-            @Override
-            public boolean onJsConfirm(WebView view, String url, String message, JsResult result) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle("确认").setMessage(message).setPositiveButton("确定", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        result.confirm();
-                    }
-                }).setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        result.cancel();
-                    }
-                }).show();
-                return true;
-            }
-
-            @Override
-            public boolean onJsPrompt(WebView view, String url, String message, String defaultValue, JsPromptResult result) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                final EditText editText = new EditText(MainActivity.this);
-                editText.setText(defaultValue);
-                builder.setTitle("输入").setMessage(message).setView(editText).setPositiveButton("确定", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        result.confirm(editText.getText().toString());
-                    }
-                }).setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        result.cancel();
-                    }
-                }).show();
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("onJsAlert from WebView")
+                        .setMessage("\n--------------------------------------------\n" + message + "\n--------------------------------------------\n\n* " + view.getTitle() + "\n* " + formattedDate)
+                        .setPositiveButton("OK", (dialog, which) -> result.confirm())
+                        .setCancelable(false)
+                        .show();
                 return true;
             }
 
