@@ -42,6 +42,7 @@ import android.webkit.JsResult;
 import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -183,6 +184,26 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         bootProgressBar = findViewById(R.id.progressBar);
         bootDetailsText = findViewById(R.id.bootDetails);
         webView = findViewById(R.id.webView);
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                // 在加载页面出现错误时进行处理
+                if (error != null) {
+                    Log.e("WebViewClient", "onReceivedError: " + error.getDescription());
+                }
+            }
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                // 页面开始加载时调用
+                Log.d("WebViewClient", "onPageStarted: " + url);
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                // 页面加载完成时调用
+                Log.d("WebViewClient", "onPageFinished: " + url);
+            }
+        });
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onShowFileChooser(final WebView mWebView, final ValueCallback<Uri[]> filePathCallback, final FileChooserParams fileChooserParams) {
