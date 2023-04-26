@@ -18,9 +18,11 @@
 package org.b3log.siyuan;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.text.TextUtils;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.webkit.WebView;
 
@@ -48,6 +50,16 @@ import java.util.zip.ZipInputStream;
  * @since 1.0.0
  */
 public final class Utils {
+
+    public static boolean isPad(Context context) {
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+        float widthInches = metrics.widthPixels / metrics.xdpi;
+        float heightInches = metrics.heightPixels / metrics.ydpi;
+        double diagonalInches = Math.sqrt(
+                Math.pow(widthInches, 2) + Math.pow(heightInches, 2));
+        return diagonalInches >= 7;
+    }
+
 
     public static void registerSoftKeyboardToolbar(final Activity activity, final WebView webView) {
         KeyboardUtils.registerSoftInputChangedListener(activity, height -> {
