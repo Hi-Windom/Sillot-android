@@ -36,6 +36,7 @@ import android.view.Display;
 import android.view.DragEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.CookieManager;
 import android.view.WindowManager;
 import android.webkit.JsPromptResult;
 import android.webkit.JsResult;
@@ -87,7 +88,7 @@ import pub.devrel.easypermissions.EasyPermissions;
  * 主程序.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.0.4.12, Mar 31, 2023
+ * @version 1.0.4.17, Jun 26, 2023
  * @since 1.0.0
  */
 public class MainActivity extends AppCompatActivity implements com.blankj.utilcode.util.Utils.OnAppStatusChangedListener {
@@ -96,7 +97,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     private ImageView bootLogo;
     private ProgressBar bootProgressBar;
     private TextView bootDetailsText;
-    private final String version = BuildConfig.VERSION_NAME;
     private String webViewVer;
     private ValueCallback<Uri[]> uploadMessage;
     private static final int REQUEST_SELECT_FILE = 100;
@@ -123,9 +123,11 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         Log.i("boot", "create main activity");
-        super.onCreate(savedInstanceState);
-        AppUtils.registerAppStatusChangedListener(this);
 
+        // 拉起内核
+        startKernel();
+
+        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         if (isFirstRun()) {
@@ -158,20 +160,20 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         // 初始化 UI 元素
         initUIElements();
 
+        // 初始化外观资源
+        initAppearance();
+
+        AppUtils.registerAppStatusChangedListener(this);
+//        WebView.setWebContentsDebuggingEnabled(true);
+
         // 注册软键盘顶部跟随工具栏
         Utils.registerSoftKeyboardToolbar(this, webView);
 
         // 沉浸式状态栏设置
-        UltimateBarX.statusBarOnly(this).
-                transparent().
-                light(false).
-                color(Color.parseColor("#212224")).
-                apply();
+        UltimateBarX.statusBarOnly(this).transparent().light(false).color(Color.parseColor("#1e1e1e")).apply();
         ((ViewGroup) webView.getParent()).setPadding(0, UltimateBarX.getStatusBarHeight(), 0, 0);
 
         KeyboardUtils.fixAndroidBug5497(this);
-
-        boot();
     }
 
     @Override
@@ -181,11 +183,13 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
     }
 
+
     private void initUIElements() {
         bootLogo = findViewById(R.id.bootLogo);
         bootProgressBar = findViewById(R.id.progressBar);
         bootDetailsText = findViewById(R.id.bootDetails);
         webView = findViewById(R.id.webView);
+        webView.setBackgroundColor(Color.parseColor("#1e1e1e"));
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
@@ -266,12 +270,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @SuppressLint("SetJavaScriptEnabled")
     private void showBootIndex() {
         webView.setVisibility(View.VISIBLE);
-        bootLogo.setVisibility(View.GONE);
-        bootProgressBar.setVisibility(View.GONE);
-        bootDetailsText.setVisibility(View.GONE);
-        final ImageView bootLogo = findViewById(R.id.bootLogo);
-        bootLogo.setVisibility(View.GONE);
-
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request) {
@@ -295,21 +293,37 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 }
                 return true;
             }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                new Handler().postDelayed(() -> {
+                    bootLogo.setVisibility(View.GONE);
+                    bootProgressBar.setVisibility(View.GONE);
+                    bootDetailsText.setVisibility(View.GONE);
+                    final ImageView bootLogo = findViewById(R.id.bootLogo);
+                    bootLogo.setVisibility(View.GONE);
+                }, 666);
+            }
         });
 
         final JSAndroid JSAndroid = new JSAndroid(this);
         webView.addJavascriptInterface(JSAndroid, "JSAndroid");
+        CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
         final WebSettings ws = webView.getSettings();
         ws.setJavaScriptEnabled(true);
         ws.setDomStorageEnabled(true);
         ws.setCacheMode(WebSettings.LOAD_NO_CACHE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            ws.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        }
         ws.setTextZoom(100);
         ws.setUseWideViewPort(true);
         ws.setLoadWithOverviewMode(true);
-        ws.setUserAgentString("SiYuan-Sillot/" + version + " https://b3log.org/siyuan " + ws.getUserAgentString());
+        ws.setUserAgentString("SiYuan-Sillot/" + Utils.version + " https://b3log.org/siyuan Android " + ws.getUserAgentString());
+
         waitFotKernelHttpServing();
         WebView.setWebContentsDebuggingEnabled(true);
-        webView.loadUrl("http://127.0.0.1:58131/appearance/boot/index.html");
+        webView.loadUrl("http://127.0.0.1:58131/appearance/boot/index.html?v=" + Utils.version);
 
         new Thread(this::keepLive).start();
     }
@@ -325,6 +339,14 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             }
         }
     };
+
+    private void startKernel() {
+        final Bundle b = new Bundle();
+        b.putString("cmd", "startKernel");
+        final Message msg = new Message();
+        msg.setData(b);
+        bootHandler.sendMessage(msg);
+    }
 
     private void bootKernel() {
         if (Mobile.isHttpServing()) {
@@ -345,17 +367,20 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             } else {
                 lang = "en_US";
             }
-            Mobile.startKernel("android", appDir, workspaceBaseDir, timezone, localIPs, lang, Build.VERSION.RELEASE + "/SDK " + Build.VERSION.SDK_INT + "/WebView " + webViewVer);
+
+            Mobile.startKernel("android", appDir, workspaceBaseDir, timezone, localIPs, lang,
+                    Build.VERSION.RELEASE +
+                            "/SDK " + Build.VERSION.SDK_INT +
+                            "/WebView " + webViewVer +
+                            "/Manufacturer " + android.os.Build.MANUFACTURER +
+                            "/Brand " + android.os.Build.BRAND);
         }).start();
 
-        final Handler h = new Handler();
-        h.postDelayed(() -> {
-            final Bundle b = new Bundle();
-            b.putString("cmd", "bootIndex");
-            final Message msg = new Message();
-            msg.setData(b);
-            bootHandler.sendMessage(msg);
-        }, 100);
+        final Bundle b = new Bundle();
+        b.putString("cmd", "bootIndex");
+        final Message msg = new Message();
+        msg.setData(b);
+        bootHandler.sendMessage(msg);
     }
 
     /**
@@ -385,11 +410,12 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         }
     }
 
-    private void boot() {
+    private void initAppearance() {
         if (needUnzipAssets()) {
             bootLogo.setVisibility(View.VISIBLE);
-            bootProgressBar.setVisibility(View.VISIBLE);
-            bootDetailsText.setVisibility(View.VISIBLE);
+            // 不要进度条更平滑一些
+            //bootProgressBar.setVisibility(View.VISIBLE);
+            //bootDetailsText.setVisibility(View.VISIBLE);
 
             final String dataDir = getFilesDir().getAbsolutePath();
             final String appDir = dataDir + "/app";
@@ -408,19 +434,13 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             Utils.unzipAsset(getAssets(), "app.zip", appDir + "/app");
 
             try {
-                FileUtils.writeStringToFile(appVerFile, version, StandardCharsets.UTF_8);
+                FileUtils.writeStringToFile(appVerFile, Utils.version, StandardCharsets.UTF_8);
             } catch (final Exception e) {
                 Log.w("boot", "write version failed", e);
             }
 
             setBootProgress("Booting kernel...", 80);
         }
-
-        final Bundle b = new Bundle();
-        b.putString("cmd", "startKernel");
-        final Message msg = new Message();
-        msg.setData(b);
-        bootHandler.sendMessage(msg);
 
 
 //        Intent InitActivity = new Intent(this, org.b3log.siyuan.permission.InitActivity.class);
@@ -446,12 +466,13 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     public void onBackPressed() {
+        super.onBackPressed();
         if (Utils.isPad(getApplicationContext())) {
             if ((System.currentTimeMillis() - exitTime) > 2000) {
                 Toast.makeText(getApplicationContext(), "再按一次退出程序", Toast.LENGTH_SHORT).show();
                 exitTime = System.currentTimeMillis();
             } else {
-                HWs.getInstance().vibratorWaveform(this, new long[]{0, 30, 25, 40, 25, 10}, new int[]{2,4,3,2,2,2}, -1);
+                HWs.getInstance().vibratorWaveform(this, new long[]{0, 30, 25, 40, 25, 10}, new int[]{2, 4, 3, 2, 2, 2}, -1);
                 exit();
                 sleep(200);
                 System.exit(0);
@@ -459,7 +480,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         } else {
             webView.evaluateJavascript("javascript:window.goBack()", null);
         }
-        HWs.getInstance().vibratorWaveform(this, new long[]{0, 30, 25, 40, 25}, new int[]{9,2,1,7,2}, -1);
+        HWs.getInstance().vibratorWaveform(this, new long[]{0, 30, 25, 40, 25}, new int[]{9, 2, 1, 7, 2}, -1);
     }
 
     @Override
@@ -521,14 +542,13 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         if (appVerFile.exists()) {
             try {
                 final String ver = FileUtils.readFileToString(appVerFile, StandardCharsets.UTF_8);
-                ret = !ver.equals(version);
+                ret = !ver.equals(Utils.version);
             } catch (final Exception e) {
                 Log.w("boot", "check version failed", e);
             }
         }
         return ret;
     }
-
 
     @Override
     protected void onDestroy() {
@@ -545,6 +565,9 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Override
     public void onForeground(Activity activity) {
         startSyncData();
+        if (null != webView) {
+            webView.evaluateJavascript("javascript:window.reconnectWebSocket()", null);
+        }
     }
 
     @Override

@@ -4,11 +4,11 @@ plugins {
     id "io.sentry.android.gradle" version "3.5.0"
 }
 
-final int vC = 10010
+final int vC = 10012
 
 android {
-    compileSdkVersion 33
-    buildToolsVersion '33.0.2'
+    compileSdk 34
+//    buildToolsVersion '33.0.2' // @Deprecated
 
 //    buildFeatures {
 //        dataBinding true // 数据绑定
@@ -37,8 +37,8 @@ android {
 
 
     // 自定义打包名称
-    android.applicationVariants.all { variant ->
-        variant.outputs.all {
+    android.applicationVariants.configureEach { variant ->
+        variant.outputs.configureEach {
             def versionType = variant.buildType.name
             if (versionType.equalsIgnoreCase("release")) {
                 outputFileName = "Sillot-v${versionName}_${genDate()}_syv2.8.5.apk"
@@ -125,25 +125,25 @@ static def genDateTime() {
 dependencies {
     // Sillot 仅需兼容 Android 11+ ，放心升级，无需理会下面的不要升级警告（仅针对 Android 版本）
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.8.0'
-    implementation 'androidx.lifecycle:lifecycle-process:2.6.1'
-    implementation 'androidx.work:work-runtime:2.7.1' // com.microsoft.clarity:clarity:1.2.2 要求 2.7.1 ，升级到 2.8.1 将冲突
+    implementation 'com.google.android.material:material:1.10.0'
+    implementation 'androidx.lifecycle:lifecycle-process:2.6.2'
+    implementation 'androidx.work:work-runtime:2.8.1'
 
-    implementation(name: 'kernel', ext: 'aar')
-    implementation(name: 'baidu-push-sdk-8.2.9.3', ext: 'aar')
+    implementation(name: 'kernel', ext: 'aar', group: '', version: '')
+    implementation(name: 'baidu-push-sdk-8.2.9.3', ext: 'aar', group: '', version: '')
 
-    implementation("commons-io:commons-io:2.11.0") // 不要升级v2.5+，否则无法兼容 Android 7
-    implementation("com.squareup.okhttp3:okhttp:4.9.3") // 不要升级v4.9+，否则无法兼容 Android 7
+    implementation("commons-io:commons-io:2.11.0")
+    implementation("com.squareup.okhttp3:okhttp:4.9.3")
     implementation 'com.gitee.zackratos:UltimateBarX:0.8.0'
     implementation 'com.blankj:utilcodex:1.31.1'
 
 //    极光推送
-    implementation 'cn.jiguang.sdk:jcore:4.2.0'
-    implementation 'cn.jiguang.sdk:jpush:5.0.0'
+    implementation 'cn.jiguang.sdk:jcore:4.5.0'
+    implementation 'cn.jiguang.sdk:jpush:5.2.2'
 
-    implementation 'com.tencent:mmkv:1.2.15'
+    implementation 'com.tencent:mmkv:1.3.1'
     implementation 'com.tencent.wcdb:wcdb-android:1.1-19'
-    annotationProcessor 'androidx.room:room-compiler:2.5.1'
+    annotationProcessor 'androidx.room:room-compiler:2.6.0'
     // Don't forget to include Room annotation compiler from Google.
 
     // For developers using AndroidX in their applications
@@ -151,7 +151,7 @@ dependencies {
 
     // For developers using the Android Support Library
     implementation 'pub.devrel:easypermissions:3.0.0'
-    implementation 'androidx.core:core-ktx:1.10.0'
+    implementation 'androidx.core:core-ktx:1.12.0'
 
     implementation 'io.reactivex.rxjava3:rxandroid:3.0.2'
     // Because RxAndroid releases are few and far between, it is recommended you also
@@ -165,6 +165,6 @@ dependencies {
     implementation 'com.tencent.bugly:crashreport:4.1.9.2'
     implementation 'com.iqiyi.xcrash:xcrash-android-lib:3.1.0'
 
-    implementation 'com.microsoft.clarity:clarity:1.2.2'
-//    存在 Duplicate class bug，等新版修复再使用
+    implementation 'com.microsoft.clarity:clarity:2.0.0'
+
 }

@@ -7,9 +7,9 @@ import cn.jpush.android.api.CmdMessage
 import cn.jpush.android.api.CustomMessage
 import cn.jpush.android.api.JPushInterface
 import cn.jpush.android.api.NotificationMessage
-import cn.jpush.android.service.JPushMessageReceiver
+import cn.jpush.android.service.JPushMessageService
 
-class JReceiver : JPushMessageReceiver() {
+class JReceiver : JPushMessageService() {
     override fun onMessage(context: Context, customMessage: CustomMessage) {
         Log.e(TAG, "[onMessage] $customMessage")
         val intent = Intent("com.jiguang.demo.message")
