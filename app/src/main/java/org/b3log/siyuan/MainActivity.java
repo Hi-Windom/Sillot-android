@@ -466,7 +466,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
+        // 不要管报错，写 super call 就失效了
         if (Utils.isPad(getApplicationContext())) {
             if ((System.currentTimeMillis() - exitTime) > 2000) {
                 Toast.makeText(getApplicationContext(), "再按一次退出程序", Toast.LENGTH_SHORT).show();
