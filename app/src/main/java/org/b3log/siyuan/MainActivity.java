@@ -88,7 +88,7 @@ import pub.devrel.easypermissions.EasyPermissions;
  * 主程序.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.0.4.17, Jun 26, 2023
+ * @version 1.0.4.18, Nov 20, 2023
  * @since 1.0.0
  */
 public class MainActivity extends AppCompatActivity implements com.blankj.utilcode.util.Utils.OnAppStatusChangedListener {
@@ -98,6 +98,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     private ProgressBar bootProgressBar;
     private TextView bootDetailsText;
     private String webViewVer;
+    private String userAgent;
     private ValueCallback<Uri[]> uploadMessage;
     private static final int REQUEST_SELECT_FILE = 100;
     private long exitTime;
@@ -123,9 +124,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         Log.i("boot", "create main activity");
-
-        // 拉起内核
-        startKernel();
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -159,6 +157,9 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
         // 初始化 UI 元素
         initUIElements();
+
+        // 拉起内核
+        startKernel();
 
         // 初始化外观资源
         initAppearance();
@@ -265,6 +266,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
         final WebSettings ws = webView.getSettings();
         checkWebViewVer(ws);
+        userAgent = ws.getUserAgentString();
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -373,7 +375,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                             "/SDK " + Build.VERSION.SDK_INT +
                             "/WebView " + webViewVer +
                             "/Manufacturer " + android.os.Build.MANUFACTURER +
-                            "/Brand " + android.os.Build.BRAND);
+                            "/Brand " + android.os.Build.BRAND +
+                            "/UA " + userAgent);
         }).start();
 
         final Bundle b = new Bundle();
