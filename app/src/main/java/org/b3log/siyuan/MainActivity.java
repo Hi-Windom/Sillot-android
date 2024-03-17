@@ -198,13 +198,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         KeyboardUtils.fixAndroidBug5497(this);
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        // Forward results to EasyPermissions https://github.com/googlesamples/easypermissions
-        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
-    }
-
 
     private void initUIElements() {
         bootLogo = findViewById(R.id.bootLogo);
@@ -596,6 +589,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             }
         } else {
             webView.evaluateJavascript("javascript:window.goBack ? window.goBack() : window.history.back()", null);
+        }
+        HWs.getInstance().vibratorWaveform(this, new long[]{0, 30, 25, 40, 25}, new int[]{9, 2, 1, 7, 2}, -1);
     }
 
     // 用于保存拍照图片的 uri
@@ -624,6 +619,14 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
+
+//    @Override 我写的垃圾代码，先留着
+//    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+//        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//        // Forward results to EasyPermissions https://github.com/googlesamples/easypermissions
+//        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+//    }
+
     private void openCamera() {
         final Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (captureIntent.resolveActivity(getPackageManager()) != null) {
@@ -635,9 +638,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 startActivityForResult(captureIntent, REQUEST_CAMERA);
             }
         }
-        }
-        HWs.getInstance().vibratorWaveform(this, new long[]{0, 30, 25, 40, 25}, new int[]{9, 2, 1, 7, 2}, -1);
     }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
