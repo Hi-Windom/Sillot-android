@@ -69,6 +69,13 @@
     <!-- Foreground KeepLiveService Crash on Android 14 https://github.com/siyuan-note/siyuan/issues/9212 -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
+    <!-- 支持拍照 Support taking photos for inserting on Android https://github.com/siyuan-note/siyuan/issues/10479 -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
+
     <!-- ignore @string/app_name error -->
     <application
         android:name=".App"
@@ -199,8 +206,11 @@
             android:name=".MainActivity"
             android:autoRemoveFromRecents="true"
             android:configChanges="keyboard|keyboardHidden|screenLayout|uiMode|orientation|screenSize|smallestScreenSize"
-            android:hardwareAccelerated="true" >
-         <!--
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize" >
+         <!-- android:windowSoftInputMode="adjustResize"
+            是为了解决软键盘遮挡 https://github.com/siyuan-note/siyuan-android/pull/7
+
             不要添加 android:launchMode="singleInstance" 否则无法从相册中选择上传
             Supports inserting pictures from photo gallery on the Android https://github.com/siyuan-note/siyuan/issues/9455
             -->

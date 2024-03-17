@@ -21,12 +21,15 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.DialogInterface;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -56,20 +59,33 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.KeyboardUtils;
 import com.blankj.utilcode.util.StringUtils;
 import com.tencent.bugly.crashreport.CrashReport;
+import com.koushikdutta.async.AsyncServer;
+import com.koushikdutta.async.http.AsyncHttpClient;
+import com.koushikdutta.async.http.AsyncHttpPost;
+import com.koushikdutta.async.http.body.JSONObjectBody;
+import com.koushikdutta.async.http.server.AsyncHttpServer;
+import com.koushikdutta.async.util.Charsets;
 import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
 
 import org.apache.commons.io.FileUtils;
 import org.b3log.siyuan.appUtils.HWs;
+import org.apache.commons.io.filefilter.DirectoryFileFilter;
+import org.apache.commons.io.filefilter.TrueFileFilter;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.lang.reflect.Field;
+import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -78,21 +94,19 @@ import java.util.Objects;
 import java.util.TimeZone;
 
 import mobile.Mobile;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 import pub.devrel.easypermissions.EasyPermissions;
 
 /**
  * 主程序.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.0.4.18, Nov 20, 2023
+ * @version 1.1.0.1, Mar 3, 2024
  * @since 1.0.0
  */
 public class MainActivity extends AppCompatActivity implements com.blankj.utilcode.util.Utils.OnAppStatusChangedListener {
 
+    private AsyncHttpServer server;
+    private int serverPort = 6906;
     private WebView webView;
     private ImageView bootLogo;
     private ProgressBar bootProgressBar;
@@ -101,6 +115,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     private String userAgent;
     private ValueCallback<Uri[]> uploadMessage;
     private static final int REQUEST_SELECT_FILE = 100;
+    private static final int REQUEST_CAMERA = 101;
     private long exitTime;
 
     private boolean isFirstRun() {
@@ -127,6 +142,9 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // 启动 HTTP Server
+        startHttpServer();
 
         if (isFirstRun()) {
             Intent InitActivity = new Intent(this, org.b3log.siyuan.permission.InitActivity.class);
@@ -165,9 +183,12 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         initAppearance();
 
         AppUtils.registerAppStatusChangedListener(this);
-//        WebView.setWebContentsDebuggingEnabled(true);
 
-        // 注册软键盘顶部跟随工具栏
+        // 使用 Chromium 调试 WebView
+        // WebView.setWebContentsDebuggingEnabled(true);
+
+        // 注册工具栏显示/隐藏跟随软键盘状态
+        // Fix https://github.com/siyuan-note/siyuan/issues/9765
         Utils.registerSoftKeyboardToolbar(this, webView);
 
         // 沉浸式状态栏设置
@@ -217,7 +238,27 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 if (uploadMessage != null) {
                     uploadMessage.onReceiveValue(null);
                 }
+
                 uploadMessage = filePathCallback;
+
+                if (fileChooserParams.isCaptureEnabled()) {
+                    if (Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q) {
+                        // 不支持 Android 10 以下
+                        Toast.makeText(getApplicationContext(), "Capture is not supported on your device (Android 10+ required)", Toast.LENGTH_LONG).show();
+                        uploadMessage = null;
+                        return false;
+                    }
+
+                    final String[] permissions = {android.Manifest.permission.CAMERA};
+                    if (!hasPermissions(permissions)) {
+                        ActivityCompat.requestPermissions(MainActivity.this, permissions, REQUEST_CAMERA);
+                        return true;
+                    }
+
+                    openCamera();
+                    return true;
+                }
+
                 final Intent intent = fileChooserParams.createIntent();
                 intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
                 try {
@@ -342,6 +383,78 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         }
     };
 
+    private void startHttpServer() {
+        if (null != server) {
+            server.stop();
+        }
+
+        try {
+            // 解决乱码问题 https://github.com/koush/AndroidAsync/issues/656#issuecomment-523325452
+            final Class<Charsets> charsetClass = Charsets.class;
+            Field usAscii = charsetClass.getDeclaredField("US_ASCII");
+            usAscii.setAccessible(true);
+            usAscii.set(Charsets.class, Charsets.UTF_8);
+        } catch (final Exception e) {
+            Utils.LogError("http", "init charset failed", e);
+        }
+
+        server = new AsyncHttpServer();
+        server.post("/api/walkDir", (request, response) -> {
+            try {
+                final long start = System.currentTimeMillis();
+                final JSONObject requestJSON = (JSONObject) request.getBody().get();
+                final String dir = requestJSON.optString("dir");
+                final JSONObject data = new JSONObject();
+                final JSONArray files = new JSONArray();
+                FileUtils.listFilesAndDirs(new File(dir), TrueFileFilter.INSTANCE, DirectoryFileFilter.DIRECTORY).forEach(file -> {
+                    final String path = file.getAbsolutePath();
+                    final JSONObject info = new JSONObject();
+                    try {
+                        info.put("path", path);
+                        info.put("name", file.getName());
+                        info.put("size", file.length());
+                        info.put("updated", file.lastModified());
+                        info.put("isDir", file.isDirectory());
+                    } catch (final Exception e) {
+                        Utils.LogError("http", "walk dir failed", e);
+                    }
+                    files.put(info);
+                });
+                data.put("files", files);
+                final JSONObject responseJSON = new JSONObject().put("code", 0).put("msg", "").put("data", data);
+                response.send(responseJSON);
+                Utils.LogInfo("http", "walk dir [" + dir + "] in [" + (System.currentTimeMillis() - start) + "] ms");
+            } catch (final Exception e) {
+                Utils.LogError("http", "walk dir failed", e);
+                try {
+                    response.send(new JSONObject().put("code", -1).put("msg", e.getMessage()));
+                } catch (final Exception e2) {
+                    Utils.LogError("http", "walk dir failed", e2);
+                }
+            }
+        });
+
+        serverPort = getAvailablePort();
+        final AsyncServer s = AsyncServer.getDefault();
+        // 生产环境绑定 ipv6 回环地址 [::1] 以防止被远程访问
+        s.listen(InetAddress.getLoopbackAddress(), serverPort, server.getListenCallback());
+        // 开发环境绑定所有网卡以便调试
+        //s.listen(null, serverPort, server.getListenCallback());
+        Utils.LogInfo("http", "HTTP server is listening on port [" + serverPort + "]");
+    }
+
+    private int getAvailablePort() {
+        int ret = 6906;
+        try {
+            ServerSocket s = new ServerSocket(0);
+            ret = s.getLocalPort();
+            s.close();
+        } catch (final Exception e) {
+            Utils.LogError("http", "get available port failed", e);
+        }
+        return ret;
+    }
+
     private void startKernel() {
         final Bundle b = new Bundle();
         b.putString("cmd", "startKernel");
@@ -351,8 +464,9 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     }
 
     private void bootKernel() {
+        Mobile.setHttpServerPort(serverPort);
         if (Mobile.isHttpServing()) {
-            Log.i("boot", "kernel HTTP server is running");
+            Utils.LogInfo("boot", "kernel HTTP server is running");
             showBootIndex();
             return;
         }
@@ -428,7 +542,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             try {
                 FileUtils.deleteDirectory(new File(appDir));
             } catch (final Exception e) {
-                Log.wtf("boot", "delete dir [" + appDir + "] failed, exit application", e);
+                Utils.LogError("boot", "delete dir [" + appDir + "] failed, exit application", e);
                 exit();
                 return;
             }
@@ -439,7 +553,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             try {
                 FileUtils.writeStringToFile(appVerFile, Utils.version, StandardCharsets.UTF_8);
             } catch (final Exception e) {
-                Log.w("boot", "write version failed", e);
+                Utils.LogError("boot", "write version failed", e);
             }
 
             setBootProgress("Booting kernel...", 80);
@@ -463,7 +577,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         try {
             Thread.sleep(time);
         } catch (final Exception e) {
-            Log.e("runtime", e.getMessage());
+            Utils.LogError("runtime", "sleep failed", e);
         }
     }
 
@@ -481,7 +595,46 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 System.exit(0);
             }
         } else {
-            webView.evaluateJavascript("javascript:window.goBack()", null);
+            webView.evaluateJavascript("javascript:window.goBack ? window.goBack() : window.history.back()", null);
+    }
+
+    // 用于保存拍照图片的 uri
+    private Uri mCameraUri;
+
+    private boolean hasPermissions(String[] permissions) {
+        for (String permission : permissions) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == REQUEST_CAMERA) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                openCamera();
+                return;
+            }
+
+            Toast.makeText(this, "Permission denied", Toast.LENGTH_LONG).show();
+        }
+
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    private void openCamera() {
+        final Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (captureIntent.resolveActivity(getPackageManager()) != null) {
+            final Uri photoUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, new ContentValues());
+            mCameraUri = photoUri;
+            if (photoUri != null) {
+                captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+                captureIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                startActivityForResult(captureIntent, REQUEST_CAMERA);
+            }
+        }
         }
         HWs.getInstance().vibratorWaveform(this, new long[]{0, 30, 25, 40, 25}, new int[]{9, 2, 1, 7, 2}, -1);
     }
@@ -493,12 +646,20 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             return;
         }
 
-        // 以下代码参考自 https://github.com/mgks/os-fileup/blob/master/app/src/main/java/mgks/os/fileup/MainActivity.java MIT license
-        if (requestCode == REQUEST_SELECT_FILE) {
+        if (requestCode == REQUEST_CAMERA) {
+            if (RESULT_OK != resultCode) {
+                uploadMessage.onReceiveValue(null);
+                uploadMessage = null;
+                return;
+            }
+
+            uploadMessage.onReceiveValue(new Uri[]{mCameraUri});
+        } else if (requestCode == REQUEST_SELECT_FILE) {
+            // 以下代码参考自 https://github.com/mgks/os-fileup/blob/master/app/src/main/java/mgks/os/fileup/MainActivity.java MIT license
+
             Uri[] results = null;
             ClipData clipData;
             String stringData;
-
             try {
                 clipData = intent.getClipData();
                 stringData = intent.getDataString();
@@ -528,9 +689,9 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             }
 
             uploadMessage.onReceiveValue(results);
-            uploadMessage = null;
         }
 
+        uploadMessage = null;
         super.onActivityResult(requestCode, resultCode, intent);
     }
 
@@ -547,7 +708,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 final String ver = FileUtils.readFileToString(appVerFile, StandardCharsets.UTF_8);
                 ret = !ver.equals(Utils.version);
             } catch (final Exception e) {
-                Log.w("boot", "check version failed", e);
+                Utils.LogError("boot", "check version failed", e);
             }
         }
         return ret;
@@ -563,6 +724,9 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             webView.removeAllViews();
             webView.destroy();
         }
+        if (null != server) {
+            server.stop();
+        }
     }
 
     @Override
@@ -576,6 +740,11 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Override
     public void onBackground(Activity activity) {
         startSyncData();
+    }
+
+    @Override
+    public void onMultiWindowModeChanged(boolean isInMultiWindowMode) {
+        super.onMultiWindowModeChanged(isInMultiWindowMode);
     }
 
     @Override
@@ -608,7 +777,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                     }
                 }
             } catch (final Exception e) {
-                Log.e("boot", "check webview version failed", e);
+                Utils.LogError("boot", "check webview version failed", e);
                 Toast.makeText(this, "Check WebView version failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
             }
         }
@@ -627,14 +796,20 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 return;
             }
             syncing = true;
-            final OkHttpClient client = new OkHttpClient();
-            final RequestBody body = RequestBody.create(null, new JSONObject().
-                    put("mobileSwitch", true).toString());
-            final Request request = new Request.Builder().url("http://127.0.0.1:58131/api/sync/performSync").method("POST", body).build();
-            final Response response = client.newCall(request).execute();
-            response.close();
+
+            final AsyncHttpPost req = new com.koushikdutta.async.http.AsyncHttpPost("http://127.0.0.1:6806/api/sync/performSync");
+            req.setBody(new JSONObjectBody(new JSONObject().put("mobileSwitch", true)));
+            AsyncHttpClient.getDefaultInstance().executeJSONObject(req,
+                    new com.koushikdutta.async.http.AsyncHttpClient.JSONObjectCallback() {
+                        @Override
+                        public void onCompleted(Exception e, com.koushikdutta.async.http.AsyncHttpResponse source, JSONObject result) {
+                            if (null != e) {
+                                Utils.LogError("sync", "data sync failed", e);
+                            }
+                        }
+                    });
         } catch (final Throwable e) {
-            Log.e("sync", "data sync failed", e);
+            Utils.LogError("sync", "data sync failed", e);
         } finally {
             syncing = false;
         }

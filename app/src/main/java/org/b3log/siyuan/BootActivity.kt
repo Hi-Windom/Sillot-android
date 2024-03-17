@@ -46,12 +46,13 @@ class BootActivity : AppCompatActivity() {
         Log.i("boot", "create boot activity")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_agreement)
-        if (isFirstRun) {
-            // 首次运行弹窗提示用户隐私条款和使用授权
-            Log.e("首次运行弹窗提示用户隐私条款和使用授权", "\n\n\n\n\n\n\n")
-            showAgreements()
-            return
-        }
+        // Privacy policy solicitation will no longer pop up when Android starts for the first time https://github.com/siyuan-note/siyuan/issues/10348
+//        if (isFirstRun) {
+//            // 首次运行弹窗提示用户隐私条款和使用授权
+//            Log.e("首次运行弹窗提示用户隐私条款和使用授权", "\n\n\n\n\n\n\n")
+//            showAgreements()
+//            return
+//        }
 
         val configClarity = ClarityConfig(projectId="gqgzluae5t",logLevel= LogLevel.Verbose)
         Clarity.initialize(this, configClarity)
