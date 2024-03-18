@@ -195,7 +195,9 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         UltimateBarX.statusBarOnly(this).transparent().light(false).color(Color.parseColor("#1e1e1e")).apply();
         ((ViewGroup) webView.getParent()).setPadding(0, UltimateBarX.getStatusBarHeight(), 0, 0);
 
-        KeyboardUtils.fixAndroidBug5497(this);
+        // Fix https://github.com/siyuan-note/siyuan/issues/9726
+        // KeyboardUtils.fixAndroidBug5497(this);
+        AndroidBug5497Workaround.assistActivity(this);
     }
 
 
