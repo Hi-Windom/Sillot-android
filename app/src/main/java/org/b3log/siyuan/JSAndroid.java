@@ -24,6 +24,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 import android.webkit.JavascriptInterface;
 
 import com.blankj.utilcode.util.BarUtils;
@@ -31,6 +34,8 @@ import com.blankj.utilcode.util.StringUtils;
 import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
 
 import org.b3log.siyuan.andapi.Toast;
+
+import mobile.Mobile;
 
 /**
  * JavaScript 接口.
@@ -48,19 +53,103 @@ public final class JSAndroid {
 
     // Sillot extend start
     @JavascriptInterface
-    public boolean requestPermission(final String id) {
-        if(true){
-            Context mContext = activity.getApplicationContext();
-            Toast.INSTANCE.Show(mContext,"注意：后台稳定伺服会消耗额外电量");
-            Intent battery = new Intent("sc.windom.sillot.intent.permission.Battery");
-            battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            activity.startActivity(battery);
-            return true;
-        }
-        return false;
+    public void requestPermission(final String id) {
+        Context mContext = activity.getApplicationContext();
+        Toast.INSTANCE.Show(mContext,"注意：后台稳定伺服会消耗额外电量");
+        Intent battery = new Intent("sc.windom.sillot.intent.permission.Battery");
+        battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        activity.startActivity(battery);
     }
 
-    // Sillot extend end
+    @JavascriptInterface
+    public void setMMKV(final String key, final String value) {
+        activity.mmkv.encode(key, value);
+    }
+
+    @JavascriptInterface
+    public String getMMKV(final String key) {
+        // 出于安全考虑禁止实现
+//        return activity.mmkv.decodeString(key);
+        return "";
+    }
+
+    @JavascriptInterface
+    public void showBiometricPrompt(final String captcha) {
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+        // 在主线程中执行
+        mainHandler.post(() -> {
+        // 在 MainActivity 中调用 showBiometricPrompt 方法
+        try {
+            BiometricHelper.showBiometricPrompt(activity, "指纹解锁", "", "取消", new BiometricHelper.BiometricCallback() {
+                @Override
+                public void onAuthenticationSuccess() {
+                    // 认证成功的处理逻辑
+                    String accessAuthCode = activity.mmkv.decodeString("accessAuthCode");
+                    Mobile.setBiometricPass(accessAuthCode);
+
+                    // 在这里调用 WebView 方法
+                    String jsCode =
+                            """
+                                    fetch('/api/system/loginAuth', {
+                                                method: 'POST',
+                                                body: JSON.stringify({
+                                                    authCode: '"""+accessAuthCode+"',"+"""
+                                                        captcha: '"""+captcha+"',"+"""
+                                                    }),
+                                                }).then((response) => {
+                                                    return response.json()
+                                                }).then((response) => {
+                                                    if (0 === response.code) {
+                                                        const url = new URL(window.location)
+                                                        window.location.href = url.searchParams.get("to") || "/"
+                                                        return
+                                                    }
+                                                                                
+                                                    if (response.code === 1) {
+                                                        captchaElement.previousElementSibling.src = `/api/system/getCaptcha?v=${new Date().getTime()}`
+                                                        captchaElement.parentElement.style.display = 'block'
+                                                    } else {
+                                                        captchaElement.parentElement.style.display = 'none'
+                                                        captchaElement.previousElementSibling.src = ''
+                                                    }
+                                                                                
+                                                    document.querySelector('#message').classList.add('b3-snackbar--show')
+                                                    document.querySelector('#message').firstElementChild.textContent = response.msg
+                                                    inputElement.value = ''
+                                                    captchaElement.value = ''
+                                                    inputElement.focus()
+                                                    setTimeout(() => {
+                                                        document.querySelector('#message').classList.remove('b3-snackbar--show')
+                                                        document.querySelector('#message').firstElementChild.textContent = ''
+                                                    }, 6000)
+                                                })""";
+                    Log.d("evaluateJavascript", jsCode);
+                    activity.webView.evaluateJavascript(jsCode, null);
+                }
+
+                @Override
+                public void onAuthenticationFailed() {
+                    // 认证失败的处理逻辑
+//                    Mobile.setBiometricPass(false);
+                }
+
+                @Override
+                public void onAuthenticationError(CharSequence errString) {
+                    // 认证错误的处理逻辑
+//                    Mobile.setBiometricPass(false);
+                }
+
+            });
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+
+        });
+
+    }
+        // Sillot extend end
 
     @JavascriptInterface
     public String getBlockURL() {

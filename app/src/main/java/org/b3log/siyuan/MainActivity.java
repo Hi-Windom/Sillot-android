@@ -17,6 +17,7 @@
  */
 package org.b3log.siyuan;
 
+import org.b3log.siyuan.permission.Ps;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ClipData;
@@ -39,6 +40,7 @@ import android.view.Display;
 import android.view.DragEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.webkit.CookieManager;
 import android.view.WindowManager;
 import android.webkit.JsPromptResult;
@@ -57,8 +59,13 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.biometric.BiometricManager;
+import androidx.biometric.BiometricPrompt;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -89,12 +96,12 @@ import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.TimeZone;
 
 import mobile.Mobile;
-import pub.devrel.easypermissions.EasyPermissions;
+import com.tencent.mmkv.MMKV;
 
 /**
  * 主程序.
@@ -107,7 +114,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     private AsyncHttpServer server;
     private int serverPort = 6906;
-    private WebView webView;
+    public WebView webView;
     private ImageView bootLogo;
     private ProgressBar bootProgressBar;
     private TextView bootDetailsText;
@@ -117,6 +124,12 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     private static final int REQUEST_SELECT_FILE = 100;
     private static final int REQUEST_CAMERA = 101;
     private long exitTime;
+
+    public MMKV mmkv;
+
+    private static final int PERMISSION_REQUEST_CODE = 1002;
+    private int works = 0;
+    private final HashSet<String> permissionList = new HashSet<>();
 
     private boolean isFirstRun() {
         final String dataDir = getFilesDir().getAbsolutePath();
@@ -145,13 +158,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
         // 启动 HTTP Server
         startHttpServer();
-
-        if (isFirstRun()) {
-            Intent InitActivity = new Intent(this, org.b3log.siyuan.permission.InitActivity.class);
-            InitActivity.putExtra("contentViewId", R.layout.init_activity);
-            InitActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(InitActivity);
-        }
 
         CrashReport.initCrashReport(getApplicationContext(), "26ae2b5fb4", true);
 
@@ -198,6 +204,65 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         // Fix https://github.com/siyuan-note/siyuan/issues/9726
         // KeyboardUtils.fixAndroidBug5497(this);
         AndroidBug5497Workaround.assistActivity(this);
+
+        BiometricManager biometricManager = BiometricManager.from(this);
+        switch (biometricManager.canAuthenticate()) {
+            case BiometricManager.BIOMETRIC_SUCCESS:
+                Log.d("BiometricManager","应用可以进行生物识别技术进行身份验证。");
+//                showBiometricPrompt();
+                break;
+            case BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE:
+                Log.e("BiometricManager","该设备上没有搭载可用的生物特征功能。");
+                break;
+            case BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE:
+                Log.e("BiometricManager","生物识别功能当前不可用。");
+                break;
+            case BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED:
+                Log.e("BiometricManager","用户没有录入生物识别数据。");
+                break;
+        }
+
+        // 初始化MMKV
+        MMKV.initialize(this);
+
+        // 获取MMKV实例
+        mmkv = MMKV.defaultMMKV();
+
+
+// 核心权限组，每次启动都要检查
+        HashSet<String> permissionsToCheck = new HashSet<>(Ps.PG_Core);
+        if (Build.VERSION.SDK_INT >= 33) {
+            permissionsToCheck.addAll(Ps.useAPI33);
+        }
+        for (String permission : permissionsToCheck) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                permissionList.add(permission);
+            } else {
+                Log.d("MainActivity", permission);
+            }
+        }
+
+// 非核心权限组，仅安装后首次启动集中申请
+        if (isFirstRun()) {
+            permissionsToCheck.addAll(Ps.PG_unCore);
+            for (String permission : permissionsToCheck) {
+                if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                    permissionList.add(permission);
+                } else {
+                    Log.d("MainActivity", permission);
+                }
+            }
+        }
+
+        works += permissionList.size();
+        doPermissionApply();
+
+        // 单独的授权界面，暂时淘汰
+//        Intent InitActivity = new Intent(this, org.b3log.siyuan.permission.InitActivity.class);
+//        InitActivity.putExtra("contentViewId", R.layout.init_activity);
+//        InitActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+//        startActivity(InitActivity);
+
     }
 
 
@@ -554,11 +619,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             setBootProgress("Booting kernel...", 80);
         }
 
-
-//        Intent InitActivity = new Intent(this, org.b3log.siyuan.permission.InitActivity.class);
-//        InitActivity.putExtra("contentViewId", R.layout.init_activity);
-//        InitActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-//        startActivity(InitActivity);
     }
 
     private void setBootProgress(final String text, final int progressPercent) {
@@ -622,12 +682,53 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     }
 
 
-//    @Override 我写的垃圾代码，先留着
-//    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-//        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-//        // Forward results to EasyPermissions https://github.com/googlesamples/easypermissions
-//        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
-//    }
+
+    private void doPermissionApply() {
+        if (!permissionList.isEmpty()) {
+            ActivityResultLauncher<String[]> requestPermissionLauncher = registerForActivityResult(
+                    new ActivityResultContracts.RequestMultiplePermissions(),
+                    permissions -> {
+                        boolean allPermissionsGranted = true;
+                        for (String permission : permissions.keySet()) {
+                            if (permissions.get(permission) != null && Boolean.TRUE.equals(permissions.get(permission))) {
+                                works--;
+                            } else {
+                                allPermissionsGranted = false;
+                            }
+                        }
+                        if (works == 0 && allPermissionsGranted) {
+                            // 所有权限都得到了允许，执行相应操作
+                        } else {
+                            // 处理未被允许的权限
+                        }
+                    });
+
+            String[] permissionsToRequest = permissionList.toArray(new String[0]);
+            if (shouldShowRequestPermissionRationale(permissionsToRequest)) {
+                // 显示权限说明
+                Toast.makeText(getApplicationContext(), "必要权限缺失，请处理！", Toast.LENGTH_LONG).show();
+                // 打开应用详情界面
+                Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.setData(Uri.parse("package:" + getPackageName()));
+                startActivity(intent);
+            } else {
+                requestPermissionLauncher.launch(permissionsToRequest);
+            }
+        } else {
+            // 处理无权限的情况，例如提醒用户或者直接返回
+        }
+    }
+
+    private boolean shouldShowRequestPermissionRationale(String[] permissions) {
+        for (String permission : permissions) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     private void openCamera() {
         final Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -752,7 +853,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     }
 
     @Override
-    protected void onResume() {
+    protected void onResume() { //在用户可以与应用程序进行交互之前
         super.onResume();
     }
 
@@ -801,7 +902,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             }
             syncing = true;
 
-            final AsyncHttpPost req = new com.koushikdutta.async.http.AsyncHttpPost("http://127.0.0.1:6806/api/sync/performSync");
+            final AsyncHttpPost req = new com.koushikdutta.async.http.AsyncHttpPost("http://127.0.0.1:58131/api/sync/performSync");
             req.setBody(new JSONObjectBody(new JSONObject().put("mobileSwitch", true)));
             AsyncHttpClient.getDefaultInstance().executeJSONObject(req,
                     new com.koushikdutta.async.http.AsyncHttpClient.JSONObjectCallback() {
