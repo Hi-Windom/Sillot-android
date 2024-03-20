@@ -79,6 +79,7 @@ import com.koushikdutta.async.http.AsyncHttpPost;
 import com.koushikdutta.async.http.body.JSONObjectBody;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.util.Charsets;
+import com.xuexiang.xupdate.easy.EasyUpdate;
 import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
 
 import org.apache.commons.io.FileUtils;
@@ -262,6 +263,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 //        InitActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
 //        startActivity(InitActivity);
 
+        EasyUpdate.checkUpdate(this, "");
     }
 
 

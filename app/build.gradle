@@ -133,7 +133,7 @@ dependencies {
     implementation(name: 'baidu-push-sdk-8.2.9.3', ext: 'aar', group: '', version: '')
 
     implementation("commons-io:commons-io:2.11.0")
-    implementation("com.squareup.okhttp3:okhttp:4.9.3")
+    implementation "com.squareup.okhttp3:okhttp:4.9.3"
     implementation 'com.gitee.zackratos:UltimateBarX:0.8.0'
     implementation 'com.blankj:utilcodex:1.31.1'
     implementation 'com.koushikdutta.async:androidasync:2.2.1'
@@ -175,5 +175,10 @@ dependencies {
 
     //完整版引入
     implementation 'com.github.CarGuo.GSYVideoPlayer:GSYVideoPlayer:v8.6.0-release-jitpack'
+
+    implementation 'com.github.xuexiangjys:XUpdate:2.1.4' // 应用自动更新
+    implementation 'com.github.xuexiangjys.XUpdateAPI:xupdate-easy:1.0.1'
+    // 如果需要使用断点续传下载功能的话添加该依赖（可选）
+    implementation 'com.github.xuexiangjys.XUpdateAPI:xupdate-downloader-aria:1.0.1'
 
 }
