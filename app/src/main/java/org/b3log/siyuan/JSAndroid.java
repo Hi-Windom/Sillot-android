@@ -85,6 +85,10 @@ public final class JSAndroid {
                 public void onAuthenticationSuccess() {
                     // 认证成功的处理逻辑
                     String accessAuthCode = activity.mmkv.decodeString("accessAuthCode");
+                    if (accessAuthCode == null) {
+                        android.widget.Toast.makeText(activity, "抱歉出错了 ＞︿＜", android.widget.Toast.LENGTH_LONG).show();
+                        return;
+                    }
                     Mobile.setBiometricPass(accessAuthCode);
 
                     // 在这里调用 WebView 方法

@@ -127,7 +127,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     public MMKV mmkv;
 
-    private static final int PERMISSION_REQUEST_CODE = 1002;
     private int works = 0;
     private final HashSet<String> permissionList = new HashSet<>();
 
@@ -853,7 +852,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     }
 
     @Override
-    protected void onResume() { //在用户可以与应用程序进行交互之前
+    protected void onResume() {
         super.onResume();
     }
 

@@ -5,9 +5,6 @@
     <uses-feature
         android:name="android.hardware.telephony"
         android:required="false" />
-    <uses-feature
-        android:name="android.hardware.camera"
-        android:required="false" />
 
     <!-- 位置权限 -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -80,7 +77,7 @@
         android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" android:minSdkVersion="33"/> <!-- https://developer.android.google.cn/guide/topics/ui/notifiers/notification-permission?hl=zh-cn -->
     <!-- Foreground KeepLiveService Crash on Android 14 https://github.com/siyuan-note/siyuan/issues/9212 -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <!-- 支持拍照 Support taking photos for inserting on Android https://github.com/siyuan-note/siyuan/issues/10479 -->
     <uses-feature
@@ -129,7 +126,7 @@
             android:exported="true">
 <!-- ref https://blog.csdn.net/qq_36009027/article/details/94627156 -->
             <!--在其他应用打开-->
-            <intent-filter>
+            <intent-filter android:label="汐洛通用处理助手">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
@@ -140,7 +137,7 @@
                 <data android:mimeType="*/*" /> <!-- 先统一注册，业务成熟后收缩 -->
             </intent-filter>
             <!--分享/发送-->
-            <intent-filter>
+            <intent-filter android:label="汐洛分享助手">
                 <action android:name="android.intent.action.SEND"/>
                 <action android:name="android.intent.action.SEND_MULTIPLE"/>
                 <category android:name="android.intent.category.DEFAULT"/>
@@ -191,6 +188,18 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".videoPlayer.SimplePlayer"
+            android:exported="true"
+            android:hardwareAccelerated="true"
+            android:configChanges="orientation|screenSize">
+            <intent-filter>
+                <action android:name="sc.windom.sillot.intent.videoPlayer.SimplePlayer" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+            </intent-filter>
+        </activity>
+
         <activity
             android:name=".BootActivity"
             android:autoRemoveFromRecents="true"
@@ -217,7 +226,7 @@
         </activity>
         <activity
             android:name=".MainActivity"
-            android:autoRemoveFromRecents="true"
+            android:autoRemoveFromRecents="false"
             android:configChanges="keyboard|keyboardHidden|screenLayout|uiMode|orientation|screenSize|smallestScreenSize"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize" >

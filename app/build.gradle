@@ -171,6 +171,9 @@ dependencies {
     // Java实现指纹识别
     implementation "androidx.biometric:biometric:1.1.0"
     // Kotlin实现指纹识别
-    implementation "androidx.biometric:biometric-ktx:1.2.0-alpha03"
+    implementation "androidx.biometric:biometric-ktx:1.2.0-alpha05"
+
+    //完整版引入
+    implementation 'com.github.CarGuo.GSYVideoPlayer:GSYVideoPlayer:v8.6.0-release-jitpack'
 
 }
