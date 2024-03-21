@@ -22,10 +22,15 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.icu.text.SimpleDateFormat;
 import android.net.Uri;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
 
@@ -39,6 +44,10 @@ import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
 import org.b3log.siyuan.andapi.Toast;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.util.Date;
 
 import mobile.Mobile;
 
@@ -158,7 +167,63 @@ public final class JSAndroid {
         });
 
     }
-        // Sillot extend end
+
+    @JavascriptInterface
+    public void savePictureByURL(final String imageUrl) throws IOException {
+        // 下载图片
+        Bitmap IMG = BitmapFactory.decodeStream(new URL("http://127.0.0.1:58131"+imageUrl).openConnection().getInputStream());
+        // 获取内部存储的 DCIM/Sillot 目录
+        File directory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Sillot");
+        if (!directory.exists()) {
+            if (!directory.mkdirs()) {
+                Log.e("Sillot_savePictureByURL", "Failed to create directory: " + directory.getAbsolutePath());
+                return;
+            }
+        }
+
+        String formattedDate = new SimpleDateFormat("yyyy-MM-dd_HHmmss").format(new Date());
+
+        // 在 DCIM/Sillot 目录中创建文件
+        File file = new File(directory, "Sillot_savePictureByURL_" + formattedDate + ".png");
+        try {
+            FileOutputStream outputStream = new FileOutputStream(file);
+            IMG.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+            outputStream.flush();
+            outputStream.close();
+            Log.i("saveLongScreenshot", "Sillot_savePictureByURL saved to " + file.getAbsolutePath());
+            notifyGallery(file);
+            android.widget.Toast.makeText(activity, "图片已保存到 /DCIM/Sillot", android.widget.Toast.LENGTH_LONG).show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e("saveLongScreenshot", "Failed to save Sillot_savePictureByURL");
+        }
+    }
+
+    private void notifyGallery(File imageFile) {
+//        向系统相册发送媒体文件扫描广播来通知系统相册更新媒体库
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        Uri contentUri = Uri.fromFile(imageFile);
+        mediaScanIntent.setData(contentUri);
+        activity.sendBroadcast(mediaScanIntent);
+    }
+    // 使用图片选择器
+    private void openGalleryPicker() {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        activity.startActivity(intent);
+    }
+    // 使用图片选择器2
+    private void openGalleryPicker2() {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE); // 删掉似乎不影响
+        activity.startActivity(intent);
+    }
+
+
+
+
+    // Sillot extend end
 
     @JavascriptInterface
     public String getBlockURL() {
