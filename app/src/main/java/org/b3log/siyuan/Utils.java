@@ -23,6 +23,7 @@ import android.content.res.AssetManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 import android.webkit.WebView;
 
 import com.blankj.utilcode.util.KeyboardUtils;
@@ -52,7 +53,7 @@ import mobile.Mobile;
  * 工具类.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.1.0.6, Jan 28, 2024
+ * @version 1.1.0.7, Mar 20, 2024
  * @since 1.0.0
  */
 public final class Utils {
@@ -61,6 +62,15 @@ public final class Utils {
      * App version.
      */
     public static final String version = BuildConfig.VERSION_NAME;
+
+    public static String getMimeType(String url) {
+        String type = null;
+        String extension = MimeTypeMap.getFileExtensionFromUrl(url);
+        if (extension != null) {
+            type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+        }
+        return type;
+    }
 
     public static boolean isPad(Context context) {
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
