@@ -11,6 +11,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import org.b3log.siyuan.MainActivity
 import org.b3log.siyuan.R
 
 /**
@@ -40,35 +41,30 @@ object ForegroundPushManager {
     private fun createForegroundNotification(context: Context): Notification? {
         val notificationManager = NotificationManagerCompat.from(context)
         // 唯一的通知通道的id.
-        val notificationChannelId = "notification_channel_id_01"
+        val notificationChannelId = "sillot_notification_channel_id_58131"
 
         // Android8.0以上的系统，新建消息通道
         //用户可见的通道名称
-        val channelName = "SillotKeeper Foreground Service Notification"
+        val channelName = "🦢 汐洛前台通知服务"
         //通道的重要程度
         val importance = NotificationManager.IMPORTANCE_HIGH
-        val notificationChannel = NotificationChannel(notificationChannelId, channelName, importance)
-        notificationChannel.description = "Channel description"
-        //LED灯
-        notificationChannel.enableLights(false)
-        //无声音
-        notificationChannel.setSound(null, null)
-        //不震动
-        notificationChannel.enableVibration(false)
-        notificationManager.createNotificationChannel(notificationChannel)
+        val chan = NotificationChannel(notificationChannelId, channelName, importance)
+        chan.description = "汐洛后台保活（一般没什么卵用）"
+        chan.enableLights(false) // 呼吸灯
+        chan.setSound(null, null) // 提示音
+        chan.enableVibration(true) // 震动
+        notificationManager.createNotificationChannel(chan)
         val builder = NotificationCompat.Builder(context, notificationChannelId)
-        //通知小图标
-        builder.setSmallIcon(R.drawable.icon)
-        //通知标题
-        builder.setContentTitle("Sillot ❤️")
-        //通知内容
-        builder.setContentText("服务正在运行中")
-        //点击通知栏关闭通知
-        builder.setAutoCancel(true)
-        //不能清除通知
-        builder.setOngoing(true)
-        //设定通知显示的时间
-        builder.setWhen(System.currentTimeMillis())
+        .setSmallIcon(R.drawable.icon) //通知小图标
+        .setContentTitle("Sillot ❤️") //通知标题
+        .setContentText("服务正在运行中") //通知内容
+        .setAutoCancel(true) //点击通知栏关闭通知
+        .setOngoing(true) //不能清除通知
+        .setPriority(importance) // 通知类别，适用“勿扰模式”
+        .setCategory(NotificationCompat.CATEGORY_MESSAGE) // 通知类别，"勿扰模式"时系统会决定要不要显示你的通知
+        .setVisibility(NotificationCompat.VISIBILITY_PUBLIC) // 屏幕可见性，适用“锁屏状态”
+        .setWhen(System.currentTimeMillis())
+        .setShowWhen(true)
         //设定启动的内容
         val activityIntent = Intent(Intent.ACTION_MAIN)
         activityIntent.addCategory(Intent.CATEGORY_LAUNCHER)

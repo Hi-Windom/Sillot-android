@@ -82,20 +82,22 @@ public class KeepLiveService extends Service {
             resultPendingIntent = PendingIntent.getActivity(this, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         }
 
-        final String NOTIFICATION_CHANNEL_ID = "sc.windom.sillot";
-        final String channelName = "SiYuan-Sillot Kernel Service";
-        final NotificationChannel chan = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_NONE);
+        final String NOTIFICATION_CHANNEL_ID = "sillot_notification_channel_id_6806";
+        final String channelName = "📚 思源内核服务";
+        final NotificationChannel chan = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_LOW);
         chan.setLightColor(Color.BLUE);
         chan.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+        chan.setDescription("思源后台保活（指望不上）");
         final NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         manager.createNotificationChannel(chan);
         final NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
-        final Notification notification = notificationBuilder.setOngoing(true).
+        final Notification notification = notificationBuilder.setOngoing(false).
                 setSmallIcon(R.drawable.icon).
                 setContentTitle(words[random.nextInt(words.length)]).
-                setPriority(NotificationManager.IMPORTANCE_MIN).
+                setPriority(NotificationManager.IMPORTANCE_LOW).
                 setCategory(Notification.CATEGORY_SERVICE).
                 setContentIntent(resultPendingIntent).
+                setNumber(99). // 自定义桌面通知数量
                 build();
         startForeground(2, notification);
     }
