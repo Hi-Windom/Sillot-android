@@ -311,10 +311,10 @@ public final class JSAndroid {
             File asset;
             String decodedUrl = url;
             try {
-                decodedUrl = URLDecoder.decode(url, "UTF-8");
                 if (assetAbsPath.contains(workspacePath)) {
                     asset = new File(workspacePath, assetAbsPath.substring(workspacePath.length() + 1));
                 } else {
+                    decodedUrl = URLDecoder.decode(url, "UTF-8");
                     asset = new File(workspacePath, "data/" + decodedUrl);
                 }
                 // 添加判断文件是否存在
