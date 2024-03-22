@@ -326,17 +326,17 @@ public final class JSAndroid {
                     final Uri uri = FileProvider.getUriForFile(activity.getApplicationContext(), "sc.windom.sillot", asset);
                     final String type = Mobile.getMimeTypeByExt(asset.getAbsolutePath());
                     Intent intent = new ShareCompat.IntentBuilder(activity.getApplicationContext())
-                                .setStream(uri)
-                                .setType(type)
-                                .getIntent()
-                                .setAction(Intent.ACTION_VIEW)
-                                .setDataAndType(uri, type)
-                                .addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+                            .setStream(uri)
+                            .setType(type)
+                            .getIntent()
+                            .setAction(Intent.ACTION_VIEW)
+                            .setDataAndType(uri, type)
+                            .addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
                     activity.startActivity(intent);
                     return;
                 }
             } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
+                e.printStackTrace();
             }
         }
 
