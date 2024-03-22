@@ -63,15 +63,6 @@ public final class Utils {
      */
     public static final String version = BuildConfig.VERSION_NAME;
 
-    public static String getMimeType(String url) {
-        String type = null;
-        String extension = MimeTypeMap.getFileExtensionFromUrl(url);
-        if (extension != null) {
-            type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-        }
-        return type;
-    }
-
     public static boolean isPad(Context context) {
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         float widthInches = metrics.widthPixels / metrics.xdpi;

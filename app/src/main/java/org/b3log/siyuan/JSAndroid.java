@@ -307,30 +307,36 @@ public final class JSAndroid {
         if (url.startsWith("assets/")) {
             // Support opening assets through other apps on the Android https://github.com/siyuan-note/siyuan/issues/10657
             final String workspacePath = Mobile.getCurrentWorkspacePath();
+            final String assetAbsPath = Mobile.getAssetAbsPath(url);
+            File asset;
             String decodedUrl = url;
             try {
                 decodedUrl = URLDecoder.decode(url, "UTF-8");
-                final File asset = new File(workspacePath, "data/" + decodedUrl);
+                if (assetAbsPath.contains(workspacePath)) {
+                    asset = new File(workspacePath, assetAbsPath.substring(workspacePath.length() + 1));
+                } else {
+                    asset = new File(workspacePath, "data/" + decodedUrl);
+                }
                 // 添加判断文件是否存在
                 if (!asset.exists()) {
                     Log.e("File Not Found", "File does not exist: " + asset.getAbsolutePath());
                     url = "http://127.0.0.1:58131/" + url;
                 } else {
                     Log.d("if (url.startsWith(\"assets/\"))", asset.getAbsolutePath());
-                    Uri uri = FileProvider.getUriForFile(activity.getApplicationContext(), "sc.windom.sillot", asset);
-                    final String type = Utils.getMimeType(url);
+                    final Uri uri = FileProvider.getUriForFile(activity.getApplicationContext(), "sc.windom.sillot", asset);
+                    final String type = Mobile.getMimeTypeByExt(asset.getAbsolutePath());
                     Intent intent = new ShareCompat.IntentBuilder(activity.getApplicationContext())
-                            .setStream(uri)
-                            .setType(type)
-                            .getIntent()
-                            .setAction(Intent.ACTION_VIEW)
-                            .setDataAndType(uri, type)
-                            .addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+                                .setStream(uri)
+                                .setType(type)
+                                .getIntent()
+                                .setAction(Intent.ACTION_VIEW)
+                                .setDataAndType(uri, type)
+                                .addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
                     activity.startActivity(intent);
                     return;
                 }
             } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
+                    e.printStackTrace();
             }
         }
 
@@ -346,7 +352,7 @@ public final class JSAndroid {
                 } else {
                     Log.d("if (url.endsWith(\".zip\") && url.startsWith(\"/export/\"))", asset.getAbsolutePath());
                     Uri uri = FileProvider.getUriForFile(activity.getApplicationContext(), "sc.windom.sillot", asset);
-                    final String type = Utils.getMimeType(url);
+                    final String type = Mobile.getMimeTypeByExt(asset.getAbsolutePath());
                     Intent intent = new ShareCompat.IntentBuilder(activity.getApplicationContext())
                             .setStream(uri)
                             .setType(type)
