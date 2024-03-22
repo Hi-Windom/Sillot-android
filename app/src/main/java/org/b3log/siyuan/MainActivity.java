@@ -382,7 +382,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 }
 
                 if (url.contains("siyuan://api/system/exit")) {
-                    exit();
+                    coldRestart();
                     return true;
                 }
 
@@ -643,7 +643,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 exitTime = System.currentTimeMillis();
             } else {
                 HWs.getInstance().vibratorWaveform(this, new long[]{0, 30, 25, 40, 25, 10}, new int[]{2, 4, 3, 2, 2, 2}, -1);
-                exit();
+                this.exit();
                 sleep(200);
                 System.exit(0);
             }
@@ -860,10 +860,20 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         super.onPause();
     }
 
-    private void exit() {
+    public void exit() {
         finishAffinity();
         finishAndRemoveTask();
     }
+
+    public void coldRestart() {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+        System.exit(0); // 不推荐的做法，因为它可能会导致应用关闭时未释放的资源，但在冷启动时，这可能是必要的。
+    }
+
+
 
     private void checkWebViewVer(final WebSettings ws) {
         // Android check WebView version 75+ https://github.com/siyuan-note/siyuan/issues/7840

@@ -28,7 +28,6 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.IBinder;
 
-import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
 import java.util.Random;

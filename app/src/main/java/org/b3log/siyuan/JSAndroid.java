@@ -30,6 +30,7 @@ import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
@@ -37,6 +38,7 @@ import android.webkit.JavascriptInterface;
 import androidx.core.app.ShareCompat;
 import androidx.core.content.FileProvider;
 
+import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.BarUtils;
 import com.blankj.utilcode.util.StringUtils;
 import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
@@ -67,10 +69,11 @@ public final class JSAndroid {
 
     // Sillot extend start
     @JavascriptInterface
-    public void requestPermission(final String id) {
-        Context mContext = activity.getApplicationContext();
-        Toast.INSTANCE.Show(mContext,"注意：后台稳定伺服会消耗额外电量");
-        Intent battery = new Intent("sc.windom.sillot.intent.permission.Battery");
+    public void requestPermission(final String id, final String Msg) {
+        if (Msg != null && !Msg.isEmpty()) {
+            Toast.INSTANCE.Show(activity, Msg);
+        }
+        Intent battery = new Intent("sc.windom.sillot.intent.permission."+id); // id 对应的是具体的类，在 permission 文件夹，没有事先创建则会报错
         battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         activity.startActivity(battery);
     }
@@ -293,6 +296,7 @@ public final class JSAndroid {
         if (StringUtils.isEmpty(url)) {
             return;
         }
+        Log.d("JSAndroid.openExternal", url);
 
         if (url.startsWith("#")) {
             return;
@@ -302,22 +306,52 @@ public final class JSAndroid {
             // Support opening assets through other apps on the Android https://github.com/siyuan-note/siyuan/issues/10657
             final String workspacePath = Mobile.getCurrentWorkspacePath();
             final File asset = new File(workspacePath, "data/" + url);
-            Uri uri = FileProvider.getUriForFile(activity.getApplicationContext(), "org.b3log.siyuan", asset);
-            final String type = Utils.getMimeType(url);
-            Intent intent = new ShareCompat.IntentBuilder(activity.getApplicationContext())
-                    .setStream(uri)
-                    .setType(type)
-                    .getIntent()
-                    .setAction(Intent.ACTION_VIEW)
-                    .setDataAndType(uri, type)
-                    .addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
-            activity.startActivity(intent);
-            return;
+            // 添加判断文件是否存在
+            if (!asset.exists()) {
+                Log.e("File Not Found", "File does not exist: " + asset.getAbsolutePath());
+                url = "http://127.0.0.1:58131/" + url;
+            } else {
+                Log.d("if (url.startsWith(\"assets/\"))", asset.getAbsolutePath());
+                Uri uri = FileProvider.getUriForFile(activity.getApplicationContext(), "sc.windom.sillot", asset);
+                final String type = Utils.getMimeType(url);
+                Intent intent = new ShareCompat.IntentBuilder(activity.getApplicationContext())
+                        .setStream(uri)
+                        .setType(type)
+                        .getIntent()
+                        .setAction(Intent.ACTION_VIEW)
+                        .setDataAndType(uri, type)
+                        .addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+                activity.startActivity(intent);
+                return;
+            }
+        }
+
+        if (url.endsWith(".zip") && url.startsWith("/export/")) {
+            final String workspacePath = Mobile.getCurrentWorkspacePath();
+            final File asset = new File(workspacePath, "temp" + url);
+            // 添加判断文件是否存在
+            if (!asset.exists()) {
+                Log.e("File Not Found", "File does not exist: " + asset.getAbsolutePath());
+            } else {
+                Log.d("if (url.endsWith(\".zip\") && url.startsWith(\"/export/\"))", asset.getAbsolutePath());
+                Uri uri = FileProvider.getUriForFile(activity.getApplicationContext(), "sc.windom.sillot", asset);
+                final String type = Utils.getMimeType(url);
+                Intent intent = new ShareCompat.IntentBuilder(activity.getApplicationContext())
+                        .setStream(uri)
+                        .setType(type)
+                        .getIntent()
+                        .setAction(Intent.ACTION_VIEW)
+                        .setDataAndType(uri, type)
+                        .addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+                activity.startActivity(intent);
+                return;
+            }
         }
 
         if (url.startsWith("/")) {
             url = "http://127.0.0.1:58131" + url;
         }
+        Log.d("openExternal final url ", url);
 
         final Uri uri = Uri.parse(url);
         final Intent browserIntent = new Intent(Intent.ACTION_VIEW, uri);
