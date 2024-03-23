@@ -19,11 +19,12 @@ package org.b3log.siyuan;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.AssetManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.webkit.MimeTypeMap;
+import android.Manifest;
 import android.webkit.WebView;
 
 import com.blankj.utilcode.util.KeyboardUtils;
@@ -31,6 +32,7 @@ import com.blankj.utilcode.util.StringUtils;
 import com.blankj.utilcode.util.TimeUtils;
 
 import org.apache.commons.io.FileUtils;
+import org.b3log.siyuan.andapi.Toast;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -38,6 +40,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -71,6 +74,35 @@ public final class Utils {
                 Math.pow(widthInches, 2) + Math.pow(heightInches, 2));
         return diagonalInches >= 7;
     }
+
+    public static boolean isValidPermission(String id) {
+        try {
+            // 使用反射获取 Manifest.permission 类中的所有静态字段
+            Field[] fields = Manifest.permission.class.getFields();
+            for (Field field : fields) {
+                // 检查是否存在与id匹配的静态字段
+                if (field.getType() == String.class && field.get(null).equals(id)) {
+                    return true;
+                }
+            }
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public static void requestPermissionActivity(Context context, final String id, final String Msg) {
+        if (Msg != null && !Msg.isEmpty()) {
+            Toast.INSTANCE.Show(context, Msg);
+        }
+
+        Intent battery = new Intent("sc.windom.sillot.intent.permission." + id); // id 对应的是具体的类，在 permission 文件夹，没有事先创建则会报错
+        battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        // 获取 Application Context 并启动 Activity
+        context.getApplicationContext().startActivity(battery);
+    }
+
 
     public static void registerSoftKeyboardToolbar(final Activity activity, final WebView webView) {
         KeyboardUtils.registerSoftInputChangedListener(activity, height -> {

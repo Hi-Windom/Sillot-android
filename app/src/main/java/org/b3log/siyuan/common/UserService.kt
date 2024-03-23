@@ -5,5 +5,4 @@ import android.content.Intent
 import cn.jpush.android.service.JCommonService
 
 class UserService : JCommonService() {
-
 }

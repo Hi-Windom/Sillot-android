@@ -32,6 +32,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.LocaleList;
 import android.os.Looper;
 import android.os.Message;
 import android.provider.MediaStore;
@@ -113,7 +114,7 @@ import com.tencent.mmkv.MMKV;
 public class MainActivity extends AppCompatActivity implements com.blankj.utilcode.util.Utils.OnAppStatusChangedListener {
 
     private AsyncHttpServer server;
-    private int serverPort = 6906;
+    private int serverPort = Ss.DefaultHTTPPort;
     public WebView webView;
     private ImageView bootLogo;
     private ProgressBar bootProgressBar;
@@ -121,8 +122,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     private String webViewVer;
     private String userAgent;
     private ValueCallback<Uri[]> uploadMessage;
-    private static final int REQUEST_SELECT_FILE = 100;
-    private static final int REQUEST_CAMERA = 101;
+    private static final int REQUEST_SELECT_FILE = Ss.REQUEST_SELECT_FILE;
+    private static final int REQUEST_CAMERA = Ss.REQUEST_CAMERA;
     private long exitTime;
 
     public MMKV mmkv;
@@ -158,7 +159,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         // 启动 HTTP Server
         startHttpServer();
 
-        CrashReport.initCrashReport(getApplicationContext(), "26ae2b5fb4", true);
+        CrashReport.initCrashReport(getApplicationContext(), Ss.initCrashReportID, true);
 
         // 这段代码并不会直接导致高刷率的生效，它只是在获取支持的显示模式中寻找高刷率最大的模式，并将其设置为首选模式。
         Display display = null;
@@ -530,7 +531,11 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         }
 
         final String appDir = getFilesDir().getAbsolutePath() + "/app";
-        final Locale locale = getResources().getConfiguration().locale;
+//        final Locale locale = getResources().getConfiguration().locale;
+        // As of API 24 (Nougat) and later
+        LocaleList locales = getResources().getConfiguration().getLocales();
+        // Now you can access the first locale in the list as follows:
+        Locale locale = locales.get(0);
         final String workspaceBaseDir = getExternalFilesDir(null).getAbsolutePath();
         final String timezone = TimeZone.getDefault().getID();
         new Thread(() -> {
@@ -668,6 +673,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == REQUEST_CAMERA) {
+            // 请求码应该在整个应用中是全局唯一的，但是处理权限请求结果应该是在申请权限的活动中进行。
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 openCamera();
                 return;

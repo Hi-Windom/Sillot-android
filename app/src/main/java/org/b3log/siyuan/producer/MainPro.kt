@@ -6,12 +6,10 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import org.b3log.siyuan.Ss
 import org.b3log.siyuan.videoPlayer.SimplePlayer
 
 class MainPro : Activity() {
-    companion object {
-        const val VIDEO_PICK_REQUEST_CODE = 1001
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,11 +42,12 @@ class MainPro : Activity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == VIDEO_PICK_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+        if (requestCode == Ss.VIDEO_PICK_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             val selectedVideoUri = data?.data
             selectedVideoUri?.let {
                 val videoPath = getRealPathFromURI(it) // 获取真实路径
                 val intent = Intent(this, SimplePlayer::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK) // 独立窗口，不影响主窗口
                 intent.putExtra("videoPath", videoPath)
                 startActivity(intent)
             }

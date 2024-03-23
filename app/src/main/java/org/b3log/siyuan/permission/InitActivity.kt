@@ -32,6 +32,7 @@ class InitActivity: Activity() {
     }
 
 
+    // 请求码应该在整个应用中是全局唯一的，但是处理权限请求结果应该是在申请权限的活动中进行。
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,

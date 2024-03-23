@@ -19,6 +19,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.ACCESS_ACTIVITY_MANAGER" />
 
     <!-- 近场通讯 -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
@@ -106,12 +107,13 @@
         android:required="false" />
     <uses-permission android:name="android.permission.CAMERA" />
 
-
+    <!--  extractNativeLibs 这个属性用于控制 Android 应用程序在安装时是否从 APK 文件中提取本地库。 设为 true 优点：快速启动应用程序，减少运行时解压缩，省电 -->
     <!-- ignore @string/app_name error -->
     <application
         android:name=".App"
         android:appCategory="productivity"
         android:debuggable="true"
+        android:resizeableActivity="true"
         android:hardwareAccelerated="true"
         android:largeHeap="true"
         android:hasFragileUserData="true"
@@ -122,6 +124,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SiYuan"
         android:usesCleartextTraffic="true"
+        android:extractNativeLibs="true"
         android:enableOnBackInvokedCallback="false"
         tools:ignore="HardcodedDebugMode"
         tools:targetApi="tiramisu">
@@ -192,6 +195,16 @@
             android:launchMode="singleInstance">
             <intent-filter>
                 <action android:name="sc.windom.sillot.intent.permission.Battery" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="${applicationId}" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".permission.Overlay"
+            android:exported="true"
+            android:launchMode="singleInstance">
+            <intent-filter>
+                <action android:name="sc.windom.sillot.intent.permission.Overlay" />
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="${applicationId}" />
@@ -327,6 +340,13 @@
                 <action android:name="cn.jiguang.user.service.action" />
             </intent-filter>
         </service>
+
+        <service android:name=".FloatingWindowService" android:foregroundServiceType="dataSync|location">
+            <property
+                android:name="android.app.PROPERTY_DATA_SYNC_FGS_SUBTYPE"
+                android:value="hosting" />
+        </service>
+
 
         <!-- Support opening assets through other apps on the Android https://github.com/siyuan-note/siyuan/issues/10657 -->
         <provider

@@ -11,8 +11,9 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import org.b3log.siyuan.MainActivity
+import org.b3log.siyuan.Ss
 import org.b3log.siyuan.R
+
 
 /**
  * description: 前台通知管理类
@@ -21,7 +22,9 @@ import org.b3log.siyuan.R
  */
 object ForegroundPushManager {
 
-    val notificationId = 200
+    val notificationId = Ss.XLQTFW_notificationId
+
+    val notificationChannelId = Ss.XLQTFW_notificationChannelId
 
     //显示通知
     @SuppressLint("MissingPermission")
@@ -40,8 +43,6 @@ object ForegroundPushManager {
      */
     private fun createForegroundNotification(context: Context): Notification? {
         val notificationManager = NotificationManagerCompat.from(context)
-        // 唯一的通知通道的id.
-        val notificationChannelId = "sillot_notification_channel_id_58131"
 
         // Android8.0以上的系统，新建消息通道
         //用户可见的通道名称
@@ -68,13 +69,8 @@ object ForegroundPushManager {
         //设定启动的内容
         val activityIntent = Intent(Intent.ACTION_MAIN)
         activityIntent.addCategory(Intent.CATEGORY_LAUNCHER)
-        //我这里写的每次点击通知跳转的是MainActivity，可以自己处理跳转事件
-//        if(ActivityTaskManager.getInstance().lastActivity != null){
-//            activityIntent.component = ComponentName(context, ActivityTaskManager.getInstance().lastActivity.javaClass)
-//        }else{
-        //启动mainActivity
-        activityIntent.component = ComponentName(context, "org.b3log.siyuan.MainActivity")
-//        }
+
+        activityIntent.component = ComponentName(context, Ss.URIMainActivity)
         activityIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
         val pendingIntent: PendingIntent
         pendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

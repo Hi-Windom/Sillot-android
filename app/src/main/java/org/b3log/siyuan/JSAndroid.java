@@ -18,10 +18,12 @@
 package org.b3log.siyuan;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -32,14 +34,17 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
 
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.ShareCompat;
 import androidx.core.content.FileProvider;
 
 import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.BarUtils;
+import com.blankj.utilcode.util.ServiceUtils;
 import com.blankj.utilcode.util.StringUtils;
 import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
 
@@ -52,6 +57,11 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.Date;
+
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.ObservableOnSubscribe;
+import io.reactivex.rxjava3.disposables.Disposable;
 
 import mobile.Mobile;
 
@@ -71,14 +81,60 @@ public final class JSAndroid {
 
     // Sillot extend start
     @JavascriptInterface
-    public void requestPermission(final String id, final String Msg) {
+    public void requestPermissionActivity(final String id, final String Msg) {
+        Utils.requestPermissionActivity(activity, id, Msg);
+    }
+    @JavascriptInterface
+    public boolean requestPermission(final String id, final String Msg) {
+        if (id == null || id.isEmpty() || !Utils.isValidPermission(id)) {
+            return false;
+        }
         if (Msg != null && !Msg.isEmpty()) {
             Toast.INSTANCE.Show(activity, Msg);
         }
-        Intent battery = new Intent("sc.windom.sillot.intent.permission."+id); // id 对应的是具体的类，在 permission 文件夹，没有事先创建则会报错
-        battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        activity.startActivity(battery);
+        ActivityCompat.requestPermissions(activity, new String[]{ id }, 1001);
+        return true; // 返回真表示已经发起申请，不代表结果
     }
+
+
+    @SuppressLint("CheckResult")
+    @JavascriptInterface
+    public void showWifi() {
+        Observable<Boolean> locationPermissionObservable = Observable.create(emitter -> {
+            if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                emitter.onNext(true);
+            } else {
+                ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, Ss.REQUEST_LOCATION);
+            }
+        });
+
+        Observable<Boolean> overlayPermissionObservable = Observable.create(emitter -> {
+            if (Settings.canDrawOverlays(activity)) {
+                emitter.onNext(true);
+            } else {
+                Utils.requestPermissionActivity(activity, "Overlay", "找到汐洛并允许");
+            }
+        });
+
+        Observable.combineLatest(locationPermissionObservable, overlayPermissionObservable, (locationGranted, overlayGranted) -> locationGranted && overlayGranted)
+                .filter(granted -> granted) // 过滤掉未获得权限的情况
+                .flatMap(granted -> {
+                    // 启动悬浮窗 Service
+                    Intent intent = new Intent(activity, FloatingWindowService.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+                    ServiceUtils.startService(intent);
+                    return Observable.just(true);
+                })
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        granted -> Log.d("Permission", "Permissions granted and service started."),
+                        throwable -> Log.e("Permission", "Error occurred: " + throwable.getMessage())
+                );
+
+
+    }
+
 
     @JavascriptInterface
     public void setMMKV(final String key, final String value) {

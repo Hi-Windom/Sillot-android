@@ -82,7 +82,7 @@ public class KeepLiveService extends Service {
             resultPendingIntent = PendingIntent.getActivity(this, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         }
 
-        final String NOTIFICATION_CHANNEL_ID = "sillot_notification_channel_id_6806";
+        final String NOTIFICATION_CHANNEL_ID = Ss.SY_NOTIFICATION_CHANNEL_ID;
         final String channelName = "📚 思源内核服务";
         final NotificationChannel chan = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_LOW);
         chan.setLightColor(Color.BLUE);

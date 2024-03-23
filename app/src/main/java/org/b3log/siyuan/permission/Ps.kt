@@ -5,7 +5,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 
 
-object Ps { // 权限组
+object Ps {
     @JvmField // java能够正常调用
     val useLocation = mutableListOf(
         Manifest.permission.ACCESS_BACKGROUND_LOCATION, // 允许应用访问后台位置。
@@ -117,36 +117,33 @@ object Ps { // 权限组
     val PG_unCore = useLocation + useCom + usePhone + useSMS + useSensor // 非核心权限组，仅安装后首次启动集中申请
 
     // system app only, can not use in any api level
-
-//           arrayListOf(
-//           Manifest.permission.ACCESS_CHECKIN_PROPERTIES,
-//            Manifest.permission.ACCOUNT_MANAGER,
-//            Manifest.permission.BATTERY_STATS,
-//            Manifest.permission.BIND_ACCESSIBILITY_SERVICE,
-//            Manifest.permission.BIND_*,
-//            Manifest.permission.BLUETOOTH_PRIVILEGED,
-//            Manifest.permission.BROADCAST_PACKAGE_REMOVED,
-//            Manifest.permission.BROADCAST_SMS,
-//            Manifest.permission.BROADCAST_WAP_PUSH,
-//            Manifest.permission.CALL_PRIVILEGED,
-//            Manifest.permission.CAPTURE_AUDIO_OUTPUT,
-//            Manifest.permission.CHANGE_COMPONENT_ENABLED_STATE,
-//            Manifest.permission.CHANGE_CONFIGURATION,
-//            Manifest.permission.CLEAR_APP_CACHE,
-//            Manifest.permission.CONTROL_LOCATION_UPDATES,
-//            Manifest.permission.DELETE_CACHE_FILES,
-//            Manifest.permission.DUMP,
-//            Manifest.permission.GLOBAL_SEARCH,
-//            Manifest.permission.INSTALL_LOCATION_PROVIDER,
-//            Manifest.permission.INSTALL_PACKAGES,
-//            Manifest.permission.INSTANT_APP_FOREGROUND_SERVICE,
-//            Manifest.permission.MEDIA_CONTENT_CONTROL,
-//            Manifest.permission.MODIFY_PHONE_STATE,
-//            Manifest.permission.STATUS_BAR,
-//            Manifest.permission.WRITE_SETTINGS,
-//            Manifest.permission.BIND_CONTROLS,
-//            Manifest.permission.BIND_QUICK_ACCESS_WALLET_SERVICE,
-//            Manifest.permission.QUERY_ALL_PACKAGES,
-//        )
+// ACCESS_CHECKIN_PROPERTIES,
+// ACCOUNT_MANAGER,
+// BATTERY_STATS,
+// BIND_ACCESSIBILITY_SERVICE,
+// BIND_*,
+// BLUETOOTH_PRIVILEGED,
+// BROADCAST_PACKAGE_REMOVED,
+// BROADCAST_SMS,
+// BROADCAST_WAP_PUSH,
+// CALL_PRIVILEGED,
+// CAPTURE_AUDIO_OUTPUT,
+// CHANGE_COMPONENT_ENABLED_STATE,
+// CHANGE_CONFIGURATION,
+// CLEAR_APP_CACHE,
+// CONTROL_LOCATION_UPDATES,
+// DELETE_CACHE_FILES,
+// DUMP,
+// GLOBAL_SEARCH,
+// INSTALL_LOCATION_PROVIDER,
+// INSTALL_PACKAGES,
+// INSTANT_APP_FOREGROUND_SERVICE,
+// MEDIA_CONTENT_CONTROL,
+// MODIFY_PHONE_STATE,
+// STATUS_BAR,
+// WRITE_SETTINGS,
+// BIND_CONTROLS,
+// BIND_QUICK_ACCESS_WALLET_SERVICE,
+// QUERY_ALL_PACKAGES,
 
 }

@@ -18,6 +18,7 @@ import org.b3log.siyuan.andapi.Toast
 
 
 class Battery : AppCompatActivity() {
+//    在应用清单声明对应 activity
     private lateinit var requestIgnoreBatteryOptimizationsLauncher: ActivityResultLauncher<Intent>
     private val activity: MainActivity? = null
 
