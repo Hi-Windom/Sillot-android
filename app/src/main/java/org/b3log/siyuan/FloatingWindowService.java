@@ -253,7 +253,7 @@ public class FloatingWindowService extends Service {
                         String signalStrengthLevel = getSignalStrengthLevel(resultSignalStrength);
 
                         wifiDetails.append("SSID: ").append(resultSSID)
-                                .append(", Signal Strength: ").append(signalStrengthLevel).append("\n");
+                                .append("\t\t Signal: ").append(signalStrengthLevel).append("\n");
                     }
                 }
             } else {

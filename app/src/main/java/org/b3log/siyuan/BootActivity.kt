@@ -20,7 +20,10 @@ package org.b3log.siyuan
 import android.app.AlertDialog
 import android.content.DialogInterface
 import android.content.Intent
-import android.os.*
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.text.Html
 import android.text.method.ScrollingMovementMethod
 import android.util.Log
@@ -31,7 +34,6 @@ import com.microsoft.clarity.ClarityConfig
 import com.microsoft.clarity.models.LogLevel
 import org.apache.commons.io.FileUtils
 import java.io.File
-
 
 
 /**

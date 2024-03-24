@@ -19,7 +19,7 @@ android {
         minSdk 30
         targetSdkVersion 34
         versionCode vC
-        versionName "0.2024"
+        versionName "0.27"
 
         ndk {
             //只接入对应 cpu 类型的 .so 库。

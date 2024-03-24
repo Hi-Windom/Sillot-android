@@ -82,10 +82,12 @@ public final class JSAndroid {
     // Sillot extend start
     @JavascriptInterface
     public void requestPermissionActivity(final String id, final String Msg) {
+        Log.d("JSAndroid", "requestPermissionActivity() invoked");
         Utils.requestPermissionActivity(activity, id, Msg);
     }
     @JavascriptInterface
     public boolean requestPermission(final String id, final String Msg) {
+        Log.d("JSAndroid", "requestPermission() invoked");
         if (id == null || id.isEmpty() || !Utils.isValidPermission(id)) {
             return false;
         }
@@ -100,6 +102,7 @@ public final class JSAndroid {
     @SuppressLint("CheckResult")
     @JavascriptInterface
     public void showWifi() {
+        Log.d("JSAndroid", "showWifi() invoked");
         Observable<Boolean> locationPermissionObservable = Observable.create(emitter -> {
             if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 emitter.onNext(true);
@@ -138,18 +141,20 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void setMMKV(final String key, final String value) {
+        Log.d("JSAndroid", "setMMKV() invoked");
         activity.mmkv.encode(key, value);
     }
 
     @JavascriptInterface
     public String getMMKV(final String key) {
+        Log.d("JSAndroid", "getMMKV() invoked");
         // 出于安全考虑禁止实现
-//        return activity.mmkv.decodeString(key);
         return "";
     }
 
     @JavascriptInterface
     public void showBiometricPrompt(final String captcha) {
+        Log.d("JSAndroid", "showBiometricPrompt() invoked");
         Handler mainHandler = new Handler(Looper.getMainLooper());
         // 在主线程中执行
         mainHandler.post(() -> {
@@ -231,6 +236,7 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void savePictureByURL(final String imageUrl) throws IOException {
+        Log.d("JSAndroid", "savePictureByURL() invoked");
         // 下载图片
         Bitmap IMG = BitmapFactory.decodeStream(new URL("http://127.0.0.1:58131"+imageUrl).openConnection().getInputStream());
         // 获取内部存储的 DCIM/Sillot 目录
@@ -288,11 +294,15 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public String getBlockURL() {
-        return activity.getIntent().getStringExtra("blockURL");
+        var url = activity.getIntent().getStringExtra("blockURL");
+        Log.d("JSAndroid", "getBlockURL() invoked. original url="+url);
+        if (url == null) { url = ""; }
+        return url;
     }
 
     @JavascriptInterface
     public String readClipboard() {
+        Log.d("JSAndroid", "readClipboard() invoked");
         final ClipboardManager clipboard = (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
         final ClipData clipData = clipboard.getPrimaryClip();
         if (null == clipData) {
@@ -322,6 +332,7 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void writeImageClipboard(final String uri) {
+        Log.d("JSAndroid", "writeImageClipboard() invoked");
         final ClipboardManager clipboard = (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
         final ClipData clip = ClipData.newUri(activity.getContentResolver(), "Copied img from SiYuan", Uri.parse("http://127.0.0.1:58131/" + uri));
         clipboard.setPrimaryClip(clip);
@@ -329,6 +340,7 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void writeClipboard(final String content) {
+        Log.d("JSAndroid", "writeClipboard() invoked");
         final ClipboardManager clipboard = (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
         final ClipData clip = ClipData.newPlainText("Copied text from SiYuan", content);
         clipboard.setPrimaryClip(clip);
@@ -336,6 +348,7 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void returnDesktop() {
+        Log.d("JSAndroid", "returnDesktop() invoked");
         final Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_HOME);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -344,6 +357,7 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void exitSillotAndroid() {
+        Log.d("JSAndroid", "exitSillotAndroid() invoked");
         activity.finishAffinity();
         activity.finishAndRemoveTask();
         System.exit(0);
@@ -351,6 +365,7 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void openExternal(String url) {
+        Log.d("JSAndroid", "openExternal() invoked");
         if (StringUtils.isEmpty(url)) {
             return;
         }
@@ -437,6 +452,7 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void changeStatusBarColor(final String color, final int appearanceMode) {
+        Log.d("JSAndroid", "changeStatusBarColor() invoked");
         activity.runOnUiThread(() -> {
             UltimateBarX.statusBarOnly(activity).transparent().light(appearanceMode == 0).color(parseColor(color)).apply();
 
