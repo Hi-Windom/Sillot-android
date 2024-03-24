@@ -146,7 +146,7 @@ public class FloatingWindowService extends Service {
                 android.graphics.PixelFormat.TRANSLUCENT);
         params.gravity = Gravity.TOP | Gravity.START;
         params.x = 0;
-        params.y = 100;
+        params.y = 0;
         windowManager.addView(floatingView, params);
     }
 
@@ -253,7 +253,7 @@ public class FloatingWindowService extends Service {
                         String signalStrengthLevel = getSignalStrengthLevel(resultSignalStrength);
 
                         wifiDetails.append("SSID: ").append(resultSSID)
-                                .append("\t\t Signal: ").append(signalStrengthLevel).append("\n");
+                                .append("\t（信号").append(signalStrengthLevel).append("）\n");
                     }
                 }
             } else {
