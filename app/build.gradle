@@ -2,9 +2,10 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
     id "io.sentry.android.gradle" version "3.5.0"
+    id 'io.realm.kotlin'
 }
 
-final int vC = 10013
+final int vC = 14 // Sillot-android 主要版本递增
 
 android {
     compileSdk 34
@@ -177,5 +178,9 @@ dependencies {
     implementation 'com.github.CarGuo.GSYVideoPlayer:GSYVideoPlayer:v8.6.0-release-jitpack'
 
     implementation "com.kongzue.dialogx:DialogX:0.0.49"
+
+    implementation 'io.realm.kotlin:library-base:1.11.0'
+    implementation 'io.realm.kotlin:library-sync:1.11.0'// If using Device Sync
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0' // If using coroutines with the SDK
 
 }

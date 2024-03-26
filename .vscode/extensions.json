@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "mhutchie.git-graph",
+    "donjayamanne.githistory",
+    "eamodio.gitlens"
+  ],
+  "unwantedRecommendations": [
+    "vscjava.vscode-java-pack"
+  ]
+}

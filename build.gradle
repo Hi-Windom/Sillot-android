@@ -19,7 +19,9 @@ buildscript {
         // in the individual module build.gradle files
     }
 }
-
+plugins {
+    id 'io.realm.kotlin' version '1.11.0' apply false
+}
 allprojects {
     repositories {
         // 阿里云Maven中央仓库下载源
