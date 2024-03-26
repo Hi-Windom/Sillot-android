@@ -91,9 +91,11 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -155,6 +157,9 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        MMKV.initialize(this);
+        mmkv = MMKV.defaultMMKV();
 
         // 启动 HTTP Server
         startHttpServer();
@@ -222,13 +227,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 break;
         }
 
-        // 初始化MMKV
-        MMKV.initialize(this);
-
-        // 获取MMKV实例
-        mmkv = MMKV.defaultMMKV();
-
-
 // 核心权限组，每次启动都要检查
         HashSet<String> permissionsToCheck = new HashSet<>(Ps.PG_Core);
         if (Build.VERSION.SDK_INT >= 33) {
@@ -271,7 +269,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         bootDetailsText = findViewById(R.id.bootDetails);
         webView = findViewById(R.id.webView);
         webView.setBackgroundColor(Color.parseColor("#1e1e1e"));
-        webView.setWebViewClient(new WebViewClient() {
+        webView.setWebViewClient(new WebViewClient() { // setWebViewClient 和 setWebChromeClient 并不同，别看走眼了
             @Override
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                 // 在加载页面出现错误时进行处理
@@ -378,12 +376,26 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 final Uri uri = request.getUrl();
                 final String url = uri.toString();
                 if (url.contains("127.0.0.1")) {
-                    view.loadUrl(url);
+                    var AppCheckInState = mmkv.getString("AppCheckInState", "unlockScreen");
+                    if (AppCheckInState.equals("lockScreen")) {
+                        try {
+                            String encodedUrl = URLEncoder.encode(url, "UTF-8");
+                            String gotourl = "http://127.0.0.1:58131/check-auth?to=" + encodedUrl;
+                            Log.w("showBootIndex","shouldOverrideUrlLoading -> " + gotourl);
+                            mmkv.putString("AppCheckInState","unlockScreen");
+                            view.loadUrl(gotourl);
+                        } catch (UnsupportedEncodingException e) {
+                            // 编码失败的处理
+                            e.printStackTrace();
+                        }
+                    } else {
+                        view.loadUrl(url);
+                    }
                     return true;
                 }
 
                 if (url.contains("siyuan://api/system/exit")) {
-                    coldRestart();
+                    exit();
                     return true;
                 }
 
@@ -398,14 +410,30 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
             @Override
             public void onPageFinished(WebView view, String url) {
+                // 页面加载完成时调用
+                Log.d("WebViewClient", "onPageFinished: " + url);
                 new Handler().postDelayed(() -> {
                     bootLogo.setVisibility(View.GONE);
                     bootProgressBar.setVisibility(View.GONE);
                     bootDetailsText.setVisibility(View.GONE);
                     final ImageView bootLogo = findViewById(R.id.bootLogo);
                     bootLogo.setVisibility(View.GONE);
-                }, 666);
+                }, 186);
             }
+
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                // 在加载页面出现错误时进行处理
+                if (error != null) {
+                    Log.e("WebViewClient", "onReceivedError: " + error.getDescription());
+                }
+            }
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                // 页面开始加载时调用
+                Log.d("WebViewClient", "onPageStarted: " + url);
+            }
+
         });
 
         final JSAndroid JSAndroid = new JSAndroid(this);

@@ -46,6 +46,10 @@ import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.BarUtils;
 import com.blankj.utilcode.util.ServiceUtils;
 import com.blankj.utilcode.util.StringUtils;
+import com.kongzue.dialogx.dialogs.PopTip;
+import com.kongzue.dialogx.dialogs.TipDialog;
+import com.kongzue.dialogx.dialogs.WaitDialog;
+import com.kongzue.dialogx.interfaces.DialogXRunnable;
 import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
 
 import org.b3log.siyuan.andapi.Toast;
@@ -79,7 +83,7 @@ public final class JSAndroid {
         this.activity = activity;
     }
 
-    // Sillot extend start
+    //// Sillot extend start
     @JavascriptInterface
     public void requestPermissionActivity(final String id, final String Msg) {
         Log.d("JSAndroid", "requestPermissionActivity() invoked");
@@ -166,11 +170,11 @@ public final class JSAndroid {
                     // 认证成功的处理逻辑
                     String accessAuthCode = activity.mmkv.decodeString("accessAuthCode");
                     if (accessAuthCode == null) {
-                        android.widget.Toast.makeText(activity, "抱歉出错了 ＞︿＜", android.widget.Toast.LENGTH_LONG).show();
+                        TipDialog.show("抱歉出错了 ＞︿＜", WaitDialog.TYPE.WARNING);
+//                        android.widget.Toast.makeText(activity, "抱歉出错了 ＞︿＜", android.widget.Toast.LENGTH_LONG).show();
                         return;
                     }
-                    Mobile.setBiometricPass(accessAuthCode);
-
+                    TipDialog.show("Success!", WaitDialog.TYPE.SUCCESS, 200);
                     // 在这里调用 WebView 方法
                     String jsCode =
                             """
@@ -214,13 +218,13 @@ public final class JSAndroid {
                 @Override
                 public void onAuthenticationFailed() {
                     // 认证失败的处理逻辑
-//                    Mobile.setBiometricPass(false);
+                    TipDialog.show("指纹错误!", WaitDialog.TYPE.ERROR);
                 }
 
                 @Override
                 public void onAuthenticationError(CharSequence errString) {
-                    // 认证错误的处理逻辑
-//                    Mobile.setBiometricPass(false);
+                    // 认证错误的处理逻辑（一般是用户点击了取消）
+                    PopTip.show("用户取消了指纹解锁");
                 }
 
             });
@@ -288,9 +292,35 @@ public final class JSAndroid {
     }
 
 
+    @JavascriptInterface
+    public void exitSillotAndroid() {
+        Log.d("JSAndroid", "exitSillotAndroid() invoked");
+        // 使用runOnUiThread确保在主线程中获取WebView的URL
+        activity.runOnUiThread(() -> {
+            String webViewUrl = activity.webView.getUrl();
+            if (webViewUrl != null && webViewUrl.contains("/check-auth?")) {
+                activity.mmkv.putString("AppCheckInState","lockScreen");
+                Log.d("JSAndroid", "exitSillotAndroid() AppCheckInState->lockScreen");
+            } else {
+                activity.mmkv.putString("AppCheckInState","unlockScreen");
+                Log.d("JSAndroid", "exitSillotAndroid() AppCheckInState->unlockScreen");
+            }
+            activity.finishAffinity();
+            activity.finishAndRemoveTask();
+            System.exit(0);
+        });
+    }
 
 
-    // Sillot extend end
+
+    @JavascriptInterface
+    public void restartSillotAndroid() {
+        Log.d("JSAndroid", "restartSillotAndroid() invoked");
+        activity.coldRestart();
+    }
+
+
+    //// Sillot extend end
 
     @JavascriptInterface
     public String getBlockURL() {
@@ -353,14 +383,6 @@ public final class JSAndroid {
         intent.addCategory(Intent.CATEGORY_HOME);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         activity.startActivity(intent);
-    }
-
-    @JavascriptInterface
-    public void exitSillotAndroid() {
-        Log.d("JSAndroid", "exitSillotAndroid() invoked");
-        activity.finishAffinity();
-        activity.finishAndRemoveTask();
-        System.exit(0);
     }
 
     @JavascriptInterface
