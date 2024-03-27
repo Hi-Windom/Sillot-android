@@ -213,6 +213,7 @@ public final class JSAndroid {
                                                 })""";
                     Log.d("evaluateJavascript", jsCode);
                     activity.webView.evaluateJavascript(jsCode, null);
+                    activity.mmkv.putString("AppCheckInState","unlockScreen");
                 }
 
                 @Override

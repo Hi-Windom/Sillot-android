@@ -376,13 +376,12 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 final Uri uri = request.getUrl();
                 final String url = uri.toString();
                 if (url.contains("127.0.0.1")) {
-                    var AppCheckInState = mmkv.getString("AppCheckInState", "unlockScreen");
+                    var AppCheckInState = mmkv.getString("AppCheckInState", "");
                     if (AppCheckInState.equals("lockScreen")) {
                         try {
                             String encodedUrl = URLEncoder.encode(url, "UTF-8");
                             String gotourl = "http://127.0.0.1:58131/check-auth?to=" + encodedUrl;
                             Log.w("showBootIndex","shouldOverrideUrlLoading -> " + gotourl);
-                            mmkv.putString("AppCheckInState","unlockScreen");
                             view.loadUrl(gotourl);
                         } catch (UnsupportedEncodingException e) {
                             // 编码失败的处理
