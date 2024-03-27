@@ -1,5 +1,6 @@
 package org.b3log.siyuan.jpush
 
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
@@ -10,6 +11,11 @@ import cn.jpush.android.api.NotificationMessage
 import cn.jpush.android.service.JPushMessageService
 
 class JReceiver : JPushMessageService() {
+    inner class MyBroadcastReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            // 处理接收到的广播
+        }
+    }
     override fun onMessage(context: Context, customMessage: CustomMessage) {
         Log.e(TAG, "[onMessage] $customMessage")
         val intent = Intent("com.jiguang.demo.message")
