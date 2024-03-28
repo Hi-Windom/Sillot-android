@@ -17,10 +17,13 @@
  */
 package org.b3log.siyuan;
 
+import static android.content.Context.POWER_SERVICE;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
+import android.os.PowerManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -30,9 +33,9 @@ import android.webkit.WebView;
 import com.blankj.utilcode.util.KeyboardUtils;
 import com.blankj.utilcode.util.StringUtils;
 import com.blankj.utilcode.util.TimeUtils;
+import com.kongzue.dialogx.dialogs.PopTip;
 
 import org.apache.commons.io.FileUtils;
-import org.b3log.siyuan.andapi.Toast;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -76,32 +79,54 @@ public final class Utils {
     }
 
     public static boolean isValidPermission(String id) {
+        if (id == null || id.isEmpty()) {
+            return false;
+        }
         try {
             // 使用反射获取 Manifest.permission 类中的所有静态字段
             Field[] fields = Manifest.permission.class.getFields();
             for (Field field : fields) {
                 // 检查是否存在与id匹配的静态字段
                 if (field.getType() == String.class && field.get(null).equals(id)) {
-                    return true;
+                    return false;
                 }
             }
         } catch (IllegalAccessException e) {
             e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    public static boolean isIgnoringBatteryOptimizations(Context context) {
+        PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        if (powerManager != null) {
+            return powerManager.isIgnoringBatteryOptimizations(context.getPackageName());
         }
         return false;
     }
 
-    public static void requestPermissionActivity(Context context, final String id, final String Msg) {
-        if (Msg != null && !Msg.isEmpty()) {
-            Toast.INSTANCE.Show(context, Msg);
+    public static void requestPermissionActivity(Context context, final String id, final String Msg) { // id 对应的是具体的类，在 permission 文件夹，没有事先创建则会报错
+
+
+        if (id.equals("Battery")) {
+            Intent battery = new Intent("sc.windom.sillot.intent.permission." + id);
+            battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            // 获取 Application Context 并启动 Activity
+            context.getApplicationContext().startActivity(battery);
         }
-
-        Intent battery = new Intent("sc.windom.sillot.intent.permission." + id); // id 对应的是具体的类，在 permission 文件夹，没有事先创建则会报错
-        battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        // 获取 Application Context 并启动 Activity
-        context.getApplicationContext().startActivity(battery);
+        if (Msg != null && !Msg.isEmpty()) {
+            PopTip.show(Msg);
+        }
     }
+    public static boolean hasBatteryOptimizationPermission(Context context) {
+            PowerManager pm = (PowerManager) context.getSystemService(POWER_SERVICE);
+            if (pm != null) {
+                return pm.isIgnoringBatteryOptimizations(context.getPackageName());
+            }
+        return false;
+    }
+
 
 
     public static void registerSoftKeyboardToolbar(final Activity activity, final WebView webView) {

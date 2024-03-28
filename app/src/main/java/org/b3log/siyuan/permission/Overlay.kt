@@ -11,7 +11,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import org.b3log.siyuan.andapi.Toast
+import com.kongzue.dialogx.dialogs.PopTip
 
 class Overlay : AppCompatActivity() {
     //    在应用清单声明对应 activity
@@ -27,11 +27,11 @@ class Overlay : AppCompatActivity() {
         ) { result: ActivityResult ->
             if (Settings.canDrawOverlays(mContext)) {
                 // 用户同意了显示悬浮窗权限
-                Toast.Show(mContext, "已获取显示悬浮窗权限")
+                PopTip.show("已获取显示悬浮窗权限")
                 finish()
             } else {
                 // 用户拒绝了显示悬浮窗权限
-                Toast.Show(mContext, "未获取显示悬浮窗权限")
+                PopTip.show("未获取显示悬浮窗权限")
                 finish()
             }
         }
@@ -42,7 +42,7 @@ class Overlay : AppCompatActivity() {
             )
         ) {
             // 用户拒绝过这个权限了，应该提示用户，为什么需要这个权限。
-            Toast.Show(mContext, "请允许显示悬浮窗权限以实现某些功能")
+            PopTip.show("请允许显示悬浮窗权限以实现某些功能")
             finish()
         } else {
             if (!Settings.canDrawOverlays(mContext)) {

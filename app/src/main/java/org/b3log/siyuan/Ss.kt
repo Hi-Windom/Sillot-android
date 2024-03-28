@@ -21,4 +21,6 @@ object Ss {
     const val REQUEST_CAMERA = 101
     const val REQUEST_LOCATION = 1002
     const val VIDEO_PICK_REQUEST_CODE = 10001
+    const val REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT = 10002 // 申请电源优化无限制权限后重启，部分系统没有该权限
+    const val REQUEST_IGNORE_BATTERY_OPTIMIZATIONS = 10002 // 申请电源优化无限制权限，部分系统没有该权限
 }

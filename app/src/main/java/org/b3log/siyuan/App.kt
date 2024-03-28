@@ -2,11 +2,16 @@ package org.b3log.siyuan
 
 import android.app.Activity
 import android.app.Application
+import android.content.Context
+import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.os.Bundle
 import cn.jpush.android.api.JPushInterface
 import com.baidu.android.pushservice.PushConstants
 import com.baidu.android.pushservice.PushManager
 import com.blankj.utilcode.util.Utils
+import com.kongzue.dialogx.DialogX
+import com.kongzue.dialogx.style.MIUIStyle
 import com.kwai.koom.base.DefaultInitTask.init
 import com.kwai.koom.base.MonitorLog
 import com.kwai.koom.base.MonitorManager
@@ -84,5 +89,35 @@ class App : Application() {
 
         MonitorManager.addMonitorConfig(config)
         OOMMonitor.startLoop() // 启动 OOMMonitor，开始周期性的检测泄漏
+
+        if (isMIUI() || isLargeScreenMachine(this)) {
+            DialogX.globalStyle = MIUIStyle()
+        } else {
+            // 其他主题感觉都不好看，暂时默认，以后可能自己弄个
+        }
+    }
+
+    private fun isMIUI(): Boolean {
+        val packageManager = applicationContext.packageManager
+        val miuiPackageName = "com.miui.gallery"
+        return try {
+            packageManager.getPackageInfo(miuiPackageName, PackageManager.GET_META_DATA)
+            true
+        } catch (e: PackageManager.NameNotFoundException) {
+            false
+        }
+    }
+
+    fun isLargeScreenMachine(context: Context): Boolean {
+        // 获取屏幕的方向
+        val screenLayout = context.resources.configuration.screenLayout
+        // 获取屏幕尺寸的掩码
+        val sizeMask = Configuration.SCREENLAYOUT_SIZE_MASK
+        // 获取屏幕尺寸的值
+        val screenSize = screenLayout and sizeMask
+
+        // 如果屏幕尺寸是超大屏或者巨屏，则可能是平板电脑
+        return screenSize == Configuration.SCREENLAYOUT_SIZE_XLARGE ||
+                screenSize == Configuration.SCREENLAYOUT_SIZE_LARGE
     }
 }

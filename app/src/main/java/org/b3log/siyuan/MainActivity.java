@@ -21,6 +21,7 @@ import org.b3log.siyuan.permission.Ps;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ClipData;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -35,10 +36,12 @@ import android.os.Handler;
 import android.os.LocaleList;
 import android.os.Looper;
 import android.os.Message;
+import android.os.PowerManager;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Display;
 import android.view.DragEvent;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -58,11 +61,9 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.biometric.BiometricManager;
@@ -73,6 +74,8 @@ import androidx.core.content.ContextCompat;
 import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.KeyboardUtils;
 import com.blankj.utilcode.util.StringUtils;
+import com.bumptech.glide.Glide;
+import com.kongzue.dialogx.dialogs.PopTip;
 import com.tencent.bugly.crashreport.CrashReport;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.http.AsyncHttpClient;
@@ -86,6 +89,7 @@ import org.apache.commons.io.FileUtils;
 import org.b3log.siyuan.appUtils.HWs;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
+import org.b3log.siyuan.realm.TestRealm;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -101,8 +105,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
 
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import mobile.Mobile;
 import com.tencent.mmkv.MMKV;
 
@@ -127,9 +133,9 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     private static final int REQUEST_SELECT_FILE = Ss.REQUEST_SELECT_FILE;
     private static final int REQUEST_CAMERA = Ss.REQUEST_CAMERA;
     private long exitTime;
-
     public MMKV mmkv;
-
+    private String MainActivityLifeState = "";
+    private boolean needColdRestart = false;
     private int works = 0;
     private final HashSet<String> permissionList = new HashSet<>();
 
@@ -138,6 +144,21 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         final String appDir = dataDir + "/app";
         final File appDirFile = new File(appDir);
         return !appDirFile.exists();
+    }
+
+//    dispatchKeyEvent 是一个更高级的方法，它可以处理所有类型的按键事件，包括按键按下、抬起和长按。
+//    dispatchKeyEvent 方法在事件传递给 onKeyDown、onKeyUp 或其他控件之前被调用。
+        // REF https://ld246.com/article/1711543259805
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+            if (event.getKeyCode() == KeyEvent.KEYCODE_ESCAPE) { // getKeyCode 的数字只能拿来和 KeyEvent 里面的对比，不然没有意义
+                // 处理ESC键按下事件
+                Log.e("ESC键被按下",String.valueOf(event.getKeyCode()));
+                return false; // 返回 true，事件就不会再传递给其他控件或者 onKeyDown/onKeyUp 方法。
+            }
+        }
+        return super.dispatchKeyEvent(event);
     }
 
     @Override
@@ -154,12 +175,15 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         Log.i("boot", "create main activity");
-
+        MainActivityLifeState = "onCreate";
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         MMKV.initialize(this);
         mmkv = MMKV.defaultMMKV();
+
+        var testRealm = new TestRealm();
+        testRealm.onCreate();
 
         // 启动 HTTP Server
         startHttpServer();
@@ -227,8 +251,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 break;
         }
 
-// 核心权限组，每次启动都要检查
-        HashSet<String> permissionsToCheck = new HashSet<>(Ps.PG_Core);
+
+        HashSet<String> permissionsToCheck = new HashSet<>(Ps.PG_Core); // 核心权限组，每次启动都要检查
         if (Build.VERSION.SDK_INT >= 33) {
             permissionsToCheck.addAll(Ps.useAPI33);
         }
@@ -236,18 +260,18 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
                 permissionList.add(permission);
             } else {
-                Log.d("MainActivity", permission);
+                Log.d("MainActivity", "onCreate() -> "+permission+" granted [Ps.PG_Core]");
             }
         }
 
-// 非核心权限组，仅安装后首次启动集中申请
+
         if (isFirstRun()) {
-            permissionsToCheck.addAll(Ps.PG_unCore);
+            permissionsToCheck.addAll(Ps.PG_unCore); // 非核心权限组，仅安装后首次启动集中申请
             for (String permission : permissionsToCheck) {
                 if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
                     permissionList.add(permission);
                 } else {
-                    Log.d("MainActivity", permission);
+                    Log.d("MainActivity", "onCreate() -> "+permission+" granted [Ps.PG_unCore]");
                 }
             }
         }
@@ -301,7 +325,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 if (fileChooserParams.isCaptureEnabled()) {
                     if (Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q) {
                         // 不支持 Android 10 以下
-                        Toast.makeText(getApplicationContext(), "Capture is not supported on your device (Android 10+ required)", Toast.LENGTH_LONG).show();
+                        PopTip.show("Capture is not supported on your device (Android 10+ required)");
                         uploadMessage = null;
                         return false;
                     }
@@ -322,7 +346,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                     startActivityForResult(intent, REQUEST_SELECT_FILE);
                 } catch (final Exception e) {
                     uploadMessage = null;
-                    Toast.makeText(getApplicationContext(), "Cannot open file chooser", Toast.LENGTH_LONG).show();
+                    PopTip.show("Cannot open file chooser");
                     return false;
                 }
                 return true;
@@ -671,7 +695,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         // 不要管报错，写 super call 就失效了
         if (Utils.isPad(getApplicationContext())) {
             if ((System.currentTimeMillis() - exitTime) > 2000) {
-                Toast.makeText(getApplicationContext(), "再按一次退出程序", Toast.LENGTH_SHORT).show();
+                PopTip.show("再按一次退出程序");
                 exitTime = System.currentTimeMillis();
             } else {
                 HWs.getInstance().vibratorWaveform(this, new long[]{0, 30, 25, 40, 25, 10}, new int[]{2, 4, 3, 2, 2, 2}, -1);
@@ -683,6 +707,13 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             webView.evaluateJavascript("javascript:window.goBack ? window.goBack() : window.history.back()", null);
         }
         HWs.getInstance().vibratorWaveform(this, new long[]{0, 30, 25, 40, 25}, new int[]{9, 2, 1, 7, 2}, -1);
+
+
+//        ImageView imageView = findViewById(R.id.bootLogo);
+//        imageView.setVisibility(View.VISIBLE);
+//        Glide.with(this)
+//                .load("https://tse2-mm.cn.bing.net/th/id/OIP-C._2mnBV5bTFR3rgEI5tcrKgHaNK?w=187&h=333&c=7&r=0&o=5&dpr=1.3&pid=1.7")
+//                .into(imageView);
     }
 
     // 用于保存拍照图片的 uri
@@ -699,6 +730,10 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        Log.w("MainActivity", "onRequestPermissionsResult() -> requestCode "+requestCode+"  grantResults[0] ");
+        if (grantResults.length > 0) {
+            Log.w("MainActivity", "onRequestPermissionsResult() -> requestCode "+requestCode+"  grantResults[0] "+grantResults[0]);
+        }
         if (requestCode == REQUEST_CAMERA) {
             // 请求码应该在整个应用中是全局唯一的，但是处理权限请求结果应该是在申请权限的活动中进行。
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -706,7 +741,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 return;
             }
 
-            Toast.makeText(this, "Permission denied", Toast.LENGTH_LONG).show();
+            PopTip.show("Permission denied");
         }
 
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -737,7 +772,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             String[] permissionsToRequest = permissionList.toArray(new String[0]);
             if (shouldShowRequestPermissionRationale(permissionsToRequest)) {
                 // 显示权限说明
-                Toast.makeText(getApplicationContext(), "必要权限缺失，请处理！", Toast.LENGTH_LONG).show();
+                PopTip.show("必要权限缺失，请处理！");
                 // 打开应用详情界面
                 Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -777,6 +812,12 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        super.onActivityResult(requestCode, resultCode, intent);
+        Log.w("MainActivity", "onActivityResult() -> requestCode "+requestCode+"  resultCode "+resultCode);
+        // 检查返回结果是否是权限请求的结果，不管 resultCode 是什么都要重启的
+        if (requestCode == Ss.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT) {
+            needColdRestart = true;
+        }
         if (null == uploadMessage) {
             super.onActivityResult(requestCode, resultCode, intent);
             return;
@@ -853,6 +894,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Override
     protected void onDestroy() {
         Log.i("boot", "destroy main activity");
+        MainActivityLifeState = "onDestroy";
         super.onDestroy();
         KeyboardUtils.unregisterSoftInputChangedListener(getWindow());
         AppUtils.unregisterAppStatusChangedListener(this);
@@ -867,6 +909,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     public void onForeground(Activity activity) {
+        MainActivityLifeState = "onForeground";
         startSyncData();
         if (null != webView) {
             webView.evaluateJavascript("javascript:window.reconnectWebSocket()", null);
@@ -875,6 +918,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     public void onBackground(Activity activity) {
+        MainActivityLifeState = "onBackground";
         startSyncData();
     }
 
@@ -884,13 +928,26 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        MainActivityLifeState = "onStart";
+        if (needColdRestart) {
+            // 执行冷重启操作
+            coldRestart();
+        }
+    }
+
+
+    @Override
     protected void onResume() {
         super.onResume();
+        MainActivityLifeState = "onResume";
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        MainActivityLifeState = "onPause";
     }
 
     public void exit() {
@@ -919,12 +976,12 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                     final String[] chromeVersionParts = chromeVersion.split("\\.");
                     webViewVer = chromeVersionParts[0];
                     if (Integer.parseInt(webViewVer) < minVer) {
-                        Toast.makeText(this, "WebView version " + webViewVer + " is too low, please upgrade to " + minVer + "+", Toast.LENGTH_LONG).show();
+                        PopTip.show("WebView version " + webViewVer + " is too low, please upgrade to " + minVer + "+");
                     }
                 }
             } catch (final Exception e) {
                 Utils.LogError("boot", "check webview version failed", e);
-                Toast.makeText(this, "Check WebView version failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                PopTip.show("Check WebView version failed: " + e.getMessage());
             }
         }
     }

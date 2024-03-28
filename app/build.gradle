@@ -177,7 +177,10 @@ dependencies {
     //完整版引入
     implementation 'com.github.CarGuo.GSYVideoPlayer:GSYVideoPlayer:v8.6.0-release-jitpack'
 
-    implementation "com.kongzue.dialogx:DialogX:0.0.49"
+    //请修改为使用 DialogX 的最新版本
+    def dialogx_version = "0.0.49"
+    implementation "com.kongzue.dialogx:DialogX:${dialogx_version}"
+    implementation "com.kongzue.dialogx.style:DialogXMIUIStyle:${dialogx_version}"
 
     implementation 'io.realm.kotlin:library-base:1.11.0'
     implementation 'io.realm.kotlin:library-sync:1.11.0'// If using Device Sync

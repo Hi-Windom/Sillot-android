@@ -7,11 +7,11 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.SystemClock.sleep
 import android.util.Log
 import android.view.View
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.kongzue.dialogx.dialogs.PopTip
 import kotlin.system.exitProcess
 
 
@@ -119,7 +119,7 @@ class InitActivity: Activity() {
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this, it)) {
                     // 用户拒绝过这个权限了，应该提示用户，为什么需要这个权限。
                     val mContext: Context = applicationContext
-                    org.b3log.siyuan.andapi.Toast.Show(mContext,"必要权限被拒绝申请，请手动授权！")
+                    PopTip.show("必要权限被拒绝申请，请手动授权！")
                     //打开本应用信息界面
                     val intent = Intent("android.settings.APPLICATION_DETAILS_SETTINGS")
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

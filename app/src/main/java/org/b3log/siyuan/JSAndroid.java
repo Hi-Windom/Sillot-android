@@ -17,6 +17,9 @@
  */
 package org.b3log.siyuan;
 
+import static androidx.core.app.ActivityCompat.startActivityForResult;
+import static com.blankj.utilcode.util.ActivityUtils.startActivity;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.ClipData;
@@ -32,27 +35,25 @@ import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
+import android.widget.LinearLayout;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.ShareCompat;
 import androidx.core.content.FileProvider;
 
-import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.BarUtils;
 import com.blankj.utilcode.util.ServiceUtils;
 import com.blankj.utilcode.util.StringUtils;
+import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.dialogs.PopTip;
 import com.kongzue.dialogx.dialogs.TipDialog;
 import com.kongzue.dialogx.dialogs.WaitDialog;
-import com.kongzue.dialogx.interfaces.DialogXRunnable;
+import com.kongzue.dialogx.util.TextInfo;
 import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
-
-import org.b3log.siyuan.andapi.Toast;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -64,8 +65,6 @@ import java.util.Date;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.core.ObservableOnSubscribe;
-import io.reactivex.rxjava3.disposables.Disposable;
 
 import mobile.Mobile;
 
@@ -85,21 +84,79 @@ public final class JSAndroid {
 
     //// Sillot extend start
     @JavascriptInterface
-    public void requestPermissionActivity(final String id, final String Msg) {
+    public boolean requestPermissionActivity(final String id, final String Msg, final String callback) {
         Log.d("JSAndroid", "requestPermissionActivity() invoked");
-        Utils.requestPermissionActivity(activity, id, Msg);
+        if (Msg != null && !Msg.isEmpty()) {
+            PopTip.show(Msg);
+        }
+        if (id.equals("Battery")) {
+            if (callback.equals("coldRestart")) {
+                if (Utils.isIgnoringBatteryOptimizations(activity)) {
+                    // 应用在电池优化的豁免列表中
+                    MessageDialog messageDialog = new MessageDialog("伺服已开启，重启后生效"
+                            , "稍后手动重启可能导致未知的错误，非必要不选择"
+                            , "立即重启", "稍后手动重启", null)
+                            .setCancelable(false) //是否允许点击外部区域或返回键关闭
+                            .setMaskColor(Color.parseColor("#3D000000"))
+                            ;
+                    messageDialog.show().setCancelButton((baseDialog, v) -> false).setOkButton((baseDialog, v) -> {
+                        activity.coldRestart();
+                        return false;
+                    }).setCancelTextInfo(new TextInfo().setFontColor(Color.RED));
+                } else {
+                    // 应用不在电池优化的豁免列表中
+                    MessageDialog messageDialog = new MessageDialog("伺服已开启，重启后生效"
+                            , "申请权限忽略电源优化（需系统支持）能获得稳定的伺服体验，代价是增加耗电，请按需选择。如果已经忽略，可选择立即重启。\n\n稍后手动重启可能导致未知的错误，非必要不选择"
+                            , "申请权限并重启", "稍后手动重启", "立即重启")
+                            .setButtonOrientation(LinearLayout.VERTICAL)  // 选项竖向排列
+                            .setCancelable(false) //是否允许点击外部区域或返回键关闭
+                            .setMaskColor(Color.parseColor("#3D000000"))
+                            ;
+                    messageDialog.show().setOkButton((baseDialog, v) -> {
+                        activity.runOnUiThread(() -> {
+                            Intent battery = new Intent("sc.windom.sillot.intent.permission.Battery");
+                            battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivityForResult(activity, battery, Ss.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT, null);
+                        });
+                        return false;
+                    }).setCancelButton((baseDialog, v) -> false).setOtherButton((baseDialog, v) -> {
+                        activity.coldRestart();
+                        return false;
+                    }).setCancelTextInfo(new TextInfo().setFontColor(Color.RED));
+                }
+
+
+            } else {
+                Intent battery = new Intent("sc.windom.sillot.intent.permission.Battery");
+                battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivityForResult(activity, battery, Ss.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, null);
+            }
+        }
+        Log.d("JSAndroid", "requestPermissionActivity()  return true");
+        return true; // 返回真表示已经发起申请，不代表结果
     }
     @JavascriptInterface
     public boolean requestPermission(final String id, final String Msg) {
         Log.d("JSAndroid", "requestPermission() invoked");
-        if (id == null || id.isEmpty() || !Utils.isValidPermission(id)) {
+        if (Utils.isValidPermission(id)) {
+            Log.d("JSAndroid", "requestPermission("+id+")  return false");
             return false;
         }
         if (Msg != null && !Msg.isEmpty()) {
-            Toast.INSTANCE.Show(activity, Msg);
+            PopTip.show(Msg);
         }
         ActivityCompat.requestPermissions(activity, new String[]{ id }, 1001);
+        Log.d("JSAndroid", "requestPermission()  return true");
         return true; // 返回真表示已经发起申请，不代表结果
+    }
+    @JavascriptInterface
+    public void openURLuseDefaultApp(final String url) {
+        Uri uri = Uri.parse(url);
+        if (uri.getScheme().toLowerCase().startsWith("http")) {
+            final Intent i = new Intent(Intent.ACTION_VIEW, uri);
+            startActivity(i); // https://developer.android.google.cn/training/app-links/verify-android-applinks?hl=zh-cn
+            // 从 Android 12 开始，经过验证的链接现在会自动在相应的应用中打开，以获得更简化、更快速的用户体验。谷歌还更改了未经Android应用链接验证或用户手动批准的链接的默认处理方式。谷歌表示，Android 12将始终在默认浏览器中打开此类未经验证的链接，而不是向您显示应用程序选择对话框。
+        }
     }
 
 
@@ -171,7 +228,6 @@ public final class JSAndroid {
                     String accessAuthCode = activity.mmkv.decodeString("accessAuthCode");
                     if (accessAuthCode == null) {
                         TipDialog.show("抱歉出错了 ＞︿＜", WaitDialog.TYPE.WARNING);
-//                        android.widget.Toast.makeText(activity, "抱歉出错了 ＞︿＜", android.widget.Toast.LENGTH_LONG).show();
                         return;
                     }
                     TipDialog.show("Success!", WaitDialog.TYPE.SUCCESS, 200);
@@ -264,7 +320,7 @@ public final class JSAndroid {
             outputStream.close();
             Log.i("saveLongScreenshot", "Sillot_savePictureByURL saved to " + file.getAbsolutePath());
             notifyGallery(file);
-            android.widget.Toast.makeText(activity, "图片已保存到 /DCIM/Sillot", android.widget.Toast.LENGTH_LONG).show();
+            PopTip.show("图片已保存到 /DCIM/Sillot");
         } catch (IOException e) {
             e.printStackTrace();
             Log.e("saveLongScreenshot", "Failed to save Sillot_savePictureByURL");
