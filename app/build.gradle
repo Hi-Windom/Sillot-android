@@ -17,8 +17,8 @@ android {
 
     defaultConfig {
         applicationId "sc.windom.sillot"
-        minSdk 30
-        targetSdkVersion 34
+        minSdk 31 // android 12
+        targetSdkVersion 34 // android 14
         versionCode vC
         versionName "0.27"
 
