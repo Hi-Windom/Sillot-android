@@ -117,12 +117,6 @@ fun AListScreen() {
     }
     var showMoreOptions by remember { mutableStateOf(false) }
 
-    var showAboutDialog by remember { mutableStateOf(false) }
-    if (showAboutDialog) {
-        AboutDialog {
-            showAboutDialog = false
-        }
-    }
 
     Scaffold(
         topBar = {
@@ -175,7 +169,6 @@ fun AListScreen() {
                                 text = { Text(stringResource(R.string.about)) },
                                 onClick = {
                                     showMoreOptions = false
-                                    showAboutDialog = true
                                 }
                             )
                         }
