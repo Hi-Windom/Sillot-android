@@ -12,9 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.kongzue.dialogx.dialogs.PopTip
-
 class Overlay : AppCompatActivity() {
-    //    在应用清单声明对应 activity
     private lateinit var requestOverlayPermissionLauncher: ActivityResultLauncher<Intent>
     private lateinit var mContext: Context
 
@@ -24,16 +22,13 @@ class Overlay : AppCompatActivity() {
 
         requestOverlayPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
-        ) { result: ActivityResult ->
+        ) { result ->
             if (Settings.canDrawOverlays(mContext)) {
-                // 用户同意了显示悬浮窗权限
                 PopTip.show("已获取显示悬浮窗权限")
-                finish()
             } else {
-                // 用户拒绝了显示悬浮窗权限
                 PopTip.show("未获取显示悬浮窗权限")
-                finish()
             }
+            finish()
         }
 
         if (ActivityCompat.shouldShowRequestPermissionRationale(
@@ -41,16 +36,12 @@ class Overlay : AppCompatActivity() {
                 Manifest.permission.SYSTEM_ALERT_WINDOW
             )
         ) {
-            // 用户拒绝过这个权限了，应该提示用户，为什么需要这个权限。
             PopTip.show("请允许显示悬浮窗权限以实现某些功能")
             finish()
         } else {
             if (!Settings.canDrawOverlays(mContext)) {
-                // 未获取显示悬浮窗权限，则弹出系统弹窗供用户选择
                 requestOverlayPermission()
-                // 这里不能结束
             } else {
-                // 已获取显示悬浮窗权限，跳过
                 finish()
             }
         }

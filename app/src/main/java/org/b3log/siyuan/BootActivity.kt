@@ -45,7 +45,7 @@ import java.io.File
  */
 class BootActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.i("boot", "create boot activity")
+        Log.i("boot", "create BootActivity (siyuan)")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_agreement)
         // Privacy policy solicitation will no longer pop up when Android starts for the first time https://github.com/siyuan-note/siyuan/issues/10348
@@ -55,9 +55,6 @@ class BootActivity : AppCompatActivity() {
 //            showAgreements()
 //            return
 //        }
-
-        val configClarity = ClarityConfig(projectId="gqgzluae5t",logLevel= LogLevel.Verbose)
-        Clarity.initialize(this, configClarity)
 
         // 获取可能存在的 block URL（通过 siyuan://blocks/xxx 打开应用时传递的）
         val blockURL = blockURL
@@ -84,13 +81,6 @@ class BootActivity : AppCompatActivity() {
                 Log.e("boot", "gets block URL failed", e)
             }
             return ret
-        }
-    private val isFirstRun: Boolean
-        get() {
-            val dataDir = filesDir.absolutePath
-            val appDir = "$dataDir/app"
-            val appDirFile = File(appDir)
-            return !appDirFile.exists()
         }
 
     private fun startMainActivity(blockURL: String) {

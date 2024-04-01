@@ -17,6 +17,8 @@
  */
 package org.b3log.siyuan;
 
+import static org.b3log.siyuan.json.TestMoshiKt.testmoshi;
+
 import org.b3log.siyuan.permission.Ps;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -38,6 +40,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.PowerManager;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.Display;
 import android.view.DragEvent;
@@ -45,6 +48,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.inputmethod.InputMethodManager;
 import android.webkit.CookieManager;
 import android.view.WindowManager;
 import android.webkit.JsPromptResult;
@@ -62,6 +66,8 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import androidx.activity.OnBackPressedCallback;
+import androidx.activity.OnBackPressedDispatcher;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
@@ -93,8 +99,12 @@ import org.b3log.siyuan.realm.TestRealm;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
@@ -120,7 +130,7 @@ import com.tencent.mmkv.MMKV;
  * @since 1.0.0
  */
 public class MainActivity extends AppCompatActivity implements com.blankj.utilcode.util.Utils.OnAppStatusChangedListener {
-
+    private final String TAG = "MainActivity";
     private AsyncHttpServer server;
     private int serverPort = Ss.DefaultHTTPPort;
     public WebView webView;
@@ -136,6 +146,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     public MMKV mmkv;
     private String MainActivityLifeState = "";
     private boolean needColdRestart = false;
+    private boolean isWebviewReady = false;
     private int works = 0;
     private final HashSet<String> permissionList = new HashSet<>();
 
@@ -152,10 +163,15 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         if (event.getAction() == KeyEvent.ACTION_DOWN) {
+//            try {
+//                throw new Exception(String.valueOf(event.getKeyCode()));
+//            } catch (Exception e) {
+//                Log.e(TAG, "捕获到异常：" + e.getMessage());
+//                App.getInstance().reportException(e);
+//            }
             if (event.getKeyCode() == KeyEvent.KEYCODE_ESCAPE) { // getKeyCode 的数字只能拿来和 KeyEvent 里面的对比，不然没有意义
-                // 处理ESC键按下事件
+                // 处理ESC键按下事件，并不能阻止输入法对ESC的响应
                 Log.e("ESC键被按下",String.valueOf(event.getKeyCode()));
-                return false; // 返回 true，事件就不会再传递给其他控件或者 onKeyDown/onKeyUp 方法。
             }
         }
         return super.dispatchKeyEvent(event);
@@ -163,6 +179,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     public void onNewIntent(final Intent intent) {
+        Log.w(TAG, "onNewIntent() involved");
         super.onNewIntent(intent);
         if (null != webView) {
             final String blockURL = intent.getStringExtra("blockURL");
@@ -173,8 +190,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     }
 
     @Override
-    protected void onCreate(final Bundle savedInstanceState) {
-        Log.i("boot", "create main activity");
+    protected void onCreate(final Bundle savedInstanceState) { // 只执行一次。在这里设置布局和初始化数据。在大多数情况下，不需要在 onRestart 中做太多事情，因为 onStart 已经处理了活动可见时的初始化。
+        Log.w(TAG, "onCreate() involved");
         MainActivityLifeState = "onCreate";
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -182,13 +199,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         MMKV.initialize(this);
         mmkv = MMKV.defaultMMKV();
 
-        var testRealm = new TestRealm();
-        testRealm.onCreate();
 
-        // 启动 HTTP Server
-        startHttpServer();
-
-        CrashReport.initCrashReport(getApplicationContext(), Ss.initCrashReportID, true);
 
         // 这段代码并不会直接导致高刷率的生效，它只是在获取支持的显示模式中寻找高刷率最大的模式，并将其设置为首选模式。
         Display display = null;
@@ -208,13 +219,50 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             getWindow().setAttributes(params);
         }
 
+        // 获取OnBackPressedDispatcher
+        OnBackPressedDispatcher onBackPressedDispatcher = getOnBackPressedDispatcher();
+
+        // 设置OnBackPressedCallback
+        onBackPressedDispatcher.addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                // 在这里处理后退逻辑
+                if (Utils.isPad(getApplicationContext())) {
+                    if ((System.currentTimeMillis() - exitTime) > 2000) {
+                        PopTip.show("再按一次退出程序");
+                        exitTime = System.currentTimeMillis();
+                    } else {
+                        HWs.getInstance().vibratorWaveform(getApplicationContext(), new long[]{0, 30, 25, 40, 25, 10}, new int[]{2, 4, 3, 2, 2, 2}, -1);
+                        exit();
+                        try {
+                            Thread.sleep(200);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        System.exit(0);
+                    }
+                } else {
+                    webView.evaluateJavascript("javascript:window.goBack ? window.goBack() : window.history.back()", null);
+                }
+                HWs.getInstance().vibratorWaveform(getApplicationContext(), new long[]{0, 30, 25, 40, 25}, new int[]{9, 2, 1, 7, 2}, -1);
+            }
+        });
+
+
+        // 启动 HTTP Server
+        Log.w(TAG, "onStart() -> startHttpServer() involved");
+        startHttpServer();
+
         // 初始化 UI 元素
+        Log.w(TAG, "onStart() -> initUIElements() involved");
         initUIElements();
 
         // 拉起内核
+        Log.w(TAG, "onStart() -> startKernel() involved");
         startKernel();
 
         // 初始化外观资源
+        Log.w(TAG, "onStart() -> initAppearance() involved");
         initAppearance();
 
         AppUtils.registerAppStatusChangedListener(this);
@@ -234,22 +282,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         // KeyboardUtils.fixAndroidBug5497(this);
         AndroidBug5497Workaround.assistActivity(this);
 
-        BiometricManager biometricManager = BiometricManager.from(this);
-        switch (biometricManager.canAuthenticate()) {
-            case BiometricManager.BIOMETRIC_SUCCESS:
-                Log.d("BiometricManager","应用可以进行生物识别技术进行身份验证。");
-//                showBiometricPrompt();
-                break;
-            case BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE:
-                Log.e("BiometricManager","该设备上没有搭载可用的生物特征功能。");
-                break;
-            case BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE:
-                Log.e("BiometricManager","生物识别功能当前不可用。");
-                break;
-            case BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED:
-                Log.e("BiometricManager","用户没有录入生物识别数据。");
-                break;
-        }
 
 
         HashSet<String> permissionsToCheck = new HashSet<>(Ps.PG_Core); // 核心权限组，每次启动都要检查
@@ -260,7 +292,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
                 permissionList.add(permission);
             } else {
-                Log.d("MainActivity", "onCreate() -> "+permission+" granted [Ps.PG_Core]");
+                Log.d(TAG, "onCreate() -> "+permission+" granted [Ps.PG_Core]");
             }
         }
 
@@ -271,7 +303,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
                     permissionList.add(permission);
                 } else {
-                    Log.d("MainActivity", "onCreate() -> "+permission+" granted [Ps.PG_unCore]");
+                    Log.d(TAG, "onCreate() -> "+permission+" granted [Ps.PG_unCore]");
                 }
             }
         }
@@ -392,20 +424,22 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    private void showBootIndex() {
+    void showBootIndex() {
+        Log.w(TAG, "showBootIndex() involved");
         webView.setVisibility(View.VISIBLE);
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request) {
                 final Uri uri = request.getUrl();
                 final String url = uri.toString();
+                Log.w(TAG, "showBootIndex() -> [WebViewClient] shouldOverrideUrlLoading <- "+url);
                 if (url.contains("127.0.0.1")) {
                     var AppCheckInState = mmkv.getString("AppCheckInState", "");
                     if (AppCheckInState.equals("lockScreen")) {
                         try {
                             String encodedUrl = URLEncoder.encode(url, "UTF-8");
                             String gotourl = "http://127.0.0.1:58131/check-auth?to=" + encodedUrl;
-                            Log.w("showBootIndex","shouldOverrideUrlLoading -> " + gotourl);
+                            Log.w(TAG,"showBootIndex() -> [WebViewClient] shouldOverrideUrlLoading -> " + gotourl);
                             view.loadUrl(gotourl);
                         } catch (UnsupportedEncodingException e) {
                             // 编码失败的处理
@@ -421,6 +455,11 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                     exit();
                     return true;
                 }
+                if (url.contains("siyuan://androidRestartSiYuan")) {
+//                    sleep(2000);
+                    coldRestart();
+                    return false;
+                }
 
                 if (uri.getScheme().toLowerCase().startsWith("http")) {
                     final Intent i = new Intent(Intent.ACTION_VIEW, uri);
@@ -435,11 +474,10 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             public void onPageFinished(WebView view, String url) {
                 // 页面加载完成时调用
                 Log.d("WebViewClient", "onPageFinished: " + url);
-                new Handler().postDelayed(() -> {
+                bootLogo.postDelayed(() -> {
                     bootLogo.setVisibility(View.GONE);
                     bootProgressBar.setVisibility(View.GONE);
                     bootDetailsText.setVisibility(View.GONE);
-                    final ImageView bootLogo = findViewById(R.id.bootLogo);
                     bootLogo.setVisibility(View.GONE);
                 }, 186);
             }
@@ -479,6 +517,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         webView.loadUrl("http://127.0.0.1:58131/appearance/boot/index.html?v=" + Utils.version);
 
         new Thread(this::keepLive).start();
+        isWebviewReady = true;
     }
 
     private Handler bootHandler = new Handler(Looper.getMainLooper()) {
@@ -496,6 +535,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     private void startHttpServer() {
         if (null != server) {
             server.stop();
+            Log.w(TAG, "startHttpServer() stop exist server");
         }
 
         try {
@@ -549,7 +589,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         // 生产环境绑定 ipv6 回环地址 [::1] 以防止被远程访问
         s.listen(InetAddress.getLoopbackAddress(), serverPort, server.getListenCallback());
         // 开发环境绑定所有网卡以便调试
-        //s.listen(null, serverPort, server.getListenCallback());
+//        s.listen(null, serverPort, server.getListenCallback());
+        Log.w(TAG, "startHttpServer() -> HTTP server is listening on port [" + serverPort + "]");
         Utils.LogInfo("http", "HTTP server is listening on port [" + serverPort + "]");
     }
 
@@ -580,7 +621,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             showBootIndex();
             return;
         }
-
+        startHttpServer();
         final String appDir = getFilesDir().getAbsolutePath() + "/app";
 //        final Locale locale = getResources().getConfiguration().locale;
         // As of API 24 (Nougat) and later
@@ -612,6 +653,45 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         final Message msg = new Message();
         msg.setData(b);
         bootHandler.sendMessage(msg);
+    }
+    void bootKernel(String i) {
+        Mobile.setHttpServerPort(serverPort);
+        if (Mobile.isHttpServing()) {
+            Log.w(TAG, "bootKernel(i) Mobile.isHttpServing , not need showBootIndex()");
+            webView.evaluateJavascript("javascript:window.reconnectWebSocket()", null);
+//            showBootIndex();
+            return;
+        }
+        final String appDir = getFilesDir().getAbsolutePath() + "/app";
+//        final Locale locale = getResources().getConfiguration().locale;
+        // As of API 24 (Nougat) and later
+        LocaleList locales = getResources().getConfiguration().getLocales();
+        // Now you can access the first locale in the list as follows:
+        Locale locale = locales.get(0);
+        final String workspaceBaseDir = getExternalFilesDir(null).getAbsolutePath();
+        final String timezone = TimeZone.getDefault().getID();
+        new Thread(() -> {
+            final String localIPs = Utils.getIPAddressList();
+            String lang = locale.getLanguage() + "_" + locale.getCountry();
+            if (lang.toLowerCase().contains("cn")) {
+                lang = "zh_CN";
+            } else {
+                lang = "en_US";
+            }
+
+            Mobile.startKernelFast("android", appDir, workspaceBaseDir, localIPs);
+//            Mobile.startKernel("android", appDir, workspaceBaseDir, timezone, localIPs, lang,
+//                    Build.VERSION.RELEASE +
+//                            "/SDK " + Build.VERSION.SDK_INT +
+//                            "/WebView " + webViewVer +
+//                            "/Manufacturer " + android.os.Build.MANUFACTURER +
+//                            "/Brand " + android.os.Build.BRAND +
+//                            "/UA " + userAgent);
+        }).start();
+//        initUIElements();
+//        if (null != webView) {
+//            webView.evaluateJavascript("javascript:window.reconnectWebSocket()", null);
+//        }
     }
 
     /**
@@ -690,32 +770,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         }
     }
 
-    @Override
-    public void onBackPressed() {
-        // 不要管报错，写 super call 就失效了
-        if (Utils.isPad(getApplicationContext())) {
-            if ((System.currentTimeMillis() - exitTime) > 2000) {
-                PopTip.show("再按一次退出程序");
-                exitTime = System.currentTimeMillis();
-            } else {
-                HWs.getInstance().vibratorWaveform(this, new long[]{0, 30, 25, 40, 25, 10}, new int[]{2, 4, 3, 2, 2, 2}, -1);
-                this.exit();
-                sleep(200);
-                System.exit(0);
-            }
-        } else {
-            webView.evaluateJavascript("javascript:window.goBack ? window.goBack() : window.history.back()", null);
-        }
-        HWs.getInstance().vibratorWaveform(this, new long[]{0, 30, 25, 40, 25}, new int[]{9, 2, 1, 7, 2}, -1);
-
-
-//        ImageView imageView = findViewById(R.id.bootLogo);
-//        imageView.setVisibility(View.VISIBLE);
-//        Glide.with(this)
-//                .load("https://tse2-mm.cn.bing.net/th/id/OIP-C._2mnBV5bTFR3rgEI5tcrKgHaNK?w=187&h=333&c=7&r=0&o=5&dpr=1.3&pid=1.7")
-//                .into(imageView);
-    }
-
     // 用于保存拍照图片的 uri
     private Uri mCameraUri;
 
@@ -730,9 +784,9 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        Log.w("MainActivity", "onRequestPermissionsResult() -> requestCode "+requestCode+"  grantResults[0] ");
+        Log.w(TAG, "onRequestPermissionsResult() -> requestCode "+requestCode+"  grantResults[0] ");
         if (grantResults.length > 0) {
-            Log.w("MainActivity", "onRequestPermissionsResult() -> requestCode "+requestCode+"  grantResults[0] "+grantResults[0]);
+            Log.w(TAG, "onRequestPermissionsResult() -> requestCode "+requestCode+"  grantResults[0] "+grantResults[0]);
         }
         if (requestCode == REQUEST_CAMERA) {
             // 请求码应该在整个应用中是全局唯一的，但是处理权限请求结果应该是在申请权限的活动中进行。
@@ -813,10 +867,11 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
-        Log.w("MainActivity", "onActivityResult() -> requestCode "+requestCode+"  resultCode "+resultCode);
+        Log.w(TAG, "onActivityResult() -> requestCode "+requestCode+"  resultCode "+resultCode);
         // 检查返回结果是否是权限请求的结果，不管 resultCode 是什么都要重启的
-        if (requestCode == Ss.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT) {
-            needColdRestart = true;
+        if (requestCode == Ss.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT && webView != null) {
+//            needColdRestart = true;
+            RestartSiyuanInWebview();
         }
         if (null == uploadMessage) {
             super.onActivityResult(requestCode, resultCode, intent);
@@ -893,7 +948,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     protected void onDestroy() {
-        Log.i("boot", "destroy main activity");
+        Log.w(TAG, "onDestroy() involved");
         MainActivityLifeState = "onDestroy";
         super.onDestroy();
         KeyboardUtils.unregisterSoftInputChangedListener(getWindow());
@@ -909,6 +964,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     public void onForeground(Activity activity) {
+        Log.w(TAG, "onForeground() involved");
         MainActivityLifeState = "onForeground";
         startSyncData();
         if (null != webView) {
@@ -918,6 +974,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     public void onBackground(Activity activity) {
+        Log.w(TAG, "onBackground() involved");
         MainActivityLifeState = "onBackground";
         startSyncData();
     }
@@ -925,29 +982,50 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Override
     public void onMultiWindowModeChanged(boolean isInMultiWindowMode) {
         super.onMultiWindowModeChanged(isInMultiWindowMode);
+        Log.w(TAG, "onMultiWindowModeChanged() involved");
     }
 
     @Override
-    protected void onStart() {
+    protected void onStart() { // 当活动变得对用户可见时，系统会调用这个方法。这是在活动即将进入前台并且用户可以看到它时进行最后准备的地方。在这里进行用户可见时的初始化，比如开始动画、注册广播接收器等。
         super.onStart();
         MainActivityLifeState = "onStart";
-        if (needColdRestart) {
-            // 执行冷重启操作
-            coldRestart();
-        }
+
+        Log.w(TAG, "onStart() -> canPopInBackground "+Utils.canPopInBackground(this));
+        Log.w(TAG, "onStart() -> canShowOnTop "+Utils.canShowOnTop(this));
+        Log.w(TAG, "onStart() -> isShowingOnLockScreen "+Utils.isShowingOnLockScreen(this));
+        Log.w(TAG, "onStart() -> canManageAllFiles "+Utils.canManageAllFiles(this));
+        Log.w(TAG, "onStart() -> canAccessDeviceState "+Utils.canAccessDeviceState(this));
+        Log.w(TAG, "onStart() -> canRequestPackageInstalls "+Utils.canRequestPackageInstalls(this));
+
+
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.w(TAG, "onStop() involved");
+        MainActivityLifeState = "onStop";
+    }
 
     @Override
     protected void onResume() {
         super.onResume();
+        Log.w(TAG, "onResume() involved");
         MainActivityLifeState = "onResume";
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        Log.w(TAG, "onPause() involved");
         MainActivityLifeState = "onPause";
+    }
+
+    @Override
+    protected void onRestart() { // 当活动重新启动时调用（一般是onStop后）。在这里恢复活动之前的状态，比如重新获取数据、恢复界面状态等。
+        super.onRestart();
+        Log.w(TAG, "onRestart() involved");
+        MainActivityLifeState = "onRestart";
     }
 
     public void exit() {
@@ -956,13 +1034,20 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     }
 
     public void coldRestart() {
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        finishAffinity(); //  这个方法用于结束当前活动所在的亲和性任务中的所有活动。亲和性任务是指具有相同 taskAffinity 属性的一组活动。当调用 finishAffinity() 时，系统会结束当前活动所在任务中所有与当前活动具有相同 taskAffinity 的活动，但不会结束其他任务中的活动。
+        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
-        finish();
-        System.exit(0); // 不推荐的做法，因为它可能会导致应用关闭时未释放的资源，但在冷启动时，这可能是必要的。
+//        finishAndRemoveTask(); //  这个方法用于结束当前活动，并从任务栈中移除整个任务。这意味着，当前活动所在的任务中所有的活动都会被结束，并且任务本身也会被移除。如果这个任务是最顶层的任务，那么用户将返回到主屏幕。
+       android.os.Process.killProcess(android.os.Process.myPid()); // 暂时无法解决杀死其他任务栈的冲突，不加这句重启活动会崩溃
     }
 
+    public void RestartSiyuanInWebview() {
+        if (webView != null) {
+            webView.evaluateJavascript("javascript:window.Sillot.androidRestartSiYuan();", null);
+            // 接下来由 webview 发起 "siyuan://androidRestartSiYuan"
+        }
+    }
 
 
     private void checkWebViewVer(final WebSettings ws) {

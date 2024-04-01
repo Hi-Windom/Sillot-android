@@ -1,25 +1,26 @@
 package org.b3log.siyuan.videoPlayer;
 
+import android.app.PictureInPictureParams;
 import android.content.pm.ActivityInfo;
+import android.graphics.Rect;
+import android.os.Build;
 import android.os.Bundle;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import android.view.View;
-import android.widget.ImageView;
 
+import android.util.Rational;
+import android.view.View;
 import org.b3log.siyuan.R;
 import com.shuyu.gsyvideoplayer.GSYVideoManager;
 import com.shuyu.gsyvideoplayer.utils.OrientationUtils;
 import com.shuyu.gsyvideoplayer.video.StandardGSYVideoPlayer;
+import java.io.File;
 
-/**
- * 横屏不旋转的 Demo
- */
 public class SimplePlayer extends AppCompatActivity {
 
     StandardGSYVideoPlayer videoPlayer;
 
     OrientationUtils orientationUtils;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,9 +33,11 @@ public class SimplePlayer extends AppCompatActivity {
 
         // 获取传入的视频路径或链接
         String videoPath = getIntent().getStringExtra("videoPath");
+        // 从视频路径中获取文件名
+        String fileName = getFileNameFromPath(videoPath);
 
         // 设置视频地址
-        videoPlayer.setUp(videoPath, true, "测试视频");
+        videoPlayer.setUp(videoPath, true, fileName);
 
         //增加title
         videoPlayer.getTitleTextView().setVisibility(View.VISIBLE);
@@ -71,6 +74,10 @@ public class SimplePlayer extends AppCompatActivity {
         videoPlayer.startPlayLogic(); // 开始播放
     }
 
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+    }
 
     @Override
     protected void onPause() {
@@ -90,7 +97,6 @@ public class SimplePlayer extends AppCompatActivity {
         GSYVideoManager.releaseAllVideos();
         if (orientationUtils != null)
             orientationUtils.releaseListener();
-        finish();
     }
 
     @Override
@@ -107,4 +113,11 @@ public class SimplePlayer extends AppCompatActivity {
         videoPlayer.setVideoAllCallBack(null);
         super.onBackPressed();
     }
+
+    // 从视频路径中获取文件名
+    private String getFileNameFromPath(String videoPath) {
+        File file = new File(videoPath);
+        return file.getName();
+    }
+
 }

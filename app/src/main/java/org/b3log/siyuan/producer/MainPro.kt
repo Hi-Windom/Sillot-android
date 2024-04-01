@@ -6,11 +6,19 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import androidx.activity.ComponentActivity
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import org.b3log.siyuan.Ss
 import org.b3log.siyuan.videoPlayer.SimplePlayer
 
-class MainPro : Activity() {
-
+class MainPro : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -40,19 +48,29 @@ class MainPro : Activity() {
         startActivity(intent)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == Ss.VIDEO_PICK_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-            val selectedVideoUri = data?.data
-            selectedVideoUri?.let {
-                val videoPath = getRealPathFromURI(it) // 获取真实路径
-                val intent = Intent(this, SimplePlayer::class.java)
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK) // 独立窗口，不影响主窗口
-                intent.putExtra("videoPath", videoPath)
-                startActivity(intent)
-            }
+    private val pickVideoLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let {
+            val videoPath = getRealPathFromURI(it)
+            val intent = Intent(this, SimplePlayer::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+            intent.putExtra("videoPath", videoPath)
+            startActivity(intent)
         }
     }
+
+//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+//        super.onActivityResult(requestCode, resultCode, data)
+//        if (requestCode == Ss.VIDEO_PICK_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+//            val selectedVideoUri = data?.data
+//            selectedVideoUri?.let {
+//                val videoPath = getRealPathFromURI(it) // 获取真实路径
+//                val intent = Intent(this, SimplePlayer::class.java)
+//                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK) // 独立窗口，不影响主窗口
+//                intent.putExtra("videoPath", videoPath)
+//                startActivity(intent)
+//            }
+//        }
+//    }
 
     private fun getRealPathFromURI(uri: Uri): String {
         val projection = arrayOf(MediaStore.Images.Media.DATA)
@@ -65,5 +83,13 @@ class MainPro : Activity() {
             return path
         }
         return ""
+    }
+}
+
+@Preview(widthDp = 50, heightDp = 50, showSystemUi = true)
+@Composable
+fun SquareComposablePreview() {
+    Box(Modifier.background(Color.Yellow)) {
+        Text("Hello World2")
     }
 }

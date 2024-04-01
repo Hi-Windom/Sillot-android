@@ -1,7 +1,9 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
+    def  kotlin_v = '1.9.23'  // 需要对齐 Compose Compiler  版本  REF https://developer.android.com/jetpack/androidx/releases/compose-kotlin?hl=zh-cn
+    // kotlin_v 设为 1.9+ 会报错 Inconsistent JVM-target compatibility detected for tasks 'compileDebugJavaWithJavac' (17) and 'kaptGenerateStubsDebugKotlin' (1.8).
     ext {
-        kotlin_version = '1.8.0'
+        kotlin_version = kotlin_v
     }
     repositories {
         maven { url 'https://jitpack.io' }
@@ -13,8 +15,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.0.2' // 8.0+ 需要 JDK 17+
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.0'
+        classpath "com.android.tools.build:gradle:8.3.1" // 8.0+ 需要 JDK 17+
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlin_v}"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -22,6 +24,7 @@ buildscript {
 }
 plugins {
     id 'io.realm.kotlin' version '1.11.0' apply false
+    id 'com.mikepenz.aboutlibraries.plugin' version "11.1.1" apply false
 }
 allprojects {
     repositories {

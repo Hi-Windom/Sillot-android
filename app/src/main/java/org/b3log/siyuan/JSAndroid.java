@@ -19,6 +19,7 @@ package org.b3log.siyuan;
 
 import static androidx.core.app.ActivityCompat.startActivityForResult;
 import static com.blankj.utilcode.util.ActivityUtils.startActivity;
+import static com.blankj.utilcode.util.ViewUtils.runOnUiThread;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -31,7 +32,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.icu.text.SimpleDateFormat;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
@@ -41,6 +44,7 @@ import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.widget.LinearLayout;
 
+import androidx.biometric.BiometricManager;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.ShareCompat;
 import androidx.core.content.FileProvider;
@@ -66,6 +70,7 @@ import java.util.Date;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Observable;
 
+import io.reactivex.rxjava3.disposables.Disposable;
 import mobile.Mobile;
 
 /**
@@ -84,6 +89,11 @@ public final class JSAndroid {
 
     //// Sillot extend start
     @JavascriptInterface
+    public boolean requestExternalStoragePermission() {
+        Utils.requestExternalStoragePermission(activity);
+        return true;
+    }
+    @JavascriptInterface
     public boolean requestPermissionActivity(final String id, final String Msg, final String callback) {
         Log.d("JSAndroid", "requestPermissionActivity() invoked");
         if (Msg != null && !Msg.isEmpty()) {
@@ -100,7 +110,7 @@ public final class JSAndroid {
                             .setMaskColor(Color.parseColor("#3D000000"))
                             ;
                     messageDialog.show().setCancelButton((baseDialog, v) -> false).setOkButton((baseDialog, v) -> {
-                        activity.coldRestart();
+                        activity.RestartSiyuanInWebview();
                         return false;
                     }).setCancelTextInfo(new TextInfo().setFontColor(Color.RED));
                 } else {
@@ -120,12 +130,10 @@ public final class JSAndroid {
                         });
                         return false;
                     }).setCancelButton((baseDialog, v) -> false).setOtherButton((baseDialog, v) -> {
-                        activity.coldRestart();
+                        activity.RestartSiyuanInWebview();
                         return false;
                     }).setCancelTextInfo(new TextInfo().setFontColor(Color.RED));
                 }
-
-
             } else {
                 Intent battery = new Intent("sc.windom.sillot.intent.permission.Battery");
                 battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -160,10 +168,10 @@ public final class JSAndroid {
     }
 
 
-    @SuppressLint("CheckResult")
     @JavascriptInterface
     public void showWifi() {
         Log.d("JSAndroid", "showWifi() invoked");
+
         Observable<Boolean> locationPermissionObservable = Observable.create(emitter -> {
             if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 emitter.onNext(true);
@@ -180,10 +188,10 @@ public final class JSAndroid {
             }
         });
 
-        Observable.combineLatest(locationPermissionObservable, overlayPermissionObservable, (locationGranted, overlayGranted) -> locationGranted && overlayGranted)
-                .filter(granted -> granted) // 过滤掉未获得权限的情况
+        Disposable disposable = Observable.combineLatest(locationPermissionObservable, overlayPermissionObservable, (locationGranted, overlayGranted) -> locationGranted && overlayGranted)
+                .filter(granted -> granted) // Filter out cases where permissions are not granted
                 .flatMap(granted -> {
-                    // 启动悬浮窗 Service
+                    // Start the floating window service
                     Intent intent = new Intent(activity, FloatingWindowService.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
                     ServiceUtils.startService(intent);
@@ -195,9 +203,8 @@ public final class JSAndroid {
                         granted -> Log.d("Permission", "Permissions granted and service started."),
                         throwable -> Log.e("Permission", "Error occurred: " + throwable.getMessage())
                 );
-
-
     }
+
 
 
     @JavascriptInterface
@@ -275,12 +282,32 @@ public final class JSAndroid {
                 @Override
                 public void onAuthenticationFailed() {
                     // 认证失败的处理逻辑
-                    TipDialog.show("指纹错误!", WaitDialog.TYPE.ERROR);
+                    TipDialog.show("指纹不匹配!", WaitDialog.TYPE.ERROR);
                 }
 
                 @Override
                 public void onAuthenticationError(CharSequence errString) {
                     // 认证错误的处理逻辑（一般是用户点击了取消）
+
+                    BiometricManager biometricManager = BiometricManager.from(activity);
+                    switch (biometricManager.canAuthenticate()) {
+                        case BiometricManager.BIOMETRIC_SUCCESS:
+                            Log.d("BiometricManager","应用可以进行生物识别技术进行身份验证。");
+                            return;
+                        case BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE:
+                            Log.e("BiometricManager","该设备上没有搭载可用的生物特征功能。");
+                            PopTip.show("该设备上没有搭载可用的生物特征功能");
+                            return;
+                        case BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE:
+                            Log.e("BiometricManager","生物识别功能当前不可用。");
+                            PopTip.show("生物识别功能当前不可用");
+                            return;
+                        case BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED:
+                            Log.e("BiometricManager","用户没有录入生物识别数据。");
+                            PopTip.show("用户没有录入生物识别数据");
+                            return;
+                    }
+
                     PopTip.show("用户取消了指纹解锁");
                 }
 
@@ -329,10 +356,20 @@ public final class JSAndroid {
 
     private void notifyGallery(File imageFile) {
 //        向系统相册发送媒体文件扫描广播来通知系统相册更新媒体库
-        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        Uri contentUri = Uri.fromFile(imageFile);
-        mediaScanIntent.setData(contentUri);
-        activity.sendBroadcast(mediaScanIntent);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            MediaScannerConnection.scanFile(activity,
+                    new String[]{imageFile.toString()}, null,
+                    (path, uri) -> {
+                        Log.i("ExternalStorage", "Scanned " + path + ":");
+                        Log.i("ExternalStorage", "-> uri=" + uri);
+                    });
+        } else {
+                Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                Uri contentUri = Uri.fromFile(imageFile);
+                mediaScanIntent.setData(contentUri);
+                activity.sendBroadcast(mediaScanIntent);
+        }
     }
     // 使用图片选择器
     private void openGalleryPicker() {
@@ -370,10 +407,18 @@ public final class JSAndroid {
 
 
 
+//    @JavascriptInterface
+//    public void restartSillotAndroid() {
+//        Log.d("JSAndroid", "restartSillotAndroid() invoked");
+//        activity.RestartSiyuanInWebview();
+//    }
     @JavascriptInterface
-    public void restartSillotAndroid() {
+    public void androidReboot() {
         Log.d("JSAndroid", "restartSillotAndroid() invoked");
-        activity.coldRestart();
+        runOnUiThread(() -> {
+            activity.bootKernel("");
+//            activity.showBootIndex();
+        });
     }
 
 

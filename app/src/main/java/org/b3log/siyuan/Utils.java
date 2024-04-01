@@ -19,11 +19,18 @@ package org.b3log.siyuan;
 
 import static android.content.Context.POWER_SERVICE;
 
+import static androidx.core.app.ActivityCompat.startActivityForResult;
+
 import android.app.Activity;
+import android.app.KeyguardManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.os.Build;
+import android.os.Environment;
 import android.os.PowerManager;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -98,13 +105,67 @@ public final class Utils {
         return true;
     }
 
-    public static boolean isIgnoringBatteryOptimizations(Context context) {
+
+    public static void requestExternalStoragePermission(Activity activity) {
+        if (!canManageAllFiles(activity)) {
+            Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+            startActivityForResult(activity, intent, Ss.REQUEST_ExternalStorageManager, null);
+        }
+    }
+
+    public static boolean canManageAllFiles(Context context) { // 管理所有文件
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            return Environment.isExternalStorageManager();
+        }
+        // On older versions, we assume that the READ_EXTERNAL_STORAGE and WRITE_EXTERNAL_STORAGE
+        // permissions are sufficient to manage all files.
+        return context.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) ==
+                PackageManager.PERMISSION_GRANTED &&
+                context.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
+                        PackageManager.PERMISSION_GRANTED;
+    }
+
+    public static boolean canAccessDeviceState(Context context) { // 访问设备状态信息
+        return context.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) ==
+                PackageManager.PERMISSION_GRANTED;
+    }
+
+    public static boolean isIgnoringBatteryOptimizations(Context context) { // 忽略电池优化
         PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         if (powerManager != null) {
             return powerManager.isIgnoringBatteryOptimizations(context.getPackageName());
         }
         return false;
     }
+    public static boolean isShowingOnLockScreen(Context context) { // 锁屏显示
+        KeyguardManager keyguardManager = context.getSystemService(KeyguardManager.class);
+        if (keyguardManager != null) {
+            return keyguardManager.isDeviceLocked();
+        }
+        return false;
+    }
+
+
+    public static boolean canShowOnTop(Context context) { // 悬浮窗
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return Settings.canDrawOverlays(context);
+        }
+        return true; // Assuming it's allowed on older versions
+    }
+
+    public static boolean canPopInBackground(Context context) { // 后台弹出界面
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return Settings.canDrawOverlays(context);
+        }
+        return true; // Assuming it's allowed on older versions
+    }
+    public static boolean canRequestPackageInstalls(Context context) { // 安装未知应用
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return context.getPackageManager().canRequestPackageInstalls();
+        }
+        return true; // Assuming it's allowed on older versions
+    }
+
 
     public static void requestPermissionActivity(Context context, final String id, final String Msg) { // id 对应的是具体的类，在 permission 文件夹，没有事先创建则会报错
 
@@ -132,14 +193,12 @@ public final class Utils {
     public static void registerSoftKeyboardToolbar(final Activity activity, final WebView webView) {
         KeyboardUtils.registerSoftInputChangedListener(activity, height -> {
             if (!activity.isInMultiWindowMode()) {
-                if (KeyboardUtils.isSoftInputVisible(activity)) {
-                    webView.evaluateJavascript("javascript:showKeyboardToolbar()", null);
-                } else {
-                    webView.evaluateJavascript("javascript:hideKeyboardToolbar()", null);
-                }
+                String javascriptCommand = KeyboardUtils.isSoftInputVisible(activity) ? "showKeyboardToolbar()" : "hideKeyboardToolbar()";
+                webView.evaluateJavascript("javascript:" + javascriptCommand, null);
             }
         });
     }
+
 
     public static void unzipAsset(final AssetManager assetManager, final String zipName, final String targetDirectory) {
         ZipInputStream zis = null;

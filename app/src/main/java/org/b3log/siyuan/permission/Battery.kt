@@ -20,16 +20,16 @@ class Battery : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val mContext: Context = applicationContext
+        val appContext: Context = applicationContext
         requestIgnoreBatteryOptimizationsLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
             if (result.resultCode == RESULT_OK || isIgnoringBatteryOptimizations()) {
                 // 用户同意了加入电池优化的白名单
-                Toast.Show(mContext, "已加入电池优化的白名单")
+                Toast.Show(appContext, "已加入电池优化的白名单")
             } else {
                 // 用户拒绝了加入电池优化的白名单，或者没有作出选择
-                Toast.Show(mContext, "未加入电池优化的白名单")
+                Toast.Show(appContext, "未加入电池优化的白名单")
             }
             // 用户已经做出选择，现在可以结束 Activity
             finish()
