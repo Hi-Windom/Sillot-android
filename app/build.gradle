@@ -213,7 +213,6 @@ dependencies {
     implementation 'io.realm.kotlin:library-sync:1.11.0'// If using Device Sync
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1' // If using coroutines with the SDK
 
-    implementation "com.kuaishou.koom:koom-java-leak-static:2.2.1" // static模式，包体较大，无编译和运行时问题。
     implementation 'com.tencent.tav:libpag:4.3.51'
 
     // To recognize Chinese script

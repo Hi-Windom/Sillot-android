@@ -12,7 +12,7 @@ fun WebScreen(modifier: Modifier = Modifier) {
     Scaffold {
 
         Column(modifier = modifier.padding(it)) {
-            val url = remember { "http://localhost:58131" }
+            val url = remember { "https://sillot.db.sc.cn" }
             WebView(url = url)
 
         }

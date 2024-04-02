@@ -2,6 +2,7 @@ package org.b3log.siyuan.sillot.ui.nav
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AcUnit
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Preview
@@ -31,7 +32,7 @@ sealed class BottomNavRoute(
     })
 
     data object AList : BottomNavRoute(R.string.app_name, "alist", {
-        Icon(painterResource(id = R.drawable.icon), null)
+        Icon(Icons.Default.AcUnit, null)
     })
 
     data object AListProvider : BottomNavRoute(R.string.alist_provider, "alist_provider", {
