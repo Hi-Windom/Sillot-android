@@ -113,7 +113,7 @@ class SillotHomeActivity : AppCompatActivity() {
                 .into(imageView)
         }
         PopTip.show("测试完毕")
-        val intent = Intent(applicationContext, MainActivity::class.java)
+        val intent = Intent(this, MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         startActivity(intent)
     }

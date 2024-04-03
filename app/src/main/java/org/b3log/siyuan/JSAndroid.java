@@ -95,7 +95,7 @@ public final class JSAndroid {
     }
     @JavascriptInterface
     public boolean requestPermissionActivity(final String id, final String Msg, final String callback) {
-        Log.d("JSAndroid", "requestPermissionActivity() invoked");
+        Log.w("JSAndroid", "requestPermissionActivity() invoked");
         if (Msg != null && !Msg.isEmpty()) {
             PopTip.show(Msg);
         }
@@ -140,7 +140,7 @@ public final class JSAndroid {
                 startActivityForResult(activity, battery, Ss.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, null);
             }
         }
-        Log.d("JSAndroid", "requestPermissionActivity()  return true");
+        Log.w("JSAndroid", "requestPermissionActivity()  return true");
         return true; // 返回真表示已经发起申请，不代表结果
     }
     @JavascriptInterface
@@ -167,10 +167,14 @@ public final class JSAndroid {
         }
     }
 
-
     @JavascriptInterface
     public void showWifi() {
         Log.d("JSAndroid", "showWifi() invoked");
+
+        if (activity == null) {
+            Log.e("JSAndroid", "showWifi() -> Activity is null");
+            return;
+        }
 
         Observable<Boolean> locationPermissionObservable = Observable.create(emitter -> {
             if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -184,14 +188,23 @@ public final class JSAndroid {
             if (Settings.canDrawOverlays(activity)) {
                 emitter.onNext(true);
             } else {
-                Utils.requestPermissionActivity(activity, "Overlay", "找到汐洛并允许");
+                // 请求悬浮窗权限
+                activity.runOnUiThread(() -> {
+//                    Intent battery = new Intent("sc.windom.sillot.intent.permission.Overlay");
+//                    battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                    intent.setData(Uri.parse("package:" + activity.getPackageName()));
+                    startActivityForResult(activity, intent, Ss.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT, null);
+                });
+                // 需要在Activity的onActivityResult中处理结果
             }
         });
 
+
         Disposable disposable = Observable.combineLatest(locationPermissionObservable, overlayPermissionObservable, (locationGranted, overlayGranted) -> locationGranted && overlayGranted)
-                .filter(granted -> granted) // Filter out cases where permissions are not granted
+                .filter(granted -> granted) // 过滤掉未授予权限的情况
                 .flatMap(granted -> {
-                    // Start the floating window service
+                    // 启动悬浮窗服务
                     Intent intent = new Intent(activity, FloatingWindowService.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
                     ServiceUtils.startService(intent);
@@ -200,10 +213,11 @@ public final class JSAndroid {
                 .subscribeOn(AndroidSchedulers.mainThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        granted -> Log.d("Permission", "Permissions granted and service started."),
-                        throwable -> Log.e("Permission", "Error occurred: " + throwable.getMessage())
+                        granted -> Log.d("JSAndroid", "showWifi() -> Permissions granted and service started."),
+                        throwable -> Log.e("JSAndroid", "showWifi() -> Error occurred: " + throwable.getMessage())
                 );
     }
+
 
 
 

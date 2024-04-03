@@ -179,7 +179,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     public void onNewIntent(final Intent intent) {
-        Log.w(TAG, "onNewIntent() involved");
+        Log.w(TAG, "onNewIntent() invoked");
         super.onNewIntent(intent);
         if (null != webView) {
             final String blockURL = intent.getStringExtra("blockURL");
@@ -191,7 +191,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) { // 只执行一次。在这里设置布局和初始化数据。在大多数情况下，不需要在 onRestart 中做太多事情，因为 onStart 已经处理了活动可见时的初始化。
-        Log.w(TAG, "onCreate() involved");
+        Log.w(TAG, "onCreate() invoked");
         MainActivityLifeState = "onCreate";
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -250,19 +250,19 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
 
         // 启动 HTTP Server
-        Log.w(TAG, "onStart() -> startHttpServer() involved");
+        Log.w(TAG, "onStart() -> startHttpServer() invoked");
         startHttpServer();
 
         // 初始化 UI 元素
-        Log.w(TAG, "onStart() -> initUIElements() involved");
+        Log.w(TAG, "onStart() -> initUIElements() invoked");
         initUIElements();
 
         // 拉起内核
-        Log.w(TAG, "onStart() -> startKernel() involved");
+        Log.w(TAG, "onStart() -> startKernel() invoked");
         startKernel();
 
         // 初始化外观资源
-        Log.w(TAG, "onStart() -> initAppearance() involved");
+        Log.w(TAG, "onStart() -> initAppearance() invoked");
         initAppearance();
 
         AppUtils.registerAppStatusChangedListener(this);
@@ -425,7 +425,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @SuppressLint("SetJavaScriptEnabled")
     void showBootIndex() {
-        Log.w(TAG, "showBootIndex() involved");
+        Log.w(TAG, "showBootIndex() invoked");
         webView.setVisibility(View.VISIBLE);
         webView.setWebViewClient(new WebViewClient() {
             @Override
@@ -873,6 +873,12 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 //            needColdRestart = true;
             RestartSiyuanInWebview();
         }
+        if (requestCode == Ss.REQUEST_OVERLAY && webView != null) {
+            if (RESULT_OK == resultCode) {
+                new PopTip("666");
+            }
+            return;
+        }
         if (null == uploadMessage) {
             super.onActivityResult(requestCode, resultCode, intent);
             return;
@@ -948,7 +954,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     protected void onDestroy() {
-        Log.w(TAG, "onDestroy() involved");
+        Log.w(TAG, "onDestroy() invoked");
         MainActivityLifeState = "onDestroy";
         super.onDestroy();
         KeyboardUtils.unregisterSoftInputChangedListener(getWindow());
@@ -964,7 +970,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     public void onForeground(Activity activity) {
-        Log.w(TAG, "onForeground() involved");
+        Log.w(TAG, "onForeground() invoked");
         MainActivityLifeState = "onForeground";
         startSyncData();
         if (null != webView) {
@@ -974,7 +980,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     public void onBackground(Activity activity) {
-        Log.w(TAG, "onBackground() involved");
+        Log.w(TAG, "onBackground() invoked");
         MainActivityLifeState = "onBackground";
         startSyncData();
     }
@@ -982,7 +988,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Override
     public void onMultiWindowModeChanged(boolean isInMultiWindowMode) {
         super.onMultiWindowModeChanged(isInMultiWindowMode);
-        Log.w(TAG, "onMultiWindowModeChanged() involved");
+        Log.w(TAG, "onMultiWindowModeChanged() invoked");
     }
 
     @Override
@@ -1003,28 +1009,28 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Override
     protected void onStop() {
         super.onStop();
-        Log.w(TAG, "onStop() involved");
+        Log.w(TAG, "onStop() invoked");
         MainActivityLifeState = "onStop";
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.w(TAG, "onResume() involved");
+        Log.w(TAG, "onResume() invoked");
         MainActivityLifeState = "onResume";
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        Log.w(TAG, "onPause() involved");
+        Log.w(TAG, "onPause() invoked");
         MainActivityLifeState = "onPause";
     }
 
     @Override
     protected void onRestart() { // 当活动重新启动时调用（一般是onStop后）。在这里恢复活动之前的状态，比如重新获取数据、恢复界面状态等。
         super.onRestart();
-        Log.w(TAG, "onRestart() involved");
+        Log.w(TAG, "onRestart() invoked");
         MainActivityLifeState = "onRestart";
     }
 

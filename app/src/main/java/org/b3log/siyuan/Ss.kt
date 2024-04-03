@@ -24,4 +24,5 @@ object Ss {
     const val REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT = 10002 // 申请电源优化无限制权限后重启，部分系统没有该权限
     const val REQUEST_IGNORE_BATTERY_OPTIMIZATIONS = 10002 // 申请电源优化无限制权限，部分系统没有该权限
     const val REQUEST_ExternalStorageManager = 10003
+    const val REQUEST_OVERLAY = 10004 // 悬浮窗权限
 }
