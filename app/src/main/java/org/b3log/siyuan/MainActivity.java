@@ -130,7 +130,7 @@ import com.tencent.mmkv.MMKV;
  * @since 1.0.0
  */
 public class MainActivity extends AppCompatActivity implements com.blankj.utilcode.util.Utils.OnAppStatusChangedListener {
-    private final String TAG = "MainActivity";
+    private final String TAG = "MainActivity-SiYuan";
     private AsyncHttpServer server;
     private int serverPort = Ss.DefaultHTTPPort;
     public WebView webView;
@@ -149,13 +149,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     private boolean isWebviewReady = false;
     private int works = 0;
     private final HashSet<String> permissionList = new HashSet<>();
-
-    private boolean isFirstRun() {
-        final String dataDir = getFilesDir().getAbsolutePath();
-        final String appDir = dataDir + "/app";
-        final File appDirFile = new File(appDir);
-        return !appDirFile.exists();
-    }
 
 //    dispatchKeyEvent 是一个更高级的方法，它可以处理所有类型的按键事件，包括按键按下、抬起和长按。
 //    dispatchKeyEvent 方法在事件传递给 onKeyDown、onKeyUp 或其他控件之前被调用。
@@ -198,7 +191,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
         MMKV.initialize(this);
         mmkv = MMKV.defaultMMKV();
-
 
 
         // 这段代码并不会直接导致高刷率的生效，它只是在获取支持的显示模式中寻找高刷率最大的模式，并将其设置为首选模式。
@@ -291,17 +283,19 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         for (String permission : permissionsToCheck) {
             if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
                 permissionList.add(permission);
+                Log.w(TAG, "onCreate() -> "+permission+" task add [Ps.PG_Core]");
             } else {
                 Log.d(TAG, "onCreate() -> "+permission+" granted [Ps.PG_Core]");
             }
         }
 
 
-        if (isFirstRun()) {
+        if (Utils.isFirstLaunch(this)) {
             permissionsToCheck.addAll(Ps.PG_unCore); // 非核心权限组，仅安装后首次启动集中申请
             for (String permission : permissionsToCheck) {
                 if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
                     permissionList.add(permission);
+                    Log.w(TAG, "onCreate() -> "+permission+" task add [Ps.PG_unCore]");
                 } else {
                     Log.d(TAG, "onCreate() -> "+permission+" granted [Ps.PG_unCore]");
                 }

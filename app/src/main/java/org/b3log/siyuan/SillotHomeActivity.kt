@@ -1,6 +1,5 @@
-package org.b3log.siyuan.sillot
+package org.b3log.siyuan
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
@@ -11,12 +10,9 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.kongzue.dialogx.dialogs.PopTip
-import org.b3log.siyuan.App
-import org.b3log.siyuan.R
 import org.b3log.siyuan.appUtils.HWs
 import org.b3log.siyuan.json.testmoshi
 import org.b3log.siyuan.realm.TestRealm
-import org.b3log.siyuan.sillot.ui.MainActivity
 
 
 class SillotHomeActivity : AppCompatActivity() {
@@ -112,10 +108,11 @@ class SillotHomeActivity : AppCompatActivity() {
                 .load("https://tse2-mm.cn.bing.net/th/id/OIP-C._2mnBV5bTFR3rgEI5tcrKgHaNK?w=187&h=333&c=7&r=0&o=5&dpr=1.3&pid=1.7")
                 .into(imageView)
         }
+        Log.e(TAG, HWs.getNetworkType(this))
         PopTip.show("测试完毕")
-        val intent = Intent(this, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        startActivity(intent)
+//        val intent = Intent(this, MainActivity::class.java)
+//        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+//        startActivity(intent)
     }
 }
 

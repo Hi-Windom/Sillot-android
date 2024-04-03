@@ -4,14 +4,18 @@ import static android.content.Context.TELEPHONY_SERVICE;
 
 import static org.b3log.siyuan.BuildConfig.DEBUG;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.KeyguardManager;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.media.AudioAttributes;
 import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -24,11 +28,13 @@ import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 
+import androidx.core.app.ActivityCompat;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 public class HWs {
-    private static final String TAG = "mlink";
+    private static final String TAG = "HWs";
     private static final Object object = new Object();
     private static HWs HWs;
 
@@ -152,94 +158,47 @@ public class HWs {
         return screenWidth + "*" + screenHeight;
     }
 
-    /**
-     * 获取运营商
-     *
-     * @param context
-     * @return
-     */
-    public String getNetOperator(Context context) {
-        TelephonyManager manager = (TelephonyManager) context.getSystemService(TELEPHONY_SERVICE);
-        String iNumeric = manager.getSimOperator();
-        String netOperator = "";
-        if (iNumeric.length() > 0) {
-            if (iNumeric.equals("46000") || iNumeric.equals("46002")) {
-                // 中国移动
-                netOperator = "中国移动";
-            } else if (iNumeric.equals("46003")) {
-                // 中国电信
-                netOperator = "中国电信";
-            } else if (iNumeric.equals("46001")) {
-                // 中国联通
-                netOperator = "中国联通";
-            } else {
-                //未知
-                netOperator = "未知";
-            }
-        }
-        Log.w(TAG, "运营商：" + netOperator);
-        return netOperator;
-    }
 
     /**
      * 获取联网方式
+     * 需要权限 Manifest.permission.READ_PHONE_STATE
      */
-    public String getNetMode(Context context) {
-        String strNetworkType = "未知";
-//        TelephonyManager manager= (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-//        manager.getNetworkType();
-        ConnectivityManager manager = (ConnectivityManager) context.
-                getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = manager.getActiveNetworkInfo();
-        if (networkInfo != null && networkInfo.isConnected()) {
-            int netMode = networkInfo.getType();
-            if (netMode == ConnectivityManager.TYPE_WIFI) {
-                strNetworkType = "WIFI";
-                //wifi
-            } else if (netMode == ConnectivityManager.TYPE_MOBILE) {
-                int networkType = networkInfo.getSubtype();
-                switch (networkType) {
+    public static String getNetworkType(Context context) {
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 
-                    //2g
-                    case TelephonyManager.NETWORK_TYPE_GPRS:
-                    case TelephonyManager.NETWORK_TYPE_EDGE:
-                    case TelephonyManager.NETWORK_TYPE_CDMA:
-                    case TelephonyManager.NETWORK_TYPE_1xRTT:
-                    case TelephonyManager.NETWORK_TYPE_IDEN: //api<8 : replace by 11
-                        strNetworkType = "2G";
-                        break;
-
-                    //3g
-                    case TelephonyManager.NETWORK_TYPE_UMTS:
-                    case TelephonyManager.NETWORK_TYPE_EVDO_0:
-                    case TelephonyManager.NETWORK_TYPE_EVDO_A:
-                    case TelephonyManager.NETWORK_TYPE_HSDPA:
-                    case TelephonyManager.NETWORK_TYPE_HSUPA:
-                    case TelephonyManager.NETWORK_TYPE_HSPA:
-                    case TelephonyManager.NETWORK_TYPE_EVDO_B: //api<9 : replace by 14
-                    case TelephonyManager.NETWORK_TYPE_EHRPD:  //api<11 : replace by 12
-                    case TelephonyManager.NETWORK_TYPE_HSPAP:  //api<13 : replace by 15
-                        strNetworkType = "3G";
-                        break;
-
-                    case TelephonyManager.NETWORK_TYPE_LTE:    //api<11 : replace by 13
-                        strNetworkType = "4G";
-                        break;
-
-                    default:
-                        String _strSubTypeName = networkInfo.getSubtypeName();
-                        // http://baike.baidu.com/item/TD-SCDMA 中国移动 联通 电信 三种3G制式
-                        if (_strSubTypeName.equalsIgnoreCase("TD-SCDMA") || _strSubTypeName.equalsIgnoreCase("WCDMA") || _strSubTypeName.equalsIgnoreCase("CDMA2000")) {
-                            strNetworkType = "3G";
-                        } else {
-                            strNetworkType = _strSubTypeName;
+        if (connectivityManager != null) {
+            Network network = connectivityManager.getActiveNetwork();
+            if (network != null) {
+                NetworkCapabilities networkCapabilities = connectivityManager.getNetworkCapabilities(network);
+                if (networkCapabilities != null) {
+                    if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                        return "WiFi";
+                    } else if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                        TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+                        if (telephonyManager != null) {
+                            @SuppressLint("MissingPermission") int networkType = telephonyManager.getDataNetworkType();
+                            switch (networkType) {
+                                case TelephonyManager.NETWORK_TYPE_NR:
+                                    return "5G";
+                                case TelephonyManager.NETWORK_TYPE_LTE:
+                                    return "4G";
+                                case TelephonyManager.NETWORK_TYPE_HSPAP:
+                                case TelephonyManager.NETWORK_TYPE_HSPA:
+                                case TelephonyManager.NETWORK_TYPE_HSDPA:
+                                case TelephonyManager.NETWORK_TYPE_HSUPA:
+                                    return "3G";
+                                case TelephonyManager.NETWORK_TYPE_EDGE:
+                                case TelephonyManager.NETWORK_TYPE_GPRS:
+                                    return "2G";
+                                default:
+                                    return "Unknown";
+                            }
                         }
-                        break;
+                    }
                 }
             }
         }
-        Log.w(TAG, "联网方式:" + strNetworkType);
-        return strNetworkType;
+        return "Unknown";
     }
 
     /**

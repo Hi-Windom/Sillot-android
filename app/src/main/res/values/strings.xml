@@ -1,6 +1,7 @@
 <resources>
 <!--  在 build.gradle 里动态定义了  <string name="app_name">汐洛</string>-->
     <string name="activity_name_SillotHome">汐洛</string>
+    <string name="activity_name_Sithw">司华</string>
     <string name="activity_name_Boot">思源汐洛版</string>
 
     <string name="open_source_license">开源许可</string>

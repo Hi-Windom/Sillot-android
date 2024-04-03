@@ -25,6 +25,7 @@ import android.app.Activity;
 import android.app.KeyguardManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.os.Build;
@@ -75,6 +76,15 @@ public final class Utils {
      * App version.
      */
     public static final String version = BuildConfig.VERSION_NAME;
+
+    public static boolean isFirstLaunch(Activity activity) {
+        SharedPreferences sharedPreferences = activity.getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
+        boolean isFirstLaunch = sharedPreferences.getBoolean("is_first_launch", true);
+        if (isFirstLaunch) {
+            sharedPreferences.edit().putBoolean("is_first_launch", false).apply();
+        }
+        return isFirstLaunch;
+    }
 
     public static boolean isPad(Context context) {
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
