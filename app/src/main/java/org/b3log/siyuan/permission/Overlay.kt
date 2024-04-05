@@ -6,18 +6,15 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
-import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.core.app.ActivityCompat
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.kongzue.dialogx.dialogs.PopTip
+import org.b3log.siyuan.Ss
+import org.b3log.siyuan.OnSiYuanMainRequestEvent
 import org.b3log.siyuan.andapi.Toast
+import org.greenrobot.eventbus.EventBus
+
 
 class Overlay : AppCompatActivity() {
     private lateinit var requestOverlayPermissionLauncher: ActivityResultLauncher<Intent>
@@ -25,14 +22,29 @@ class Overlay : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val appContext: Context = applicationContext
-
+        Toast.Show(appContext, "找到汐洛并允许显示悬浮窗")
         requestOverlayPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
             if (Settings.canDrawOverlays(appContext)) {
                 Toast.Show(appContext, "已获取显示悬浮窗权限")
+                // 发送事件，将权限请求的结果发送出去
+                EventBus.getDefault().post(
+                    OnSiYuanMainRequestEvent(
+                        Ss.REQUEST_OVERLAY,
+                        RESULT_OK,
+                        "showwifi"
+                    )
+                )
             } else {
                 Toast.Show(appContext, "未获取显示悬浮窗权限")
+                EventBus.getDefault().post(
+                    OnSiYuanMainRequestEvent(
+                        Ss.REQUEST_OVERLAY,
+                        RESULT_CANCELED,
+                        ""
+                    )
+                )
             }
             finish()
         }

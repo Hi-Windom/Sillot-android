@@ -190,13 +190,12 @@ public final class JSAndroid {
             } else {
                 // 请求悬浮窗权限
                 activity.runOnUiThread(() -> {
-//                    Intent battery = new Intent("sc.windom.sillot.intent.permission.Overlay");
-//                    battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
-                    intent.setData(Uri.parse("package:" + activity.getPackageName()));
-                    startActivityForResult(activity, intent, Ss.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT, null);
+                    Intent intent = new Intent("sc.windom.sillot.intent.permission.Overlay");
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+//                    intent.setData(Uri.parse("package:" + activity.getPackageName()));
+                    startActivityForResult(activity, intent, Ss.REQUEST_OVERLAY, null);
                 });
-                // 需要在Activity的onActivityResult中处理结果
             }
         });
 

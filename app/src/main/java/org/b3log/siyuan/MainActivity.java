@@ -17,14 +17,10 @@
  */
 package org.b3log.siyuan;
 
-import static org.b3log.siyuan.json.TestMoshiKt.testmoshi;
-
 import org.b3log.siyuan.permission.Ps;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ClipData;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -33,25 +29,19 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.LocaleList;
 import android.os.Looper;
 import android.os.Message;
-import android.os.PowerManager;
 import android.provider.MediaStore;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.Display;
 import android.view.DragEvent;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
-import android.view.inputmethod.InputMethodManager;
 import android.webkit.CookieManager;
 import android.view.WindowManager;
-import android.webkit.JsPromptResult;
 import android.webkit.JsResult;
 import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
@@ -61,9 +51,9 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
@@ -72,15 +62,13 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.biometric.BiometricManager;
-import androidx.biometric.BiometricPrompt;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.KeyboardUtils;
+import com.blankj.utilcode.util.ServiceUtils;
 import com.blankj.utilcode.util.StringUtils;
-import com.bumptech.glide.Glide;
 import com.kongzue.dialogx.dialogs.PopTip;
 import com.tencent.bugly.crashreport.CrashReport;
 import com.koushikdutta.async.AsyncServer;
@@ -95,16 +83,14 @@ import org.apache.commons.io.FileUtils;
 import org.b3log.siyuan.appUtils.HWs;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
-import org.b3log.siyuan.realm.TestRealm;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
@@ -115,10 +101,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
-import java.util.Map;
 import java.util.TimeZone;
 
-import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import mobile.Mobile;
 import com.tencent.mmkv.MMKV;
 
@@ -192,7 +176,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         MMKV.initialize(this);
         mmkv = MMKV.defaultMMKV();
 
-
+        // 注册 EventBus
+        EventBus.getDefault().register(this);
         // 这段代码并不会直接导致高刷率的生效，它只是在获取支持的显示模式中寻找高刷率最大的模式，并将其设置为首选模式。
         Display display = null;
         display = this.getDisplay(); // 等效于 getApplicationContext().getDisplay() 因为Activity已经实现了Context接口，所以用 this 替换
@@ -859,19 +844,12 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        super.onActivityResult(requestCode, resultCode, intent);
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) { // 应该在 onRequestPermissionsResult 处理的别跑来这里啊混蛋！
         Log.w(TAG, "onActivityResult() -> requestCode "+requestCode+"  resultCode "+resultCode);
         // 检查返回结果是否是权限请求的结果，不管 resultCode 是什么都要重启的
         if (requestCode == Ss.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT && webView != null) {
 //            needColdRestart = true;
             RestartSiyuanInWebview();
-        }
-        if (requestCode == Ss.REQUEST_OVERLAY && webView != null) {
-            if (RESULT_OK == resultCode) {
-                new PopTip("666");
-            }
-            return;
         }
         if (null == uploadMessage) {
             super.onActivityResult(requestCode, resultCode, intent);
@@ -946,11 +924,32 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         return ret;
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(OnSiYuanMainRequestEvent event) {
+        // 检查权限请求的结果
+        if (event.getRequestCode() == Ss.REQUEST_OVERLAY) {
+            if (event.getResultCode() == RESULT_OK) {
+                // 权限已授予
+                // 在此处执行相应的操作
+                if (event.getCallback().equals("showwifi")) { // 已有权限的情况下不走这里
+                    Intent intent = new Intent(this, FloatingWindowService.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+                    ServiceUtils.startService(intent);
+                }
+            } else {
+                // 权限未授予
+                // 在此处执行相应的操作
+            }
+        }
+    }
+
     @Override
     protected void onDestroy() {
         Log.w(TAG, "onDestroy() invoked");
         MainActivityLifeState = "onDestroy";
         super.onDestroy();
+        // 注销 EventBus
+        EventBus.getDefault().unregister(this);
         KeyboardUtils.unregisterSoftInputChangedListener(getWindow());
         AppUtils.unregisterAppStatusChangedListener(this);
         if (null != webView) {
