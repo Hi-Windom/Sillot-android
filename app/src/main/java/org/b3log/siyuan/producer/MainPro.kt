@@ -8,6 +8,8 @@ import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -37,10 +39,21 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.Android
+import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Css
+import androidx.compose.material.icons.filled.DataObject
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.FolderZip
+import androidx.compose.material.icons.filled.Html
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Javascript
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.Tab
+import androidx.compose.material.icons.filled.TableChart
+import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -59,6 +72,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
@@ -164,25 +178,99 @@ class MainPro : ComponentActivity() {
 //    }
 //}
 fun getIconForFileType(fileType: String): ImageVector {
-    return when (fileType) {
-        "视频" -> Icons.Default.Movie
-        "音频" -> Icons.Default.MusicNote
-        "文本" -> Icons.Default.Description
-        "图像" -> Icons.Default.Image
-        "程序" -> Icons.Default.Android
-        else -> Icons.AutoMirrored.Filled.InsertDriveFile // 默认图标，您可以根据需要修改
+    return when {
+        fileType == "其他文本" -> Icons.Default.TextFields
+        fileType == "HTML" -> Icons.Default.Html
+        fileType == "CSS" -> Icons.Default.Css
+        fileType == "JavaScript" -> Icons.Default.Javascript
+        fileType == "PDF" -> Icons.Default.PictureAsPdf
+        fileType == "Word文档" -> Icons.Default.Badge
+        fileType == "Excel表格" -> Icons.Default.TableChart
+        fileType == "PowerPoint演示文稿" -> Icons.Default.Tab
+        fileType == "压缩文件" -> Icons.Default.FolderZip
+        fileType == "EPUB" -> Icons.Default.Book
+        fileType.endsWith("视频") -> Icons.Default.Movie
+        fileType.endsWith("音频") -> Icons.Default.MusicNote
+        fileType.endsWith("文本") -> Icons.Default.Description
+        fileType.endsWith("图像") -> Icons.Default.Image
+        fileType.endsWith("程序") -> Icons.Default.Android
+        fileType.endsWith("音频") -> Icons.Default.MusicNote
+        else -> Icons.AutoMirrored.Filled.InsertDriveFile // 默认图标
     }
 }
 fun getFileType(mimeType: String): String {
     return when {
-        mimeType.startsWith("video/") -> "视频"
-        mimeType.startsWith("audio/") -> "音频"
-        mimeType.startsWith("text/") -> "文本"
-        mimeType.startsWith("image/") -> "图像"
-        mimeType == "application/vnd.android.package-archive" -> "程序"
+        mimeType.startsWith("video/") -> {
+            when (mimeType) {
+                "video/mp4" -> "MP4 视频"
+                "video/mpeg" -> "MPEG 视频"
+                "video/quicktime" -> "QuickTime 视频"
+                "video/x-msvideo" -> "AVI 视频"
+                "video/x-flv" -> "FLV 视频"
+                "video/x-matroska" -> "Matroska 视频"
+                "video/webm" -> "WebM 视频"
+                else -> "其他视频"
+            }
+        }
+        mimeType.startsWith("audio/") -> {
+            when (mimeType) {
+                "audio/mpeg" -> "MP3 音频"
+                "audio/x-wav" -> "WAV 音频"
+                "audio/ogg" -> "OGG 音频"
+                "audio/aac" -> "AAC 音频"
+                "audio/flac" -> "FLAC 音频"
+                "audio/amr" -> "AMR 音频"
+                "audio/midi" -> "MIDI 音频"
+                "audio/x-ms-wma" -> "WMA 音频"
+                "audio/x-aiff" -> "AIFF 音频"
+                "audio/x-ms-wmv" -> "WMV 音频"
+                "audio/mp4" -> "M4A 音频"
+                else -> "其他音频"
+            }
+        }
+        mimeType.startsWith("text/") -> {
+            when (mimeType) {
+                "text/plain" -> "文本"
+                "text/html" -> "HTML"
+                "text/css" -> "CSS"
+                "text/javascript" -> "JavaScript"
+                else -> "其他文本"
+            }
+        }
+        mimeType.startsWith("image/") -> {
+            when (mimeType) {
+                "image/jpeg" -> "JPEG 图像"
+                "image/png" -> "PNG 图像"
+                "image/gif" -> "GIF 图像"
+                "image/bmp" -> "BMP 图像"
+                "image/webp" -> "WebP 图像"
+                "image/tiff" -> "TIFF 图像"
+                "image/tiff-fx" -> "TIFF-FX 图像"
+                else -> "其他图像"
+            }
+        }
+        mimeType.startsWith("application/") -> {
+            when (mimeType) {
+                "application/vnd.android.package-archive" -> "程序"
+                "application/pdf" -> "PDF"
+                "application/zip" -> "压缩文件"
+                "application/epub+zip" -> "EPUB"
+                "application/msword" -> "Word文档"
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> "Word文档"
+                "application/vnd.ms-excel" -> "Excel表格"
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" -> "Excel表格"
+                "application/vnd.ms-powerpoint" -> "PowerPoint演示文稿"
+                "application/vnd.openxmlformats-officedocument.presentationml.presentation" -> "PowerPoint演示文稿"
+
+                // 更多应用程序类型的判断
+                else -> "其他程序"
+            }
+        }
+        // 其他类型
         else -> "其他"
     }
 }
+
 fun getMimeType(context: Context, uri: Uri): String? {
     return context.contentResolver.getType(uri)
 }
@@ -280,6 +368,29 @@ fun getFileSizeFromUri(contentResolver: ContentResolver, uri: Uri): Long? {
         val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
         cursor.moveToFirst()
         cursor.getLong(sizeIndex)
+    }
+}
+@Composable
+fun loadAppThumbnail(): ImageBitmap? { // 这里获取到的是自己的应用图标
+    val context = LocalContext.current
+    val packageManager = context.packageManager
+    val packageName = context.packageName
+
+    var thumbnail: ImageBitmap? = null
+
+    val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
+    val drawable = applicationInfo.loadIcon(packageManager)
+    thumbnail = convertDrawableToImageBitmap(drawable)
+
+    return thumbnail
+}
+@Composable
+fun convertDrawableToImageBitmap(drawable: Drawable): ImageBitmap? {
+    return try {
+        val bitmap = (drawable as BitmapDrawable).bitmap
+        bitmap.asImageBitmap()
+    } catch (e: Exception) {
+        null
     }
 }
 
@@ -480,33 +591,33 @@ fun MyUI(intent: Intent?, fileType: String?, context: Context) {
                             Box(modifier = Modifier
                                 .size(Thumbnail_Height.dp)
                                 .fillMaxSize()) {
-                                if (fileType == "图像") {
-                                    val bitmap = uri?.let { it1 ->
-                                        context.contentResolver?.loadThumbnail(it1,
-                                            Size(Thumbnail_Height, Thumbnail_Height), null)
-                                    }
-                                    bitmap?.let {
-                                        Image(bitmap = it.asImageBitmap(), contentDescription = "Thumbnail", modifier = Modifier
-                                            .size(Thumbnail_Height.dp)
-//                                            .fillParentMaxSize(0.9f)
-                                        )
-                                    }
-                                } else {
-                                    val icon = fileType?.let { it1 -> getIconForFileType(it1) }
-                                    icon?.let { it1 ->
-                                        Icon(
-                                            imageVector = it1,
-                                            contentDescription = "File Type Icon",
-                                            modifier = Modifier
+                                if (fileType != null) {
+                                    if (fileType.endsWith("图像")) {
+                                        val bitmap = uri?.let { it1 ->
+                                            context.contentResolver?.loadThumbnail(it1,
+                                                Size(Thumbnail_Height, Thumbnail_Height), null)
+                                        }
+                                        bitmap?.let {
+                                            Image(bitmap = it.asImageBitmap(), contentDescription = "Thumbnail", modifier = Modifier
                                                 .size(Thumbnail_Height.dp)
-//                                                .fillParentMaxSize(0.9f)
-                                        )
+                                            )
+                                        }
+                                    } else {
+                                        val icon = fileType?.let { it1 -> getIconForFileType(it1) }
+                                        icon?.let { it1 ->
+                                            Icon(
+                                                imageVector = it1,
+                                                contentDescription = "File Type Icon",
+                                                modifier = Modifier
+                                                    .size(Thumbnail_Height.dp)
+                                            )
+                                        }
+                            //                    Image( // 对应的是 R.drawable.id 方案
+                            //                        painter = painterResource(id = icon),
+                            //                        contentDescription = null,
+                            //                        modifier = Modifier.size(100.dp)
+                            //                    )
                                     }
-//                    Image( // 对应的是 R.drawable.id 方案
-//                        painter = painterResource(id = icon),
-//                        contentDescription = null,
-//                        modifier = Modifier.size(100.dp)
-//                    )
                                 }
                             }
 
@@ -649,32 +760,33 @@ fun MyUI(intent: Intent?, fileType: String?, context: Context) {
                     Box(modifier = Modifier
                         .size(Thumbnail_Height.dp)
                         .fillMaxSize()) {
-                        if (fileType == "图像") {
-                            val bitmap = uri?.let { it1 ->
-                                context.contentResolver?.loadThumbnail(it1,
-                                    Size(Thumbnail_Height, Thumbnail_Height), null)
-                            }
-                            bitmap?.let {
-                                Image(bitmap = it.asImageBitmap(), contentDescription = "Thumbnail", modifier = Modifier
-                                    .size(Thumbnail_Height.dp)
-                                    .fillMaxSize())
-                            }
-                        } else {
-                            val icon = fileType?.let { it1 -> getIconForFileType(it1) }
-                            icon?.let { it1 ->
-                                Icon(
-                                    imageVector = it1,
-                                    contentDescription = "File Type Icon",
-                                    modifier = Modifier
+                        if (fileType != null) {
+                            if (fileType.endsWith("图像")) {
+                                val bitmap = uri?.let { it1 ->
+                                    context.contentResolver?.loadThumbnail(it1,
+                                        Size(Thumbnail_Height, Thumbnail_Height), null)
+                                }
+                                bitmap?.let {
+                                    Image(bitmap = it.asImageBitmap(), contentDescription = "Thumbnail", modifier = Modifier
                                         .size(Thumbnail_Height.dp)
-                                        .fillMaxSize()
-                                )
+                                        .fillMaxSize())
+                                }
+                            } else {
+                                val icon = fileType?.let { it1 -> getIconForFileType(it1) }
+                                icon?.let { it1 ->
+                                    Icon(
+                                        imageVector = it1,
+                                        contentDescription = "File Type Icon",
+                                        modifier = Modifier
+                                            .size(Thumbnail_Height.dp)
+                                    )
+                                }
+                    //                    Image( // 对应的是 R.drawable.id 方案
+                    //                        painter = painterResource(id = icon),
+                    //                        contentDescription = null,
+                    //                        modifier = Modifier.size(100.dp)
+                    //                    )
                             }
-//                    Image( // 对应的是 R.drawable.id 方案
-//                        painter = painterResource(id = icon),
-//                        contentDescription = null,
-//                        modifier = Modifier.size(100.dp)
-//                    )
                         }
                     }
 
