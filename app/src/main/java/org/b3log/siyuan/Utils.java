@@ -77,6 +77,15 @@ public final class Utils {
      */
     public static final String version = BuildConfig.VERSION_NAME;
 
+    public static String getDeviceInfoString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n- via -\n");
+        sb.append("Device: ").append(Build.BRAND).append("-").append(Build.MODEL).append(" (").append(Build.MANUFACTURER).append(")\n");
+        sb.append("Android: ").append(Build.VERSION.RELEASE).append(" (SDK_").append(Build.VERSION.SDK_INT).append(")\n");
+        sb.append("Apk: ").append(BuildConfig.VERSION_NAME).append(" (").append(BuildConfig.VERSION_CODE).append(")\n");
+        return sb.toString();
+    }
+
     public static boolean isFirstLaunch(Activity activity) {
         SharedPreferences sharedPreferences = activity.getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
         boolean isFirstLaunch = sharedPreferences.getBoolean("is_first_launch", true);

@@ -17,94 +17,98 @@
  */
 package org.b3log.siyuan;
 
-import org.b3log.siyuan.permission.Ps;
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.content.ClipData;
-import android.content.ContentValues;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.LocaleList;
-import android.os.Looper;
-import android.os.Message;
-import android.provider.MediaStore;
-import android.util.Log;
-import android.view.Display;
-import android.view.DragEvent;
-import android.view.KeyEvent;
-import android.view.View;
-import android.view.ViewGroup;
-import android.webkit.CookieManager;
-import android.view.WindowManager;
-import android.webkit.JsResult;
-import android.webkit.PermissionRequest;
-import android.webkit.ValueCallback;
-import android.webkit.WebChromeClient;
-import android.webkit.WebResourceError;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.Switch;
-import android.widget.TextView;
+ import android.annotation.SuppressLint;
+ import android.app.Activity;
+ import android.content.ClipData;
+ import android.content.ClipboardManager;
+ import android.content.ContentValues;
+ import android.content.Context;
+ import android.content.Intent;
+ import android.content.pm.PackageManager;
+ import android.graphics.Bitmap;
+ import android.graphics.Color;
+ import android.net.Uri;
+ import android.os.Build;
+ import android.os.Bundle;
+ import android.os.Handler;
+ import android.os.LocaleList;
+ import android.os.Looper;
+ import android.os.Message;
+ import android.provider.MediaStore;
+ import android.util.Log;
+ import android.view.Display;
+ import android.view.DragEvent;
+ import android.view.KeyEvent;
+ import android.view.View;
+ import android.view.ViewGroup;
+ import android.view.WindowManager;
+ import android.webkit.CookieManager;
+ import android.webkit.JsResult;
+ import android.webkit.PermissionRequest;
+ import android.webkit.ValueCallback;
+ import android.webkit.WebChromeClient;
+ import android.webkit.WebResourceError;
+ import android.webkit.WebResourceRequest;
+ import android.webkit.WebSettings;
+ import android.webkit.WebView;
+ import android.webkit.WebViewClient;
+ import android.widget.ImageView;
+ import android.widget.ProgressBar;
+ import android.widget.TextView;
+ import android.widget.Toast;
 
-import androidx.activity.OnBackPressedCallback;
-import androidx.activity.OnBackPressedDispatcher;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+ import androidx.activity.OnBackPressedCallback;
+ import androidx.activity.OnBackPressedDispatcher;
+ import androidx.activity.result.ActivityResultLauncher;
+ import androidx.activity.result.contract.ActivityResultContracts;
+ import androidx.appcompat.app.AlertDialog;
+ import androidx.appcompat.app.AppCompatActivity;
+ import androidx.core.app.ActivityCompat;
+ import androidx.core.content.ContextCompat;
 
-import com.blankj.utilcode.util.AppUtils;
-import com.blankj.utilcode.util.KeyboardUtils;
-import com.blankj.utilcode.util.ServiceUtils;
-import com.blankj.utilcode.util.StringUtils;
-import com.kongzue.dialogx.dialogs.PopTip;
-import com.tencent.bugly.crashreport.CrashReport;
-import com.koushikdutta.async.AsyncServer;
-import com.koushikdutta.async.http.AsyncHttpClient;
-import com.koushikdutta.async.http.AsyncHttpPost;
-import com.koushikdutta.async.http.body.JSONObjectBody;
-import com.koushikdutta.async.http.server.AsyncHttpServer;
-import com.koushikdutta.async.util.Charsets;
-import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
+ import com.blankj.utilcode.util.AppUtils;
+ import com.blankj.utilcode.util.KeyboardUtils;
+ import com.blankj.utilcode.util.ServiceUtils;
+ import com.blankj.utilcode.util.StringUtils;
+ import com.kongzue.dialogx.dialogs.BottomMenu;
+ import com.kongzue.dialogx.dialogs.PopTip;
+ import com.kongzue.dialogx.interfaces.OnMenuItemClickListener;
+ import com.koushikdutta.async.AsyncServer;
+ import com.koushikdutta.async.http.AsyncHttpClient;
+ import com.koushikdutta.async.http.AsyncHttpPost;
+ import com.koushikdutta.async.http.body.JSONObjectBody;
+ import com.koushikdutta.async.http.server.AsyncHttpServer;
+ import com.koushikdutta.async.util.Charsets;
+ import com.tencent.bugly.crashreport.CrashReport;
+ import com.tencent.mmkv.MMKV;
+ import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
 
-import org.apache.commons.io.FileUtils;
-import org.b3log.siyuan.appUtils.HWs;
-import org.apache.commons.io.filefilter.DirectoryFileFilter;
-import org.apache.commons.io.filefilter.TrueFileFilter;
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
-import org.json.JSONArray;
-import org.json.JSONObject;
+ import org.apache.commons.io.FileUtils;
+ import org.apache.commons.io.filefilter.DirectoryFileFilter;
+ import org.apache.commons.io.filefilter.TrueFileFilter;
+ import org.b3log.siyuan.appUtils.HWs;
+ import org.b3log.siyuan.permission.Ps;
+ import org.greenrobot.eventbus.EventBus;
+ import org.greenrobot.eventbus.Subscribe;
+ import org.greenrobot.eventbus.ThreadMode;
+ import org.json.JSONArray;
+ import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Field;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.TimeZone;
+ import java.io.ByteArrayOutputStream;
+ import java.io.File;
+ import java.io.UnsupportedEncodingException;
+ import java.lang.reflect.Field;
+ import java.net.InetAddress;
+ import java.net.ServerSocket;
+ import java.net.URLEncoder;
+ import java.nio.charset.StandardCharsets;
+ import java.text.SimpleDateFormat;
+ import java.util.Date;
+ import java.util.HashSet;
+ import java.util.Locale;
+ import java.util.TimeZone;
 
-import mobile.Mobile;
-import com.tencent.mmkv.MMKV;
+ import mobile.Mobile;
 
 /**
  * 主程序.
@@ -164,6 +168,73 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 webView.evaluateJavascript("javascript:window.openFileByURL('" + blockURL + "')", null);
             }
         }
+    }
+    public void sendEmail(String recipient, String subject, String body) {
+        Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+        emailIntent.setData(Uri.parse("mailto:")); // only email apps should handle this
+
+        // 设置收件人
+        emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{recipient});
+        // 设置邮件主题
+        emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
+        // 设置邮件正文
+        emailIntent.putExtra(Intent.EXTRA_TEXT, body);
+
+        if (emailIntent.resolveActivity(getPackageManager()) != null) {
+            startActivity(emailIntent);
+        } else {
+            PopTip.show("No email client found");
+        }
+    }
+    public void launchQQAndCopyToClipboard(String qqNumber) {
+        // 将QQ号复制到剪贴板
+        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clip = ClipData.newPlainText("label", qqNumber);
+        clipboard.setPrimaryClip(clip);
+
+        Toast.makeText(this, "QQ 号已复制", Toast.LENGTH_SHORT).show();
+
+        Intent intent = getPackageManager().getLaunchIntentForPackage("com.tencent.mobileqq");
+
+        if (intent != null) {
+            startActivity(intent);
+        } else {
+            PopTip.show("QQ 未安装");
+        }
+    }
+    public void launchTikTopAndCopyToClipboard(String TTA) {
+        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clip = ClipData.newPlainText("label", TTA);
+        clipboard.setPrimaryClip(clip);
+        Toast.makeText(this, "抖音号已复制", Toast.LENGTH_SHORT).show();
+
+        Intent intent = getPackageManager().getLaunchIntentForPackage("com.ss.android.ugc.aweme");
+
+        if (intent != null) {
+            startActivity(intent);
+        } else {
+            PopTip.show("抖音未安装");
+        }
+    }
+
+    private void androidFeedback() {
+        String[] menuOptions = {
+                "电子邮件",
+                "QQ",
+                "抖音"
+        };
+        BottomMenu.show(menuOptions)
+                .setMessage("请选择反馈渠道")
+                .setOnMenuItemClickListener((OnMenuItemClickListener<BottomMenu>) (dialog, text, index) -> {
+                    if (text.equals("电子邮件")) {
+                        sendEmail("694357845@qq.com", "汐洛安卓反馈", Utils.getDeviceInfoString());
+                    } else if (text.equals("QQ")) {
+                        launchQQAndCopyToClipboard("694357845");
+                    } else if (text.equals("抖音")) {
+                        launchTikTopAndCopyToClipboard("AsyncTTk");
+                    }
+                    return false;
+                });
     }
 
     @Override
@@ -438,6 +509,10 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 //                    sleep(2000);
                     coldRestart();
                     return false;
+                }
+                if (url.contains("siyuan://androidFeedback")) {
+                    androidFeedback();
+                    return true; // 这里返回 true 阻止网页导航
                 }
 
                 if (uri.getScheme().toLowerCase().startsWith("http")) {
