@@ -7,7 +7,7 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.9.22'
 }
 
-final int vC = 14 // Sillot-android 主要版本递增
+final int vC = 15 // Sillot-android 主要版本递增
 
 // REF https://kotlinlang.org/docs/gradle-configure-project.html?utm_campaign=gradle-jvm-target-validation&utm_medium=kgp&utm_source=warnings#check-for-jvm-target-compatibility-of-related-compile-tasks
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile.class).configureEach {
@@ -31,7 +31,7 @@ android {
         minSdk 31 // android 12
         targetSdkVersion 34 // android 14
         versionCode vC
-        versionName "0.27"
+        versionName "0.28" // Sillot 版本同步
 
         ndk {
             //只接入对应 cpu 类型的 .so 库。
