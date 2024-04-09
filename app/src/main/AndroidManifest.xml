@@ -201,6 +201,7 @@
 
         <activity android:name=".permission.Battery"
             android:exported="true"
+            android:autoRemoveFromRecents="true"
             android:launchMode="singleInstance">
             <intent-filter>
                 <action android:name="sc.windom.sillot.intent.permission.Battery" />
@@ -211,6 +212,7 @@
         </activity>
         <activity android:name=".permission.Overlay"
             android:exported="true"
+            android:autoRemoveFromRecents="true"
             android:launchMode="singleInstance">
             <intent-filter>
                 <action android:name="sc.windom.sillot.intent.permission.Overlay" />
@@ -222,6 +224,7 @@
 
         <activity android:name=".permission.InitActivity"
             android:exported="true"
+            android:autoRemoveFromRecents="true"
             android:configChanges="orientation|screenSize"
             android:launchMode="singleInstance">
             <intent-filter>

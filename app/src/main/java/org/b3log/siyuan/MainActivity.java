@@ -820,8 +820,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        Log.w(TAG, "onRequestPermissionsResult() -> requestCode "+requestCode+"  grantResults[0] ");
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) { // 其他 Activity 的结果不要傻傻的在这里处理好吧
         if (grantResults.length > 0) {
             Log.w(TAG, "onRequestPermissionsResult() -> requestCode "+requestCode+"  grantResults[0] "+grantResults[0]);
         }
@@ -904,11 +903,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) { // 应该在 onRequestPermissionsResult 处理的别跑来这里啊混蛋！
         Log.w(TAG, "onActivityResult() -> requestCode "+requestCode+"  resultCode "+resultCode);
-        // 检查返回结果是否是权限请求的结果，不管 resultCode 是什么都要重启的
-        if (requestCode == Ss.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT && webView != null) {
-//            needColdRestart = true;
-            RestartSiyuanInWebview();
-        }
         if (null == uploadMessage) {
             super.onActivityResult(requestCode, resultCode, intent);
             return;
@@ -997,6 +991,11 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             } else {
                 // 权限未授予
                 // 在此处执行相应的操作
+            }
+        } else if (event.getRequestCode() == Ss.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT) {
+            // 不管结果是什么都重启
+            if (event.getCallback().equals("RestartSiyuanInWebview")) {
+                RestartSiyuanInWebview();
             }
         }
     }

@@ -10,8 +10,10 @@ import android.provider.Settings
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import com.kongzue.dialogx.dialogs.PopTip
+import org.b3log.siyuan.OnSiYuanMainRequestEvent
+import org.b3log.siyuan.Ss
 import org.b3log.siyuan.andapi.Toast
+import org.greenrobot.eventbus.EventBus
 
 
 class Battery : AppCompatActivity() {
@@ -27,9 +29,24 @@ class Battery : AppCompatActivity() {
             if (result.resultCode == RESULT_OK || isIgnoringBatteryOptimizations()) {
                 // 用户同意了加入电池优化的白名单
                 Toast.Show(appContext, "已加入电池优化的白名单")
+                // 发送事件，将权限请求的结果发送出去
+                EventBus.getDefault().post(
+                    OnSiYuanMainRequestEvent(
+                        Ss.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT,
+                        RESULT_OK,
+                        "RestartSiyuanInWebview"
+                    )
+                )
             } else {
                 // 用户拒绝了加入电池优化的白名单，或者没有作出选择
                 Toast.Show(appContext, "未加入电池优化的白名单")
+                EventBus.getDefault().post(
+                    OnSiYuanMainRequestEvent(
+                        Ss.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT,
+                        RESULT_CANCELED,
+                        "RestartSiyuanInWebview"
+                    )
+                )
             }
             // 用户已经做出选择，现在可以结束 Activity
             finish()
