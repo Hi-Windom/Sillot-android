@@ -375,27 +375,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         bootDetailsText = findViewById(R.id.bootDetails);
         webView = findViewById(R.id.webView);
         webView.setBackgroundColor(Color.parseColor("#1e1e1e"));
-        webView.setWebViewClient(new WebViewClient() { // setWebViewClient 和 setWebChromeClient 并不同，别看走眼了
-            @Override
-            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                // 在加载页面出现错误时进行处理
-                if (error != null) {
-                    Log.e("WebViewClient", "onReceivedError: " + error.getDescription());
-                }
-            }
-            @Override
-            public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                // 页面开始加载时调用
-                Log.d("WebViewClient", "onPageStarted: " + url);
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                // 页面加载完成时调用
-                Log.d("WebViewClient", "onPageFinished: " + url);
-            }
-        });
         webView.setWebChromeClient(new WebChromeClient() {
+            // setWebViewClient 和 setWebChromeClient 并不同，别看走眼了
             @Override
             public boolean onShowFileChooser(final WebView mWebView, final ValueCallback<Uri[]> filePathCallback, final FileChooserParams fileChooserParams) {
                 if (uploadMessage != null) {
@@ -478,6 +459,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         Log.w(TAG, "showBootIndex() invoked");
         webView.setVisibility(View.VISIBLE);
         webView.setWebViewClient(new WebViewClient() {
+            // setWebViewClient 和 setWebChromeClient 并不同，别看走眼了
             @Override
             public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request) {
                 final Uri uri = request.getUrl();
@@ -528,6 +510,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             public void onPageFinished(WebView view, String url) {
                 // 页面加载完成时调用
                 Log.d("WebViewClient", "onPageFinished: " + url);
+                view.evaluateJavascript("javascript:document.body.classList.add(\"body--mobile\")", null);
                 bootLogo.postDelayed(() -> {
                     bootLogo.setVisibility(View.GONE);
                     bootProgressBar.setVisibility(View.GONE);
