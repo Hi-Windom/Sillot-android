@@ -168,6 +168,11 @@ dependencies {
     implementation 'com.blankj:utilcodex:1.31.1'
     implementation 'com.koushikdutta.async:androidasync:2.2.1'
 
+    implementation 'io.github.justson:agentweb-core:v5.1.1-androidx'
+    implementation 'io.github.justson:agentweb-filechooser:v5.1.1-androidx' // (可选)
+    implementation 'com.github.Justson:Downloader:v5.0.4-androidx' // (可选)
+
+
 //    极光推送
     implementation 'cn.jiguang.sdk:jcore:4.6.1'
     implementation 'cn.jiguang.sdk:jpush:5.2.2'

@@ -344,6 +344,14 @@
             -->
         </activity>
         <activity
+            android:name=".AgentWebActivity"
+            android:autoRemoveFromRecents="false"
+            android:configChanges="keyboard|keyboardHidden|screenLayout|uiMode|orientation|screenSize|smallestScreenSize"
+            android:hardwareAccelerated="true"
+            android:taskAffinity=".sillot.task.webview"
+            android:windowSoftInputMode="adjustResize" >
+        </activity>
+        <activity
             android:name="cn.jpush.android.ui.PopWinActivity"
             android:exported="true"
             android:theme="@style/MyDialogStyle"
