@@ -179,7 +179,6 @@
 
         </activity>
 
-
         <receiver
             android:name=".jpush.JReceiver"
             android:enabled="true"
@@ -251,57 +250,79 @@
 <!--        REF https://juejin.cn/post/7026669198537392165-->
 <!--        “亲和性”表示 Activity 倾向于属于哪个任务。默认情况下，同一应用中的所有 Activity 彼此具有亲和性。因此，在默认情况下，同一应用中的所有 Activity 都倾向于位于同一任务。-->
 <!--        android:taskAffinity 分别设置了两个活动的任务亲和性，这样它们就会属于不同的任务。当用户点击桌面上的图标时，系统会检查该活动是否属于正在后台运行的任务，如果不是，则会创建一个新的任务来启动该活动。-->
-<!--        汐洛主入口，放在最前作为默认启动-->
-<!--        <activity-->
-<!--            android:name=".SillotHomeActivity"-->
-<!--            android:icon="@drawable/icon"-->
-<!--            android:label="@string/activity_name_SillotHome"-->
-<!--            android:autoRemoveFromRecents="false"-->
-<!--            android:configChanges="orientation|screenSize"-->
-<!--            android:exported="true"-->
-<!--            android:hardwareAccelerated="true"-->
-<!--            android:noHistory="false"-->
-<!--            android:taskAffinity=".sillot.task"-->
-<!--            android:theme="@style/Theme.SiYuan.Boot">-->
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.MAIN" />-->
 
-<!--                <category android:name="android.intent.category.LAUNCHER" />-->
-<!--            </intent-filter>-->
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.VIEW" />-->
-<!--                <category android:name="android.intent.category.DEFAULT" />-->
-<!--                <category android:name="android.intent.category.BROWSABLE" />-->
+        <activity android:name=".USB_AUDIO_EXCLUSIVE"
+            android:icon="@drawable/icon"
+            android:label="@string/activity_name_USB_AUDIO_EXCLUSIVE"
+            android:exported="true"
+            android:supportsPictureInPicture="true"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"
+            android:autoRemoveFromRecents="false"
+            android:taskAffinity=".sillot.task.USB_AUDIO_EXCLUSIVE"
+            android:launchMode="singleInstance">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
 
-<!--                <data android:scheme="sillot" />-->
-<!--                <data android:scheme="sisi" />-->
-<!--            </intent-filter>-->
-<!--        </activity>-->
-<!--        &lt;!&ndash;   司华入口&ndash;&gt;-->
-<!--        <activity-->
-<!--            android:name=".sillot.ui.MainActivity"-->
-<!--            android:icon="@drawable/icon"-->
-<!--            android:label="@string/activity_name_Sithw"-->
-<!--            android:autoRemoveFromRecents="false"-->
-<!--            android:configChanges="orientation|screenSize"-->
-<!--            android:exported="true"-->
-<!--            android:hardwareAccelerated="true"-->
-<!--            android:noHistory="false"-->
-<!--            android:taskAffinity=".sillot.sithw.task"-->
-<!--            android:theme="@style/Theme.SiYuan.Boot">-->
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.MAIN" />-->
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <service
+            android:name=".MusicService"
+            android:foregroundServiceType="mediaPlayback"
+            android:enabled="true"
+            android:exported="false"/>
 
-<!--                <category android:name="android.intent.category.LAUNCHER" />-->
-<!--            </intent-filter>-->
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.VIEW" />-->
-<!--                <category android:name="android.intent.category.DEFAULT" />-->
-<!--                <category android:name="android.intent.category.BROWSABLE" />-->
+        <!--        汐洛主入口，放在最前作为默认启动-->
+        <activity
+            android:name=".SillotHomeActivity"
+            android:icon="@drawable/icon"
+            android:label="@string/activity_name_SillotHome"
+            android:autoRemoveFromRecents="false"
+            android:configChanges="orientation|screenSize"
+            android:exported="true"
+            android:hardwareAccelerated="true"
+            android:noHistory="false"
+            android:taskAffinity=".sillot.task"
+            android:theme="@style/Theme.SiYuan.Boot">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
 
-<!--                <data android:scheme="sithw" />-->
-<!--            </intent-filter>-->
-<!--        </activity>-->
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="sillot" />
+                <data android:scheme="sisi" />
+            </intent-filter>
+        </activity>
+        <!--   司华入口-->
+        <activity
+            android:name=".sillot.ui.MainActivity"
+            android:icon="@drawable/icon"
+            android:label="@string/activity_name_Sithw"
+            android:autoRemoveFromRecents="false"
+            android:configChanges="orientation|screenSize"
+            android:exported="true"
+            android:hardwareAccelerated="true"
+            android:noHistory="false"
+            android:taskAffinity=".sillot.sithw.task"
+            android:theme="@style/Theme.SiYuan.Boot">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="sithw" />
+            </intent-filter>
+        </activity>
 
 <!--        思源笔记入口-->
         <activity

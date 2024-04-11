@@ -25,6 +25,7 @@ package org.b3log.siyuan;
  import android.content.Context;
  import android.content.Intent;
  import android.content.pm.PackageManager;
+ import android.content.res.Configuration;
  import android.graphics.Bitmap;
  import android.graphics.Color;
  import android.net.Uri;
@@ -61,6 +62,7 @@ package org.b3log.siyuan;
  import androidx.activity.OnBackPressedDispatcher;
  import androidx.activity.result.ActivityResultLauncher;
  import androidx.activity.result.contract.ActivityResultContracts;
+ import androidx.annotation.NonNull;
  import androidx.appcompat.app.AlertDialog;
  import androidx.appcompat.app.AppCompatActivity;
  import androidx.core.app.ActivityCompat;
@@ -243,6 +245,10 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         MainActivityLifeState = "onCreate";
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+//        getWindow().setFlags(
+//                WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+//                WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
+//        );
 
         MMKV.initialize(this);
         mmkv = MMKV.defaultMMKV();
@@ -329,7 +335,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         // Fix https://github.com/siyuan-note/siyuan/issues/9726
         // KeyboardUtils.fixAndroidBug5497(this);
         AndroidBug5497Workaround.assistActivity(this);
-
 
 
         HashSet<String> permissionsToCheck = new HashSet<>(Ps.PG_Core); // 核心权限组，每次启动都要检查
@@ -999,6 +1004,30 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             }
         }
     }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        Log.w(TAG,"onConfigurationChanged -> invoked");
+        // 检测屏幕方向是否发生改变
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            // 当前为横屏，在这里处理横屏时的布局变化
+            Log.w(TAG,"当前为横屏");
+        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            // 当前为竖屏，在这里处理竖屏时的布局变化
+            Log.w(TAG,"当前为横屏");
+        }
+
+        // 检测软键盘的显示状态
+        if (newConfig.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_NO) {
+            // 软键盘隐藏了，在这里处理布局变化
+            Log.w(TAG,"软键盘隐藏了");
+        } else if (newConfig.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_YES) {
+            // 软键盘显示了，在这里处理布局变化
+            Log.w(TAG,"软键盘隐藏了");
+        }
+    }
+
 
     @Override
     protected void onDestroy() {

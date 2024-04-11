@@ -3,6 +3,7 @@
     <string name="activity_name_SillotHome">汐洛</string>
     <string name="activity_name_Sithw">司华</string>
     <string name="activity_name_Boot">思源汐洛版</string>
+    <string name="activity_name_USB_AUDIO_EXCLUSIVE">汐洛音乐播放器</string>
 
     <string name="open_source_license">开源许可</string>
     <string name="back">返回</string>
