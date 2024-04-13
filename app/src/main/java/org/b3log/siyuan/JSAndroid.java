@@ -22,7 +22,6 @@ import static com.blankj.utilcode.util.ActivityUtils.startActivity;
 import static com.blankj.utilcode.util.ViewUtils.runOnUiThread;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -126,7 +125,7 @@ public final class JSAndroid {
                         activity.runOnUiThread(() -> {
                             Intent battery = new Intent("sc.windom.sillot.intent.permission.Battery");
                             battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivityForResult(activity, battery, Ss.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT, null);
+                            startActivityForResult(activity, battery, S.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT, null);
                         });
                         return false;
                     }).setCancelButton((baseDialog, v) -> false).setOtherButton((baseDialog, v) -> {
@@ -137,7 +136,7 @@ public final class JSAndroid {
             } else {
                 Intent battery = new Intent("sc.windom.sillot.intent.permission.Battery");
                 battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivityForResult(activity, battery, Ss.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, null);
+                startActivityForResult(activity, battery, S.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, null);
             }
         }
         Log.w("JSAndroid", "requestPermissionActivity()  return true");
@@ -180,7 +179,7 @@ public final class JSAndroid {
             if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 emitter.onNext(true);
             } else {
-                ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, Ss.REQUEST_LOCATION);
+                ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, S.REQUEST_LOCATION);
             }
         });
 
@@ -194,7 +193,7 @@ public final class JSAndroid {
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 //                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
 //                    intent.setData(Uri.parse("package:" + activity.getPackageName()));
-                    startActivityForResult(activity, intent, Ss.REQUEST_OVERLAY, null);
+                    startActivityForResult(activity, intent, S.REQUEST_OVERLAY, null);
                 });
             }
         });

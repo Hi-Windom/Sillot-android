@@ -11,7 +11,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -72,7 +71,7 @@ public class FloatingWindowService extends Service {
         // 创建PendingIntent时，添加FLAG_IMMUTABLE标志
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 
-        Notification notification = new NotificationCompat.Builder(this, Ss.SY_NOTIFICATION_CHANNEL_ID)
+        Notification notification = new NotificationCompat.Builder(this, S.SY_NOTIFICATION_CHANNEL_ID)
                 .setContentTitle("FloatingWindowService")
                 .setContentText("显示 Wifi 悬浮窗")
                 .setSmallIcon(R.drawable.icon)
@@ -86,7 +85,7 @@ public class FloatingWindowService extends Service {
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel serviceChannel = new NotificationChannel(
-                    Ss.FloatingWindowService_NOTIFICATION_CHANNEL_ID,
+                    S.FloatingWindowService_NOTIFICATION_CHANNEL_ID,
                     "显示悬浮窗",
                     NotificationManager.IMPORTANCE_DEFAULT
             );

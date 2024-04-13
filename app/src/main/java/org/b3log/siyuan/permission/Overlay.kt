@@ -10,7 +10,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import org.b3log.siyuan.Ss
+import org.b3log.siyuan.S
 import org.b3log.siyuan.OnSiYuanMainRequestEvent
 import org.b3log.siyuan.andapi.Toast
 import org.greenrobot.eventbus.EventBus
@@ -31,7 +31,7 @@ class Overlay : AppCompatActivity() {
                 // 发送事件，将权限请求的结果发送出去
                 EventBus.getDefault().post(
                     OnSiYuanMainRequestEvent(
-                        Ss.REQUEST_OVERLAY,
+                        S.REQUEST_OVERLAY,
                         RESULT_OK,
                         "showwifi"
                     )
@@ -40,7 +40,7 @@ class Overlay : AppCompatActivity() {
                 Toast.Show(appContext, "未获取显示悬浮窗权限")
                 EventBus.getDefault().post(
                     OnSiYuanMainRequestEvent(
-                        Ss.REQUEST_OVERLAY,
+                        S.REQUEST_OVERLAY,
                         RESULT_CANCELED,
                         ""
                     )

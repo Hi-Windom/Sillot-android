@@ -3,8 +3,6 @@ package org.b3log.siyuan
 import android.app.Activity
 import android.app.Application
 import android.content.Context
-import android.content.pm.PackageManager
-import android.content.res.Configuration
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
@@ -24,7 +22,6 @@ import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.annotations.Ignore
 import io.realm.kotlin.types.annotations.PrimaryKey
 import org.b3log.siyuan.common.ForegroundPushManager
-import java.io.File
 import java.net.InetAddress
 import java.net.UnknownHostException
 
@@ -75,7 +72,7 @@ class App : Application() {
         JPushInterface.setDebugMode(true)
         JPushInterface.init(this)
         // 初始化 baidu PUSH
-        PushManager.startWork(this, PushConstants.LOGIN_TYPE_API_KEY, Ss.initBaiduPushID);
+        PushManager.startWork(this, PushConstants.LOGIN_TYPE_API_KEY, S.initBaiduPushID);
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityPaused(activity: Activity) {
                 Log.w(TAG, "onActivityPaused() invoked -> Activity : ${activity.javaClass.simpleName}")
@@ -193,7 +190,7 @@ class App : Application() {
      override fun attachBaseContext(base: Context?) { // 在onCreate方法之前。这个方法的目的是将应用程序的上下文与它的基类上下文关联起来。
          super.attachBaseContext(base)
          application = this
-         CrashReport.initCrashReport(this, Ss.initCrashReportID, true) // 初始化 bugly
+         CrashReport.initCrashReport(this, S.initCrashReportID, true) // 初始化 bugly
          val configClarity = ClarityConfig(projectId="gqgzluae5t",logLevel= LogLevel.Warning)
          Clarity.initialize(this, configClarity) // 初始化 Clarity
      }

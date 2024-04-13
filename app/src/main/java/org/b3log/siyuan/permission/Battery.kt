@@ -11,7 +11,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import org.b3log.siyuan.OnSiYuanMainRequestEvent
-import org.b3log.siyuan.Ss
+import org.b3log.siyuan.S
 import org.b3log.siyuan.andapi.Toast
 import org.greenrobot.eventbus.EventBus
 
@@ -32,7 +32,7 @@ class Battery : AppCompatActivity() {
                 // 发送事件，将权限请求的结果发送出去
                 EventBus.getDefault().post(
                     OnSiYuanMainRequestEvent(
-                        Ss.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT,
+                        S.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT,
                         RESULT_OK,
                         "RestartSiyuanInWebview"
                     )
@@ -42,7 +42,7 @@ class Battery : AppCompatActivity() {
                 Toast.Show(appContext, "未加入电池优化的白名单")
                 EventBus.getDefault().post(
                     OnSiYuanMainRequestEvent(
-                        Ss.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT,
+                        S.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT,
                         RESULT_CANCELED,
                         "RestartSiyuanInWebview"
                     )

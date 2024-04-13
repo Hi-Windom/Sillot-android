@@ -1,3 +1,4 @@
+@file:Suppress("CompositionLocalNaming", "CompositionLocalNaming")
 package org.b3log.siyuan.producer
 
 import android.annotation.SuppressLint
@@ -5,6 +6,7 @@ import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.ContentResolver
+import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -12,8 +14,10 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
+import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.OpenableColumns
+import android.provider.Settings
 import android.util.Log
 import android.util.Size
 import androidx.activity.ComponentActivity
@@ -25,6 +29,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -34,7 +39,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
@@ -42,7 +49,6 @@ import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Css
-import androidx.compose.material.icons.filled.DataObject
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.FolderZip
 import androidx.compose.material.icons.filled.Html
@@ -63,6 +69,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -77,35 +84,45 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
+import androidx.documentfile.provider.DocumentFile
+import com.kongzue.dialogx.dialogs.BottomMenu
+import com.kongzue.dialogx.dialogs.PopNotification
+import com.kongzue.dialogx.interfaces.OnBottomMenuButtonClickListener
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.b3log.siyuan.R
+import org.b3log.siyuan.S
+import org.b3log.siyuan.Us
 import org.b3log.siyuan.andapi.Toast
+import org.b3log.siyuan.sillot.util.FileUtil.getDataColumn
 import org.b3log.siyuan.videoPlayer.SimplePlayer
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.text.DecimalFormat
 
+
 // TODO: 多选文件打开的处理
 // TODO: 文件覆盖提醒
 // TODO: 缓存清理
+// TODO: 如果是 workspaceParentDir 目录下的文件支持删除
 class MainPro : ComponentActivity() {
     val TAG = "MainPro"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         val intent = intent
         val uri = intent.data
 // 设置沉浸式通知栏
@@ -114,7 +131,7 @@ class MainPro : ComponentActivity() {
             insets
         }
         if (uri != null) {
-            val ft = getMimeType(this,uri)?.let { getFileType(it) }
+            val ft = getMimeType(this,uri)?.let { Us.getFileMIMEType(it) }
             ft?.let { Log.e(TAG, it) }
             if (ft == "视频") {
                 handleVideo(uri)
@@ -198,78 +215,7 @@ fun getIconForFileType(fileType: String): ImageVector {
         else -> Icons.AutoMirrored.Filled.InsertDriveFile // 默认图标
     }
 }
-fun getFileType(mimeType: String): String {
-    return when {
-        mimeType.startsWith("video/") -> {
-            when (mimeType) {
-                "video/mp4" -> "MP4 视频"
-                "video/mpeg" -> "MPEG 视频"
-                "video/quicktime" -> "QuickTime 视频"
-                "video/x-msvideo" -> "AVI 视频"
-                "video/x-flv" -> "FLV 视频"
-                "video/x-matroska" -> "Matroska 视频"
-                "video/webm" -> "WebM 视频"
-                else -> "其他视频"
-            }
-        }
-        mimeType.startsWith("audio/") -> {
-            when (mimeType) {
-                "audio/mpeg" -> "MP3 音频"
-                "audio/x-wav" -> "WAV 音频"
-                "audio/ogg" -> "OGG 音频"
-                "audio/aac" -> "AAC 音频"
-                "audio/flac" -> "FLAC 音频"
-                "audio/amr" -> "AMR 音频"
-                "audio/midi" -> "MIDI 音频"
-                "audio/x-ms-wma" -> "WMA 音频"
-                "audio/x-aiff" -> "AIFF 音频"
-                "audio/x-ms-wmv" -> "WMV 音频"
-                "audio/mp4" -> "M4A 音频"
-                else -> "其他音频"
-            }
-        }
-        mimeType.startsWith("text/") -> {
-            when (mimeType) {
-                "text/plain" -> "文本"
-                "text/html" -> "HTML"
-                "text/css" -> "CSS"
-                "text/javascript" -> "JavaScript"
-                else -> "其他文本"
-            }
-        }
-        mimeType.startsWith("image/") -> {
-            when (mimeType) {
-                "image/jpeg" -> "JPEG 图像"
-                "image/png" -> "PNG 图像"
-                "image/gif" -> "GIF 图像"
-                "image/bmp" -> "BMP 图像"
-                "image/webp" -> "WebP 图像"
-                "image/tiff" -> "TIFF 图像"
-                "image/tiff-fx" -> "TIFF-FX 图像"
-                else -> "其他图像"
-            }
-        }
-        mimeType.startsWith("application/") -> {
-            when (mimeType) {
-                "application/vnd.android.package-archive" -> "程序"
-                "application/pdf" -> "PDF"
-                "application/zip" -> "压缩文件"
-                "application/epub+zip" -> "EPUB"
-                "application/msword" -> "Word文档"
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> "Word文档"
-                "application/vnd.ms-excel" -> "Excel表格"
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" -> "Excel表格"
-                "application/vnd.ms-powerpoint" -> "PowerPoint演示文稿"
-                "application/vnd.openxmlformats-officedocument.presentationml.presentation" -> "PowerPoint演示文稿"
 
-                // 更多应用程序类型的判断
-                else -> "其他程序"
-            }
-        }
-        // 其他类型
-        else -> "其他"
-    }
-}
 
 fun getMimeType(context: Context, uri: Uri): String? {
     return context.contentResolver.getType(uri)
@@ -286,25 +232,28 @@ fun getFileName(context: Context, uri: Uri): String? {
 }
 
 fun getFileSize(uri: Uri): String? {
-    val file = File(uri.path)
-    return if (file.exists()) {
-        val fileSizeInBytes = file.length().toDouble()
-        val units = arrayOf("B", "KB", "MB", "GB", "TB")
-        var fileSize = fileSizeInBytes
-        var unitIndex = 0
+    val file = uri.path?.let { File(it) }
+    if (file != null) {
+        return if (file.exists()) {
+            val fileSizeInBytes = file.length().toDouble()
+            val units = arrayOf("B", "KB", "MB", "GB", "TB")
+            var fileSize = fileSizeInBytes
+            var unitIndex = 0
 
-        // 转换文件大小到合适的单位
-        while (fileSize >= 1024 && unitIndex < units.size - 1) {
-            fileSize /= 1024
-            unitIndex++
+            // 转换文件大小到合适的单位
+            while (fileSize >= 1024 && unitIndex < units.size - 1) {
+                fileSize /= 1024
+                unitIndex++
+            }
+
+            // 格式化文件大小，保留两位小数
+            val df = DecimalFormat("#.##")
+            "${df.format(fileSize)} ${units[unitIndex]}"
+        } else {
+            null
         }
-
-        // 格式化文件大小，保留两位小数
-        val df = DecimalFormat("#.##")
-        "${df.format(fileSize)} ${units[unitIndex]}"
-    } else {
-        null
     }
+    return "unknown"
 }
 
 fun isStorageSpaceAvailable(contentResolver: ContentResolver, uri: Uri): Boolean {
@@ -327,27 +276,149 @@ fun isStorageSpaceAvailable(contentResolver: ContentResolver, uri: Uri): Boolean
     return true
 }
 
-// 根据 Uri 获取文件对象
-fun getFileFromUri(context: Context, uri: Uri): File? {
-    if (!isStorageSpaceAvailable(context.contentResolver, uri)) {
-        // 存储空间不足，处理逻辑
-        Toast.Show(context, "存储空间不足，请先清理")
-        return null
-    }
-    val inputStream = context.contentResolver.openInputStream(uri)
-    val file = File.createTempFile("temp_file", null)
-    val outputStream = FileOutputStream(file)
-    inputStream?.use { input ->
-        outputStream.use { output ->
-            val buffer = ByteArray(8 * 1024) // 缓冲区大小为 8 KB
-            var bytesRead: Int
-            while (input.read(buffer).also { bytesRead = it } != -1) {
-                output.write(buffer, 0, bytesRead)
+fun getPathFromUri(context: Context, uri: Uri): String? {
+    var filePath: String? = null
+    val contentResolver = context.contentResolver
+
+    // 根据不同的URI方案执行不同的处理
+    when {
+        "content" == uri.scheme -> {
+            val cursor = contentResolver.query(uri, null, null, null, null)
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val columnIndex = it.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
+                    filePath = it.getString(columnIndex)
+                }
             }
-            output.flush()
+        }
+        "file" == uri.scheme -> {
+            filePath = uri.path
+        }
+        // 如果是通过DocumentProvider获取的URI
+        DocumentsContract.isDocumentUri(context, uri) -> {
+            if (isExternalStorageDocument(uri)) {
+                // 处理外部存储器文档
+                val docId = DocumentsContract.getDocumentId(uri)
+                val split = docId.split(":")
+                val type = split[0]
+
+                if ("primary".equals(type, ignoreCase = true)) {
+                    filePath = "${context.getExternalFilesDir(null)}/${split[1]}"
+                }
+            } else if (isDownloadsDocument(uri)) {
+                // 处理下载的文件
+                val id = DocumentsContract.getDocumentId(uri)
+                val contentUri = ContentUris.withAppendedId(
+                    Uri.parse("content://downloads/public_downloads"), id.toLong()
+                )
+                filePath = getDataColumn(context, contentUri, null, null)
+            } else if (isMediaDocument(uri)) {
+                // 处理媒体文档
+                val docId = DocumentsContract.getDocumentId(uri)
+                val split = docId.split(":")
+                val type = split[0]
+
+                var contentUri: Uri? = null
+                when (type) {
+                    "image" -> contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                    "video" -> contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                    "audio" -> contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                }
+
+                val selection = "_id=?"
+                val selectionArgs = arrayOf(split[1])
+                filePath = getDataColumn(context, contentUri, selection, selectionArgs)
+            }
         }
     }
-    return file
+    return filePath
+}
+// 检查URI是否是外部存储器文档
+private fun isExternalStorageDocument(uri: Uri): Boolean {
+    return "com.android.externalstorage.documents" == uri.authority
+}
+
+// 检查URI是否是下载文档
+private fun isDownloadsDocument(uri: Uri): Boolean {
+    return "com.android.providers.downloads.documents" == uri.authority
+}
+
+// 检查URI是否是媒体文档
+private fun isMediaDocument(uri: Uri): Boolean {
+    return "com.android.providers.media.documents" == uri.authority
+}
+
+/**
+ * 将源文件复制到应用私有的目录中。当文件存在时不会创建新的重命名文件。进行哈希检查来跳过覆写不会减少耗时。
+ *
+ * @param targetFolderPath 目标文件夹的路径，相对于应用的私有目录。使用绝对路径，例： /storage/emulated/0/Android/data/sc.windom.sillot/files/sillot
+ * @param targetFileName 目标文件的名称。
+ * @param sourceFilePath 源文件的路径。
+ */
+private fun copyFileToMyAppFolder(targetFolderPath: String, targetFileName: String, sourceFilePath: String) {
+    // 创建源文件的 File 对象
+    val sourceFile = File(sourceFilePath)
+
+    // 创建目标文件夹的 File 对象
+    val targetFolder = File(targetFolderPath)
+
+    // 如果目标文件夹不存在，则创建它
+    if (!targetFolder.exists()) {
+        targetFolder.mkdirs()
+    }
+
+    // 创建目标文件的 File 对象
+    val targetFile = File(targetFolder, targetFileName)
+
+    // 打开源文件的输入流
+    var inputStream: FileInputStream? = null
+    // 获取目标文件的输出流
+    var outputStream: FileOutputStream? = null
+
+    inputStream = FileInputStream(sourceFile)
+    outputStream = FileOutputStream(targetFile)
+
+    // 将数据从输入流复制到输出流
+    inputStream.copyTo(outputStream)
+
+    // 关闭输入流和输出流，确保释放资源
+    inputStream.close()
+    outputStream.close()
+
+}
+/**
+ * 将源文件复制到指定的目录，通过文档树这个特殊的口径。当文件存在时会创建新的重命名文件
+ *
+ * @param context 一般是当前活动
+ * @param treeUri 用户选择的文件件Uri，不是真实路径Uri。
+ * @param targetFileName 目标文件名。
+ * @param sourceFilePath 源文件路径。
+ * @param mimeType 源文件类型。
+ * @param move 是否删除源文件
+ */
+private fun copyFileToFolderByDocumentTree(context: Context, treeUri: Uri, targetFileName: String = "Untitled.sc", sourceFilePath: String, mimeType: String, move: Boolean = false) {
+
+    // 创建源文件的 File 对象
+    val sourceFile = File(sourceFilePath)
+
+    // 创建目标文件夹的 DocumentFile 对象
+    val treeDocumentFile = DocumentFile.fromTreeUri(context, treeUri)
+
+    // 在目标文件夹中创建一个新文件
+    val targetFile = treeDocumentFile?.createFile(mimeType, targetFileName) ?: return
+
+    // 打开源文件的输入流
+    val inputStream = FileInputStream(sourceFile)
+
+    // 获取目标文件的输出流
+    context.contentResolver.openOutputStream(targetFile.uri)?.use { outputStream ->
+        // 将数据从输入流复制到输出流
+        inputStream.copyTo(outputStream)
+    }
+
+    // 关闭输入流
+    inputStream.close()
+    if (move) { sourceFile.delete() }
 }
 
 fun isFileSizeOverLimit(file: File, limitMB: Int): Boolean {
@@ -400,157 +471,15 @@ fun convertDrawableToImageBitmap(drawable: Drawable): ImageBitmap? {
 fun MyUI(intent: Intent?, fileType: String?, context: Context) {
     val TAG = "MainPro-MyUI"
     val uri = intent?.data
+    val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
     val coroutineScope = rememberCoroutineScope()
     val fileName = uri?.let { getFileName(context, it) }
     val fileSize = uri?.let { getFileSize(it) }
-//    val mimeType = intent?.data?.let { getMimeType(context, it) }
-//    val fileType = mimeType?.let { getFileType(it) }
-    val Thumbnail_Height = 250
-    val Button_Width = 300
-    val btn_lspace = 0.1.em
-    val btn_PaddingTopH = 3.dp
-    val btn_PaddingTopV = 6.dp
-    val btn_TextFontsizeH = 20.sp
-    val btn_TextFontsizeV = 18.sp
-    val btn_Color1 = Color.White
-    val btn_bgColor1 = Color(0xFF2196F3)
-    val btn_bgColor2 = Color(0xFF1976D2)
-    val btn_bgColor3 = Color(0xFF2391B5)
-    val btn_bgColor4 = Color(0xFF237A58)
-    val btnText1 = "分享"
-    val btnText2 = "复制到剪贴板"
-    val btnText3 = "保存到指定文件夹"
-    val btnText4 = "存入工作空间级资源目录"
-    var progressValue by remember { mutableStateOf(0) }
-    var isButton3OnClickRunning by remember { mutableStateOf(false) }
-    var isButton4OnClickRunning by remember { mutableStateOf(false) }
-    var destinationDir by remember {
-        mutableStateOf(File(context.getExternalFilesDir(null), "sillot/data/assets"))
-    }
-    var sourceFile by remember {
-        mutableStateOf(uri?.let { getFileFromUri(context, it) })
-    }
-    var selectedFolder by remember { mutableStateOf<Uri?>(null) }
+    val mimeType = intent?.data?.let { getMimeType(context, it) } ?: ""
+    val _fileType = Us.getFileMIMEType(mimeType)
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
 
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.data?.let { uri ->
-                // Get the selected folder path from the URI
-                selectedFolder = uri
-            }
-        }
-    }
-    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    LaunchedEffect(key1 = isButton3OnClickRunning) {
-        if (isButton3OnClickRunning && selectedFolder!=null) {
-            // 启动一个协程来执行任务
-            coroutineScope.launch {
-                withContext(Dispatchers.IO) {
-                    var inputStream: BufferedInputStream? = null
-                    var outputStream: BufferedOutputStream? = null
-
-                    try {
-                        inputStream = BufferedInputStream(FileInputStream(sourceFile))
-                        val destinationFile =
-                            (fileName ?: sourceFile?.name)?.let { File(destinationDir, it) }
-                        outputStream = BufferedOutputStream(FileOutputStream(destinationFile))
-
-                        val buffer = ByteArray(1024 * 64) // 64KB的缓冲区
-                        val totalBytes = sourceFile?.length()
-                        var bytesCopied = 0L
-
-                        var bytesRead: Int
-                        while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                            outputStream.write(buffer, 0, bytesRead)
-                            bytesCopied += bytesRead
-
-                            if (totalBytes != null) {
-                                progressValue = (bytesCopied.toFloat() / totalBytes.toFloat() * 100).toInt()
-                            }
-                        }
-                    } catch (e: IOException) {
-                        e.printStackTrace()
-                    } finally {
-                        outputStream?.flush()
-                        outputStream?.close()
-                        inputStream?.close()
-                    }
-                }
-                withContext(Dispatchers.Main) {
-                    Toast.Show(context, "已复制到指定文件夹")
-                }
-                // 执行任务完成后，关闭遮罩
-                isButton3OnClickRunning = false
-                selectedFolder = null
-            }
-        }
-    }
-    LaunchedEffect(key1 = isButton4OnClickRunning) {
-        if (isButton4OnClickRunning) {
-            // 启动一个协程来执行任务
-            coroutineScope.launch {
-                withContext(Dispatchers.IO) {
-                    var inputStream: BufferedInputStream? = null
-                    var outputStream: BufferedOutputStream? = null
-
-                    try {
-                        inputStream = BufferedInputStream(FileInputStream(sourceFile))
-                        val destinationFile =
-                            (fileName ?: sourceFile?.name)?.let { File(destinationDir, it) }
-                        outputStream = BufferedOutputStream(FileOutputStream(destinationFile))
-
-                        val buffer = ByteArray(1024 * 64) // 64KB的缓冲区
-                        val totalBytes = sourceFile?.length()
-                        var bytesCopied = 0L
-
-                        var bytesRead: Int
-                        while (inputStream!!.read(buffer).also { bytesRead = it } != -1) {
-                            outputStream!!.write(buffer, 0, bytesRead)
-                            bytesCopied += bytesRead
-
-                            if (totalBytes != null) {
-                                progressValue = (bytesCopied.toFloat() / totalBytes.toFloat() * 100).toInt()
-                            }
-                        }
-                    } catch (e: IOException) {
-                        e.printStackTrace()
-                    } finally {
-                        outputStream?.flush()
-                        outputStream?.close()
-                        inputStream?.close()
-                    }
-                }
-                            withContext(Dispatchers.Main) {
-                                Toast.Show(context, "已存入")
-                            }
-                // 执行任务完成后，关闭遮罩
-                isButton4OnClickRunning = false
-                selectedFolder = null
-            }
-        }
-    }
-    // 遮罩组件
-    if (isButton4OnClickRunning || isButton3OnClickRunning) {
-        Dialog(
-            onDismissRequest = {
-                isButton3OnClickRunning = false
-                isButton4OnClickRunning = false
-                selectedFolder = null
-                               },
-            properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
-        ) {
-            // 遮罩内容
-            Box(modifier = Modifier.fillMaxSize()) {
-                // 这里可以添加一些内容，比如进度条
-                LinearProgressIndicator(
-                    progress = { progressValue / 100f },
-                    modifier = Modifier.padding(2.dp).height(13.dp).fillMaxWidth().align(Alignment.Center),
-                )
-                Text("${progressValue / 100f} / 100")
-            }
-        }
-    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -579,350 +508,624 @@ fun MyUI(intent: Intent?, fileType: String?, context: Context) {
             )
         }, modifier = Modifier.background(Color.Gray)
     ) {
-        if (isLandscape) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                    // 横屏
-                    LazyColumn(modifier = Modifier.weight(1f).padding(horizontal = 8.dp, vertical = 4.dp).fillMaxHeight(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                        item {
-                            // 显示图像缩略图或文件类型图标
-                            Box(modifier = Modifier
-                                .size(Thumbnail_Height.dp)
-                                .fillMaxSize()) {
-                                if (fileType != null) {
-                                    if (fileType.endsWith("图像")) {
-                                        val bitmap = uri?.let { it1 ->
-                                            context.contentResolver?.loadThumbnail(it1,
-                                                Size(Thumbnail_Height, Thumbnail_Height), null)
-                                        }
-                                        bitmap?.let {
-                                            Image(bitmap = it.asImageBitmap(), contentDescription = "Thumbnail", modifier = Modifier
-                                                .size(Thumbnail_Height.dp)
-                                            )
-                                        }
-                                    } else {
-                                        val icon = fileType?.let { it1 -> getIconForFileType(it1) }
-                                        icon?.let { it1 ->
-                                            Icon(
-                                                imageVector = it1,
-                                                contentDescription = "File Type Icon",
-                                                modifier = Modifier
-                                                    .size(Thumbnail_Height.dp)
-                                            )
-                                        }
-                            //                    Image( // 对应的是 R.drawable.id 方案
-                            //                        painter = painterResource(id = icon),
-                            //                        contentDescription = null,
-                            //                        modifier = Modifier.size(100.dp)
-                            //                    )
-                                    }
-                                }
-                            }
-
-                            fileName?.let { it1 ->
-                                Text(
-                                    text = it1, // 使用获取到的文件名
-                                    fontSize = 20.sp, // 横屏字体小一点
-                                    modifier = Modifier.padding(8.dp).fillParentMaxWidth(0.8f)
-                                )
-                            }
-                            Text(
-                                text = "$fileSize ($fileType)",
-                                fontSize = 13.sp,
-                                color = Color.Gray,
-                                modifier = Modifier.padding(bottom = 6.dp)
-                            )
-
-                        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isLandscape) {
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth(.4f)
+                            .fillMaxHeight()
+                            .padding(vertical = 16.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        InfoPart(
+                            context = context,
+                            uri = uri,
+                            fileType = fileType,
+                            fileName = fileName,
+                            fileSize = fileSize
+                        )
                     }
-                    LazyColumn(modifier = Modifier.weight(1f).padding(start = 0.dp, top = 8.dp, end = 8.dp, bottom = 4.dp
-                    ).fillMaxHeight(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                        item {
-
-                            Button(modifier= Modifier
-                                .width(Button_Width.dp)
-                                .padding(top = btn_PaddingTopH),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = btn_bgColor1,
-                                    contentColor = btn_Color1
-                                ), enabled = true, onClick = {
-                                val shareIntent = Intent().apply {
-                                    action = Intent.ACTION_SEND
-                                    putExtra(Intent.EXTRA_STREAM, uri) // 将文件 Uri 添加到 Intent 的 EXTRA_STREAM 中
-                                    type = "*/*" // 设置 MIME 类型为通配符，表示所有类型的文件
-                                }
-
-                                val chooserIntent = Intent.createChooser(shareIntent, "分享文件到")
-                                chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) // 添加新任务标志
-
-                                // 使用 ContextCompat 中的 startActivity 启动分享意图
-                                context.let { it1 -> ContextCompat.startActivity(it1, chooserIntent, null) }
-                            }) {
-                                Text(
-                                    text = btnText1,
-                                    letterSpacing = btn_lspace,
-                                    fontSize = btn_TextFontsizeH
-                                )
-                            }
-
-                            Button(modifier= Modifier
-                                .width(Button_Width.dp)
-                                .padding(top = btn_PaddingTopH),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = btn_bgColor2,
-                                    contentColor = btn_Color1
-                                ), enabled = true, onClick = {
-                                // 获取系统的剪贴板管理器
-                                val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                // 创建一个剪贴板数据对象，将文件的 Uri 放入其中
-                                val clipData = ClipData.newUri(context.contentResolver, "label", uri)
-                                // 设置剪贴板数据对象的 MIME 类型
-                                clipData.addItem(ClipData.Item(uri))
-                                // 将数据放入剪贴板
-                                clipboardManager.setPrimaryClip(clipData)
-                                Toast.Show(context, "复制成功")
-                            }) {
-                                Text(
-                                    text = btnText2,
-                                    letterSpacing = btn_lspace,
-                                    fontSize = btn_TextFontsizeH
-                                )
-                            }
-                            Button(modifier= Modifier
-                                .width(Button_Width.dp)
-                                .padding(top = btn_PaddingTopH),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = btn_bgColor3,
-                                    contentColor = btn_Color1
-                                ), enabled = true, onClick = {
-                                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-                                launcher.launch(intent)
-                                // 非阻塞
-                            }) {
-                                Text(
-                                    text = btnText3,
-                                    letterSpacing = btn_lspace,
-                                    fontSize = btn_TextFontsizeH
-                                )
-                            }
-
-                            Button(modifier= Modifier
-                                .width(Button_Width.dp)
-                                .padding(top = btn_PaddingTopH),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = btn_bgColor4,
-                                    contentColor = btn_Color1
-                                ), enabled = true, onClick = {
-                                if (uri!=null) {
-                                    coroutineScope.launch {
-                                        destinationDir = File(context.getExternalFilesDir(null), "sillot/data/assets")
-                                        sourceFile = getFileFromUri(context, uri)
-                                        if (sourceFile == null || isFileSizeOverLimit(context.contentResolver, uri, 5858)) {
-                                            withContext(Dispatchers.Main) {
-                                                Toast.Show(context, "暂不支持超大文件或文件不存在")
-                                            }
-                                        } else {
-                                            Log.e(TAG,destinationDir.toString())
-                                            isButton4OnClickRunning = true // 值变化时会触发重组
-                                        }
-                                    }
-                                }
-                            }) {
-                                Text(
-                                    text = btnText4,
-                                    letterSpacing = btn_lspace,
-                                    fontSize = btn_TextFontsizeH
-                                )
-                            }
-
-                        }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth(.6f)
+                            .fillMaxHeight()
+//                            .height(IntrinsicSize.Min)
+                            .padding(vertical = 16.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        BtnPart(
+                            context = context,
+                            uri = uri,
+                            mimeType = mimeType,
+                            fileName = fileName
+                        )
                     }
-
-                selectedFolder?.let { folder ->
-                    val folderPath = "/storage/emulated/0/" + (folder.lastPathSegment?.split(":")
-                        ?.last() ?: "")
-                    if (folderPath!="") {
-                        Log.e(TAG, "Selected Folder: $folderPath")
-                        Text("Selected Folder: $folderPath")
-                        destinationDir = File(folderPath)
-                        sourceFile = uri?.let { it1 -> getFileFromUri(context, it1) }
-                        isButton3OnClickRunning = true // 值变化时会触发重组
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    item {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        InfoPart(
+                            context = context,
+                            uri = uri,
+                            fileType = fileType,
+                            fileName = fileName,
+                            fileSize = fileSize
+                        )
+                        BtnPart(
+                            context = context,
+                            uri = uri,
+                            mimeType = mimeType,
+                            fileName = fileName
+                        )
                     }
                 }
             }
-        } else {
-            // 竖屏
-            LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                item {
-                    // 显示图像缩略图或文件类型图标
-                    Box(modifier = Modifier
-                        .size(Thumbnail_Height.dp)
-                        .fillMaxSize()) {
-                        if (fileType != null) {
-                            if (fileType.endsWith("图像")) {
-                                val bitmap = uri?.let { it1 ->
-                                    context.contentResolver?.loadThumbnail(it1,
-                                        Size(Thumbnail_Height, Thumbnail_Height), null)
-                                }
-                                bitmap?.let {
-                                    Image(bitmap = it.asImageBitmap(), contentDescription = "Thumbnail", modifier = Modifier
-                                        .size(Thumbnail_Height.dp)
-                                        .fillMaxSize())
-                                }
-                            } else {
-                                val icon = fileType?.let { it1 -> getIconForFileType(it1) }
-                                icon?.let { it1 ->
-                                    Icon(
-                                        imageVector = it1,
-                                        contentDescription = "File Type Icon",
-                                        modifier = Modifier
-                                            .size(Thumbnail_Height.dp)
-                                    )
-                                }
+        }
+
+
+
+    }
+}
+@SuppressLint("UnrememberedMutableInteractionSource")
+@Composable
+fun SelectableText(text: String, modifier: Modifier = Modifier, style: TextStyle = TextStyle()) {
+    // 支持长按选择操作
+    SelectionContainer {
+        Text(
+            text = text,
+            modifier = modifier,
+            style = style
+                .copy(
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    fontStyle = FontStyle.Normal
+                )
+        )
+    }
+}
+@Composable
+fun InfoPart(context: Context, uri: Uri?, fileType: String?, fileName: String?, fileSize: String?) {
+    val TAG = "MainPro-InfoPart"
+    val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
+    val Thumbnail_Height = S.C.Thumbnail_Height.current
+    val Thumbnail_Height_IMG = S.C.Thumbnail_Height_IMG.current
+
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
+
+    // 显示图像缩略图或文件类型图标
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .wrapContentSize(Alignment.Center)
+        ) {
+            if (fileType != null) {
+                if (fileType.endsWith("图像")) {
+                    val bitmap = uri?.let { it1 ->
+                        context.contentResolver?.loadThumbnail(
+                            it1,
+                            Size(
+                                if (isLandscape) Thumbnail_Height else Thumbnail_Height_IMG,
+                                if (isLandscape) Thumbnail_Height else Thumbnail_Height_IMG
+                            ), null
+                        )
+                    }
+                    bitmap?.let {
+                        Image(
+                            bitmap = it.asImageBitmap(),
+                            contentDescription = "Thumbnail",
+                            modifier = Modifier
+                                .size(Thumbnail_Height_IMG.dp)
+                                .fillMaxSize()
+                        )
+                    }
+                } else {
+                    val icon = getIconForFileType(fileType)
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = "File Type Icon",
+                        modifier = Modifier
+                            .size(Thumbnail_Height.dp)
+                    )
                     //                    Image( // 对应的是 R.drawable.id 方案
                     //                        painter = painterResource(id = icon),
                     //                        contentDescription = null,
                     //                        modifier = Modifier.size(100.dp)
                     //                    )
-                            }
-                        }
-                    }
-
-                    fileName?.let { it1 ->
-                        Text(
-                            text = it1, // 使用获取到的文件名
-                            fontSize = 24.sp,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                    }
-                    Text(
-                        text = "$fileSize ($fileType)",
-                        fontSize = 16.sp,
-                        color = Color.Gray,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                    Button(modifier= Modifier
-                        .width(Button_Width.dp)
-                        .padding(top = btn_PaddingTopV),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = btn_bgColor1,
-                            contentColor = btn_Color1
-                        ), enabled = true, onClick = {
-                        val shareIntent = Intent().apply {
-                            action = Intent.ACTION_SEND
-                            putExtra(Intent.EXTRA_STREAM, uri) // 将文件 Uri 添加到 Intent 的 EXTRA_STREAM 中
-                            type = "*/*" // 设置 MIME 类型为通配符，表示所有类型的文件
-                        }
-
-                        val chooserIntent = Intent.createChooser(shareIntent, "分享文件到")
-                        chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) // 添加新任务标志
-
-                        // 使用 ContextCompat 中的 startActivity 启动分享意图
-                        context.let { it1 -> ContextCompat.startActivity(it1, chooserIntent, null) }
-                    }) {
-                        Text(
-                            text = btnText1,
-                            letterSpacing = btn_lspace,
-                            fontSize = btn_TextFontsizeV
-                        )
-                    }
-
-                    Button(modifier= Modifier
-                        .width(Button_Width.dp)
-                        .padding(top = btn_PaddingTopV),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = btn_bgColor2,
-                            contentColor = btn_Color1
-                        ), enabled = true, onClick = {
-                        // 获取系统的剪贴板管理器
-                        val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        // 创建一个剪贴板数据对象，将文件的 Uri 放入其中
-                        val clipData = ClipData.newUri(context.contentResolver, "label", uri)
-                        // 设置剪贴板数据对象的 MIME 类型
-                        clipData.addItem(ClipData.Item(uri))
-                        // 将数据放入剪贴板
-                        clipboardManager.setPrimaryClip(clipData)
-                        Toast.Show(context, "复制成功")
-                    }) {
-                        Text(
-                            text = btnText2,
-                            letterSpacing = btn_lspace,
-                            fontSize = btn_TextFontsizeV
-                        )
-                    }
-                    Button(modifier= Modifier
-                        .width(Button_Width.dp)
-                        .padding(top = btn_PaddingTopV),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = btn_bgColor3,
-                            contentColor = btn_Color1
-                        ), enabled = true, onClick = {
-                        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-                        launcher.launch(intent)
-                        // 非阻塞
-                    }) {
-                        Text(
-                            text = btnText3,
-                            letterSpacing = btn_lspace,
-                            fontSize = btn_TextFontsizeV
-                        )
-                    }
-
-                    Button(modifier= Modifier
-                        .width(Button_Width.dp)
-                        .padding(top = btn_PaddingTopV),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = btn_bgColor4,
-                            contentColor = btn_Color1
-                        ), enabled = true, onClick = {
-                        if (uri!=null) {
-                            coroutineScope.launch {
-                                destinationDir = File(context.getExternalFilesDir(null), "sillot/data/assets")
-                                sourceFile = getFileFromUri(context, uri)
-                                if (sourceFile == null || isFileSizeOverLimit(context.contentResolver, uri, 5858)) {
-                                    withContext(Dispatchers.Main) {
-                                        Toast.Show(context, "暂不支持超大文件或文件不存在")
-                                    }
-                                } else {
-                                    Log.e(TAG,destinationDir.toString())
-                                    isButton4OnClickRunning = true // 值变化时会触发重组
-                                }
-                            }
-                        }
-                    }) {
-                        Text(
-                            text = btnText4,
-                            letterSpacing = btn_lspace,
-                            fontSize = btn_TextFontsizeV
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-
-
-                    selectedFolder?.let { folder ->
-                        val folderPath = "/storage/emulated/0/" + (folder.lastPathSegment?.split(":")
-                            ?.last() ?: "")
-                        if (folderPath!="") {
-                            Log.e(TAG, "Selected Folder: $folderPath")
-                            Text("Selected Folder: $folderPath")
-                            destinationDir = File(folderPath)
-                            sourceFile = uri?.let { it1 -> getFileFromUri(context, it1) }
-                            isButton3OnClickRunning = true // 值变化时会触发重组
-                        }
-                    }
                 }
             }
 
+            fileName?.let { it1 ->
+                SelectableText(
+                    text = it1, // 使用获取到的文件名
+                    style = TextStyle(
+                        fontSize = if (isLandscape) 14.sp else 16.sp
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "$fileSize ($fileType)",
+                    fontSize = if (isLandscape) 12.sp else 14.sp,
+                    color = Color.Gray,
+                    modifier = if (isLandscape) Modifier.padding(top = 6.dp) else Modifier.padding(
+                        bottom = 6.dp
+                    )
+                )
+            }
         }
+    }
 
+}
+
+@SuppressLint("Range")
+@Composable
+fun BtnPart(context: Context, uri: Uri?, mimeType: String, fileName: String?) {
+    val TAG = "MainPro-BtnPart"
+    val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
+    val coroutineScope = rememberCoroutineScope()
+    val Button_Width = S.C.Button_Width.current
+    val btn_lspace = S.C.btn_lspace.current
+    val btn_PaddingTopH = S.C.btn_PaddingTopH.current
+    val btn_PaddingTopV = S.C.btn_PaddingTopV.current
+    val btn_TextFontsizeH = S.C.btn_TextFontsizeH.current
+    val btn_TextFontsizeV = S.C.btn_TextFontsizeV.current
+    val btn_Color1 = S.C.btn_Color1.current
+    val btn_bgColor1 = S.C.btn_bgColor1.current
+    val btn_bgColor2 = S.C.btn_bgColor2.current
+    val btn_bgColor3 = S.C.btn_bgColor3.current
+    val btn_bgColor4 = S.C.btn_bgColor4.current
+    val btnText1 = S.C.btnText1.current
+    val btnText2 = S.C.btnText2.current
+    val btnText3 = S.C.btnText3.current
+    val btnText4 = S.C.btnText4.current
+
+    var showAudioButton by remember { mutableStateOf(false) }
+    var showVideoButton by remember { mutableStateOf(false) }
+    var showApkButton by remember { mutableStateOf(false) }
+
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
+
+    var progressValue by remember { mutableStateOf(0) }
+    var isButton3OnClickRunning by remember { mutableStateOf(false) }
+    var isButton4OnClickRunning by remember { mutableStateOf(false) }
+    var workspaceAssetsDir by remember { mutableStateOf("${S.workspaceParentDir}/sillot/data/assets") }
+    var uri_from_file by remember { mutableStateOf(Uri.parse("")) }
+    var uri_to_dir by remember { mutableStateOf(Uri.parse("")) }
+    var selectedFolder by remember { mutableStateOf<Uri?>(null) }
+
+
+    LaunchedEffect(key1 = mimeType) {
+        showAudioButton = mimeType.startsWith("audio/")
+        showVideoButton = mimeType.startsWith("video/")
+        showApkButton = mimeType == "application/vnd.android.package-archive"
+    }
+
+    fun onCopyFileToFolderByDocumentTree() {
+        // 启动一个协程来执行任务
+        coroutineScope.launch {
+            withContext(Dispatchers.IO) {
+
+                try {
+                    if (!isStorageSpaceAvailable(context.contentResolver, uri_from_file)) {
+                        // 存储空间不足，处理逻辑
+                        Toast.Show(context, "存储空间不足，请先清理")
+                        return@withContext
+                    }
+                    val sourceFilePath = getPathFromUri(context, uri_from_file)
+                    // 复制文件到所选文件夹
+                    fileName?.let {
+                        sourceFilePath?.let { it1 ->
+                            copyFileToFolderByDocumentTree(
+                                context, uri_to_dir, it,
+                                it1, mimeType
+                            )
+                        }
+                    }
+                    withContext(Dispatchers.Main) {
+                        Toast.Show(context, "已复制到指定文件夹")
+                    }
+                } catch (e: IOException) {
+                    Log.e(TAG, e.toString())
+                    withContext(Dispatchers.Main) {
+                        PopNotification.show("任务失败", e.toString()).noAutoDismiss()
+                    }
+                }
+                // 执行任务完成后，关闭遮罩
+                isButton3OnClickRunning = false
+            }
+        }
+    }
+    fun onCopyFileToMyAppFolder() {
+        // 启动一个协程来执行任务
+        coroutineScope.launch {
+            withContext(Dispatchers.IO) {
+                try {
+                    if (!isStorageSpaceAvailable(context.contentResolver, uri_from_file)) {
+                        // 存储空间不足，处理逻辑
+                        PopNotification.show(R.drawable.icon,  "存储空间不足，请先清理")
+                        return@withContext
+                    }
+                    val sourceFilePath = getPathFromUri(context, uri_from_file)
+                    // 复制文件到所选文件夹
+                    fileName?.let {
+                        sourceFilePath?.let { it1 ->
+                            try {
+                                copyFileToMyAppFolder(
+                                    workspaceAssetsDir, it, it1
+                                )
+                                PopNotification.show(R.drawable.icon, "已存入 ${workspaceAssetsDir}").autoDismiss(5000)
+                            } catch (e: IOException) {
+                                Log.e(TAG, e.toString())
+                                PopNotification.show(R.drawable.icon, "任务失败", e.toString()).noAutoDismiss()
+                            }
+
+                        }
+                    }
+                } catch (e: IOException) {
+                    Log.e(TAG, e.toString())
+                    withContext(Dispatchers.Main) {
+                        PopNotification.show(R.drawable.icon, "任务失败", e.toString()).noAutoDismiss()
+                    }
+                } finally {
+                    // 执行任务完成后，关闭遮罩
+                    isButton4OnClickRunning = false
+                }
+            }
+        }
+    }
+    var manageAllFilesPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (Us.canManageAllFiles(context)) {
+            if (isButton3OnClickRunning) { onCopyFileToFolderByDocumentTree() }
+            else if (isButton4OnClickRunning) { onCopyFileToMyAppFolder() }
+
+        }
+    }
+    val bt3TaskLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.let { _uri ->
+                if (uri == null) return@let
+                isButton3OnClickRunning = true  // 没有设置 LaunchedEffect 但是需要显示遮罩
+                // 通过 SAF 获取持久性权限
+                context.contentResolver.takePersistableUriPermission(_uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+
+//                Us.requestExternalStoragePermission(context as Activity)
+                // 使用DocumentFile处理URI
+                val rootDocument = DocumentFile.fromTreeUri(context, _uri)
+                // 例如，列出根目录下的文件和文件夹
+                rootDocument?.listFiles()?.forEach { file ->
+                    // 处理文件或文件夹
+                    Log.d(TAG, "File name: ${file.name}, Is directory: ${file.isDirectory}, mimeType: ${file.type}, canRead: ${file.canRead()}, canWrite: ${file.canWrite()}, lastModified: ${file.lastModified()} ")
+                }
+
+                uri_from_file = uri
+                uri_to_dir = _uri
+                if (Us.canManageAllFiles(context)) {
+                    onCopyFileToFolderByDocumentTree()
+                }
+                else {
+                    val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                    manageAllFilesPermissionLauncher.launch(intent)
+                }
+
+            }
+        }
+    }
+
+    LaunchedEffect(key1 = isButton4OnClickRunning) {
+        if (isButton4OnClickRunning) {
+            uri_from_file = uri
+            uri_to_dir = Uri.parse(workspaceAssetsDir)
+            if (Us.canManageAllFiles(context)) {
+                onCopyFileToMyAppFolder()
+            }
+            else {
+                val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                manageAllFilesPermissionLauncher.launch(intent)
+            }
+
+        }
+    }
+    // 遮罩组件
+    if (isButton4OnClickRunning || isButton3OnClickRunning) {
+                Dialog(
+                    onDismissRequest = {
+                        isButton3OnClickRunning = false
+                        isButton4OnClickRunning = false
+                        selectedFolder = null
+                    },
+                    properties = DialogProperties(
+                        dismissOnBackPress = false,
+                        dismissOnClickOutside = false
+                    )
+                ) {
+                    // 遮罩内容
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (false) {
+                            LinearProgressIndicator(
+                                progress = { progressValue / 100f },
+                                modifier = Modifier
+                                    .padding(2.dp)
+                                    .height(13.dp)
+                                    .fillMaxWidth(),
+                            )
+                        } else {
+                            // 不设置progress参数，显示不确定进度
+                            LinearProgressIndicator(
+                                modifier = Modifier
+                                    .padding(bottom = 58.dp)
+                                    .height(13.dp)
+                                    .fillMaxWidth(),
+                            )
+                            Text(
+                                text = "操作正在进行……\n请勿旋转屏幕或退出",
+                                color = Color.Yellow,
+                                modifier = Modifier
+                                    .padding(bottom = 8.dp)
+                                    .align(Alignment.BottomCenter),
+                                letterSpacing = btn_lspace,
+                                fontSize = if (isLandscape) btn_TextFontsizeH else btn_TextFontsizeV
+                            )
+                        }
+                    }
+                }
+    }
+
+    //// @D 通用按键部分
+
+    // 分享
+    Button(modifier= Modifier
+        .width(Button_Width.dp)
+        .padding(top = if (isLandscape) btn_PaddingTopH else btn_PaddingTopV),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = btn_bgColor1,
+            contentColor = btn_Color1
+        ), enabled = true, onClick = {
+            val shareIntent = Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_STREAM, uri) // 将文件 Uri 添加到 Intent 的 EXTRA_STREAM 中
+                type = "*/*" // 设置 MIME 类型为通配符，表示所有类型的文件
+            }
+
+            val chooserIntent = Intent.createChooser(shareIntent, "分享文件到")
+            chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) // 添加新任务标志
+
+            // 使用 ContextCompat 中的 startActivity 启动分享意图
+            context.let { it1 -> ContextCompat.startActivity(it1, chooserIntent, null) }
+        }) {
+        Text(
+            text = btnText1,
+            letterSpacing = btn_lspace,
+            fontSize = if (isLandscape) btn_TextFontsizeH else btn_TextFontsizeV
+        )
+    }
+
+    // 复制到剪贴板
+    Button(modifier= Modifier
+        .width(Button_Width.dp)
+        .padding(top = if (isLandscape) btn_PaddingTopH else btn_PaddingTopV),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = btn_bgColor2,
+            contentColor = btn_Color1
+        ), enabled = true, onClick = {
+            // 获取系统的剪贴板管理器
+            val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            // 创建一个剪贴板数据对象，将文件的 Uri 放入其中
+            val clipData = ClipData.newUri(context.contentResolver, "label", uri)
+            // 设置剪贴板数据对象的 MIME 类型
+            clipData.addItem(ClipData.Item(uri))
+            // 将数据放入剪贴板
+            clipboardManager.setPrimaryClip(clipData)
+            Toast.Show(context, "复制成功")
+        }) {
+        Text(
+            text = btnText2,
+            letterSpacing = btn_lspace,
+            fontSize = if (isLandscape) btn_TextFontsizeH else btn_TextFontsizeV
+        )
+    }
+
+    // 保存到指定文件夹
+    Button(modifier= Modifier
+        .width(Button_Width.dp)
+        .padding(top = if (isLandscape) btn_PaddingTopH else btn_PaddingTopV),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = btn_bgColor3,
+            contentColor = btn_Color1
+        ), enabled = true, onClick = {
+            val btn3_intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+            bt3TaskLauncher.launch(btn3_intent)
+            // 非阻塞
+        }) {
+        Text(
+            text = btnText3,
+            letterSpacing = btn_lspace,
+            fontSize = if (isLandscape) btn_TextFontsizeH else btn_TextFontsizeV
+        )
+    }
+
+    // 存入工作空间级资源目录
+    Button(modifier= Modifier
+        .width(Button_Width.dp)
+        .padding(top = if (isLandscape) btn_PaddingTopH else btn_PaddingTopV),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = btn_bgColor4,
+            contentColor = btn_Color1
+        ), enabled = true, onClick = {
+            if (uri!=null) {
+//                val handler = Handler(Looper.getMainLooper())
+//                handler.post {
+                    val directories = Us.getDirectoriesInPath(S.workspaceParentDir)
+                    val filteredDirectories = directories.filter { it != "home" }
+                    var selectMenuIndex = 0
+                    var selectMenuText = "sillot"
+                    BottomMenu.show(filteredDirectories)
+                        .setMessage("sillot 是默认工作空间")
+                        .setTitle("选择要存入的工作空间")
+                        .setSelection(selectMenuIndex) //指定已选择的位置
+                        .setOnMenuItemClickListener { dialog, text, index ->
+                            selectMenuIndex = index
+                            selectMenuText = text as String
+                            dialog.refreshUI() // 在 compose 里需要强制刷新
+                            true // 点击菜单后不会自动关闭
+                        }
+                        .setOkButton("确定",
+                            OnBottomMenuButtonClickListener { menu, view ->
+                                Log.e(TAG, "${selectMenuText}")
+
+                                workspaceAssetsDir = "/storage/emulated/0/Android/data/sc.windom.sillot/files/${selectMenuText}/data/assets"
+                                isButton4OnClickRunning = true // 值变化时会触发重组
+                                false
+                            })
+                        .setCancelButton("取消",
+                            OnBottomMenuButtonClickListener { menu, view ->
+                                false
+                            })
+//                }
+            }
+        }) {
+        Text(
+            text = btnText4,
+            letterSpacing = btn_lspace,
+            fontSize = if (isLandscape) btn_TextFontsizeH else btn_TextFontsizeV
+        )
+    }
+
+
+    //// 类型按键区
+
+    fun ApkBTNonClick1() {
+        uri?.let { Us.installApk(context as Activity, it) }
+    }
+    if (inspectionMode || showAudioButton) {
+        AudioButtons()
+    } else if (showVideoButton) {
+        VideoButtons()
+    } else if (showApkButton) {
+        ApkButtons(::ApkBTNonClick1)
+    }
+
+}
+
+@Composable
+fun AudioButtons() {
+    val TAG = "MainPro-BtnPart-AudioButtons"
+    val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
+    val Button_Width = S.C.Button_Width.current
+    val btn_lspace = S.C.btn_lspace.current
+    val btn_PaddingTopH = S.C.btn_PaddingTopH.current
+    val btn_PaddingTopV = S.C.btn_PaddingTopV.current
+    val btn_TextFontsizeH = S.C.btn_TextFontsizeH.current
+    val btn_TextFontsizeV = S.C.btn_TextFontsizeV.current
+    val btn_Color1 = S.C.btn_Color1.current
+    val btn_bgColor1 = S.C.btn_bgColor_pink.current
+    val btnText1 = S.C.btnTextAudio1.current
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
+    Button(modifier= Modifier
+        .width(Button_Width.dp)
+        .padding(top = if (isLandscape) btn_PaddingTopH else btn_PaddingTopV),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = btn_bgColor1,
+            contentColor = btn_Color1
+        ), enabled = true, onClick = { /*TODO*/ }) {
+        Text(
+            text = btnText1,
+            letterSpacing = btn_lspace,
+            fontSize = if (isLandscape) btn_TextFontsizeH else btn_TextFontsizeV
+        )
     }
 }
 
+@Composable
+fun VideoButtons() {
+    val TAG = "MainPro-BtnPart-AudioButtons"
+    val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
+    val Button_Width = S.C.Button_Width.current
+    val btn_lspace = S.C.btn_lspace.current
+    val btn_PaddingTopH = S.C.btn_PaddingTopH.current
+    val btn_PaddingTopV = S.C.btn_PaddingTopV.current
+    val btn_TextFontsizeH = S.C.btn_TextFontsizeH.current
+    val btn_TextFontsizeV = S.C.btn_TextFontsizeV.current
+    val btn_Color1 = S.C.btn_Color1.current
+    val btn_bgColor1 = S.C.btn_bgColor_pink.current
+    val btnText1 = S.C.btnTextVideo1.current
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
+    Button(modifier= Modifier
+        .width(Button_Width.dp)
+        .padding(top = if (isLandscape) btn_PaddingTopH else btn_PaddingTopV),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = btn_bgColor1,
+            contentColor = btn_Color1
+        ), enabled = true, onClick = { /*TODO*/ }) {
+        Text(
+            text = btnText1,
+            letterSpacing = btn_lspace,
+            fontSize = if (isLandscape) btn_TextFontsizeH else btn_TextFontsizeV
+        )
+    }
+}
+
+@Composable
+fun ApkButtons( ApkBTNonClick1: () -> Unit) {
+    val TAG = "MainPro-BtnPart-AudioButtons"
+    val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
+    val Button_Width = S.C.Button_Width.current
+    val btn_lspace = S.C.btn_lspace.current
+    val btn_PaddingTopH = S.C.btn_PaddingTopH.current
+    val btn_PaddingTopV = S.C.btn_PaddingTopV.current
+    val btn_TextFontsizeH = S.C.btn_TextFontsizeH.current
+    val btn_TextFontsizeV = S.C.btn_TextFontsizeV.current
+    val btn_Color1 = S.C.btn_Color1.current
+    val btn_bgColor1 = S.C.btn_bgColor_pink.current
+    val btnText1 = S.C.btnText5Apk1.current
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
+    Button(modifier= Modifier
+        .width(Button_Width.dp)
+        .padding(top = if (isLandscape) btn_PaddingTopH else btn_PaddingTopV),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = btn_bgColor1,
+            contentColor = btn_Color1
+        ), enabled = true, onClick = ApkBTNonClick1) {
+        Text(
+            text = btnText1,
+            letterSpacing = btn_lspace,
+            fontSize = if (isLandscape) btn_TextFontsizeH else btn_TextFontsizeV
+        )
+    }
+}
 
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    MyUI(null, null, LocalContext.current)
+    // 在预览环境中覆盖值。provides 提供明确值，这将覆盖组件嵌套中CompositionLocalProvider的值；providesDefault 提供默认值，
+    // CompositionLocalProvider的作用域和它们在代码中的顺序决定了哪个providesDefault生效。
+    CompositionLocalProvider(
+        S.C.Thumbnail_Height provides 250,
+        S.C.Button_Width providesDefault 300,
+    ) {
+        MyUI(null, null, LocalContext.current)
+    }
 }

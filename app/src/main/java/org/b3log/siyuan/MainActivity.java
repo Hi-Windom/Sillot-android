@@ -122,7 +122,7 @@ package org.b3log.siyuan;
 public class MainActivity extends AppCompatActivity implements com.blankj.utilcode.util.Utils.OnAppStatusChangedListener {
     private final String TAG = "MainActivity-SiYuan";
     private AsyncHttpServer server;
-    private int serverPort = Ss.DefaultHTTPPort;
+    private int serverPort = S.DefaultHTTPPort;
     public WebView webView;
     private ImageView bootLogo;
     private ProgressBar bootProgressBar;
@@ -130,8 +130,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     private String webViewVer;
     private String userAgent;
     private ValueCallback<Uri[]> uploadMessage;
-    private static final int REQUEST_SELECT_FILE = Ss.REQUEST_SELECT_FILE;
-    private static final int REQUEST_CAMERA = Ss.REQUEST_CAMERA;
+    private static final int REQUEST_SELECT_FILE = S.REQUEST_SELECT_FILE;
+    private static final int REQUEST_CAMERA = S.REQUEST_CAMERA;
     private long exitTime;
     public MMKV mmkv;
     private String MainActivityLifeState = "";
@@ -984,7 +984,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(OnSiYuanMainRequestEvent event) {
         // 检查权限请求的结果
-        if (event.getRequestCode() == Ss.REQUEST_OVERLAY) {
+        if (event.getRequestCode() == S.REQUEST_OVERLAY) {
             if (event.getResultCode() == RESULT_OK) {
                 // 权限已授予
                 // 在此处执行相应的操作
@@ -997,7 +997,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 // 权限未授予
                 // 在此处执行相应的操作
             }
-        } else if (event.getRequestCode() == Ss.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT) {
+        } else if (event.getRequestCode() == S.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT) {
             // 不管结果是什么都重启
             if (event.getCallback().equals("RestartSiyuanInWebview")) {
                 RestartSiyuanInWebview();

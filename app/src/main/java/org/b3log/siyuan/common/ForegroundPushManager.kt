@@ -11,7 +11,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import org.b3log.siyuan.Ss
+import org.b3log.siyuan.S
 import org.b3log.siyuan.R
 
 
@@ -22,9 +22,9 @@ import org.b3log.siyuan.R
  */
 object ForegroundPushManager {
 
-    val notificationId = Ss.XLQTFW_notificationId
+    val notificationId = S.XLQTFW_notificationId
 
-    val notificationChannelId = Ss.XLQTFW_notificationChannelId
+    val notificationChannelId = S.XLQTFW_notificationChannelId
 
     //显示通知
     @SuppressLint("MissingPermission")
@@ -70,7 +70,7 @@ object ForegroundPushManager {
         val activityIntent = Intent(Intent.ACTION_MAIN)
         activityIntent.addCategory(Intent.CATEGORY_LAUNCHER)
 
-        activityIntent.component = ComponentName(context, Ss.URIMainActivity)
+        activityIntent.component = ComponentName(context, S.URIMainActivity)
         activityIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
         val pendingIntent: PendingIntent
         pendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
