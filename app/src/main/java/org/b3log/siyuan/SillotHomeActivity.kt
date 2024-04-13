@@ -1,5 +1,6 @@
 package org.b3log.siyuan
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
@@ -110,9 +111,12 @@ class SillotHomeActivity : AppCompatActivity() {
         }
         Log.e(TAG, HWs.getNetworkType(this))
         PopTip.show("测试完毕")
-//        val intent = Intent(this, MainActivity::class.java)
+//        val intent = Intent(this, POST_NOTIFICATIONS::class.java)
 //        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 //        startActivity(intent)
+        val intent = Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
+        startActivity(intent)
+
     }
 }
 

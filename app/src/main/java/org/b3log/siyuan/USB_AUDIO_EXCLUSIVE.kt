@@ -196,16 +196,25 @@ class USB_AUDIO_EXCLUSIVE : AppCompatActivity() {
         val audioFocusRequest = audioFocusRequestBuilder.setOnAudioFocusChangeListener { focusChange ->
             when (focusChange) {
                 AudioManager.AUDIOFOCUS_GAIN -> {
-                    Log.d(TAG, "恢复播放或继续播放")
+                    Log.d(TAG, "获得音频焦点，可以开始或恢复正常的音频播放")
+                }
+                AudioManager.AUDIOFOCUS_GAIN_TRANSIENT -> {
+                    Log.d(TAG, "获得短暂音频焦点，可以开始或恢复短暂的音频播放")
+                }
+                AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK -> {
+                    Log.d(TAG, "获得短暂音频焦点，可以开始或恢复短暂的音频播放，其他音频可能会降低音量")
+                }
+                AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE -> {
+                    Log.d(TAG, "获得独占的短暂音频焦点，其他音频应该完全停止")
                 }
                 AudioManager.AUDIOFOCUS_LOSS -> {
-                    Log.d(TAG, "暂停播放并释放媒体资源")
+                    Log.d(TAG, "永久失去音频焦点，应该暂停播放并释放媒体资源")
                 }
                 AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                    Log.d(TAG, "暂停播放，但不清除媒体资源，因为可能会很快再次获得焦点")
+                    Log.d(TAG, "暂时失去音频焦点，应该暂停播放但保留媒体资源，因为可能会很快再次获得焦点")
                 }
                 AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
-                    Log.d(TAG, "降低音量，这通常用于过渡性的干扰，如通知")
+                    Log.d(TAG, "暂时失去音频焦点，应该降低音量，这通常用于处理临时干扰，如通知")
                 }
             }
         }.build()
@@ -268,7 +277,7 @@ fun MyUI_USB_AUDIO_EXCLUSIVE(activity: USB_AUDIO_EXCLUSIVE) {
 
     // 在这里移除通知栏
     fun removeNotification() {
-        NotificationManagerCompat.from(activity).cancel(Ss.USB_AUDIO_EXCLUSIVE_notificationId)
+        NotificationManagerCompat.from(activity).cancel(S.USB_AUDIO_EXCLUSIVE_notificationId)
     }
 
     val uri by remember { mutableStateOf<Uri?>(null) }

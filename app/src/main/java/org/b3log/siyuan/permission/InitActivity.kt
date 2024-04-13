@@ -14,7 +14,7 @@ import androidx.core.content.ContextCompat
 import com.kongzue.dialogx.dialogs.PopTip
 import kotlin.system.exitProcess
 
-
+@Deprecated("之前不会在当前活动申请权限的时候凑合用的")
 class InitActivity: Activity() {
 
     var works = 0

@@ -29,6 +29,7 @@ import java.io.IOException
 import androidx.media.app.NotificationCompat as MediaNotificationCompat
 
 
+@Deprecated("正在转向 media3 : Media3 库会使用播放器的状态自动更新媒体会话。因此，您无需手动处理从玩家到会话的映射。这与传统方法有所不同，在传统方法中，您需要独立于播放器本身创建和维护 PlaybackStateCompat，例如用于指明任何错误。")
 class MusicService : LifecycleService(), MediaPlayer.OnCompletionListener,
     MediaPlayer.OnSeekCompleteListener {
     val TAG = "MusicService"
@@ -103,13 +104,21 @@ class MusicService : LifecycleService(), MediaPlayer.OnCompletionListener,
     }
 
 
+    private var mediaDuration: Int = 0
+
+    // 在 MediaPlayer 成功准备后更新 mediaDuration
+    private fun updateMediaDuration(mediaPlayer: MediaPlayer) {
+        mediaDuration = mediaPlayer.duration
+    }
+
     private fun sendMediaStatusBroadcast(mediaPlayer: MediaPlayer) {
         val intent = Intent(ACTION_MEDIA_STATUS_CHANGED)
         intent.putExtra(EXTRA_MEDIA_PLAYING, mediaPlayer.isPlaying)
         intent.putExtra(EXTRA_MEDIA_CURRENT_POSITION, mediaPlayer.currentPosition)
-        intent.putExtra(EXTRA_MEDIA_DURATION, mediaPlayer.duration)
+        intent.putExtra(EXTRA_MEDIA_DURATION, mediaDuration)
         sendBroadcast(intent)
     }
+
 
     override fun onCreate() {
         super.onCreate()
@@ -127,11 +136,12 @@ class MusicService : LifecycleService(), MediaPlayer.OnCompletionListener,
                 .build()
             mediaSession.setPlaybackState(playbackState)
             mediaPlayer.start()
+            updateMediaDuration(it)
             sendMediaStatusBroadcast(mediaPlayer)
         }
 
         createNotificationChannel(
-            Ss.SILLOT_MUSIC_PLAYER_NOTIFICATION_CHANNEL_ID,
+            S.SILLOT_MUSIC_PLAYER_NOTIFICATION_CHANNEL_ID,
             "🦢 汐洛音乐播放服务"
         )
         mediaSession = MediaSessionCompat(this, "MusicService")
@@ -185,7 +195,7 @@ class MusicService : LifecycleService(), MediaPlayer.OnCompletionListener,
                     .setActions(COMMON_CONTROL_ACTIONS)
                     .build()
                 mediaSession.setPlaybackState(playbackState)
-                mediaController.transportControls.stop()
+//                mediaController.transportControls.stop() // 这句代码会让 onStop 不停被调用，禁止
                 sendMediaStatusBroadcast(mediaPlayer)
             }
 
@@ -233,7 +243,7 @@ class MusicService : LifecycleService(), MediaPlayer.OnCompletionListener,
                             mediaPlayer.prepare() // 重写方法已经实现自动启动
                             // 设置单曲循环
                             mediaPlayer.isLooping = false // 通常在 MediaPlayer.prepare() 方法之后立即调用 setLooping
-                            startForeground(Ss.USB_AUDIO_EXCLUSIVE_notificationId, createAudioPlaybackNotification())
+                            startForeground(S.USB_AUDIO_EXCLUSIVE_notificationId, createAudioPlaybackNotification())
 
                             // 设置媒体会话的音频时长和文件名
                             mediaSession.setMetadata(
@@ -315,21 +325,33 @@ class MusicService : LifecycleService(), MediaPlayer.OnCompletionListener,
     }
 
     override fun onCompletion(mp: MediaPlayer?) {
-        Log.w(TAG," onCompletion() invoked")
-        val playbackState = PlaybackStateCompat.Builder()
-            .setState(PlaybackStateCompat.STATE_STOPPED,
-                mediaPlayer.currentPosition.toLong(), 1f)
-            .setActions(COMMON_CONTROL_ACTIONS)
-            .build()
-        mediaSession.setPlaybackState(playbackState)
-        sendMediaStatusBroadcast(mediaPlayer)
+        Log.w(TAG, "onCompletion() invoked")
+        try {
+            // 检查 mediaPlayer 是否为 null 或处于错误状态
+            if (mp != null) {
+                val playbackState = PlaybackStateCompat.Builder()
+                    .setState(PlaybackStateCompat.STATE_STOPPED,
+                        mediaPlayer.currentPosition.toLong(), 1f)
+                    .setActions(COMMON_CONTROL_ACTIONS)
+                    .build()
+                mediaSession.setPlaybackState(playbackState)
+                sendMediaStatusBroadcast(mediaPlayer)
+            } else {
+                Log.e(TAG, "MediaPlayer is null in onCompletion()")
+            }
+        } catch (e: Exception) {
+            // 捕获并处理异常
+            Log.e(TAG, "Exception in onCompletion()", e)
+        }
     }
+
+
     override fun onSeekComplete(mp: MediaPlayer?) {
         Log.w(TAG," onSeekComplete() invoked")
     }
 
     private fun createAudioPlaybackNotification(): Notification  {
-        val builder = NotificationCompat.Builder(this, Ss.SILLOT_MUSIC_PLAYER_NOTIFICATION_CHANNEL_ID)
+        val builder = NotificationCompat.Builder(this, S.SILLOT_MUSIC_PLAYER_NOTIFICATION_CHANNEL_ID)
             .setContentTitle("未知歌曲")
             .setContentText("未知艺术家")
             .setSmallIcon(R.drawable.icon)
