@@ -116,7 +116,7 @@ package org.b3log.siyuan;
  * 主程序.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.1.0.1, Mar 3, 2024
+ * @version 1.1.0.2, Apr 13, 2024
  * @since 1.0.0
  */
 public class MainActivity extends AppCompatActivity implements com.blankj.utilcode.util.Utils.OnAppStatusChangedListener {
@@ -322,7 +322,9 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         AppUtils.registerAppStatusChangedListener(this);
 
         // 使用 Chromium 调试 WebView
-        // WebView.setWebContentsDebuggingEnabled(true);
+        if (Utils.isDebugPackageAndMode(this)) {
+            WebView.setWebContentsDebuggingEnabled(true);
+        }
 
         // 注册工具栏显示/隐藏跟随软键盘状态
         // Fix https://github.com/siyuan-note/siyuan/issues/9765
@@ -665,7 +667,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         }
         startHttpServer();
         final String appDir = getFilesDir().getAbsolutePath() + "/app";
-//        final Locale locale = getResources().getConfiguration().locale;
+//        final Locale locale = LocaleList.getDefault().get(0);
         // As of API 24 (Nougat) and later
         LocaleList locales = getResources().getConfiguration().getLocales();
         // Now you can access the first locale in the list as follows:
@@ -677,6 +679,10 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             String lang = locale.getLanguage() + "_" + locale.getCountry();
             if (lang.toLowerCase().contains("cn")) {
                 lang = "zh_CN";
+            } else if (lang.toLowerCase().contains("es")) {
+                lang = "es_ES";
+            } else if (lang.toLowerCase().contains("fr")) {
+                lang = "fr_FR";
             } else {
                 lang = "en_US";
             }
