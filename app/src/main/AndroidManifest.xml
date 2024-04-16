@@ -171,7 +171,7 @@
                 <data android:scheme="http"/>
                 <data android:scheme="https"/>
                 <data android:scheme="magnet" />
-                <data android:mimeType="*/*" /> <!-- 先统一注册，业务成熟后收缩 -->
+                <data android:mimeType="*/*" />
             </intent-filter>
             <!--分享/发送-->
             <intent-filter android:label="汐洛分享助手">
@@ -269,6 +269,10 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- shortcutId 不能重复-->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts_3" />
         </activity>
         <service
             android:name=".MusicService"
@@ -320,6 +324,10 @@
                 <data android:scheme="sillot" />
                 <data android:scheme="sisi" />
             </intent-filter>
+            <!-- shortcutId 不能重复-->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts_1" />
         </activity>
         <!--   司华入口-->
         <activity
@@ -345,6 +353,10 @@
 
                 <data android:scheme="sithw" />
             </intent-filter>
+            <!-- shortcutId 不能重复-->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts_2" />
         </activity>
 
 <!--        思源笔记入口-->
