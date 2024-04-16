@@ -10,6 +10,10 @@ import androidx.compose.ui.unit.sp
 object S {
 
     const val packageName = "sc.windom.sillot"
+    const val gitRepoUrl = "https://github.com/Hi-Windom/Sillot-android"
+    const val emailAdress = "694357845@qq.com"
+    const val QQ = "694357845"
+    const val TTK = "AsyncTTk" // 抖音
     const val workspaceParentDir = "/storage/emulated/0/Android/data/${packageName}/files"
 
     const val DefaultHTTPPort = 58131
@@ -67,5 +71,6 @@ object S {
         val btnTextAudio1 = compositionLocalOf { "播放（旧）" }
         val btnTextVideo1 = compositionLocalOf { "播放" }
         val btnText5Apk1 = compositionLocalOf { "安装" }
+        val small_iconSize = compositionLocalOf { 24.dp }
     }
 }

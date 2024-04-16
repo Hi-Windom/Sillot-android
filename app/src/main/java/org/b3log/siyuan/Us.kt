@@ -7,13 +7,18 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.os.PowerManager
 import android.provider.Settings
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
+import com.blankj.utilcode.util.ActivityUtils.startActivity
+import com.kongzue.dialogx.dialogs.PopTip
+import org.b3log.siyuan.videoPlayer.SimplePlayer
 import java.io.File
 import java.io.FileInputStream
 import java.security.MessageDigest
@@ -172,6 +177,9 @@ object Us {
         return digest.digest()
     }
 
+    fun getMimeType(context: Context, uri: Uri): String? {
+        return context.contentResolver.getType(uri)
+    }
 
     fun getFileMIMEType(mimeType: String): String {
         return when {
@@ -246,6 +254,20 @@ object Us {
         }
     }
 
+    fun handleVideo(context: Context, uri: Uri) {
+        val videoPath = if (uri.scheme == "file") {
+            // 本地文件
+            uri.path ?: ""
+        } else {
+            // URL
+            uri.toString()
+        }
+
+        val intent = Intent(context, SimplePlayer::class.java)
+        intent.putExtra("videoPath", videoPath)
+        startActivity(intent)
+    }
+
     fun installApk(activity: Activity, apkFile: File) {
         val installIntent: Intent
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
@@ -285,4 +307,80 @@ object Us {
         installIntent.setDataAndType(apkUri, "application/vnd.android.package-archive")
         activity.startActivity(installIntent)
     }
+
+    fun sendEmail(packageManager: PackageManager, recipient: String, subject: String?, body: String?) {
+        val emailIntent = Intent(Intent.ACTION_SENDTO)
+        emailIntent.setData(Uri.parse("mailto:")) // only email apps should handle this
+
+        // 设置收件人
+        emailIntent.putExtra(Intent.EXTRA_EMAIL, arrayOf(recipient))
+        // 设置邮件主题
+        emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject)
+        // 设置邮件正文
+        emailIntent.putExtra(Intent.EXTRA_TEXT, body)
+        if (emailIntent.resolveActivity(packageManager) != null) {
+            startActivity(emailIntent)
+        } else {
+            PopTip.show("No email client found")
+        }
+    }
+
+    fun deleteFileByUri(context: Context, uri: Uri): Boolean {
+        // 获取ContentResolver实例
+        val contentResolver = context.contentResolver
+
+        // 尝试从内容提供者中删除文件
+        try {
+            // 删除文件，这个调用会同时从文件系统和内容提供者的数据库中删除文件
+            val deletedRows = contentResolver.delete(uri, null, null)
+
+            // 如果删除的行数大于0，则表示文件删除成功
+            if (deletedRows > 0) {
+                return true
+            }
+        } catch (e: Exception) {
+            // 处理可能出现的异常，例如权限问题或文件不存在
+            Log.e("FileDelete", "Error deleting file", e)
+        }
+
+        // 删除失败
+        return false
+    }
+
+    fun notifyGallery(context: Context, imageUri: Uri) {
+//        向系统相册发送媒体文件扫描广播来通知系统相册更新媒体库
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            MediaScannerConnection.scanFile(
+                context, arrayOf(imageUri.toString()), null
+            ) { path: String, uri: Uri ->
+                Log.i("ExternalStorage", "Scanned $path:")
+                Log.i("ExternalStorage", "-> uri=$uri")
+            }
+        } else {
+            val mediaScanIntent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
+            mediaScanIntent.setData(imageUri)
+            context.sendBroadcast(mediaScanIntent)
+        }
+    }
+    fun notifyGallery(context: Context, imageFile: File) {
+//        向系统相册发送媒体文件扫描广播来通知系统相册更新媒体库
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            MediaScannerConnection.scanFile(
+                context, arrayOf(imageFile.toString()), null
+            ) { path: String, uri: Uri ->
+                Log.i("ExternalStorage", "Scanned $path:")
+                Log.i("ExternalStorage", "-> uri=$uri")
+            }
+        } else {
+            val mediaScanIntent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
+            val contentUri = Uri.fromFile(imageFile)
+            mediaScanIntent.setData(contentUri)
+            context.sendBroadcast(mediaScanIntent)
+        }
+    }
+
+    fun notifyGallery(activity: Activity, imageFile: File) {
+        notifyGallery(activity as Context, imageFile)
+    }
+
 }

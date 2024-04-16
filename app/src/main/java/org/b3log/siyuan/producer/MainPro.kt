@@ -60,11 +60,25 @@ import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Tab
 import androidx.compose.material.icons.filled.TableChart
 import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.twotone.BugReport
+import androidx.compose.material.icons.twotone.Check
+import androidx.compose.material.icons.twotone.Close
+import androidx.compose.material.icons.twotone.ContentCopy
+import androidx.compose.material.icons.twotone.Delete
+import androidx.compose.material.icons.twotone.Email
+import androidx.compose.material.icons.twotone.Report
+import androidx.compose.material.icons.twotone.Send
+import androidx.compose.material.icons.twotone.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -75,6 +89,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -85,6 +100,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -95,6 +111,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
+import com.blankj.utilcode.util.ActivityUtils.startActivity
 import com.kongzue.dialogx.dialogs.BottomMenu
 import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.interfaces.OnBottomMenuButtonClickListener
@@ -102,9 +119,13 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import me.saket.cascade.CascadeDropdownMenu
+import me.saket.cascade.rememberCascadeState
+import org.b3log.siyuan.CascadeMaterialTheme
 import org.b3log.siyuan.R
 import org.b3log.siyuan.S
 import org.b3log.siyuan.Us
+import org.b3log.siyuan.Utils
 import org.b3log.siyuan.andapi.Toast
 import org.b3log.siyuan.sillot.util.FileUtil.getDataColumn
 import org.b3log.siyuan.videoPlayer.SimplePlayer
@@ -119,6 +140,7 @@ import java.text.DecimalFormat
 // TODO: 文件覆盖提醒
 // TODO: 缓存清理
 // TODO: 如果是 workspaceParentDir 目录下的文件支持删除
+// TODO: 文件被删除时处理异常
 class MainPro : ComponentActivity() {
     val TAG = "MainPro"
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -131,16 +153,14 @@ class MainPro : ComponentActivity() {
             insets
         }
         if (uri != null) {
-            val ft = getMimeType(this,uri)?.let { Us.getFileMIMEType(it) }
-            ft?.let { Log.e(TAG, it) }
-            if (ft == "视频") {
-                handleVideo(uri)
-            } else {
-                // 处理其他类型文件
-                setContent {
-                    MyUI(intent, ft, this)
+            setContent {
+                CascadeMaterialTheme {
+                    MyUI(intent)
                 }
             }
+//            if (ft == "视频") {
+//                handleVideo(uri) // 不再直接播放
+//            }
         } else {
         }
 
@@ -217,9 +237,6 @@ fun getIconForFileType(fileType: String): ImageVector {
 }
 
 
-fun getMimeType(context: Context, uri: Uri): String? {
-    return context.contentResolver.getType(uri)
-}
 @SuppressLint("Range")
 fun getFileName(context: Context, uri: Uri): String? {
     var result: String? = null
@@ -465,20 +482,131 @@ fun convertDrawableToImageBitmap(drawable: Drawable): ImageBitmap? {
     }
 }
 
+@Composable
+private fun TopRightMenu(
+    expanded: Boolean,
+    TAG: String,
+    uri: Uri?,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val state = rememberCascadeState()
+    val Lcc = LocalContext.current
+    CascadeDropdownMenu(
+        state = state,
+        modifier = modifier,
+        expanded = expanded,
+        onDismissRequest = onDismiss
+    ) {
+        if(uri != null){
+            DropdownMenuItem(
+                text = { Text("复制") },
+                leadingIcon = { Icon(Icons.TwoTone.ContentCopy, contentDescription = null) },
+                onClick = {
+                    // 获取系统的剪贴板管理器
+                    val clipboardManager = Lcc.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    // 创建一个剪贴板数据对象，将文件的 Uri 放入其中
+                    val clipData = ClipData.newUri(Lcc.contentResolver, "label", uri)
+                    // 设置剪贴板数据对象的 MIME 类型
+                    clipData.addItem(ClipData.Item(uri))
+                    // 将数据放入剪贴板
+                    clipboardManager.setPrimaryClip(clipData)
+                    Toast.Show(Lcc, "复制成功")
+                },
+            )
+            DropdownMenuItem(
+                text = { Text("分享") },
+                leadingIcon = { Icon(Icons.TwoTone.Share, contentDescription = null) },
+                onClick = {
+                    val shareIntent = Intent().apply {
+                        action = Intent.ACTION_SEND
+                        putExtra(Intent.EXTRA_STREAM, uri) // 将文件 Uri 添加到 Intent 的 EXTRA_STREAM 中
+                        type = "*/*" // 设置 MIME 类型为通配符，表示所有类型的文件
+                    }
+
+                    val chooserIntent = Intent.createChooser(shareIntent, "分享文件到")
+                    chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) // 添加新任务标志
+
+                    // 使用 ContextCompat 中的 startActivity 启动分享意图
+                    Lcc.let { it1 -> ContextCompat.startActivity(it1, chooserIntent, null) }
+                },
+            )
+            DropdownMenuItem(
+                text = { Text("删除") },
+                leadingIcon = { Icon(Icons.TwoTone.Delete, contentDescription = null) },
+                childrenHeader = {
+                    DropdownMenuHeader {
+                        Text(
+                            text = "Are you sure?",
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                },
+                children = {
+                    DropdownMenuItem(
+                        text = { Text("Yep") },
+                        leadingIcon = { Icon(Icons.TwoTone.Check, contentDescription = null) },
+                        onClick = {
+                            onDismiss()
+                            Us.deleteFileByUri(Lcc, uri).let {
+                                if (it) {
+//                                    Us.notifyGallery(Lcc, uri)
+                                    Toast.Show(Lcc, "暂不支持该操作")
+                                } else {
+                                    Toast.Show(Lcc, "删除失败")
+                                }
+                            }
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Go back") },
+                        leadingIcon = { Icon(Icons.TwoTone.Close, contentDescription = null) },
+                        onClick = {
+                            state.navigateBack()
+                        }
+                    )
+                },
+            )
+        }
+        DropdownMenuItem(
+            text = { Text("帮助") },
+            leadingIcon = { Icon(painterResource(R.drawable.icon), contentDescription = null, modifier = modifier.size(S.C.small_iconSize.current)) },
+            children = {
+                DropdownMenuItem(
+                    text = { Text("报告此页") },
+                    leadingIcon = { Icon(Icons.TwoTone.Email, contentDescription = null) },
+                    onClick = {  Us.sendEmail(Lcc.packageManager, S.emailAdress, "汐洛安卓反馈 - 报告此页", "TAG: ${TAG}\n${Utils.getDeviceInfoString()}")  },
+                )
+                DropdownMenuItem(
+                    text = { Text("反馈此页") },
+                    leadingIcon = { Icon(Icons.TwoTone.BugReport, contentDescription = null) },
+                    onClick = { openUrl("${S.gitRepoUrl}/issues/new")},
+                )
+            },
+        )
+    }
+}
+
+private fun openUrl(url: String) {
+    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+}
+
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
 @Composable
-fun MyUI(intent: Intent?, fileType: String?, context: Context) {
+fun MyUI(intent: Intent?) {
     val TAG = "MainPro-MyUI"
     val uri = intent?.data
+    val Lcc = LocalContext.current
     val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
     val coroutineScope = rememberCoroutineScope()
-    val fileName = uri?.let { getFileName(context, it) }
+    val fileName = uri?.let { getFileName(Lcc, it) }
     val fileSize = uri?.let { getFileSize(it) }
-    val mimeType = intent?.data?.let { getMimeType(context, it) } ?: ""
-    val _fileType = Us.getFileMIMEType(mimeType)
+    val mimeType = intent?.data?.let { Us.getMimeType(Lcc, it) } ?: ""
+    val fileType = Us.getFileMIMEType(mimeType)
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
 
+    var isMenuVisible by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -493,8 +621,8 @@ fun MyUI(intent: Intent?, fileType: String?, context: Context) {
                             modifier = Modifier
                                 .clickable(onClick = {
                                     // 将Context对象安全地转换为Activity
-                                    if (context is Activity) {
-                                        context.finish() // 结束活动
+                                    if (Lcc is Activity) {
+                                        Lcc.finish() // 结束活动
                                     }
                                 })
                                 .padding(end = 8.dp)
@@ -504,8 +632,24 @@ fun MyUI(intent: Intent?, fileType: String?, context: Context) {
                             fontSize = 18.sp
                         )
                     }
-                }, modifier = Modifier.background(Color.Blue)
+
+                }, modifier = Modifier.background(Color.Blue),
+                actions = {
+                    IconButton(
+                        onClick = { isMenuVisible = true }
+                    ) {
+                        TopRightMenu(
+                            expanded = isMenuVisible,
+                            onDismiss = { isMenuVisible = false },
+                            TAG = TAG,
+                            uri = uri,
+                        )
+                        Icon(Icons.Rounded.MoreVert, contentDescription = "More options")
+                    }
+                }
             )
+
+
         }, modifier = Modifier.background(Color.Gray)
     ) {
         Box(
@@ -528,7 +672,6 @@ fun MyUI(intent: Intent?, fileType: String?, context: Context) {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         InfoPart(
-                            context = context,
                             uri = uri,
                             fileType = fileType,
                             fileName = fileName,
@@ -546,7 +689,6 @@ fun MyUI(intent: Intent?, fileType: String?, context: Context) {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         BtnPart(
-                            context = context,
                             uri = uri,
                             mimeType = mimeType,
                             fileName = fileName
@@ -564,14 +706,12 @@ fun MyUI(intent: Intent?, fileType: String?, context: Context) {
                     item {
                         Spacer(modifier = Modifier.height(16.dp))
                         InfoPart(
-                            context = context,
                             uri = uri,
                             fileType = fileType,
                             fileName = fileName,
                             fileSize = fileSize
                         )
                         BtnPart(
-                            context = context,
                             uri = uri,
                             mimeType = mimeType,
                             fileName = fileName
@@ -603,8 +743,9 @@ fun SelectableText(text: String, modifier: Modifier = Modifier, style: TextStyle
     }
 }
 @Composable
-fun InfoPart(context: Context, uri: Uri?, fileType: String?, fileName: String?, fileSize: String?) {
+fun InfoPart(uri: Uri?, fileType: String?, fileName: String?, fileSize: String?) {
     val TAG = "MainPro-InfoPart"
+    val Lcc= LocalContext.current
     val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
     val Thumbnail_Height = S.C.Thumbnail_Height.current
     val Thumbnail_Height_IMG = S.C.Thumbnail_Height_IMG.current
@@ -623,7 +764,7 @@ fun InfoPart(context: Context, uri: Uri?, fileType: String?, fileName: String?, 
             if (fileType != null) {
                 if (fileType.endsWith("图像")) {
                     val bitmap = uri?.let { it1 ->
-                        context.contentResolver?.loadThumbnail(
+                        Lcc.contentResolver?.loadThumbnail(
                             it1,
                             Size(
                                 if (isLandscape) Thumbnail_Height else Thumbnail_Height_IMG,
@@ -680,8 +821,9 @@ fun InfoPart(context: Context, uri: Uri?, fileType: String?, fileName: String?, 
 
 @SuppressLint("Range")
 @Composable
-fun BtnPart(context: Context, uri: Uri?, mimeType: String, fileName: String?) {
+fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
     val TAG = "MainPro-BtnPart"
+    val Lcc = LocalContext.current
     val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
     val coroutineScope = rememberCoroutineScope()
     val Button_Width = S.C.Button_Width.current
@@ -727,23 +869,23 @@ fun BtnPart(context: Context, uri: Uri?, mimeType: String, fileName: String?) {
             withContext(Dispatchers.IO) {
 
                 try {
-                    if (!isStorageSpaceAvailable(context.contentResolver, uri_from_file)) {
+                    if (!isStorageSpaceAvailable(Lcc.contentResolver, uri_from_file)) {
                         // 存储空间不足，处理逻辑
-                        Toast.Show(context, "存储空间不足，请先清理")
+                        Toast.Show(Lcc, "存储空间不足，请先清理")
                         return@withContext
                     }
-                    val sourceFilePath = getPathFromUri(context, uri_from_file)
+                    val sourceFilePath = getPathFromUri(Lcc, uri_from_file)
                     // 复制文件到所选文件夹
                     fileName?.let {
                         sourceFilePath?.let { it1 ->
                             copyFileToFolderByDocumentTree(
-                                context, uri_to_dir, it,
+                                Lcc, uri_to_dir, it,
                                 it1, mimeType
                             )
                         }
                     }
                     withContext(Dispatchers.Main) {
-                        Toast.Show(context, "已复制到指定文件夹")
+                        Toast.Show(Lcc, "已复制到指定文件夹")
                     }
                 } catch (e: IOException) {
                     Log.e(TAG, e.toString())
@@ -761,12 +903,12 @@ fun BtnPart(context: Context, uri: Uri?, mimeType: String, fileName: String?) {
         coroutineScope.launch {
             withContext(Dispatchers.IO) {
                 try {
-                    if (!isStorageSpaceAvailable(context.contentResolver, uri_from_file)) {
+                    if (!isStorageSpaceAvailable(Lcc.contentResolver, uri_from_file)) {
                         // 存储空间不足，处理逻辑
                         PopNotification.show(R.drawable.icon,  "存储空间不足，请先清理")
                         return@withContext
                     }
-                    val sourceFilePath = getPathFromUri(context, uri_from_file)
+                    val sourceFilePath = getPathFromUri(Lcc, uri_from_file)
                     // 复制文件到所选文件夹
                     fileName?.let {
                         sourceFilePath?.let { it1 ->
@@ -795,7 +937,7 @@ fun BtnPart(context: Context, uri: Uri?, mimeType: String, fileName: String?) {
         }
     }
     var manageAllFilesPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (Us.canManageAllFiles(context)) {
+        if (Us.canManageAllFiles(Lcc)) {
             if (isButton3OnClickRunning) { onCopyFileToFolderByDocumentTree() }
             else if (isButton4OnClickRunning) { onCopyFileToMyAppFolder() }
 
@@ -807,11 +949,11 @@ fun BtnPart(context: Context, uri: Uri?, mimeType: String, fileName: String?) {
                 if (uri == null) return@let
                 isButton3OnClickRunning = true  // 没有设置 LaunchedEffect 但是需要显示遮罩
                 // 通过 SAF 获取持久性权限
-                context.contentResolver.takePersistableUriPermission(_uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                Lcc.contentResolver.takePersistableUriPermission(_uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
 
-//                Us.requestExternalStoragePermission(context as Activity)
+//                Us.requestExternalStoragePermission(Lcc as Activity)
                 // 使用DocumentFile处理URI
-                val rootDocument = DocumentFile.fromTreeUri(context, _uri)
+                val rootDocument = DocumentFile.fromTreeUri(Lcc, _uri)
                 // 例如，列出根目录下的文件和文件夹
                 rootDocument?.listFiles()?.forEach { file ->
                     // 处理文件或文件夹
@@ -820,7 +962,7 @@ fun BtnPart(context: Context, uri: Uri?, mimeType: String, fileName: String?) {
 
                 uri_from_file = uri
                 uri_to_dir = _uri
-                if (Us.canManageAllFiles(context)) {
+                if (Us.canManageAllFiles(Lcc)) {
                     onCopyFileToFolderByDocumentTree()
                 }
                 else {
@@ -836,7 +978,7 @@ fun BtnPart(context: Context, uri: Uri?, mimeType: String, fileName: String?) {
         if (isButton4OnClickRunning) {
             uri_from_file = uri
             uri_to_dir = Uri.parse(workspaceAssetsDir)
-            if (Us.canManageAllFiles(context)) {
+            if (Us.canManageAllFiles(Lcc)) {
                 onCopyFileToMyAppFolder()
             }
             else {
@@ -896,57 +1038,57 @@ fun BtnPart(context: Context, uri: Uri?, mimeType: String, fileName: String?) {
 
     //// @D 通用按键部分
 
-    // 分享
-    Button(modifier= Modifier
-        .width(Button_Width.dp)
-        .padding(top = if (isLandscape) btn_PaddingTopH else btn_PaddingTopV),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = btn_bgColor1,
-            contentColor = btn_Color1
-        ), enabled = true, onClick = {
-            val shareIntent = Intent().apply {
-                action = Intent.ACTION_SEND
-                putExtra(Intent.EXTRA_STREAM, uri) // 将文件 Uri 添加到 Intent 的 EXTRA_STREAM 中
-                type = "*/*" // 设置 MIME 类型为通配符，表示所有类型的文件
-            }
+    // 分享 ，已迁移到右上角
+//    Button(modifier= Modifier
+//        .width(Button_Width.dp)
+//        .padding(top = if (isLandscape) btn_PaddingTopH else btn_PaddingTopV),
+//        colors = ButtonDefaults.buttonColors(
+//            containerColor = btn_bgColor1,
+//            contentColor = btn_Color1
+//        ), enabled = true, onClick = {
+//            val shareIntent = Intent().apply {
+//                action = Intent.ACTION_SEND
+//                putExtra(Intent.EXTRA_STREAM, uri) // 将文件 Uri 添加到 Intent 的 EXTRA_STREAM 中
+//                type = "*/*" // 设置 MIME 类型为通配符，表示所有类型的文件
+//            }
+//
+//            val chooserIntent = Intent.createChooser(shareIntent, "分享文件到")
+//            chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) // 添加新任务标志
+//
+//            // 使用 ContextCompat 中的 startActivity 启动分享意图
+//            Lcc.let { it1 -> ContextCompat.startActivity(it1, chooserIntent, null) }
+//        }) {
+//        Text(
+//            text = btnText1,
+//            letterSpacing = btn_lspace,
+//            fontSize = if (isLandscape) btn_TextFontsizeH else btn_TextFontsizeV
+//        )
+//    }
 
-            val chooserIntent = Intent.createChooser(shareIntent, "分享文件到")
-            chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) // 添加新任务标志
-
-            // 使用 ContextCompat 中的 startActivity 启动分享意图
-            context.let { it1 -> ContextCompat.startActivity(it1, chooserIntent, null) }
-        }) {
-        Text(
-            text = btnText1,
-            letterSpacing = btn_lspace,
-            fontSize = if (isLandscape) btn_TextFontsizeH else btn_TextFontsizeV
-        )
-    }
-
-    // 复制到剪贴板
-    Button(modifier= Modifier
-        .width(Button_Width.dp)
-        .padding(top = if (isLandscape) btn_PaddingTopH else btn_PaddingTopV),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = btn_bgColor2,
-            contentColor = btn_Color1
-        ), enabled = true, onClick = {
-            // 获取系统的剪贴板管理器
-            val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            // 创建一个剪贴板数据对象，将文件的 Uri 放入其中
-            val clipData = ClipData.newUri(context.contentResolver, "label", uri)
-            // 设置剪贴板数据对象的 MIME 类型
-            clipData.addItem(ClipData.Item(uri))
-            // 将数据放入剪贴板
-            clipboardManager.setPrimaryClip(clipData)
-            Toast.Show(context, "复制成功")
-        }) {
-        Text(
-            text = btnText2,
-            letterSpacing = btn_lspace,
-            fontSize = if (isLandscape) btn_TextFontsizeH else btn_TextFontsizeV
-        )
-    }
+    // 复制到剪贴板 ，已迁移到右上角
+//    Button(modifier= Modifier
+//        .width(Button_Width.dp)
+//        .padding(top = if (isLandscape) btn_PaddingTopH else btn_PaddingTopV),
+//        colors = ButtonDefaults.buttonColors(
+//            containerColor = btn_bgColor2,
+//            contentColor = btn_Color1
+//        ), enabled = true, onClick = {
+//            // 获取系统的剪贴板管理器
+//            val clipboardManager = Lcc.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+//            // 创建一个剪贴板数据对象，将文件的 Uri 放入其中
+//            val clipData = ClipData.newUri(Lcc.contentResolver, "label", uri)
+//            // 设置剪贴板数据对象的 MIME 类型
+//            clipData.addItem(ClipData.Item(uri))
+//            // 将数据放入剪贴板
+//            clipboardManager.setPrimaryClip(clipData)
+//            Toast.Show(Lcc, "复制成功")
+//        }) {
+//        Text(
+//            text = btnText2,
+//            letterSpacing = btn_lspace,
+//            fontSize = if (isLandscape) btn_TextFontsizeH else btn_TextFontsizeV
+//        )
+//    }
 
     // 保存到指定文件夹
     Button(modifier= Modifier
@@ -1018,12 +1160,12 @@ fun BtnPart(context: Context, uri: Uri?, mimeType: String, fileName: String?) {
     //// 类型按键区
 
     fun ApkBTNonClick1() {
-        uri?.let { Us.installApk(context as Activity, it) }
+        uri?.let { Us.installApk(Lcc as Activity, it) }
     }
     if (inspectionMode || showAudioButton) {
         AudioButtons()
     } else if (showVideoButton) {
-        VideoButtons()
+        uri?.let { VideoButtons(it) }
     } else if (showApkButton) {
         ApkButtons(::ApkBTNonClick1)
     }
@@ -1050,7 +1192,8 @@ fun AudioButtons() {
         colors = ButtonDefaults.buttonColors(
             containerColor = btn_bgColor1,
             contentColor = btn_Color1
-        ), enabled = true, onClick = { /*TODO*/ }) {
+        ), enabled = false,
+        onClick = { /*TODO*/ }) {
         Text(
             text = btnText1,
             letterSpacing = btn_lspace,
@@ -1060,9 +1203,10 @@ fun AudioButtons() {
 }
 
 @Composable
-fun VideoButtons() {
+fun VideoButtons(uri: Uri) {
     val TAG = "MainPro-BtnPart-AudioButtons"
     val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
+    val Lcc = LocalContext.current
     val Button_Width = S.C.Button_Width.current
     val btn_lspace = S.C.btn_lspace.current
     val btn_PaddingTopH = S.C.btn_PaddingTopH.current
@@ -1079,7 +1223,9 @@ fun VideoButtons() {
         colors = ButtonDefaults.buttonColors(
             containerColor = btn_bgColor1,
             contentColor = btn_Color1
-        ), enabled = true, onClick = { /*TODO*/ }) {
+        ), enabled = true, onClick = {
+            Us.handleVideo(Lcc, uri)
+        }) {
         Text(
             text = btnText1,
             letterSpacing = btn_lspace,
@@ -1126,6 +1272,6 @@ fun DefaultPreview() {
         S.C.Thumbnail_Height provides 250,
         S.C.Button_Width providesDefault 300,
     ) {
-        MyUI(null, null, LocalContext.current)
+        MyUI(null)
     }
 }

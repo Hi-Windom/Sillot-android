@@ -11,6 +11,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.kongzue.dialogx.dialogs.PopTip
+import com.zlylib.fileselectorlib.FileSelector
 import org.b3log.siyuan.appUtils.HWs
 import org.b3log.siyuan.json.testmoshi
 import org.b3log.siyuan.realm.TestRealm
@@ -114,9 +115,13 @@ class SillotHomeActivity : AppCompatActivity() {
 //        val intent = Intent(this, POST_NOTIFICATIONS::class.java)
 //        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 //        startActivity(intent)
-        val intent = Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
-        startActivity(intent)
-
+//
+//        val intent = Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
+//        startActivity(intent)
+//        FileSelector.from(this)
+//            .onlySelectFolder()  //只能选择文件夹
+//            .requestCode(1) //设置返回码
+//            .start();
     }
 }
 
