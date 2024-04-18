@@ -7,7 +7,7 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.9.22'
 }
 
-final int vC = 16 // Sillot-android 主要版本递增
+final int vC = 17 // Sillot-android 主要版本递增
 final String versionSillot = "0.29" // Sillot 版本同步
 
 // 多渠道打包配置已引用的方式传递
