@@ -8,12 +8,17 @@ plugins {
 }
 
 final int vC = 16 // Sillot-android 主要版本递增
+final String versionSillot = "0.29" // Sillot 版本同步
+
+// 多渠道打包配置已引用的方式传递
+apply from: rootProject.file('flavors.gradle')
 
 // REF https://kotlinlang.org/docs/gradle-configure-project.html?utm_campaign=gradle-jvm-target-validation&utm_medium=kgp&utm_source=warnings#check-for-jvm-target-compatibility-of-related-compile-tasks
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile.class).configureEach {
     jvmTargetValidationMode = org.jetbrains.kotlin.gradle.dsl.jvm.JvmTargetValidationMode.WARNING
 }
 android {
+    namespace 'org.b3log.siyuan' // 这里不要修改
     compileSdk 34
 //    buildToolsVersion '33.0.2' // @Deprecated
 
@@ -31,7 +36,7 @@ android {
         minSdk 31 // android 12
         targetSdkVersion 34 // android 14
         versionCode vC
-        versionName "0.29" // Sillot 版本同步
+        versionName "3.0.10" // 思源版本同步
 
         ndk {
             //只接入对应 cpu 类型的 .so 库。
@@ -47,19 +52,20 @@ android {
         ]
     }
 
-
     // 自定义打包名称
     android.applicationVariants.configureEach { variant ->
-        variant.outputs.configureEach {
+        variant.outputs.configureEach { output ->
+            def versionName = variant.versionName
+            def flavorName = variant.flavorName
             def versionType = variant.buildType.name
             if (versionType.equalsIgnoreCase("release")) {
-                outputFileName = "Sillot-v${versionName}_${genDate()}_syv2.8.5.apk"
+                outputFileName = "Sillot-v${versionSillot}_${genDate()}_syv${versionName}.apk"
             } else {
                 outputFileName = "Sillot.apk"
             }
+            output.outputFileName = outputFileName
         }
     }
-
 
     buildTypes {
         action { // 防止第三方库debug模式导致action失败
@@ -132,7 +138,6 @@ android {
     lint {
         abortOnError false
     }
-    namespace 'org.b3log.siyuan'
     ndkVersion '25.2.9519653'
 }
 

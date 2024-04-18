@@ -76,3 +76,4 @@ lint/tmp/
 
 app/src/main/assets/app.zip
 /.history
+signings.gradle

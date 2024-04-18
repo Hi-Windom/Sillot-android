@@ -1,3 +1,5 @@
 /build
 /.history
 /debug
+*.keystore
+*.jks

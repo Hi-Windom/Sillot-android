@@ -31,9 +31,11 @@ allprojects {
         // https://developer.aliyun.com/mvn/guide?spm=a2c6h.13651104.0.0.435836a4Lghjtb
         maven { url 'https://maven.aliyun.com/repository/google' }
 //        maven { url 'https://maven.aliyun.com/repository/public' } // 不许用，不然满江红
-        maven { url 'https://jitpack.io' } // 尝试放在腾讯云前面解决 github action 的问题
-        // 腾讯云
-        maven { url 'https://mirrors.tencent.com/nexus/repository/maven-public/' }
+        maven { url 'https://jitpack.io' }
+        // 不在GitHub Actions中使用的仓库配置
+        if (!System.getenv().containsKey('CI')) {
+            maven { url 'https://mirrors.tencent.com/nexus/repository/maven-public/' }
+        }
         maven {url 'https://developer.huawei.com/repo/'}
         google()
         mavenCentral()

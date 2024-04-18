@@ -20,6 +20,8 @@ package org.b3log.siyuan
 import android.app.AlertDialog
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -40,21 +42,41 @@ import java.io.File
  * 引导启动.
  *
  * @author [Liang Ding](http://88250.b3log.org)
- * @version 1.1.0.2, Feb 9, 2023
+ * @version 1.1.0.4, Feb 13, 2024
  * @since 1.0.0
  */
 class BootActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.i("boot", "create BootActivity (siyuan)")
+        Log.i("boot", "create boot activity")
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_agreement)
-        // Privacy policy solicitation will no longer pop up when Android starts for the first time https://github.com/siyuan-note/siyuan/issues/10348
-//        if (isFirstRun) {
-//            // 首次运行弹窗提示用户隐私条款和使用授权
-//            Log.e("首次运行弹窗提示用户隐私条款和使用授权", "\n\n\n\n\n\n\n")
-//            showAgreements()
-//            return
-//        }
+
+        // Privacy policy solicitation will no longer pop up when Android starts for the first time
+        // https://github.com/siyuan-note/siyuan/issues/10348
+        var applicationInfo: ApplicationInfo? = null
+        applicationInfo = try {
+            packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
+        } catch (e: PackageManager.NameNotFoundException) {
+            throw RuntimeException(e)
+        }
+
+        // 从配置清单获取 CHANNEL 的值，用于判断是哪个渠道包
+        val channel = applicationInfo?.metaData?.getString("CHANNEL")
+
+        // 渠道集合
+        val requiredChannels: MutableSet<String?> = HashSet()
+        requiredChannels.add("google-play")
+        requiredChannels.add("official")
+
+        // 判断 CHANNEL 值是否在 requiredChannels 集合中
+        val isChannelVersion = requiredChannels.contains(channel)
+
+        // 不存在且第一次运行
+        if (!isChannelVersion && isFirstRun) {
+            // 首次运行弹窗提示用户隐私条款和使用授权
+            setContentView(R.layout.activity_agreement)
+            showAgreements()
+            return
+        }
 
         // 获取可能存在的 block URL（通过 siyuan://blocks/xxx 打开应用时传递的）
         val blockURL = blockURL
@@ -82,7 +104,13 @@ class BootActivity : AppCompatActivity() {
             }
             return ret
         }
-
+    private val isFirstRun: Boolean
+        private get() {
+            val dataDir = filesDir.absolutePath
+            val appDir = "$dataDir/app"
+            val appDirFile = File(appDir)
+            return !appDirFile.exists()
+        }
     private fun startMainActivity(blockURL: String) {
         val intent = Intent(applicationContext, MainActivity::class.java)
         intent.putExtra("blockURL", blockURL)

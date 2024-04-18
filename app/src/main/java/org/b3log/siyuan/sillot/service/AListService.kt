@@ -187,7 +187,7 @@ class AListService : Service() {
 
             builder.setChannelId(NOTIFICATION_CHAN_ID)
         } else {
-            smallIconRes = R.mipmap.ic_launcher_round
+            smallIconRes = R.drawable.icon
         }
         val notification = builder
             .setColor(color)
