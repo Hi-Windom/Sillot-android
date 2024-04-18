@@ -11,7 +11,7 @@ final int vC = 17 // Sillot-android 主要版本递增
 final String versionSillot = "0.29" // Sillot 版本同步
 
 // 多渠道打包配置已引用的方式传递
-apply from: rootProject.file('flavors.gradle')
+//apply from: rootProject.file('flavors.gradle')
 
 // REF https://kotlinlang.org/docs/gradle-configure-project.html?utm_campaign=gradle-jvm-target-validation&utm_medium=kgp&utm_source=warnings#check-for-jvm-target-compatibility-of-related-compile-tasks
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile.class).configureEach {
@@ -56,7 +56,6 @@ android {
     android.applicationVariants.configureEach { variant ->
         variant.outputs.configureEach { output ->
             def versionName = variant.versionName
-            def flavorName = variant.flavorName
             def versionType = variant.buildType.name
             if (versionType.equalsIgnoreCase("release")) {
                 outputFileName = "Sillot-v${versionSillot}_${genDate()}_syv${versionName}.apk"

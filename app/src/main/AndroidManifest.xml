@@ -499,9 +499,9 @@
         </provider>
 
         <!-- 多渠道打包配置 -->
-        <meta-data
-            android:name="CHANNEL"
-            android:value="${CHANNEL}" />
+<!--        <meta-data-->
+<!--            android:name="CHANNEL"-->
+<!--            android:value="${CHANNEL}" />-->
 
     </application>
 
