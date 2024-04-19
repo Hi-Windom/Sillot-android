@@ -7,11 +7,9 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.9.22'
 }
 
-final int vC = 18 // Sillot-android 主要版本递增
-final String versionSillot = "0.30" // Sillot 版本同步
 
 // 多渠道打包配置已引用的方式传递
-//apply from: rootProject.file('flavors.gradle')
+apply from: rootProject.file('flavors.gradle')
 apply from: rootProject.file('buildRelease.gradle')
 
 // REF https://kotlinlang.org/docs/gradle-configure-project.html?utm_campaign=gradle-jvm-target-validation&utm_medium=kgp&utm_source=warnings#check-for-jvm-target-compatibility-of-related-compile-tasks
@@ -37,7 +35,7 @@ android {
         minSdk 31 // android 12
         targetSdkVersion 34 // android 14
         versionCode vC
-        versionName "3.0.10" // 思源版本同步
+        versionName versionSillot // 思源版本同步
 
         ndk {
             //只接入对应 cpu 类型的 .so 库。
@@ -56,10 +54,9 @@ android {
     // 自定义打包名称
     android.applicationVariants.configureEach { variant ->
         variant.outputs.configureEach { output ->
-            def versionName = variant.versionName
             def versionType = variant.buildType.name
             if (versionType.equalsIgnoreCase("release")) {
-                outputFileName = "Sillot-v${versionSillot}_${genDate()}_syv${versionName}.apk"
+                outputFileName = "Sillot-v${versionSillot}_${genDate()}_syv${siyuanVersionName}.apk"
             } else {
                 outputFileName = "Sillot.apk"
             }
@@ -79,7 +76,6 @@ android {
             renderscriptDebuggable true
             minifyEnabled true
             shrinkResources true
-            zipAlignEnabled true
             matchingFallbacks = ['release'] // 第三方库处理
         }
         debug {
@@ -89,7 +85,6 @@ android {
         release {
             minifyEnabled true
             shrinkResources true
-            zipAlignEnabled true
             versionNameSuffix ".${vC}"
             resValue "string","app_name","汐洛"
             manifestPlaceholders = [
