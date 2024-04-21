@@ -1,10 +1,19 @@
 {
+  // 此项目主要在 Android Studio 中开发
   "recommendations": [
-    "mhutchie.git-graph",
-    "donjayamanne.githistory",
-    "eamodio.gitlens"
+      // 这里不重复工作区已有推荐
+      ////
+      ////
+      //// 通用部分
+      ////
+      ////
+      ////
+      //// 前端部分
+      ////
+      ////
+      ////
+      //// 后端部分
+      ////
   ],
-  "unwantedRecommendations": [
-    "vscjava.vscode-java-pack"
-  ]
+  "unwantedRecommendations": [],
 }
