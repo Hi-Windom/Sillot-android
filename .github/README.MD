@@ -43,6 +43,14 @@
 </p>
 <hr>
 
+
+
+<p align="center">
+<br><br>
+<a href="https://github.com/siyuan-note/siyuan-android">思源安卓（SiYuan Android）</a> | <a href="README_Sillot.md">汐洛安卓（Sillot Android）</a>
+</p>
+
+
 ## 🔗 Quick Links
 
 > - [📍 Overview](#-overview)
@@ -62,13 +70,13 @@
 
 ## 📍 Overview
 
-<code>► INSERT-TEXT-HERE</code>
+`<code>`► INSERT-TEXT-HERE`</code>`
 
 ---
 
 ## 📦 Features
 
-<code>► INSERT-TEXT-HERE</code>
+`<code>`► INSERT-TEXT-HERE`</code>`
 
 ---
 
