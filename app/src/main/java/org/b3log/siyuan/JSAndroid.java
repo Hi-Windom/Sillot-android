@@ -542,8 +542,8 @@ public final class JSAndroid {
                     activity.startActivity(intent);
                     return;
                 }
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                Log.e("JSAndroid", String.valueOf(e));
             }
         }
 
@@ -570,8 +570,8 @@ public final class JSAndroid {
                     activity.startActivity(intent);
                     return;
                 }
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                Log.e("JSAndroid", String.valueOf(e));
             }
         }
 
