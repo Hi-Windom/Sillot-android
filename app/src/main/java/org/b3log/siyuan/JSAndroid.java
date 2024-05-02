@@ -530,7 +530,7 @@ public final class JSAndroid {
                     url = "http://127.0.0.1:58131/" + url;
                 } else {
                     Log.d("if (url.startsWith(\"assets/\"))", asset.getAbsolutePath());
-                    final Uri uri = FileProvider.getUriForFile(activity.getApplicationContext(), "sc.windom.sillot", asset);
+                    final Uri uri = FileProvider.getUriForFile(activity.getApplicationContext(), BuildConfig.APPLICATION_ID, asset);
                     final String type = Mobile.getMimeTypeByExt(asset.getAbsolutePath());
                     Intent intent = new ShareCompat.IntentBuilder(activity.getApplicationContext())
                             .setStream(uri)
@@ -558,7 +558,7 @@ public final class JSAndroid {
                     Log.e("File Not Found", "File does not exist: " + asset.getAbsolutePath());
                 } else {
                     Log.d("if (url.endsWith(\".zip\") && url.startsWith(\"/export/\"))", asset.getAbsolutePath());
-                    Uri uri = FileProvider.getUriForFile(activity.getApplicationContext(), "sc.windom.sillot", asset);
+                    Uri uri = FileProvider.getUriForFile(activity.getApplicationContext(), BuildConfig.APPLICATION_ID, asset);
                     final String type = Mobile.getMimeTypeByExt(asset.getAbsolutePath());
                     Intent intent = new ShareCompat.IntentBuilder(activity.getApplicationContext())
                             .setStream(uri)
