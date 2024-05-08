@@ -269,7 +269,8 @@ public final class JSAndroid {
                                                         window.location.href = url.searchParams.get("to") || "/"
                                                         return
                                                     }
-                                                                                
+                                                    const inputElement = document.getElementById('authCode')
+                                                    const captchaElement = document.getElementById('captcha')
                                                     if (response.code === 1) {
                                                         captchaElement.previousElementSibling.src = `/api/system/getCaptcha?v=${new Date().getTime()}`
                                                         captchaElement.parentElement.style.display = 'block'
@@ -277,7 +278,6 @@ public final class JSAndroid {
                                                         captchaElement.parentElement.style.display = 'none'
                                                         captchaElement.previousElementSibling.src = ''
                                                     }
-                                                                                
                                                     document.querySelector('#message').classList.add('b3-snackbar--show')
                                                     document.querySelector('#message').firstElementChild.textContent = response.msg
                                                     inputElement.value = ''
