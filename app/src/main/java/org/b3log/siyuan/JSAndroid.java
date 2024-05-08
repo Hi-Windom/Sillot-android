@@ -33,6 +33,7 @@ import android.graphics.Color;
 import android.icu.text.SimpleDateFormat;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
+import android.util.Log;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -75,8 +76,9 @@ import mobile.Mobile;
 /**
  * JavaScript 接口.
  *
- * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.1.3.0, Feb 3, 2024
+ * @author <a href="https://88250.b3log.org">Liang Ding</a>
+ * @author <a href="https://github.com/Soltus">绛亽</a>
+ * @version 1.1.3.1, May 3, 2024
  * @since 1.0.0
  */
 public final class JSAndroid {
@@ -544,6 +546,7 @@ public final class JSAndroid {
                 }
             } catch (Exception e) {
                 Log.e("JSAndroid", String.valueOf(e));
+                Utils.LogError("JSAndroid", "openExternal failed", e);
             }
         }
 

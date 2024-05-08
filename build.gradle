@@ -1,8 +1,8 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     ext {
-        siyuanVersionCode = 231
-        siyuanVersionName = "3.0.11"
+        siyuanVersionCode = 233
+        siyuanVersionName = "3.0.13"
     }
     def  kotlin_v = '1.9.23'  // 需要对齐 Compose Compiler  版本  REF https://developer.android.com/jetpack/androidx/releases/compose-kotlin?hl=zh-cn
     // kotlin_v 设为 1.9+ 会报错 Inconsistent JVM-target compatibility detected for tasks 'compileDebugJavaWithJavac' (17) and 'kaptGenerateStubsDebugKotlin' (1.8).
