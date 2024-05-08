@@ -248,31 +248,6 @@ fun getFileName(context: Context, uri: Uri): String? {
     return result
 }
 
-fun getFileSize(uri: Uri): String? {
-    val file = uri.path?.let { File(it) }
-    if (file != null) {
-        return if (file.exists()) {
-            val fileSizeInBytes = file.length().toDouble()
-            val units = arrayOf("B", "KB", "MB", "GB", "TB")
-            var fileSize = fileSizeInBytes
-            var unitIndex = 0
-
-            // 转换文件大小到合适的单位
-            while (fileSize >= 1024 && unitIndex < units.size - 1) {
-                fileSize /= 1024
-                unitIndex++
-            }
-
-            // 格式化文件大小，保留两位小数
-            val df = DecimalFormat("#.##")
-            "${df.format(fileSize)} ${units[unitIndex]}"
-        } else {
-            null
-        }
-    }
-    return "unknown"
-}
-
 fun isStorageSpaceAvailable(contentResolver: ContentResolver, uri: Uri): Boolean {
     contentResolver.openFileDescriptor(uri, "r").use { pfd ->
         val inputStream = contentResolver.openInputStream(uri)
@@ -601,7 +576,7 @@ fun MyUI(intent: Intent?) {
     val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
     val coroutineScope = rememberCoroutineScope()
     val fileName = uri?.let { getFileName(Lcc, it) }
-    val fileSize = uri?.let { getFileSize(it) }
+    val fileSize = uri?.let { Us.getFileSize(Lcc, it) }
     val mimeType = intent?.data?.let { Us.getMimeType(Lcc, it) } ?: ""
     val fileType = fileName?.let { Us.getFileMIMEType(mimeType, it) } ?: run { Us.getFileMIMEType(mimeType) }
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）

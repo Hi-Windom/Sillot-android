@@ -3,15 +3,18 @@ package org.b3log.siyuan
 import android.Manifest
 import android.app.Activity
 import android.app.KeyguardManager
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.database.Cursor
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.os.PowerManager
+import android.provider.OpenableColumns
 import android.provider.Settings
 import android.util.Log
 import androidx.core.app.ActivityCompat
@@ -24,6 +27,7 @@ import org.b3log.siyuan.videoPlayer.SimplePlayer
 import java.io.File
 import java.io.FileInputStream
 import java.security.MessageDigest
+import java.text.DecimalFormat
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -177,6 +181,87 @@ object Us {
             }
         }
         return digest.digest()
+    }
+
+
+    /**
+     * 简单版，如需支持 content:// 协议查询，请使用增强版 getFileSize(context: Context, uri: Uri)
+     *
+     * @param uri 目标文件的 uri
+     *
+     */
+    fun getFileSize(uri: Uri): String? {
+        val file = uri.path?.let { File(it) }
+        if (file != null) {
+            return if (file.exists()) {
+                val fileSizeInBytes = file.length().toDouble()
+                val units = arrayOf("B", "KB", "MB", "GB", "TB")
+                var fileSize = fileSizeInBytes
+                var unitIndex = 0
+
+                // 转换文件大小到合适的单位
+                while (fileSize >= 1024 && unitIndex < units.size - 1) {
+                    fileSize /= 1024
+                    unitIndex++
+                }
+
+                // 格式化文件大小，保留两位小数
+                val df = DecimalFormat("#.##")
+                "${df.format(fileSize)} ${units[unitIndex]}"
+            } else {
+                null
+            }
+        }
+        return "unknown"
+    }
+
+    /**
+     * 增强版，支持 content:// 协议查询
+     *
+     * @param context 若要读取content://协议的文件大小，需要使用ContentResolver和Cursor。这是因为content:// URI通常指向设备上的内容提供器，这些内容提供器可能存储在数据库中，也可能存储在文件系统中，或者有其他的存储机制。
+     * @param uri 目标文件的 uri
+     */
+    fun getFileSize(context: Context, uri: Uri): String {
+        val contentResolver: ContentResolver = context.contentResolver
+        var fileSizeInBytes: Long = 0
+
+        // 尝试使用文件路径获取文件大小
+        val file = uri.path?.let { File(it) }
+        if (file != null && file.exists()) {
+            fileSizeInBytes = file.length()
+        } else {
+            // 尝试使用ContentResolver查询
+            val cursor: Cursor? = contentResolver.query(uri, null, null, null, null)
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val sizeIndex = it.getColumnIndexOrThrow(OpenableColumns.SIZE)
+                    fileSizeInBytes = it.getLong(sizeIndex)
+                }
+            }
+        }
+
+        // 如果文件大小不为0，转换并格式化文件大小
+        return if (fileSizeInBytes > 0) {
+            formatFileSize(fileSizeInBytes)
+        } else {
+            "unknown"
+        }
+    }
+
+    fun formatFileSize(fileSizeInBytes: Long): String {
+        val units = arrayOf("B", "KB", "MB", "GB", "TB")
+        var fileSize = fileSizeInBytes.toDouble()
+        var unitIndex = 0
+
+        // 转换文件大小到合适的单位
+        while (fileSize >= 1024 && unitIndex < units.size - 1) {
+            fileSize /= 1024
+            unitIndex++
+        }
+
+        // 格式化文件大小，保留两位小数
+        val df = DecimalFormat("#.##")
+        return "${df.format(fileSize)}${units[unitIndex]}"
     }
 
     fun getMimeType(context: Context, uri: Uri): String? {
