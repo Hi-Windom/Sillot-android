@@ -291,7 +291,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                         try {
                             Thread.sleep(200);
                         } catch (InterruptedException e) {
-                            e.printStackTrace();
+                            Log.e(TAG, String.valueOf(e));
                         }
                         System.exit(0);
                     }
