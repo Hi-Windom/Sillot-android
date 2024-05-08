@@ -17,7 +17,9 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import com.blankj.utilcode.util.ActivityUtils.startActivity
+import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.dialogs.PopTip
+import org.b3log.siyuan.andapi.Toast
 import org.b3log.siyuan.videoPlayer.SimplePlayer
 import java.io.File
 import java.io.FileInputStream
@@ -181,7 +183,10 @@ object Us {
         return context.contentResolver.getType(uri)
     }
 
-    fun getFileMIMEType(mimeType: String): String {
+    fun getFileMIMEType(mimeType: String, fileName: String=""): String {
+        when {
+            fileName.endsWith(".apk.1") -> { return "程序" }
+        }
         return when {
             mimeType.startsWith("video/") -> {
                 when (mimeType) {
@@ -244,13 +249,11 @@ object Us {
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" -> "Excel表格"
                     "application/vnd.ms-powerpoint" -> "PowerPoint演示文稿"
                     "application/vnd.openxmlformats-officedocument.presentationml.presentation" -> "PowerPoint演示文稿"
-
-                    // 更多应用程序类型的判断
-                    else -> "其他程序"
+                    else -> mimeType
                 }
             }
             // 其他类型
-            else -> "其他"
+            else -> mimeType
         }
     }
 
@@ -291,22 +294,40 @@ object Us {
         activity.startActivity(installIntent)
     }
     fun installApk(activity: Activity, apkUri: Uri) {
-        val installIntent: Intent
+        try {
+            val installIntent: Intent
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            // Android N及以上版本需要额外权限
-            installIntent = Intent(Intent.ACTION_INSTALL_PACKAGE)
-            installIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            installIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-        } else {
-            // Android N以下版本
-            installIntent = Intent(Intent.ACTION_VIEW)
-            installIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            // 检查是否已有安装未知来源应用的权限
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val packageManager = activity.packageManager
+                val hasInstallPermission = packageManager.canRequestPackageInstalls()
+                if (!hasInstallPermission) {
+                    Toast.Show(activity, "请先授予汐洛安装未知应用权限")
+                    // 启动授权 activity
+                    val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
+                    activity.startActivityForResult(intent, S.REQUEST_CODE_INSTALL_PERMISSION)
+                    return
+                }
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                // Android N及以上版本需要额外权限
+                installIntent = Intent(Intent.ACTION_INSTALL_PACKAGE) // 忽略已弃用，神金搞那么复杂
+                installIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+//                installIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION) // 安装应用不需要写权限，如果是另一个应用的私有文件会导致无法安装
+            } else {
+                // Android N以下版本
+                installIntent = Intent(Intent.ACTION_VIEW)
+                installIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+
+            installIntent.setDataAndType(apkUri, "application/vnd.android.package-archive")
+            activity.startActivity(installIntent)
+        } catch (e: Exception) {
+            Log.e("Us.installApk", e.toString())
+            PopNotification.show("任务失败", e.toString()).noAutoDismiss()
         }
-
-        installIntent.setDataAndType(apkUri, "application/vnd.android.package-archive")
-        activity.startActivity(installIntent)
     }
+
 
     fun sendEmail(packageManager: PackageManager, recipient: String, subject: String?, body: String?) {
         val emailIntent = Intent(Intent.ACTION_SENDTO)

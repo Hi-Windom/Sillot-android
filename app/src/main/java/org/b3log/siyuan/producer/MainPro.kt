@@ -603,7 +603,7 @@ fun MyUI(intent: Intent?) {
     val fileName = uri?.let { getFileName(Lcc, it) }
     val fileSize = uri?.let { getFileSize(it) }
     val mimeType = intent?.data?.let { Us.getMimeType(Lcc, it) } ?: ""
-    val fileType = Us.getFileMIMEType(mimeType)
+    val fileType = fileName?.let { Us.getFileMIMEType(mimeType, it) } ?: run { Us.getFileMIMEType(mimeType) }
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
 
     var isMenuVisible by rememberSaveable { mutableStateOf(false) }
@@ -858,9 +858,11 @@ fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
 
 
     LaunchedEffect(key1 = mimeType) {
-        showAudioButton = mimeType.startsWith("audio/")
-        showVideoButton = mimeType.startsWith("video/")
-        showApkButton = mimeType == "application/vnd.android.package-archive"
+        if (fileName != null) {
+            showAudioButton = mimeType.startsWith("audio/")
+            showVideoButton = mimeType.startsWith("video/")
+            showApkButton = mimeType == "application/vnd.android.package-archive" || (mimeType == "application/octet-stream" && fileName.endsWith(".apk.1"))
+        }
     }
 
     fun onCopyFileToFolderByDocumentTree() {

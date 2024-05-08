@@ -40,8 +40,9 @@ object S {
     const val REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT = 10002 // 申请电源优化无限制权限后重启，部分系统没有该权限
     const val REQUEST_IGNORE_BATTERY_OPTIMIZATIONS = 10002 // 申请电源优化无限制权限，部分系统没有该权限
     const val REQUEST_CODE_MANAGE_STORAGE = 10003
-    const val REQUEST_OVERLAY = 10004 // 悬浮窗权限
-    const val REQUEST_POST_NOTIFICATIONS = 10005 // 读取通知权限
+    const val REQUEST_OVERLAY = 10004 // 悬浮窗
+    const val REQUEST_POST_NOTIFICATIONS = 10005 // 读取通知
+    const val REQUEST_CODE_INSTALL_PERMISSION = 10006 // 安装应用
 
     // compose 组件常量
     object C {
