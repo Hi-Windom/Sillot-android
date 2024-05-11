@@ -283,17 +283,13 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 // 在这里处理后退逻辑
                 if (Utils.isPad(getApplicationContext())) {
                     if ((System.currentTimeMillis() - exitTime) > 2000) {
-                        PopTip.show("再按一次退出程序");
+                        PopTip.show("再按一次退出汐洛绞架");
                         exitTime = System.currentTimeMillis();
                     } else {
                         HWs.getInstance().vibratorWaveform(getApplicationContext(), new long[]{0, 30, 25, 40, 25, 10}, new int[]{2, 4, 3, 2, 2, 2}, -1);
-                        exit();
-                        try {
-                            Thread.sleep(200);
-                        } catch (InterruptedException e) {
-                            Log.e(TAG, String.valueOf(e));
+                        if (webView != null) {
+                            webView.evaluateJavascript("javascript:window.location.href = 'siyuan://api/system/exit';", null);
                         }
-                        System.exit(0);
                     }
                 } else {
                     webView.evaluateJavascript("javascript:window.goBack ? window.goBack() : window.history.back()", null);
