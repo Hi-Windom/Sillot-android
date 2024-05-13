@@ -6,6 +6,7 @@
     <string name="activity_name_USB_AUDIO_EXCLUSIVE">汐洛音乐播放器</string>
     <string name="shortcut_long_label_1">启动->汐洛</string>
     <string name="shortcut_short_label_1">启动汐洛</string>
+    <string name="ManageSpaceActivity">管理汐洛空间</string>
 
     <string name="open_source_license">开源许可</string>
     <string name="back">返回</string>

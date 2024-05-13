@@ -118,11 +118,16 @@
     <uses-permission android:name="android.permission.CAMERA" />
 
     <!--  extractNativeLibs 这个属性用于控制 Android 应用程序在安装时是否从 APK 文件中提取本地库。 设为 true 优点：快速启动应用程序，减少运行时解压缩，省电 -->
+    <!--   由于是在系统级界面启动，没有应用上下文，因此 android:manageSpaceActivity 需要完整指定 -->
+    <!--    https://developer.android.com/guide/topics/manifest/application-element?hl=zh-cn-->
     <!-- ignore @string/app_name error -->
     <application
         android:name=".App"
-        android:appCategory="productivity"
+        android:appCategory="game"
         android:debuggable="true"
+        android:manageSpaceActivity="org.b3log.siyuan.ManageSpaceActivity"
+        android:allowTaskReparenting="true"
+        android:backupInForeground="false"
         android:resizeableActivity="true"
         android:hardwareAccelerated="true"
         android:largeHeap="true"
@@ -502,6 +507,13 @@
 <!--        <meta-data-->
 <!--            android:name="CHANNEL"-->
 <!--            android:value="${CHANNEL}" />-->
+
+<!--    将"清除数据"项变为"管理空间"，自定义数据清除    https://github.com/Hi-Windom/Sillot-android/issues/49-->
+        <activity
+            android:name=".ManageSpaceActivity"
+            android:label="@string/ManageSpaceActivity"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"
+            android:exported="true" />
 
     </application>
 
