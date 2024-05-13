@@ -9,6 +9,7 @@ import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
@@ -84,6 +85,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -566,6 +568,27 @@ private fun openUrl(url: String) {
     startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
 }
 
+/**
+ * 用于 Composable 的屏幕锁定
+ *
+ * @param orientation Int 类型，一般是 ActivityInfo.SCREEN_ORIENTATION_*
+ */
+@Composable
+fun LockScreenOrientation(orientation: Int) {
+    val activity = (LocalContext.current as? ComponentActivity)
+    DisposableEffect(activity) {
+        activity?.requestedOrientation = orientation
+        onDispose {
+            // Reset the orientation to the system settings when the DisposableEffect is disposed
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+    }
+}
+
+fun ComponentActivity.lockScreenOrientation(orientation: Int) {
+    requestedOrientation = orientation
+}
+
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
 @Composable
@@ -967,6 +990,8 @@ fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
     }
     // 遮罩组件
     if (isButton4OnClickRunning || isButton3OnClickRunning) {
+        // 锁定当前屏幕方向，避免重绘，相当于 android.app.Activity.setRequestedOrientation
+        LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED)
                 Dialog(
                     onDismissRequest = {
                         isButton3OnClickRunning = false
@@ -1011,6 +1036,10 @@ fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
                         }
                     }
                 }
+    }
+    if (!isButton4OnClickRunning && !isButton3OnClickRunning) {
+        // 解除屏幕方向锁定
+        LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED)
     }
 
     //// @D 通用按键部分

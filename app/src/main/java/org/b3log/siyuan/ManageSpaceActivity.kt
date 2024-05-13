@@ -1,5 +1,7 @@
 package org.b3log.siyuan
 
+import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -24,5 +26,8 @@ class ManageSpaceActivity : ComponentActivity() {
                 MyUI(intent)
             }
         }
+
+//设置竖屏锁定
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
 }
