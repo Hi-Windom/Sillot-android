@@ -1128,7 +1128,8 @@ fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
 //                handler.post {
                     val directories = Us.getDirectoriesInPath(S.workspaceParentDir)
                     val filteredDirectories = directories.filter { it != "home" }
-                    var selectMenuIndex = 0
+                if (filteredDirectories.isNotEmpty())
+                {var selectMenuIndex = 0
                     var selectMenuText = "sillot"
                     BottomMenu.show(filteredDirectories)
                         .setMessage("sillot 是默认工作空间")
@@ -1144,7 +1145,7 @@ fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
                             OnBottomMenuButtonClickListener { menu, view ->
                                 Log.e(TAG, "${selectMenuText}")
 
-                                workspaceAssetsDir = "/storage/emulated/0/Android/data/sc.windom.sillot/files/${selectMenuText}/data/assets"
+                                workspaceAssetsDir = "${S.workspaceParentDir}/${selectMenuText}/data/assets"
                                 isButton4OnClickRunning = true // 值变化时会触发重组
                                 false
                             })
@@ -1152,6 +1153,9 @@ fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
                             OnBottomMenuButtonClickListener { menu, view ->
                                 false
                             })
+                } else {
+                    PopNotification.show(R.drawable.icon, "未发现任何工作空间", "请检查是否初始化了，或者路径存在异常 ${S.workspaceParentDir}/").noAutoDismiss()
+                }
 //                }
             }
         }) {
