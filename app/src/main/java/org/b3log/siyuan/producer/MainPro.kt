@@ -1025,7 +1025,7 @@ fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
                                     .fillMaxWidth(),
                             )
                             Text(
-                                text = "操作正在进行……\n请勿旋转屏幕或退出",
+                                text = "操作正在进行……\n请勿退出",
                                 color = Color.Yellow,
                                 modifier = Modifier
                                     .padding(bottom = 8.dp)
