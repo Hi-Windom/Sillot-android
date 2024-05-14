@@ -234,7 +234,6 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:mimeType="*/*" />
             </intent-filter>
-            <!--在其他应用打开-->
             <intent-filter android:label="汐洛链接处理助手">
                 <!--必须设置-->
                 <action android:name="android.intent.action.VIEW" />
