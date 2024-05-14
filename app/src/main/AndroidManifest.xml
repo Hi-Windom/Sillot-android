@@ -117,6 +117,40 @@
     <!-- 拍摄照片和视频 -->
     <uses-permission android:name="android.permission.CAMERA" />
 
+<!--    https://developer.android.com/training/package-visibility/use-cases?hl=zh-cn -->
+    <queries>
+        <!-- 检查浏览器是否可用 -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
+        </intent>
+        <!-- 连接到文字转语音引擎 -->
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+        <!--连接到语音识别服务 -->
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+        <!--连接到媒体浏览器服务 -->
+        <intent>
+            <action android:name="android.media.browse.MediaBrowserService" />
+        </intent>
+        <!-- 创建自定义共享表单
+         https://developer.android.com/training/sharing/send?hl=zh-cn#why-to-use-system-sharesheet 请尽可能使用系统提供的共享表单。
+         -->
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <!-- Replace with the MIME type that your app works with, if needed. -->
+            <data android:mimeType="*/*" />
+        </intent>
+        <!-- 显示自定义文字选择操作 -->
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT" />
+            <data android:mimeType="text/plain" />
+        </intent>
+    </queries>
     <!--  extractNativeLibs 这个属性用于控制 Android 应用程序在安装时是否从 APK 文件中提取本地库。 设为 true 优点：快速启动应用程序，减少运行时解压缩，省电 -->
     <!--   由于是在系统级界面启动，没有应用上下文，因此 android:manageSpaceActivity 需要完整指定 -->
     <!--    https://developer.android.com/guide/topics/manifest/application-element?hl=zh-cn-->
@@ -163,10 +197,12 @@
 
         <activity
             android:name=".producer.MainPro"
+            android:label="Sillot MainPro"
             android:screenOrientation="fullSensor"
             android:supportsPictureInPicture="true"
             android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"
-            android:exported="true">
+            android:exported="true"
+            tools:ignore="DiscouragedApi">
 <!-- ref https://blog.csdn.net/qq_36009027/article/details/94627156 -->
             <!--在其他应用打开-->
             <intent-filter android:label="汐洛通用处理助手">
@@ -175,21 +211,40 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <!--需要被网页拉起必须设置-->
                 <category android:name="android.intent.category.BROWSABLE" />
+                <!--必须小写，包括scheme、host、port、path-->
                 <data android:scheme="file"/>
                 <data android:scheme="content"/>
-                <data android:scheme="http"/>
-                <data android:scheme="https"/>
-                <data android:scheme="magnet"/>
                 <data android:host="*"/>
                 <data android:pathPattern=".*"/>
                 <data android:mimeType="*/*" />
             </intent-filter>
             <!--分享/发送-->
             <intent-filter android:label="汐洛分享助手">
+<!--                android.intent.action.SENDTO: 这个动作通常用于发送消息到指定的目标。它通常与mailto:或smsto:等URI方案结合使用，用于发送电子邮件或短信。
+当使用SENDTO动作时，意图通常会包含一个URI，这个URI指定了消息应该被发送到的地址。-->
                 <action android:name="android.intent.action.SEND"/>
                 <action android:name="android.intent.action.SEND_MULTIPLE"/>
+<!--                android.intent.action.SEND: 这个动作用于发送数据。它通常用于分享文本、图片或其他类型的数据。当使用SEND动作时，意图通常会包含要发送的数据
+（通过extra中的Intent.EXTRA_TEXT、Intent.EXTRA_STREAM等字段），但不指定特定的目标地址。系统会显示一个对话框，让用户选择使用哪个应用来发送数据。-->
+                <action android:name="android.intent.action.SENDTO"/>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+                <!--必须设置-->
                 <category android:name="android.intent.category.DEFAULT"/>
+                <!--需要被网页拉起必须设置-->
+                <category android:name="android.intent.category.BROWSABLE" />
                 <data android:mimeType="*/*" />
+            </intent-filter>
+            <!--在其他应用打开-->
+            <intent-filter android:label="汐洛链接处理助手">
+                <!--必须设置-->
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <!--需要被网页拉起必须设置-->
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="magnet"/>
+                <data android:scheme="http"/>
+                <data android:scheme="https"/>
+<!--      设置这个会导致失效          <data android:host="*"/>-->
             </intent-filter>
 
         </activity>

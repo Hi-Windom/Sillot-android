@@ -149,6 +149,7 @@ class MainPro : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val intent = intent
         val uri = intent.data
+        Log.i(TAG, "onCreate() invoked")
 // 设置沉浸式通知栏
         window.setDecorFitsSystemWindows(false)
         window.decorView.setOnApplyWindowInsetsListener { _, insets ->
