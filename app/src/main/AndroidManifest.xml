@@ -63,7 +63,7 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
 
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
-    <uses-permission android:name="sc.windom.sillot.permission.JOPERATE_MESSAGE" />
+    <uses-permission android:name="${applicationId}.permission.JOPERATE_MESSAGE" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_LOCATION_EXTRA_COMMANDS" />
     <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
@@ -209,7 +209,7 @@
                 <action android:name="cn.jpush.android.intent.NOTIFICATION_CLICK_ACTION" />
                 <action android:name="cn.jpush.android.intent.CONNECTION" />
 
-                <category android:name="sc.windom.sillot" />
+                <category android:name="${applicationId}" />
             </intent-filter>
         </receiver>
 
@@ -218,7 +218,7 @@
             android:autoRemoveFromRecents="true"
             android:launchMode="singleInstance">
             <intent-filter>
-                <action android:name="sc.windom.sillot.intent.permission.Battery" />
+                <action android:name="${applicationId}.intent.permission.Battery" />
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="${applicationId}" />
@@ -229,7 +229,7 @@
             android:autoRemoveFromRecents="true"
             android:launchMode="singleInstance">
             <intent-filter>
-                <action android:name="sc.windom.sillot.intent.permission.Overlay" />
+                <action android:name="${applicationId}.intent.permission.Overlay" />
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="${applicationId}" />
@@ -242,7 +242,7 @@
             android:configChanges="orientation|screenSize"
             android:launchMode="singleInstance">
             <intent-filter>
-                <action android:name="sc.windom.sillot.intent.permission.InitActivity" />
+                <action android:name="${applicationId}.intent.permission.InitActivity" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
@@ -255,7 +255,7 @@
             android:taskAffinity=".sillot.task.background"
             android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize">
             <intent-filter>
-                <action android:name="sc.windom.sillot.intent.videoPlayer.SimplePlayer" />
+                <action android:name="${applicationId}.intent.videoPlayer.SimplePlayer" />
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
@@ -499,7 +499,7 @@
         <!-- Support opening assets through other apps on the Android https://github.com/siyuan-note/siyuan/issues/10657 -->
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="sc.windom.sillot"
+            android:authorities="${applicationId}"
             android:grantUriPermissions="true"
             tools:replace="android:authorities">
             <meta-data
