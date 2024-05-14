@@ -3,4 +3,10 @@
     <external-files-path
         name="share"
         path="/" />
+<!-- 允许应用共享其外部存储、缓存、外部文件和内部存储中的文件。-->
+    <external-path name="external_files" path="." />
+    <external-path name="external_cache" path="." />
+    <external-files-path name="external_files" path="." />
+    <cache-path name="cache" path="." />
+    <files-path name="files" path="." />
 </paths>
