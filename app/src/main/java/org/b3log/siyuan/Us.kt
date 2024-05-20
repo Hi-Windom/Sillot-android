@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.app.KeyguardManager
 import android.content.ContentResolver
+import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -14,18 +15,23 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.os.PowerManager
+import android.provider.DocumentsContract
+import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.provider.Settings
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
+import androidx.documentfile.provider.DocumentFile
 import com.blankj.utilcode.util.ActivityUtils.startActivity
 import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.dialogs.PopTip
 import org.b3log.siyuan.andapi.Toast
+import org.b3log.siyuan.sillot.util.FileUtil
 import org.b3log.siyuan.videoPlayer.SimplePlayer
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.security.MessageDigest
 import java.text.DecimalFormat
 import kotlin.math.pow
@@ -183,6 +189,191 @@ object Us {
         return digest.digest()
     }
 
+
+    /**
+     * 从 uri 获取文件路径
+     *
+     * @param context Context
+     * @param uri 目标文件夹的 uri
+     */
+    fun getPathFromUri(context: Context, uri: Uri): String? {
+        var filePath: String? = null
+        val contentResolver = context.contentResolver
+
+        Log.i("getPathFromUri() -> ", uri.toString());
+        // 根据不同的URI方案执行不同的处理
+        when {
+            "content" == uri.scheme -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    // Android 10及以上版本使用openFileDescriptor来获取文件路径
+                    contentResolver.openFileDescriptor(uri, "r", null).use { parcelFileDescriptor ->
+                        if (parcelFileDescriptor != null) {
+                            val tempFile = File(context.cacheDir, "temp_file")
+                            FileInputStream(parcelFileDescriptor.fileDescriptor).use { inputStream ->
+                                FileOutputStream(tempFile).use { outputStream ->
+                                    inputStream.copyTo(outputStream)
+                                }
+                            }
+
+                            filePath = tempFile.absolutePath
+                        }
+                    }
+                } else {
+                    val cursor = contentResolver.query(uri, null, null, null, null)
+                    cursor?.use {
+                        if (it.moveToFirst()) {
+                            // MediaStore.Images.Media.DATA 不存在则会 crash ，比如微信文件，但是安卓10以下不管了
+                            val columnIndex = it.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
+                            filePath = it.getString(columnIndex)
+                        }
+                    }
+                }
+            }
+            "file" == uri.scheme -> {
+                filePath = uri.path
+            }
+            // 如果是通过DocumentProvider获取的URI
+            DocumentsContract.isDocumentUri(context, uri) -> {
+                if (isExternalStorageDocument(uri)) {
+                    // 处理外部存储器文档
+                    val docId = DocumentsContract.getDocumentId(uri)
+                    val split = docId.split(":")
+                    val type = split[0]
+
+                    if ("primary".equals(type, ignoreCase = true)) {
+                        filePath = "${context.getExternalFilesDir(null)}/${split[1]}"
+                    }
+                } else if (isDownloadsDocument(uri)) {
+                    // 处理下载的文件
+                    val id = DocumentsContract.getDocumentId(uri)
+                    val contentUri = ContentUris.withAppendedId(
+                        Uri.parse("content://downloads/public_downloads"), id.toLong()
+                    )
+                    filePath = FileUtil.getDataColumn(context, contentUri, null, null)
+                } else if (isMediaDocument(uri)) {
+                    // 处理媒体文档
+                    val docId = DocumentsContract.getDocumentId(uri)
+                    val split = docId.split(":")
+                    val type = split[0]
+
+                    var contentUri: Uri? = null
+                    when (type) {
+                        "image" -> contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                        "video" -> contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                        "audio" -> contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                    }
+
+                    val selection = "_id=?"
+                    val selectionArgs = arrayOf(split[1])
+                    filePath = FileUtil.getDataColumn(context, contentUri, selection, selectionArgs)
+                }
+            }
+        }
+        filePath?.let { Log.i("getPathFromUri() -> ", it) };
+        return filePath
+    }
+
+    /**
+     * 检查URI是否是外部存储器文档
+     *
+     * @param uri 目标文件夹的 uri
+     */
+    fun isExternalStorageDocument(uri: Uri): Boolean {
+        return "com.android.externalstorage.documents" == uri.authority
+    }
+
+    /**
+     * 检查URI是否是下载文档
+     *
+     * @param uri 目标文件夹的 uri
+     */
+    fun isDownloadsDocument(uri: Uri): Boolean {
+        return "com.android.providers.downloads.documents" == uri.authority
+    }
+
+    /**
+     * 检查URI是否是媒体文档
+     *
+     * @param uri 目标文件夹的 uri
+     */
+    fun isMediaDocument(uri: Uri): Boolean {
+        return "com.android.providers.media.documents" == uri.authority
+    }
+
+    /**
+     * 将源文件复制到指定的目录，通过文档树这个特殊的口径。当文件存在时会创建新的重命名文件
+     *
+     * @param context 一般是当前活动
+     * @param treeUri 用户选择的文件件Uri，不是真实路径Uri。
+     * @param targetFileName 目标文件名。
+     * @param sourceFilePath 源文件路径。
+     * @param mimeType 源文件类型。
+     * @param move 是否删除源文件
+     */
+    fun copyFileToFolderByDocumentTree(context: Context, treeUri: Uri, targetFileName: String = "Untitled.sc", sourceFilePath: String, mimeType: String, move: Boolean = false) {
+
+        // 创建源文件的 File 对象
+        val sourceFile = File(sourceFilePath)
+
+        // 创建目标文件夹的 DocumentFile 对象
+        val treeDocumentFile = DocumentFile.fromTreeUri(context, treeUri)
+
+        // 在目标文件夹中创建一个新文件
+        val targetFile = treeDocumentFile?.createFile(mimeType, targetFileName) ?: return
+
+        // 打开源文件的输入流
+        val inputStream = FileInputStream(sourceFile)
+
+        // 获取目标文件的输出流
+        context.contentResolver.openOutputStream(targetFile.uri)?.use { outputStream ->
+            // 将数据从输入流复制到输出流
+            inputStream.copyTo(outputStream)
+        }
+
+        // 关闭输入流
+        inputStream.close()
+        if (move) { sourceFile.delete() }
+    }
+
+
+    /**
+     * 将源文件复制到应用私有的目录中。当文件存在时不会创建新的重命名文件。进行哈希检查来跳过覆写不会减少耗时因此不弄检查。
+     *
+     * @param targetFolderPath 目标文件夹的路径，相对于应用的私有目录。使用绝对路径，例： /storage/emulated/0/Android/data/sc.windom.sillot/files/sillot
+     * @param targetFileName 目标文件的名称。
+     * @param sourceFilePath 源文件的路径。
+     */
+    fun copyFileToMyAppFolder(targetFolderPath: String, targetFileName: String, sourceFilePath: String) {
+        // 创建源文件的 File 对象
+        val sourceFile = File(sourceFilePath)
+
+        // 创建目标文件夹的 File 对象
+        val targetFolder = File(targetFolderPath)
+
+        // 如果目标文件夹不存在，则创建它
+        if (!targetFolder.exists()) {
+            targetFolder.mkdirs()
+        }
+
+        // 创建目标文件的 File 对象
+        val targetFile = File(targetFolder, targetFileName)
+
+        // 打开源文件的输入流
+        var inputStream: FileInputStream? = null
+        // 获取目标文件的输出流
+        var outputStream: FileOutputStream? = null
+
+        inputStream = FileInputStream(sourceFile)
+        outputStream = FileOutputStream(targetFile)
+
+        // 将数据从输入流复制到输出流
+        inputStream.copyTo(outputStream)
+
+        // 关闭输入流和输出流，确保释放资源
+        inputStream.close()
+        outputStream.close()
+
+    }
 
     /**
      * 简单版，如需支持 content:// 协议查询，请使用增强版 getFileSize(context: Context, uri: Uri)

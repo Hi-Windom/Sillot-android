@@ -6,7 +6,6 @@ import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.ContentResolver
-import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
@@ -15,7 +14,6 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
-import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.provider.Settings
@@ -68,18 +66,14 @@ import androidx.compose.material.icons.twotone.Close
 import androidx.compose.material.icons.twotone.ContentCopy
 import androidx.compose.material.icons.twotone.Delete
 import androidx.compose.material.icons.twotone.Email
-import androidx.compose.material.icons.twotone.Report
-import androidx.compose.material.icons.twotone.Send
 import androidx.compose.material.icons.twotone.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -129,13 +123,9 @@ import org.b3log.siyuan.S
 import org.b3log.siyuan.Us
 import org.b3log.siyuan.Utils
 import org.b3log.siyuan.andapi.Toast
-import org.b3log.siyuan.sillot.util.FileUtil.getDataColumn
 import org.b3log.siyuan.videoPlayer.SimplePlayer
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.IOException
-import java.text.DecimalFormat
 
 
 // TODO: 多选文件打开的处理
@@ -271,150 +261,6 @@ fun isStorageSpaceAvailable(contentResolver: ContentResolver, uri: Uri): Boolean
     return true
 }
 
-fun getPathFromUri(context: Context, uri: Uri): String? {
-    var filePath: String? = null
-    val contentResolver = context.contentResolver
-
-    // 根据不同的URI方案执行不同的处理
-    when {
-        "content" == uri.scheme -> {
-            val cursor = contentResolver.query(uri, null, null, null, null)
-            cursor?.use {
-                if (it.moveToFirst()) {
-                    val columnIndex = it.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
-                    filePath = it.getString(columnIndex)
-                }
-            }
-        }
-        "file" == uri.scheme -> {
-            filePath = uri.path
-        }
-        // 如果是通过DocumentProvider获取的URI
-        DocumentsContract.isDocumentUri(context, uri) -> {
-            if (isExternalStorageDocument(uri)) {
-                // 处理外部存储器文档
-                val docId = DocumentsContract.getDocumentId(uri)
-                val split = docId.split(":")
-                val type = split[0]
-
-                if ("primary".equals(type, ignoreCase = true)) {
-                    filePath = "${context.getExternalFilesDir(null)}/${split[1]}"
-                }
-            } else if (isDownloadsDocument(uri)) {
-                // 处理下载的文件
-                val id = DocumentsContract.getDocumentId(uri)
-                val contentUri = ContentUris.withAppendedId(
-                    Uri.parse("content://downloads/public_downloads"), id.toLong()
-                )
-                filePath = getDataColumn(context, contentUri, null, null)
-            } else if (isMediaDocument(uri)) {
-                // 处理媒体文档
-                val docId = DocumentsContract.getDocumentId(uri)
-                val split = docId.split(":")
-                val type = split[0]
-
-                var contentUri: Uri? = null
-                when (type) {
-                    "image" -> contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                    "video" -> contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-                    "audio" -> contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-                }
-
-                val selection = "_id=?"
-                val selectionArgs = arrayOf(split[1])
-                filePath = getDataColumn(context, contentUri, selection, selectionArgs)
-            }
-        }
-    }
-    return filePath
-}
-// 检查URI是否是外部存储器文档
-private fun isExternalStorageDocument(uri: Uri): Boolean {
-    return "com.android.externalstorage.documents" == uri.authority
-}
-
-// 检查URI是否是下载文档
-private fun isDownloadsDocument(uri: Uri): Boolean {
-    return "com.android.providers.downloads.documents" == uri.authority
-}
-
-// 检查URI是否是媒体文档
-private fun isMediaDocument(uri: Uri): Boolean {
-    return "com.android.providers.media.documents" == uri.authority
-}
-
-/**
- * 将源文件复制到应用私有的目录中。当文件存在时不会创建新的重命名文件。进行哈希检查来跳过覆写不会减少耗时。
- *
- * @param targetFolderPath 目标文件夹的路径，相对于应用的私有目录。使用绝对路径，例： /storage/emulated/0/Android/data/sc.windom.sillot/files/sillot
- * @param targetFileName 目标文件的名称。
- * @param sourceFilePath 源文件的路径。
- */
-private fun copyFileToMyAppFolder(targetFolderPath: String, targetFileName: String, sourceFilePath: String) {
-    // 创建源文件的 File 对象
-    val sourceFile = File(sourceFilePath)
-
-    // 创建目标文件夹的 File 对象
-    val targetFolder = File(targetFolderPath)
-
-    // 如果目标文件夹不存在，则创建它
-    if (!targetFolder.exists()) {
-        targetFolder.mkdirs()
-    }
-
-    // 创建目标文件的 File 对象
-    val targetFile = File(targetFolder, targetFileName)
-
-    // 打开源文件的输入流
-    var inputStream: FileInputStream? = null
-    // 获取目标文件的输出流
-    var outputStream: FileOutputStream? = null
-
-    inputStream = FileInputStream(sourceFile)
-    outputStream = FileOutputStream(targetFile)
-
-    // 将数据从输入流复制到输出流
-    inputStream.copyTo(outputStream)
-
-    // 关闭输入流和输出流，确保释放资源
-    inputStream.close()
-    outputStream.close()
-
-}
-/**
- * 将源文件复制到指定的目录，通过文档树这个特殊的口径。当文件存在时会创建新的重命名文件
- *
- * @param context 一般是当前活动
- * @param treeUri 用户选择的文件件Uri，不是真实路径Uri。
- * @param targetFileName 目标文件名。
- * @param sourceFilePath 源文件路径。
- * @param mimeType 源文件类型。
- * @param move 是否删除源文件
- */
-private fun copyFileToFolderByDocumentTree(context: Context, treeUri: Uri, targetFileName: String = "Untitled.sc", sourceFilePath: String, mimeType: String, move: Boolean = false) {
-
-    // 创建源文件的 File 对象
-    val sourceFile = File(sourceFilePath)
-
-    // 创建目标文件夹的 DocumentFile 对象
-    val treeDocumentFile = DocumentFile.fromTreeUri(context, treeUri)
-
-    // 在目标文件夹中创建一个新文件
-    val targetFile = treeDocumentFile?.createFile(mimeType, targetFileName) ?: return
-
-    // 打开源文件的输入流
-    val inputStream = FileInputStream(sourceFile)
-
-    // 获取目标文件的输出流
-    context.contentResolver.openOutputStream(targetFile.uri)?.use { outputStream ->
-        // 将数据从输入流复制到输出流
-        inputStream.copyTo(outputStream)
-    }
-
-    // 关闭输入流
-    inputStream.close()
-    if (move) { sourceFile.delete() }
-}
 
 fun isFileSizeOverLimit(file: File, limitMB: Int): Boolean {
     val fileSize = file.length() // 获取文件大小，单位为字节
@@ -875,11 +721,11 @@ fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
                         Toast.Show(Lcc, "存储空间不足，请先清理")
                         return@withContext
                     }
-                    val sourceFilePath = getPathFromUri(Lcc, uri_from_file)
+                    val sourceFilePath = Us.getPathFromUri(Lcc, uri_from_file)
                     // 复制文件到所选文件夹
                     fileName?.let {
                         sourceFilePath?.let { it1 ->
-                            copyFileToFolderByDocumentTree(
+                            Us.copyFileToFolderByDocumentTree(
                                 Lcc, uri_to_dir, it,
                                 it1, mimeType
                             )
@@ -909,12 +755,12 @@ fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
                         PopNotification.show(R.drawable.icon,  "存储空间不足，请先清理")
                         return@withContext
                     }
-                    val sourceFilePath = getPathFromUri(Lcc, uri_from_file)
+                    val sourceFilePath = Us.getPathFromUri(Lcc, uri_from_file)
                     // 复制文件到所选文件夹
                     fileName?.let {
                         sourceFilePath?.let { it1 ->
                             try {
-                                copyFileToMyAppFolder(
+                                Us.copyFileToMyAppFolder(
                                     workspaceAssetsDir, it, it1
                                 )
                                 PopNotification.show(R.drawable.icon, "已存入 ${workspaceAssetsDir}").autoDismiss(5000)
