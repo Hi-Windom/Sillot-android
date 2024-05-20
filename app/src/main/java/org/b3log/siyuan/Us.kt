@@ -1,6 +1,7 @@
 package org.b3log.siyuan
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.KeyguardManager
 import android.content.ContentResolver
@@ -20,6 +21,24 @@ import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.provider.Settings
 import android.util.Log
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
+import androidx.compose.material.icons.filled.Android
+import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Css
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.FolderZip
+import androidx.compose.material.icons.filled.Html
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Javascript
+import androidx.compose.material.icons.filled.Movie
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.Tab
+import androidx.compose.material.icons.filled.TableChart
+import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import androidx.documentfile.provider.DocumentFile
@@ -189,6 +208,31 @@ object Us {
         return digest.digest()
     }
 
+
+    fun isFileSizeOverLimit(file: File, limitMB: Int): Boolean {
+        val fileSize = file.length() // 获取文件大小，单位为字节
+        val fileSizeInMB = fileSize / (1024 * 1024) // 将文件大小转换为 MB
+        return fileSizeInMB > limitMB
+    }
+    fun isFileSizeOverLimit(contentResolver: ContentResolver, uri: Uri, limitMB: Int): Boolean {
+        val fileSize = getFileSizeFromUri(contentResolver, uri) ?: return false // 获取文件大小，如果获取失败则返回 false
+        val fileSizeInMB = fileSize / (1024 * 1024) // 将文件大小转换为 MB
+        return fileSizeInMB > limitMB
+    }
+
+    /**
+     * 根据 Uri 获取文件大小
+     *
+     * @param contentResolver ContentResolver
+     * @param uri 目标文件夹的 uri
+     */
+    fun getFileSizeFromUri(contentResolver: ContentResolver, uri: Uri): Long? {
+        return contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+            cursor.moveToFirst()
+            cursor.getLong(sizeIndex)
+        }
+    }
 
     /**
      * 从 uri 获取文件路径
@@ -459,6 +503,40 @@ object Us {
         return context.contentResolver.getType(uri)
     }
 
+
+    //fun getIconForFileType(fileType: String): Int { // 有空再说
+//    return when (fileType) {
+//        "视频" -> R.drawable.ic_video
+//        "音频" -> R.drawable.ic_audio
+//        "文本" -> R.drawable.ic_text
+//        "图像" -> R.drawable.ic_image
+//        "程序" -> R.drawable.ic_program
+//        else -> R.drawable.ic_file // 默认图标
+//    }
+//}
+    fun getIconForFileType(fileType: String): ImageVector {
+        return when {
+            fileType == "其他文本" -> Icons.Default.TextFields
+            fileType == "HTML" -> Icons.Default.Html
+            fileType == "CSS" -> Icons.Default.Css
+            fileType == "JavaScript" -> Icons.Default.Javascript
+            fileType == "PDF" -> Icons.Default.PictureAsPdf
+            fileType == "Word文档" -> Icons.Default.Badge
+            fileType == "Excel表格" -> Icons.Default.TableChart
+            fileType == "PowerPoint演示文稿" -> Icons.Default.Tab
+            fileType == "压缩文件" -> Icons.Default.FolderZip
+            fileType == "EPUB" -> Icons.Default.Book
+            fileType.endsWith("视频") -> Icons.Default.Movie
+            fileType.endsWith("音频") -> Icons.Default.MusicNote
+            fileType.endsWith("文本") -> Icons.Default.Description
+            fileType.endsWith("图像") -> Icons.Default.Image
+            fileType.endsWith("程序") -> Icons.Default.Android
+            fileType.endsWith("音频") -> Icons.Default.MusicNote
+            else -> Icons.AutoMirrored.Filled.InsertDriveFile // 默认图标
+        }
+    }
+
+
     fun getFileMIMEType(mimeType: String, fileName: String=""): String {
         when {
             fileName.endsWith(".apk.1") -> { return "程序" }
@@ -531,6 +609,42 @@ object Us {
             // 其他类型
             else -> mimeType
         }
+    }
+
+    fun openUrl(url: String) {
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+    }
+
+
+    fun isStorageSpaceAvailable(contentResolver: ContentResolver, uri: Uri): Boolean {
+        contentResolver.openFileDescriptor(uri, "r").use { pfd ->
+            val inputStream = contentResolver.openInputStream(uri)
+            inputStream?.use { input ->
+                val fileSize = pfd?.statSize ?: 0
+                val buffer = ByteArray(8 * 1024) // 缓冲区大小为 8 KB
+                var bytesRead: Int
+                var totalBytesRead = 0L
+                while (input.read(buffer).also { bytesRead = it } != -1) {
+                    totalBytesRead += bytesRead
+                    // 假设存储空间不足的临界值为文件大小的三倍
+                    if (totalBytesRead > fileSize * 3) {
+                        return false
+                    }
+                }
+            }
+        }
+        return true
+    }
+
+    @SuppressLint("Range")
+    fun getFileName(context: Context, uri: Uri): String? {
+        var result: String? = null
+        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+            }
+        }
+        return result
     }
 
     fun handleVideo(context: Context, uri: Uri) {
