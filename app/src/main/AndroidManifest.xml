@@ -363,8 +363,33 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
+        <!--        汐洛链滴社区客户端主入口-->
+        <activity
+            android:name=".ld246.ManageSpaceActivity"
+            android:icon="@drawable/icon"
+            android:label="@string/activity_name_ld246Home"
+            android:autoRemoveFromRecents="false"
+            android:configChanges="orientation|screenSize"
+            android:exported="true"
+            android:hardwareAccelerated="true"
+            android:noHistory="false"
+            android:taskAffinity=".sillot.task"
+            android:theme="@style/Theme.SiYuan.Boot">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
 
-        <!--        汐洛主入口，放在最前作为默认启动-->
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- shortcutId 不能重复-->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts_4" />
+        </activity>
+        <!--        汐洛主入口-->
         <activity
             android:name=".SillotHomeActivity"
             android:icon="@drawable/icon"
