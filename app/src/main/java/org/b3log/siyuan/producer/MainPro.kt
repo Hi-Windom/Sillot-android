@@ -145,7 +145,7 @@ fun MyUI(intent: Intent?) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(it),
             contentAlignment = Alignment.Center
         ) {
             if (isLandscape) {
