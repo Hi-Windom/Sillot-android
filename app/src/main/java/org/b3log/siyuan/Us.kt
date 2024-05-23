@@ -20,6 +20,7 @@ import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.provider.Settings
+import android.util.Base64
 import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
@@ -45,19 +46,117 @@ import androidx.documentfile.provider.DocumentFile
 import com.blankj.utilcode.util.ActivityUtils.startActivity
 import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.dialogs.PopTip
+import com.tencent.mmkv.MMKV
 import org.b3log.siyuan.andapi.Toast
 import org.b3log.siyuan.sillot.util.FileUtil
 import org.b3log.siyuan.videoPlayer.SimplePlayer
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.net.URLDecoder
 import java.security.MessageDigest
 import java.text.DecimalFormat
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+import javax.crypto.spec.SecretKeySpec
 import kotlin.math.pow
 import kotlin.math.sqrt
 
 
 object Us {
+    fun dropAndDecodeUrl(url: String, drop: String): String {
+        // 正则表达式匹配 "https://ld246.com/forward?goto=" 并去除
+        val regex = drop.toRegex()
+        val withoutPrefix = regex.replace(url, "")
+
+        // URL 解码
+        return URLDecoder.decode(withoutPrefix, "UTF-8")
+    }
+    fun parseAndDecodeUrl(url: String, regex: Regex): String {
+        val decodedUrls = regex.findAll(url).map { matchResult ->
+            val encodedUrl = matchResult.groupValues[1]
+            URLDecoder.decode(encodedUrl, "UTF-8")
+        }.joinToString(separator = " ", prefix = "\"", postfix = "\"")
+
+        // 使用解码后的 URL 替换原始 URL 中的匹配部分
+        return regex.replace(url, decodedUrls)
+    }
+    fun displayTokenEndLimiter(inputStr: String, endLength: Int): String {
+        val length = inputStr.length
+        return if (length >= endLength) {
+            "*".repeat(length - endLength) + inputStr.substring(length - endLength)
+        } else {
+            inputStr
+        }
+    }
+    fun displayTokenLimiter(inputStr: String, startLength: Int, endLength: Int): String {
+        val length = inputStr.length
+        return if (length <= startLength) {
+            inputStr
+        } else {
+            val starsCount = length - startLength - endLength
+            if (starsCount > 0) {
+                inputStr.substring(0, startLength) + "*".repeat(starsCount) + inputStr.substring(length - endLength)
+            } else {
+                inputStr.substring(0, startLength + starsCount) + inputStr.substring(length - endLength)
+            }
+        }
+    }
+
+    /**
+     * 生成AES密钥
+     *
+     */
+    fun generateAesKey(): SecretKey {
+        val keyGenerator = KeyGenerator.getInstance("AES")
+        keyGenerator.init(128) // 选择密钥大小，这里为128位
+        return keyGenerator.generateKey()
+    }
+
+
+    /**
+     * AES加密
+     *
+     */
+    @SuppressLint("GetInstance")
+    fun encryptAes(data: String, key: SecretKey): String {
+        val cipher = Cipher.getInstance("AES")
+        cipher.init(Cipher.ENCRYPT_MODE, key)
+        val encryptedBytes = cipher.doFinal(data.toByteArray(Charsets.UTF_8))
+        return Base64.encodeToString(encryptedBytes, Base64.DEFAULT)
+    }
+
+
+    /**
+     * AES解密
+     *
+     */
+    @SuppressLint("GetInstance")
+    fun decryptAes(encryptedData: String, key: SecretKey): String {
+        val cipher = Cipher.getInstance("AES")
+        cipher.init(Cipher.DECRYPT_MODE, key)
+        val decryptedBytes = cipher.doFinal(Base64.decode(encryptedData, Base64.DEFAULT))
+        return String(decryptedBytes, Charsets.UTF_8)
+    }
+
+    /**
+     * 读取MMKV中存储的加密Token并进行解密
+     *
+     */
+    fun getDecryptedToken(mmkv: MMKV, MMKV_KEY: String, AES_KEY: String): String? {
+        // 从MMKV中读取存储的AES密钥
+        val encodedKey = mmkv.decodeString(AES_KEY, null) ?: return null
+        val keyBytes = Base64.decode(encodedKey, Base64.DEFAULT)
+        val aesKey = SecretKeySpec(keyBytes, "AES")
+
+        // 从MMKV中读取存储的加密Token
+        val encryptedToken = mmkv.decodeString(MMKV_KEY, null) ?: return null
+
+        // 解密Token
+        return decryptAes(encryptedToken, aesKey)
+    }
+
     fun isMIUI(applicationContext : Context): Boolean {
         val packageManager = applicationContext.packageManager
         val miuiPackageName = "com.miui.gallery"

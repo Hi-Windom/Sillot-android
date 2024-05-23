@@ -20,6 +20,11 @@ object S {
     const val initCrashReportID = "26ae2b5fb4"
     const val initBaiduPushID = "6Ef26UV3UyM5b7NyiwiGAnM0"
 
+    const val KEY_TOKEN_ld246 = "TOKEN_ld246"
+    const val KEY_AES_TOKEN_ld246 = "AES_KEY_TOKEN_ld246"
+
+    const val HOST_ld246 = "ld246.com"
+
 
     const val XLQTFW_notificationId = 58131
     const val USB_AUDIO_EXCLUSIVE_notificationId = 7654321
@@ -73,5 +78,6 @@ object S {
         val btnTextVideo1 = compositionLocalOf { "播放" }
         val btnText5Apk1 = compositionLocalOf { "安装" }
         val small_iconSize = compositionLocalOf { 24.dp }
+        val Card_bgColor_green1 = compositionLocalOf { Color(0x9F237A58) }
     }
 }

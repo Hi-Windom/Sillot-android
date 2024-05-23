@@ -250,7 +250,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 //                WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
 //        );
 
-        MMKV.initialize(this);
         mmkv = MMKV.defaultMMKV();
 
         // 注册 EventBus

@@ -1,6 +1,5 @@
 package org.b3log.siyuan
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
@@ -9,9 +8,9 @@ import android.webkit.MimeTypeMap
 import android.widget.ImageView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
-import com.bumptech.glide.Glide
+import coil.load
+import coil.size.Scale
 import com.kongzue.dialogx.dialogs.PopTip
-import com.zlylib.fileselectorlib.FileSelector
 import org.b3log.siyuan.appUtils.HWs
 import org.b3log.siyuan.json.testmoshi
 import org.b3log.siyuan.realm.TestRealm
@@ -106,9 +105,10 @@ class SillotHomeActivity : AppCompatActivity() {
         val imageView = findViewById<ImageView>(R.id.testGlide)
         if (imageView != null) {
             imageView.setVisibility(View.VISIBLE)
-            Glide.with(this)
-                .load("https://tse2-mm.cn.bing.net/th/id/OIP-C._2mnBV5bTFR3rgEI5tcrKgHaNK?w=187&h=333&c=7&r=0&o=5&dpr=1.3&pid=1.7")
-                .into(imageView)
+            imageView.load("https://tse2-mm.cn.bing.net/th/id/OIP-C._2mnBV5bTFR3rgEI5tcrKgHaNK?w=187&h=333&c=7&r=0&o=5&dpr=1.3&pid=1.7") {
+                crossfade(true)
+                scale(Scale.FILL)
+            }
         }
         Log.e(TAG, HWs.getNetworkType(this))
         PopTip.show("测试完毕")

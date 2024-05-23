@@ -57,11 +57,13 @@ import org.b3log.siyuan.Utils
 import org.b3log.siyuan.andapi.Toast
 
 data class MenuItem31(val title: String, val action: () -> Unit)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommonTopAppBar(
     title: String, // 应用栏标题
     uri: Uri?,
+    additionalMenuItem: @Composable (() -> Unit)? = null,
     onBackPressed: () -> Unit, // 返回按钮的点击事件
 ) {
     val TAG = "CommonTopAppBar"
@@ -93,6 +95,7 @@ fun CommonTopAppBar(
                 onDismiss = { isMenuVisible = false },
                 TAG = TAG,
                 uri = uri,
+                additionalMenuItem = additionalMenuItem // 将额外的菜单项传递给 TopRightMenu
             )
         }
     )
@@ -104,6 +107,7 @@ fun TopRightMenu(
     TAG: String,
     uri: Uri?,
     onDismiss: () -> Unit,
+    additionalMenuItem: @Composable (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val state = rememberCascadeState()
@@ -184,6 +188,11 @@ fun TopRightMenu(
                 },
             )
         }
+        // 调用额外的菜单项
+        if (additionalMenuItem != null) {
+            additionalMenuItem()
+        }
+
         DropdownMenuItem(
             text = { Text("帮助") },
             leadingIcon = { Icon(

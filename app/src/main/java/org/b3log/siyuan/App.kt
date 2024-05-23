@@ -16,6 +16,7 @@ import com.microsoft.clarity.Clarity
 import com.microsoft.clarity.ClarityConfig
 import com.microsoft.clarity.models.LogLevel
 import com.tencent.bugly.crashreport.CrashReport
+import com.tencent.mmkv.MMKV
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
 import io.realm.kotlin.types.RealmObject
@@ -71,6 +72,7 @@ class App : Application() {
         Utils.init(this)
         JPushInterface.setDebugMode(true)
         JPushInterface.init(this)
+        MMKV.initialize(this)
         // 初始化 baidu PUSH
         PushManager.startWork(this, PushConstants.LOGIN_TYPE_API_KEY, S.initBaiduPushID);
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
