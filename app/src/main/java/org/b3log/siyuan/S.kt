@@ -79,5 +79,6 @@ object S {
         val btnText5Apk1 = compositionLocalOf { "安装" }
         val small_iconSize = compositionLocalOf { 24.dp }
         val Card_bgColor_green1 = compositionLocalOf { Color(0x9F237A58) }
+        val Card_bgColor_gold1 = compositionLocalOf { Color(0x88997758) }
     }
 }

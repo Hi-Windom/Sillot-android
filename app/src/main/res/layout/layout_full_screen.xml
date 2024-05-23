@@ -1,0 +1,37 @@
+<!-- layout_full_screen.xml -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <WebView
+        android:id="@+id/webView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:padding="10dp">
+
+        <TextView
+            android:id="@+id/btnRefresh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="刷新"
+            android:textColor="#FFFFFF"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_alignParentStart="true"/>
+
+        <TextView
+            android:id="@+id/btnClose"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="关闭"
+            android:textColor="#FFFFFF"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_alignParentEnd="true"/>
+    </RelativeLayout>
+</FrameLayout>

@@ -2,15 +2,23 @@ package org.b3log.siyuan.ld246
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log
+import android.view.View
+import android.webkit.WebResourceRequest
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import android.widget.TextView
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,6 +28,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.twotone.OpenInBrowser
 import androidx.compose.material.icons.twotone.Token
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -46,6 +55,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,28 +66,39 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.kongzue.dialogx.dialogs.FullScreenDialog
 import com.kongzue.dialogx.dialogs.InputDialog
 import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.dialogs.PopTip
+import com.kongzue.dialogx.interfaces.DialogLifecycleCallback
+import com.kongzue.dialogx.interfaces.OnBindView
+import com.kongzue.dialogx.util.views.ActivityScreenShotImageView
 import com.tencent.mmkv.MMKV
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.b3log.siyuan.CascadeMaterialTheme
+import org.b3log.siyuan.R
 import org.b3log.siyuan.S
 import org.b3log.siyuan.Us
+import org.b3log.siyuan.appUtils.HWs
 import org.b3log.siyuan.compose.SelectableHtmlText
 import org.b3log.siyuan.compose.components.CommonTopAppBar
 import org.b3log.siyuan.ld246.api.ApiServiceNotification
+import org.b3log.siyuan.ld246.utils.AuthorizedWebViewClient
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
+
 class HomeActivity : ComponentActivity() {
     val TAG = "ld246-HomeActivity"
+    private var exitTime: Long = 0
     var mmkv: MMKV = MMKV.defaultMMKV()
+    private var fullScreenDialog: FullScreenDialog? = null
+    private var openUrlExternal: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,7 +112,52 @@ class HomeActivity : ComponentActivity() {
                 UI(intent)
             }
         }
-
+        ActivityScreenShotImageView.hideContentView =
+            true; // https://github.com/kongzue/DialogX/wiki/%E5%85%A8%E5%B1%8F%E5%AF%B9%E8%AF%9D%E6%A1%86-FullScreenDialog
+        // 获取OnBackPressedDispatcher
+        val onBackPressedDispatcher = onBackPressedDispatcher
+        // 设置OnBackPressedCallback
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // 在这里处理后退逻辑
+                if (fullScreenDialog?.isShow() == true) {
+                    // 如果全屏对话框正在显示，优先处理对话框内的返回逻辑
+                    val webView =
+                        fullScreenDialog?.getCustomView()?.findViewById<WebView>(R.id.webView)
+                    if (webView?.canGoBack() == true) {
+                        webView.goBack()
+                    } else {
+                        fullScreenDialog?.dismiss()
+                    }
+                } else {
+                    if (System.currentTimeMillis() - exitTime > 2000) {
+                        PopTip.show("再按一次结束当前活动")
+                        exitTime = System.currentTimeMillis()
+                    } else {
+                        HWs.getInstance().vibratorWaveform(
+                            applicationContext,
+                            longArrayOf(0, 30, 25, 40, 25, 10),
+                            intArrayOf(2, 4, 3, 2, 2, 2),
+                            -1
+                        )
+                        try {
+                            Thread.sleep(200)
+                        } catch (e: InterruptedException) {
+                            Log.w(TAG, e.toString())
+                        }
+                        Log.w(TAG, "再见")
+                        finish()
+//                        exitProcess(0)
+                    }
+                }
+                HWs.getInstance().vibratorWaveform(
+                    applicationContext,
+                    longArrayOf(0, 30, 25, 40, 25),
+                    intArrayOf(9, 2, 1, 7, 2),
+                    -1
+                )
+            }
+        })
     }
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -169,13 +235,29 @@ class HomeActivity : ComponentActivity() {
     @Composable
     fun AddDropdownMenu() {
         DropdownMenuItem(
+            text = { Text("切换链接打开方式") },
+            leadingIcon = { Icon(Icons.TwoTone.OpenInBrowser, contentDescription = null) },
+            onClick = {
+                openUrlExternal = !openUrlExternal
+                if (openUrlExternal) {
+                    PopNotification.show(
+                        "已切换为浏览器打开"
+                    )
+                } else {
+                    PopNotification.show(
+                        "已切换为应用内打开"
+                    )
+                }
+            }
+        )
+        DropdownMenuItem(
             text = { Text("链滴 API TOKEN") },
             leadingIcon = { Icon(Icons.TwoTone.Token, contentDescription = null) },
             onClick = {
                 val deToken = Us.getDecryptedToken(mmkv, S.KEY_TOKEN_ld246, S.KEY_AES_TOKEN_ld246)
                 InputDialog(
                     "🛸 API TOKEN",
-                    "可在社区 设置 - 账号 中找到 API Token，固定以 'token ' 开头\n\n温馨提示：应用存储 Token 时进行了一定的处理，且不会传输到网络，但用户仍需注意防止 Token 泄露，因为链滴目前无法重置 API Token ！建议使用前先阅读源代码",
+                    "可在社区 设置 - 账号 中找到 API Token，固定以 'token ' 开头\n\n温馨提示：应用存储 Token 时进行了一定的处理，且不会传输到网络，但用户仍需注意防止 Token 泄露！建议使用前先阅读源代码",
                     "确定",
                     "取消",
                     deToken?.let { deToken } ?: run { "token " }
@@ -250,6 +332,7 @@ class HomeActivity : ComponentActivity() {
 
     @Composable
     fun NotificationCard(notification: 回帖消息Response_Notification, Lcc: Context) {
+        val uriHandler = LocalUriHandler.current
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -263,13 +346,34 @@ class HomeActivity : ComponentActivity() {
             } else {
                 // 如果未读
                 CardDefaults.cardColors(
-                    containerColor = Color.White,
-                    contentColor = Color.Black
+                    containerColor = S.C.Card_bgColor_gold1.current,
+                    contentColor = Color.White
                 )
             }
         ) {
-            Column(modifier = Modifier.padding(10.dp)) {
-                Row {
+            Column(modifier = Modifier
+                .padding(10.dp)
+                .clickable {
+                    // SelectableHtmlText 需要响应内容的点击事件，因此打开文章得扩大到整个卡片。
+                    val url = "https://${S.HOST_ld246}/article/${notification.dataId}"
+                    if (openUrlExternal) {
+                        uriHandler.openUri(url)
+                    } else {
+                        showFullScreenDialog(url)
+                    }
+                }) {
+                Row(
+                    modifier = Modifier
+                        .clickable {
+                            val url = "https://${S.HOST_ld246}/member/${notification.authorName}"
+                            if (openUrlExternal) {
+                                // 使用 LocalUriHandler 打开链接，不需要手动阻止事件冒泡
+                                uriHandler.openUri(url)
+                            } else {
+                                showFullScreenDialog(url)
+                            }
+                        }
+                ) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(notification.authorAvatarURL)
@@ -284,13 +388,19 @@ class HomeActivity : ComponentActivity() {
                         modifier = Modifier.padding(start = 8.dp) // 添加一些 padding 以增加间隔
                     )
                 }
-                Text(text = notification.title, fontSize = 15.sp, fontStyle = FontStyle.Italic, fontWeight = FontWeight.Bold)
+                Text(
+                    text = notification.title,
+                    fontSize = 15.sp,
+                    fontStyle = FontStyle.Italic,
+                    fontWeight = FontWeight.Bold
+                )
                 SelectableHtmlText(notification.content)
             }
         }
     }
 
 
+    @SuppressLint("StaticFieldLeak")
     inner class NotificationsViewModel : ViewModel() {
         private val _notifications = MutableLiveData<List<回帖消息Response_Notification>?>()
         val notifications: MutableLiveData<List<回帖消息Response_Notification>?> = _notifications
@@ -373,5 +483,118 @@ class HomeActivity : ComponentActivity() {
     fun DefaultPreview() {
         UI(null)
     }
+
+    fun showFullScreenDialog(url: String, dialog: FullScreenDialog?) {
+        val _dialog = dialog ?: run { FullScreenDialog.build() }
+        fullScreenDialog = _dialog
+        _dialog.apply {
+            setDialogLifecycleCallback(object : DialogLifecycleCallback<FullScreenDialog?>() {
+                override fun onShow(dialog: FullScreenDialog?) {
+                    dialog?.setCustomView(object :
+                        OnBindView<FullScreenDialog?>(R.layout.layout_full_screen) {
+                        override fun onBind(dialog: FullScreenDialog?, v: View) {
+                            val webView = v.findViewById<WebView>(R.id.webView)
+                            webView.webViewClient = object : WebViewClient() {
+                                override fun shouldOverrideUrlLoading(
+                                    view: WebView,
+                                    request: WebResourceRequest
+                                ): Boolean {
+                                    val _url = request.url.toString()
+                                    if (_url.startsWith("mqq://") || _url.startsWith("wtloginmqq://") || _url.startsWith(
+                                            "sinaweibo://"
+                                        )
+                                    ) {
+                                        return try {
+                                            val intent = Intent(Intent.ACTION_VIEW, request.url)
+                                            view.context.startActivity(intent)
+                                            true
+                                        } catch (e: ActivityNotFoundException) {
+                                            false
+                                        }
+                                    }
+                                    return false
+                                }
+                            }
+                            webView.loadUrl(url)
+
+                            val btnRefresh = v.findViewById<TextView>(R.id.btnRefresh)
+                            btnRefresh.setOnClickListener {
+                                webView.reload()
+                            }
+
+                            val btnClose = v.findViewById<TextView>(R.id.btnClose)
+                            btnClose.setOnClickListener {
+                                dialog?.dismiss()
+                            }
+                        }
+                    })
+                }
+
+                override fun onDismiss(dialog: FullScreenDialog?) {
+                    // 对话框关闭时的操作
+                }
+            })
+        }?.show()
+    }
+
+    fun showFullScreenDialog(url: String) {
+        if (fullScreenDialog == null) {
+            val _dialog = FullScreenDialog.build()
+            fullScreenDialog = _dialog
+            _dialog.apply {
+                setDialogLifecycleCallback(object : DialogLifecycleCallback<FullScreenDialog?>() {
+                    override fun onShow(dialog: FullScreenDialog?) {
+                        dialog?.setCustomView(object : OnBindView<FullScreenDialog?>(R.layout.layout_full_screen) {
+                            override fun onBind(dialog: FullScreenDialog?, v: View) {
+                                val webView = v.findViewById<WebView>(R.id.webView)
+                                webView.webViewClient = object : WebViewClient() {
+                                    override fun shouldOverrideUrlLoading(
+                                        view: WebView,
+                                        request: WebResourceRequest
+                                    ): Boolean {
+                                        val _url = request.url.toString()
+                                        if (_url.startsWith("mqq://") || _url.startsWith("wtloginmqq://") || _url.startsWith(
+                                                "sinaweibo://"
+                                            )
+                                        ) {
+                                            return try {
+                                                val intent = Intent(Intent.ACTION_VIEW, request.url)
+                                                view.context.startActivity(intent)
+                                                true
+                                            } catch (e: ActivityNotFoundException) {
+                                                false
+                                            }
+                                        }
+                                        return false
+                                    }
+                                }
+
+                                val btnRefresh = v.findViewById<TextView>(R.id.btnRefresh)
+                                btnRefresh.setOnClickListener {
+                                    webView.reload()
+                                }
+
+                                val btnClose = v.findViewById<TextView>(R.id.btnClose)
+                                btnClose.setOnClickListener {
+                                    dialog?.dismiss()
+                                }
+                            }
+                        })
+                    }
+
+                    override fun onDismiss(dialog: FullScreenDialog?) {
+                        // 对话框关闭时的操作
+                        fullScreenDialog = null
+                    }
+                })
+            }.show()
+        }
+
+        val webView = fullScreenDialog!!.getCustomView()?.findViewById<WebView>(R.id.webView)
+        webView!!.loadUrl(url)
+        fullScreenDialog!!.show().refreshUI()
+    }
+
+
 
 }

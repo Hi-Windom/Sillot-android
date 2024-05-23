@@ -75,7 +75,7 @@ class SillotHomeActivity : AppCompatActivity() {
                         try {
                             Thread.sleep(200)
                         } catch (e: InterruptedException) {
-                            e.printStackTrace()
+                            Log.w(TAG, e.toString())
                         }
                         Log.w(TAG, "再见")
                         finish()
