@@ -169,13 +169,13 @@ class HomeActivity : ComponentActivity() {
     @Composable
     fun AddDropdownMenu() {
         DropdownMenuItem(
-            text = { Text("设置TOKEN") },
+            text = { Text("链滴 API TOKEN") },
             leadingIcon = { Icon(Icons.TwoTone.Token, contentDescription = null) },
             onClick = {
                 val deToken = Us.getDecryptedToken(mmkv, S.KEY_TOKEN_ld246, S.KEY_AES_TOKEN_ld246)
                 InputDialog(
-                    "输入TOKEN",
-                    "可在社区 设置 - 账号 中找到 API Token，固定以 'token ' 开头",
+                    "🛸 API TOKEN",
+                    "可在社区 设置 - 账号 中找到 API Token，固定以 'token ' 开头\n\n温馨提示：应用存储 Token 时进行了一定的处理，且不会传输到网络，但用户仍需注意防止 Token 泄露，因为链滴目前无法重置 API Token ！建议使用前先阅读源代码",
                     "确定",
                     "取消",
                     deToken?.let { deToken } ?: run { "token " }
