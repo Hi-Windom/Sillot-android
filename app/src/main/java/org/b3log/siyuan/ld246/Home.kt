@@ -221,7 +221,7 @@ class HomeActivity : ComponentActivity() {
                     .padding(it)
                     .fillMaxSize()
             ) {
-                NotificationsScreen(viewModel = viewmodel, Lcc)
+                NotificationsScreen(viewModel = viewmodel)
                 if (state.isRefreshing) {
                     LinearProgressIndicator(Modifier.fillMaxWidth())
                 } else {
@@ -291,7 +291,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     @Composable
-    fun NotificationsScreen(viewModel: NotificationsViewModel, Lcc: Context) {
+    fun NotificationsScreen(viewModel: NotificationsViewModel) {
         // 观察LiveData并更新状态
         val notifications = viewModel.notifications.observeAsState(listOf()).value
         Log.d("NotificationsList", notifications.toString())
