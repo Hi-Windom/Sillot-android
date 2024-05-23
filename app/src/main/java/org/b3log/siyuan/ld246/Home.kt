@@ -315,23 +315,23 @@ class HomeActivity : ComponentActivity() {
                 }
             }
         } else {
-            NotificationsList(notifications, Lcc)
+            NotificationsList(notifications)
         }
     }
 
     @Composable
-    fun NotificationsList(notifications: List<回帖消息Response_Notification>, Lcc: Context) {
+    fun NotificationsList(notifications: List<回帖消息Response_Notification>) {
         LazyColumn {
             item {
                 notifications.forEach { notification ->
-                    NotificationCard(notification, Lcc)
+                    NotificationCard(notification)
                 }
             }
         }
     }
 
     @Composable
-    fun NotificationCard(notification: 回帖消息Response_Notification, Lcc: Context) {
+    fun NotificationCard(notification: 回帖消息Response_Notification) {
         val uriHandler = LocalUriHandler.current
         Card(
             modifier = Modifier
@@ -482,59 +482,6 @@ class HomeActivity : ComponentActivity() {
     @Composable
     fun DefaultPreview() {
         UI(null)
-    }
-
-    fun showFullScreenDialog(url: String, dialog: FullScreenDialog?) {
-        val _dialog = dialog ?: run { FullScreenDialog.build() }
-        fullScreenDialog = _dialog
-        _dialog.apply {
-            setDialogLifecycleCallback(object : DialogLifecycleCallback<FullScreenDialog?>() {
-                override fun onShow(dialog: FullScreenDialog?) {
-                    dialog?.setCustomView(object :
-                        OnBindView<FullScreenDialog?>(R.layout.layout_full_screen) {
-                        override fun onBind(dialog: FullScreenDialog?, v: View) {
-                            val webView = v.findViewById<WebView>(R.id.webView)
-                            webView.webViewClient = object : WebViewClient() {
-                                override fun shouldOverrideUrlLoading(
-                                    view: WebView,
-                                    request: WebResourceRequest
-                                ): Boolean {
-                                    val _url = request.url.toString()
-                                    if (_url.startsWith("mqq://") || _url.startsWith("wtloginmqq://") || _url.startsWith(
-                                            "sinaweibo://"
-                                        )
-                                    ) {
-                                        return try {
-                                            val intent = Intent(Intent.ACTION_VIEW, request.url)
-                                            view.context.startActivity(intent)
-                                            true
-                                        } catch (e: ActivityNotFoundException) {
-                                            false
-                                        }
-                                    }
-                                    return false
-                                }
-                            }
-                            webView.loadUrl(url)
-
-                            val btnRefresh = v.findViewById<TextView>(R.id.btnRefresh)
-                            btnRefresh.setOnClickListener {
-                                webView.reload()
-                            }
-
-                            val btnClose = v.findViewById<TextView>(R.id.btnClose)
-                            btnClose.setOnClickListener {
-                                dialog?.dismiss()
-                            }
-                        }
-                    })
-                }
-
-                override fun onDismiss(dialog: FullScreenDialog?) {
-                    // 对话框关闭时的操作
-                }
-            })
-        }?.show()
     }
 
     fun showFullScreenDialog(url: String) {
