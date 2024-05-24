@@ -57,19 +57,11 @@ private fun UI(intent: Intent?) {
     val TAG = "MainPro-MyUI"
     val uri = intent?.data
     val Lcc = LocalContext.current
-    val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
-    val coroutineScope = rememberCoroutineScope()
-    val fileName = uri?.let { Us.getFileName(Lcc, it) }
-    val fileSize = uri?.let { Us.getFileSize(Lcc, it) }
-    val mimeType = intent?.data?.let { Us.getMimeType(Lcc, it) } ?: ""
-    val fileType = fileName?.let { Us.getFileMIMEType(mimeType, it) } ?: run { Us.getFileMIMEType(mimeType) }
-    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
-
-    var isMenuVisible by rememberSaveable { mutableStateOf(false) }
+    var isMenuVisible = rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
-            CommonTopAppBar("汐洛存储清理助手", uri) {
+            CommonTopAppBar("汐洛存储清理助手", uri, isMenuVisible) {
                 // 将Context对象安全地转换为Activity
                 if (Lcc is Activity) {
                     Lcc.finish() // 结束活动

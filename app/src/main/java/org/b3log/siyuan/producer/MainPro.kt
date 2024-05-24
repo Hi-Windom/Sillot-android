@@ -130,11 +130,11 @@ fun MyUI(intent: Intent?) {
     val fileType = fileName?.let { Us.getFileMIMEType(mimeType, it) } ?: run { Us.getFileMIMEType(mimeType) }
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
 
-    var isMenuVisible by rememberSaveable { mutableStateOf(false) }
+    var isMenuVisible = rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
-            CommonTopAppBar("汐洛文件中转站", uri) {
+            CommonTopAppBar("汐洛文件中转站", uri, isMenuVisible) {
                 // 将Context对象安全地转换为Activity
                 if (Lcc is Activity) {
                     Lcc.finish() // 结束活动

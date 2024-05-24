@@ -63,11 +63,12 @@ data class MenuItem31(val title: String, val action: () -> Unit)
 fun CommonTopAppBar(
     title: String, // 应用栏标题
     uri: Uri?,
+    isMenuVisible: MutableState<Boolean>,
     additionalMenuItem: @Composable (() -> Unit)? = null,
     onBackPressed: () -> Unit, // 返回按钮的点击事件
 ) {
     val TAG = "CommonTopAppBar"
-    var isMenuVisible by rememberSaveable { mutableStateOf(false) }
+//    var isMenuVisible by rememberSaveable { mutableStateOf(false) }
     val Lcc = LocalContext.current
     TopAppBar(
         title = {
@@ -87,12 +88,12 @@ fun CommonTopAppBar(
         },
         modifier = Modifier.background(Color.Blue),
         actions = {
-            IconButton(onClick = { isMenuVisible = true }) {
+            IconButton(onClick = { isMenuVisible.value = true }) {
                 Icon(Icons.Rounded.MoreVert, contentDescription = "More options")
             }
             TopRightMenu(
-                expanded = isMenuVisible,
-                onDismiss = { isMenuVisible = false },
+                expanded = isMenuVisible.value,
+                onDismiss = { isMenuVisible.value = false },
                 TAG = TAG,
                 uri = uri,
                 additionalMenuItem = additionalMenuItem // 将额外的菜单项传递给 TopRightMenu
@@ -119,13 +120,15 @@ fun TopRightMenu(
         expanded = expanded,
         onDismissRequest = onDismiss
     ) {
-        if(uri != null){
+        if (uri != null) {
             DropdownMenuItem(
                 text = { Text("复制") },
                 leadingIcon = { Icon(Icons.TwoTone.ContentCopy, contentDescription = null) },
                 onClick = {
+                    onDismiss()
                     // 获取系统的剪贴板管理器
-                    val clipboardManager = Lcc.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clipboardManager =
+                        Lcc.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     // 创建一个剪贴板数据对象，将文件的 Uri 放入其中
                     val clipData = ClipData.newUri(Lcc.contentResolver, "label", uri)
                     // 设置剪贴板数据对象的 MIME 类型
@@ -139,6 +142,7 @@ fun TopRightMenu(
                 text = { Text("分享") },
                 leadingIcon = { Icon(Icons.TwoTone.Share, contentDescription = null) },
                 onClick = {
+                    onDismiss()
                     val shareIntent = Intent().apply {
                         action = Intent.ACTION_SEND
                         putExtra(Intent.EXTRA_STREAM, uri) // 将文件 Uri 添加到 Intent 的 EXTRA_STREAM 中
@@ -170,6 +174,7 @@ fun TopRightMenu(
                         onClick = {
                             onDismiss()
                             Us.deleteFileByUri(Lcc, uri).let {
+                                onDismiss()
                                 if (it) {
 //                                    Us.notifyGallery(Lcc, uri)
                                     Toast.Show(Lcc, "暂不支持该操作")
@@ -196,25 +201,37 @@ fun TopRightMenu(
 
         DropdownMenuItem(
             text = { Text("帮助") },
-            leadingIcon = { Icon(
-                painterResource(R.drawable.icon), contentDescription = null, modifier = modifier.size(
-                    S.C.small_iconSize.current)) },
+            leadingIcon = {
+                Icon(
+                    painterResource(R.drawable.icon),
+                    contentDescription = null,
+                    modifier = modifier.size(
+                        S.C.small_iconSize.current
+                    )
+                )
+            },
             children = {
                 DropdownMenuItem(
                     text = { Text("报告此页") },
                     leadingIcon = { Icon(Icons.TwoTone.Email, contentDescription = null) },
-                    onClick = {  Us.sendEmail(Lcc.packageManager, S.emailAdress, "汐洛安卓反馈 - 报告此页", "TAG: ${TAG}\n${Utils.getDeviceInfoString()}")  },
+                    onClick = {
+                        onDismiss();Us.sendEmail(
+                        Lcc.packageManager,
+                        S.emailAdress,
+                        "汐洛安卓反馈 - 报告此页",
+                        "TAG: ${TAG}\n${Utils.getDeviceInfoString()}"
+                    )
+                    },
                 )
                 DropdownMenuItem(
                     text = { Text("反馈此页") },
                     leadingIcon = { Icon(Icons.TwoTone.BugReport, contentDescription = null) },
-                    onClick = { Us.openUrl("${S.gitRepoUrl}/issues/new")},
+                    onClick = { onDismiss();Us.openUrl("${S.gitRepoUrl}/issues/new") },
                 )
             },
         )
     }
 }
-
 
 
 data class MenuItem58(
@@ -223,6 +240,7 @@ data class MenuItem58(
     val contentDescription: String?,
     val action: () -> Unit
 )
+
 // 不好弄这个抽象
 @Composable
 fun CommonTopRightMenu(

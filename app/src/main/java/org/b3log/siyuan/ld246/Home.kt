@@ -23,11 +23,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.twotone.Article
+import androidx.compose.material.icons.automirrored.twotone.Reply
+import androidx.compose.material.icons.twotone.Attribution
+import androidx.compose.material.icons.twotone.CenterFocusWeak
 import androidx.compose.material.icons.twotone.OpenInBrowser
+import androidx.compose.material.icons.twotone.Quickreply
 import androidx.compose.material.icons.twotone.Swipe
 import androidx.compose.material.icons.twotone.Token
 import androidx.compose.material3.Card
@@ -36,12 +42,20 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults.SecondaryIndicator
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +63,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -58,6 +74,7 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -75,7 +92,10 @@ import com.kongzue.dialogx.interfaces.OnBindView
 import com.kongzue.dialogx.util.views.ActivityScreenShotImageView
 import com.tencent.mmkv.MMKV
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.launch
 import org.b3log.siyuan.CascadeMaterialTheme
 import org.b3log.siyuan.R
@@ -94,10 +114,31 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class HomeActivity : ComponentActivity() {
     val TAG = "ld246-HomeActivity"
-    private var exitTime: Long = 0
     var mmkv: MMKV = MMKV.defaultMMKV()
+    var token = Us.getDecryptedToken(mmkv, S.KEY_TOKEN_ld246, S.KEY_AES_TOKEN_ld246)
+    val ua = "Sillot-anroid/0.35"
+    private var exitTime: Long = 0
     private var fullScreenDialog: FullScreenDialog? = null
     private var openUrlExternal: Boolean = false
+    private val titles = listOf("回帖", "评论", "回复", "提及", "关注")
+    private val titles_icons = listOf(
+        Icons.AutoMirrored.TwoTone.Article,
+        Icons.TwoTone.Quickreply,
+        Icons.AutoMirrored.TwoTone.Reply,
+        Icons.TwoTone.Attribution,
+        Icons.TwoTone.CenterFocusWeak
+    )
+    private val titles_type = listOf("commented", "comment2ed", "reply", "at", "following")
+    private var LockNoteType: String = titles[0]
+    private var LockNoteType_EN: String = titles_type[0]
+    val mapEmpty = mutableMapOf<String, List<ld246_Response_Data_Notification>>().apply {
+        titles.associateWithTo(this) { emptyList() }
+    }
+    var map: MutableMap<String, List<ld246_Response_Data_Notification>> = mapEmpty
+    private var job: Job? = null
+    var viewmodel: NotificationsViewModel? = null
+    var retrofit: Retrofit? = null
+    var apiService: ApiServiceNotification? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -111,6 +152,14 @@ class HomeActivity : ComponentActivity() {
                 UI(intent)
             }
         }
+        viewmodel = NotificationsViewModel()
+        // 创建Retrofit实例
+        retrofit = Retrofit.Builder()
+            .baseUrl("https://${S.HOST_ld246}/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+        // 创建API服务实例
+        apiService = retrofit!!.create(ApiServiceNotification::class.java)
         ActivityScreenShotImageView.hideContentView =
             true; // https://github.com/kongzue/DialogX/wiki/%E5%85%A8%E5%B1%8F%E5%AF%B9%E8%AF%9D%E6%A1%86-FullScreenDialog
         // 获取OnBackPressedDispatcher
@@ -163,49 +212,49 @@ class HomeActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
     @Composable
     private fun UI(intent: Intent?) {
-        val TAG = "MainPro-MyUI"
         val uri = intent?.data
         val Lcc = LocalContext.current
-        val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
-        val coroutineScope = rememberCoroutineScope()
-        val fileName = uri?.let { Us.getFileName(Lcc, it) }
-        val fileSize = uri?.let { Us.getFileSize(Lcc, it) }
-        val mimeType = intent?.data?.let { Us.getMimeType(Lcc, it) } ?: ""
-        val fileType = fileName?.let { Us.getFileMIMEType(mimeType, it) }
-            ?: run { Us.getFileMIMEType(mimeType) }
-        val isLandscape =
-            LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
+        val isTabChanged = rememberSaveable { mutableStateOf(titles[0]) }
+        val PullToRefreshState = rememberPullToRefreshState()
+        var isMenuVisible = rememberSaveable { mutableStateOf(false) }
 
-        var isMenuVisible by rememberSaveable { mutableStateOf(false) }
-        var itemCount by remember { mutableStateOf(15) }
-        val state = rememberPullToRefreshState()
-
-
-// 创建Retrofit实例
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://${S.HOST_ld246}/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-
-// 创建API服务实例
-        val apiService = retrofit.create(ApiServiceNotification::class.java)
-        val viewmodel = NotificationsViewModel()
-        if (state.isRefreshing) {
-            LaunchedEffect(true) {
-                delay(500) // 避免接口请求频繁
-                viewmodel.fetchNotifications(state, apiService)
+        DisposableEffect(viewmodel) {
+            onDispose {
+                // 在这里释放资源
+                job?.cancel()
             }
         }
-// 启动时自动获取通知
-        LaunchedEffect(Unit) {
-            viewmodel.fetchNotifications(state, apiService)
+        // 将LiveData转换为Compose可以理解的State对象。这样，每当LiveData的值发生变化时，Compose就会自动重组使用该State的UI部分。
+        val observeNotifications = viewmodel!!.notificationsMap.observeAsState(listOf())
+        if (PullToRefreshState.isRefreshing) {
+            LaunchedEffect(true) {
+                viewmodel!!.fetchNotifications(PullToRefreshState, apiService!!)
+                delay(200) // 避免接口请求频繁
+            }
         }
+
+        LaunchedEffect(Unit) {
+            snapshotFlow { isTabChanged.value } // 创建一个Flow，它在每次isTabChanged.value变化时发出（启动时也会执行一次）
+                .conflate() // 当新值到来时，如果上一个值还没被处理，就忽略它
+                .collectLatest { // collectLatest会取消当前正在进行的操作，并开始新的操作
+                    Log.d("LaunchedEffect-snapshotFlow", isTabChanged.value)
+                    viewmodel!!.fetchNotifications(PullToRefreshState, apiService!!)
+                    delay(200) // 避免接口请求频繁
+                }
+        }
+
+
         Scaffold(
             topBar = {
                 CommonTopAppBar(
                     "汐洛链滴社区客户端",
                     uri,
-                    additionalMenuItem = { AddDropdownMenu() }) {
+                    isMenuVisible,
+                    additionalMenuItem = {
+                        AddDropdownMenu(onDismiss = {
+                            isMenuVisible.value = false
+                        })
+                    }) {
                     // 将Context对象安全地转换为Activity
                     if (Lcc is Activity) {
                         Lcc.finish() // 结束活动
@@ -213,37 +262,52 @@ class HomeActivity : ComponentActivity() {
                 }
             }, modifier = Modifier
                 .background(Color.Gray)
-                .nestedScroll(state.nestedScrollConnection)
+                .nestedScroll(PullToRefreshState.nestedScrollConnection)
         ) {
             Box(
                 Modifier
                     .padding(it)
                     .fillMaxSize()
             ) {
-                NotificationsScreen(viewModel = viewmodel)
-                if (state.isRefreshing) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    NotificationsScreen(observeNotifications)
+
+                    SecondaryTextTabs(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(top = 31.dp),
+                        isTabChanged
+                    )
+                }
+                if (PullToRefreshState.isRefreshing) {
                     LinearProgressIndicator(Modifier.fillMaxWidth())
                 } else {
-                    LinearProgressIndicator(progress = { state.progress }, Modifier.fillMaxWidth())
+                    LinearProgressIndicator(
+                        progress = { PullToRefreshState.progress },
+                        Modifier.fillMaxWidth()
+                    )
                 }
             }
         }
     }
 
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    fun AddDropdownMenu() {
+    fun AddDropdownMenu(onDismiss: () -> Unit) {
         DropdownMenuItem(
-            text = { Text("切换类型") },
+            text = { Text("手动刷新") },
             leadingIcon = { Icon(Icons.TwoTone.Swipe, contentDescription = null) },
             onClick = {
-                // TODO
+                onDismiss()
+                viewmodel!!.fetchNotifications(null, apiService!!)
             }
         )
         DropdownMenuItem(
             text = { Text("切换链接打开方式") },
             leadingIcon = { Icon(Icons.TwoTone.OpenInBrowser, contentDescription = null) },
             onClick = {
+                onDismiss()
                 openUrlExternal = !openUrlExternal
                 if (openUrlExternal) {
                     PopNotification.show(
@@ -260,6 +324,7 @@ class HomeActivity : ComponentActivity() {
             text = { Text("链滴 API TOKEN") },
             leadingIcon = { Icon(Icons.TwoTone.Token, contentDescription = null) },
             onClick = {
+                onDismiss()
                 val deToken = Us.getDecryptedToken(mmkv, S.KEY_TOKEN_ld246, S.KEY_AES_TOKEN_ld246)
                 InputDialog(
                     "🛸 API TOKEN",
@@ -270,6 +335,7 @@ class HomeActivity : ComponentActivity() {
                 )
                     .setCancelable(false)
                     .setOkButton { baseDialog, v, inputStr ->
+                        token = inputStr
                         // 生成AES密钥
                         val aesKey = Us.generateAesKey()
                         // 注意：这里需要将SecretKey转换为可以存储的格式，例如转换为字节数组然后进行Base64编码
@@ -297,13 +363,68 @@ class HomeActivity : ComponentActivity() {
     }
 
     @Composable
-    fun NotificationsScreen(viewModel: NotificationsViewModel) {
+    fun SecondaryTextTabs(
+        modifier: Modifier,
+        isTabChanged: MutableState<String>
+    ) {
+        // REF https://www.composables.com/material3/tabrow
+        var state by remember { mutableStateOf(0) }
+        val selectedContentColor = S.C.Card_bgColor_gold1.current    // 选中时文字颜色
+        val unselectedContentColor = Color.Gray // 未选中时文字颜色
+
+        Column(modifier = modifier) {
+            TabRow(
+                selectedTabIndex = state,
+                containerColor = MaterialTheme.colorScheme.surface, // 设置TabRow的背景颜色
+                indicator = { tabPositions ->
+                    SecondaryIndicator(
+                        modifier = Modifier
+                            .tabIndicatorOffset(tabPositions[state])
+                            .height(0.dp), // 设置选中指示器的高度 （切换动画有卡顿感，干脆隐藏了）
+                        color = selectedContentColor // 设置选中指示器的颜色
+                    )
+                }
+            ) {
+                titles.forEachIndexed { index, title ->
+                    Tab(
+                        selected = state == index,
+                        onClick = {
+                            state = index
+                            LockNoteType = title;
+                            LockNoteType_EN = titles_type[index];
+                            isTabChanged.value = title
+                        },
+                        selectedContentColor = selectedContentColor,
+                        unselectedContentColor = unselectedContentColor,
+                        text = {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = title,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Icon(
+                                    imageVector = titles_icons[index],
+                                    contentDescription = title
+                                )
+                            }
+                        }
+                    )
+                }
+            }
+        }
+    }
+
+
+    @Composable
+    fun NotificationsScreen(n: State<List<ld246_Response_Data_Notification>?>) {
         // 观察LiveData并更新状态
-        val notifications = viewModel.notifications.observeAsState(listOf()).value
-        Log.d("NotificationsList", notifications.toString())
-        if (notifications.isNullOrEmpty()) {
+        val v = n.value
+        if (v?.isEmpty() == true) {
             // 显示空数据状态的占位符
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
+            LazyColumn {
                 items(13) { index ->
                     Card(
                         modifier = Modifier
@@ -321,23 +442,20 @@ class HomeActivity : ComponentActivity() {
                 }
             }
         } else {
-            NotificationsList(notifications)
-        }
-    }
-
-    @Composable
-    fun NotificationsList(notifications: List<回帖消息Response_Notification>) {
-        LazyColumn {
-            item {
-                notifications.forEach { notification ->
-                    NotificationCard(notification)
+            LazyColumn(
+                modifier = Modifier.padding(bottom = 70.dp) // 避免被底栏遮住
+            ) {
+                item {
+                    v!!.forEach { notification ->
+                        NotificationCard(notification)
+                    }
                 }
             }
         }
     }
 
     @Composable
-    fun NotificationCard(notification: 回帖消息Response_Notification) {
+    fun NotificationCard(notification: ld246_Response_Data_Notification) {
         val uriHandler = LocalUriHandler.current
         Card(
             modifier = Modifier
@@ -408,78 +526,103 @@ class HomeActivity : ComponentActivity() {
 
     @SuppressLint("StaticFieldLeak")
     inner class NotificationsViewModel : ViewModel() {
-        private val _notifications = MutableLiveData<List<回帖消息Response_Notification>?>()
-        val notifications: MutableLiveData<List<回帖消息Response_Notification>?> = _notifications
+        val TAG = "NotificationsViewModel"
+        var __init__ = false;
+        private val _notificationsMap = MutableLiveData<List<ld246_Response_Data_Notification>?>()
+        val notificationsMap: MutableLiveData<List<ld246_Response_Data_Notification>?> =
+            _notificationsMap
 
         @OptIn(ExperimentalMaterial3Api::class)
-        fun fetchNotifications(state: PullToRefreshState, apiService: ApiServiceNotification) {
-            viewModelScope.launch {
+        private fun updateNotificationsMap(state: PullToRefreshState?) {
+            Log.e(TAG, "updateNotificationsMap() -> ${map[LockNoteType]} ")
+            _notificationsMap.postValue(map[LockNoteType])
+            if (state != null) {
+                if (state.isRefreshing) {
+                    state.endRefresh()
+                }
+            }
+        }
+
+        private fun handleErrorResponse(response: Response<ld246_Response>) {
+            val message = "更新失败: ${response.message()}"
+            when (response.code()) {
+                401 -> PopNotification.show(
+                    message,
+                    "TOKEN为空或者错误，请在右上角设置 TOKEN 后下拉刷新"
+                ).noAutoDismiss()
+
+                403 -> PopNotification.show(message, "权限不足").noAutoDismiss()
+                else -> PopNotification.show("onResponse失败", response.toString()).noAutoDismiss()
+            }
+        }
+
+        @OptIn(ExperimentalMaterial3Api::class)
+        fun fetchNotifications(state: PullToRefreshState?, apiService: ApiServiceNotification) {
+            job = viewModelScope.launch {
                 try {
-                    _notifications.postValue(null) // 先重置
-                    // 执行网络请求
-                    apiService.apiV2NotificationsCommentedGet(
-                        "1",
-                        Us.getDecryptedToken(mmkv, S.KEY_TOKEN_ld246, S.KEY_AES_TOKEN_ld246),
-                        "Sillot-anroid/0.35"
-                    ).enqueue(object :
-                        Callback<回帖消息Response> {
-                        override fun onResponse(
-                            call: Call<回帖消息Response>,
-                            response: Response<回帖消息Response>
-                        ) {
-                            if (response.isSuccessful) {
-                                Log.d("onResponse", response.body().toString())
-                                _notifications.postValue(response.body()?.data?.commentedNotifications)
-                                PopTip.show("<(￣︶￣)↗[GO!]");
-                                apiService.apiV2NotificationsMakeRead(
-                                    "commented",
-                                    Us.getDecryptedToken(
-                                        mmkv,
-                                        S.KEY_TOKEN_ld246,
-                                        S.KEY_AES_TOKEN_ld246
-                                    ),
-                                    "Sillot-anroid/0.35"
-                                )
-                            } else {
-                                // 处理错误响应
-                                val rcode = response.code()
-                                when (rcode) {
-                                    401 -> PopNotification.show(
-                                        "更新失败",
-                                        "TOKEN为空或者错误，请在右上角设置 TOKEN 后下拉刷新"
-                                    ).noAutoDismiss()
-
-                                    403 -> PopNotification.show("更新失败", "权限不足")
-                                        .noAutoDismiss()
-
-                                    else -> PopNotification.show(
-                                        "onResponse失败",
-                                        response.toString()
-                                    ).noAutoDismiss()
+                    if (state == null || state.isRefreshing || !__init__ || map[LockNoteType]!!.isEmpty()) {
+                        // 执行网络请求
+                        val caller: Call<ld246_Response>? = when (LockNoteType) {
+                            "回帖" -> apiService.apiV2NotificationsCommentedGet(1, token, ua)
+                            "评论" -> apiService.apiV2NotificationsComment2edGet(1, token, ua)
+                            "回复" -> apiService.apiV2NotificationsReplyGet(1, token, ua)
+                            "提及" -> apiService.apiV2NotificationsAtGet(1, token, ua)
+                            "关注" -> apiService.apiV2NotificationsFollowingGet(1, token, ua)
+                            else -> null
+                        }
+                        // enqueue 方法通常用于将一个网络请求加入到请求队列中，准备异步执行
+                        caller?.enqueue(object : Callback<ld246_Response> {
+                            override fun onResponse(
+                                call: Call<ld246_Response>,
+                                response: Response<ld246_Response>
+                            ) {
+                                if (response.isSuccessful) {
+                                    Log.d(TAG, "onResponse: ${response.body().toString()}")
+                                    response.body()?.data?.let {
+                                        map[LockNoteType] = when (LockNoteType) {
+                                            "回帖" -> it.commentedNotifications
+                                            "评论" -> it.comment2edNotifications
+                                            "回复" -> it.replyNotifications
+                                            "提及" -> it.atNotifications
+                                            "关注" -> it.followingNotifications
+                                            else -> listOf()
+                                        }
+                                    }
+                                    PopTip.show("<(￣︶￣)↗[GO!]")
+                                    apiService.apiV2NotificationsMakeRead(
+                                        LockNoteType_EN,
+                                        token,
+                                        ua
+                                    )
+                                } else {
+                                    Log.e(TAG, "onResponse: $response")
+                                    handleErrorResponse(response)
                                 }
+                                updateNotificationsMap(state)
+                                Log.e("MAPMAP 1", map.toString())
                             }
-                            if (state.isRefreshing) {
-                                state.endRefresh()
-                            }
-                        }
 
-                        override fun onFailure(call: Call<回帖消息Response>, t: Throwable) {
-                            // 处理异常
-                            Log.e("onFailure", t.toString())
-                            if (state.isRefreshing) {
-                                state.endRefresh()
+                            override fun onFailure(call: Call<ld246_Response>, t: Throwable) {
+                                // 处理异常
+                                Log.e("onFailure", t.toString())
+                                PopNotification.show(call.toString(), t.toString()).noAutoDismiss()
+                                updateNotificationsMap(state)
                             }
-                            PopNotification.show(call.toString(), t.toString()).noAutoDismiss()
-                        }
-                    })
+                        })
+                    } else {
+                        updateNotificationsMap(state)
+                        Log.e("MAPMAP 2", map.toString())
+                    }
                 } catch (e: Exception) {
                     // 处理错误
                     Log.e("catch viewModelScope.launch", e.toString())
                     PopNotification.show("任务失败", e.toString()).noAutoDismiss()
+                    updateNotificationsMap(state)
                 } finally {
                     // 此处执行则不会等待 onResponse
                 }
             }
+            __init__ = true;
         }
     }
 
@@ -497,7 +640,8 @@ class HomeActivity : ComponentActivity() {
             _dialog.apply {
                 setDialogLifecycleCallback(object : DialogLifecycleCallback<FullScreenDialog?>() {
                     override fun onShow(dialog: FullScreenDialog?) {
-                        dialog?.setCustomView(object : OnBindView<FullScreenDialog?>(R.layout.layout_full_screen) {
+                        dialog?.setCustomView(object :
+                            OnBindView<FullScreenDialog?>(R.layout.layout_full_screen) {
                             override fun onBind(dialog: FullScreenDialog?, v: View) {
                                 val webView = v.findViewById<WebView>(R.id.webView)
                                 webView.webViewClient = object : WebViewClient() {
@@ -547,7 +691,6 @@ class HomeActivity : ComponentActivity() {
         webView!!.loadUrl(url)
         fullScreenDialog!!.show().refreshUI()
     }
-
 
 
 }
