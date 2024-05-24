@@ -20,7 +20,6 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -724,7 +723,7 @@ class HomeActivity : ComponentActivity() {
                 modifier = Modifier.padding(bottom = 70.dp) // 避免被底栏遮住
             ) {
                 item {
-                    v!!.forEach { notification ->
+                    v?.forEach { notification ->
                         NotificationCard(notification)
                     }
                 }
@@ -1038,7 +1037,6 @@ class HomeActivity : ComponentActivity() {
                 val webView = dialog.getCustomView()?.findViewById<WebView>(R.id.webView)
                 Log.w(fullScreenDialog.toString(), webView.toString())
                 webView?.loadUrl(url)
-                dialog.refreshUI()
             }
         }
     }
