@@ -1,10 +1,12 @@
 @file:Suppress("CompositionLocalNaming", "CompositionLocalNaming")
+
 package org.b3log.siyuan.producer
 
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
@@ -97,15 +99,32 @@ class MainPro : ComponentActivity() {
         Log.i(TAG, "onCreate() invoked")
         val scheme = uri?.scheme
         val host = uri?.host
-        Log.d(TAG, "scheme: $scheme, host:$host")
-        if (S.isUriMatched(uri, S.case_ld246_1) || S.isUriMatched(uri, S.case_ld246_2) || S.isUriMatched(uri, S.case_github_1)) {
+        Log.d(TAG, "scheme: $scheme, host: $host")
+        if (S.isUriMatched(uri, S.case_ld246_1) || S.isUriMatched(
+                uri,
+                S.case_ld246_2
+            ) || S.isUriMatched(uri, S.case_github_1)
+        ) {
             // 转发处理
             val homeIntent = Intent(this, HomeActivity::class.java)
             homeIntent.data = uri // 将URI数据传递给HomeActivity
             startActivity(homeIntent)
             finish() // 如果不需要返回MainPro，可以在这里结束它
+        } else if (uri != null && uri.scheme.isNullOrEmpty() || listOf(
+                "http",
+                "https",
+                "siyuan"
+            ).contains(
+                uri!!.scheme
+            )
+        ) {
+            // 转发处理
+            // 这里需要转发的思路是：此处判断作为兜底十有八九用户已经将汐洛设置为默认浏览器，转发给系统会导致死循环，系统认为没有应用能够处理，汐洛会闪退
+            val homeIntent = Intent(this, HomeActivity::class.java)
+            homeIntent.data = uri // 将URI数据传递给HomeActivity
+            startActivity(homeIntent)
+            finish() // 如果不需要返回MainPro，可以在这里结束它
         } else {
-            // 如果不是特定的scheme和host，处理其他逻辑或直接结束
             // ...
         }
 
@@ -142,8 +161,10 @@ fun MyUI(intent: Intent?) {
     val fileName = uri?.let { Us.getFileName(Lcc, it) }
     val fileSize = uri?.let { Us.getFileSize(Lcc, it) }
     val mimeType = intent?.data?.let { Us.getMimeType(Lcc, it) } ?: ""
-    val fileType = fileName?.let { Us.getFileMIMEType(mimeType, it) } ?: run { Us.getFileMIMEType(mimeType) }
-    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
+    val fileType =
+        fileName?.let { Us.getFileMIMEType(mimeType, it) } ?: run { Us.getFileMIMEType(mimeType) }
+    val isLandscape =
+        LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
 
     var isMenuVisible = rememberSaveable { mutableStateOf(false) }
 
@@ -227,19 +248,19 @@ fun MyUI(intent: Intent?) {
         }
 
 
-
     }
 }
 
 @Composable
 fun InfoPart(uri: Uri?, fileType: String?, fileName: String?, fileSize: String?) {
     val TAG = "MainPro-InfoPart"
-    val Lcc= LocalContext.current
+    val Lcc = LocalContext.current
     val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
     val Thumbnail_Height = S.C.Thumbnail_Height.current
     val Thumbnail_Height_IMG = S.C.Thumbnail_Height_IMG.current
 
-    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
+    val isLandscape =
+        LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
 
     // 显示图像缩略图或文件类型图标
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -335,7 +356,8 @@ fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
     var showVideoButton by remember { mutableStateOf(false) }
     var showApkButton by remember { mutableStateOf(false) }
 
-    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
+    val isLandscape =
+        LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
 
     var progressValue by remember { mutableStateOf(0) }
     var isButton3OnClickRunning by remember { mutableStateOf(false) }
@@ -350,7 +372,10 @@ fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
         if (fileName != null) {
             showAudioButton = mimeType.startsWith("audio/")
             showVideoButton = mimeType.startsWith("video/")
-            showApkButton = mimeType == "application/vnd.android.package-archive" || (mimeType == "application/octet-stream" && fileName.endsWith(".apk.1"))
+            showApkButton =
+                mimeType == "application/vnd.android.package-archive" || (mimeType == "application/octet-stream" && fileName.endsWith(
+                    ".apk.1"
+                ))
         }
     }
 
@@ -389,6 +414,7 @@ fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
             }
         }
     }
+
     fun onCopyFileToMyAppFolder() {
         // 启动一个协程来执行任务
         coroutineScope.launch {
@@ -396,7 +422,7 @@ fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
                 try {
                     if (!Us.isStorageSpaceAvailable(Lcc.contentResolver, uri_from_file)) {
                         // 存储空间不足，处理逻辑
-                        PopNotification.show(R.drawable.icon,  "存储空间不足，请先清理")
+                        PopNotification.show(R.drawable.icon, "存储空间不足，请先清理")
                         return@withContext
                     }
                     val sourceFilePath = Us.getPathFromUri(Lcc, uri_from_file)
@@ -407,10 +433,14 @@ fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
                                 Us.copyFileToMyAppFolder(
                                     workspaceAssetsDir, it, it1
                                 )
-                                PopNotification.show(R.drawable.icon, "已存入 ${workspaceAssetsDir}").autoDismiss(5000)
+                                PopNotification.show(
+                                    R.drawable.icon,
+                                    "已存入 ${workspaceAssetsDir}"
+                                ).autoDismiss(5000)
                             } catch (e: IOException) {
                                 Log.e(TAG, e.toString())
-                                PopNotification.show(R.drawable.icon, "任务失败", e.toString()).noAutoDismiss()
+                                PopNotification.show(R.drawable.icon, "任务失败", e.toString())
+                                    .noAutoDismiss()
                             }
 
                         }
@@ -418,7 +448,8 @@ fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
                 } catch (e: IOException) {
                     Log.e(TAG, e.toString())
                     withContext(Dispatchers.Main) {
-                        PopNotification.show(R.drawable.icon, "任务失败", e.toString()).noAutoDismiss()
+                        PopNotification.show(R.drawable.icon, "任务失败", e.toString())
+                            .noAutoDismiss()
                     }
                 } finally {
                     // 执行任务完成后，关闭遮罩
@@ -427,43 +458,54 @@ fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
             }
         }
     }
-    var manageAllFilesPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (Us.canManageAllFiles(Lcc)) {
-            if (isButton3OnClickRunning) { onCopyFileToFolderByDocumentTree() }
-            else if (isButton4OnClickRunning) { onCopyFileToMyAppFolder() }
 
-        }
-    }
-    val bt3TaskLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.data?.let { _uri ->
-                if (uri == null) return@let
-                isButton3OnClickRunning = true  // 没有设置 LaunchedEffect 但是需要显示遮罩
-                // 通过 SAF 获取持久性权限
-                Lcc.contentResolver.takePersistableUriPermission(_uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-
-//                Us.requestExternalStoragePermission(Lcc as Activity)
-                // 使用DocumentFile处理URI
-                val rootDocument = DocumentFile.fromTreeUri(Lcc, _uri)
-                // 例如，列出根目录下的文件和文件夹
-                rootDocument?.listFiles()?.forEach { file ->
-                    // 处理文件或文件夹
-                    Log.d(TAG, "File name: ${file.name}, Is directory: ${file.isDirectory}, mimeType: ${file.type}, canRead: ${file.canRead()}, canWrite: ${file.canWrite()}, lastModified: ${file.lastModified()} ")
-                }
-
-                uri_from_file = uri
-                uri_to_dir = _uri
-                if (Us.canManageAllFiles(Lcc)) {
+    var manageAllFilesPermissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (Us.canManageAllFiles(Lcc)) {
+                if (isButton3OnClickRunning) {
                     onCopyFileToFolderByDocumentTree()
-                }
-                else {
-                    val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-                    manageAllFilesPermissionLauncher.launch(intent)
+                } else if (isButton4OnClickRunning) {
+                    onCopyFileToMyAppFolder()
                 }
 
             }
         }
-    }
+    val bt3TaskLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                result.data?.data?.let { _uri ->
+                    if (uri == null) return@let
+                    isButton3OnClickRunning = true  // 没有设置 LaunchedEffect 但是需要显示遮罩
+                    // 通过 SAF 获取持久性权限
+                    Lcc.contentResolver.takePersistableUriPermission(
+                        _uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    )
+
+//                Us.requestExternalStoragePermission(Lcc as Activity)
+                    // 使用DocumentFile处理URI
+                    val rootDocument = DocumentFile.fromTreeUri(Lcc, _uri)
+                    // 例如，列出根目录下的文件和文件夹
+                    rootDocument?.listFiles()?.forEach { file ->
+                        // 处理文件或文件夹
+                        Log.d(
+                            TAG,
+                            "File name: ${file.name}, Is directory: ${file.isDirectory}, mimeType: ${file.type}, canRead: ${file.canRead()}, canWrite: ${file.canWrite()}, lastModified: ${file.lastModified()} "
+                        )
+                    }
+
+                    uri_from_file = uri
+                    uri_to_dir = _uri
+                    if (Us.canManageAllFiles(Lcc)) {
+                        onCopyFileToFolderByDocumentTree()
+                    } else {
+                        val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                        manageAllFilesPermissionLauncher.launch(intent)
+                    }
+
+                }
+            }
+        }
 
     LaunchedEffect(key1 = isButton4OnClickRunning) {
         if (isButton4OnClickRunning) {
@@ -471,8 +513,7 @@ fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
             uri_to_dir = Uri.parse(workspaceAssetsDir)
             if (Us.canManageAllFiles(Lcc)) {
                 onCopyFileToMyAppFolder()
-            }
-            else {
+            } else {
                 val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
                 manageAllFilesPermissionLauncher.launch(intent)
             }
@@ -483,50 +524,50 @@ fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
     if (isButton4OnClickRunning || isButton3OnClickRunning) {
         // 锁定当前屏幕方向，避免重绘，相当于 android.app.Activity.setRequestedOrientation
         LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED)
-                Dialog(
-                    onDismissRequest = {
-                        isButton3OnClickRunning = false
-                        isButton4OnClickRunning = false
-                        selectedFolder = null
-                    },
-                    properties = DialogProperties(
-                        dismissOnBackPress = false,
-                        dismissOnClickOutside = false
+        Dialog(
+            onDismissRequest = {
+                isButton3OnClickRunning = false
+                isButton4OnClickRunning = false
+                selectedFolder = null
+            },
+            properties = DialogProperties(
+                dismissOnBackPress = false,
+                dismissOnClickOutside = false
+            )
+        ) {
+            // 遮罩内容
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                if (false) {
+                    LinearProgressIndicator(
+                        progress = { progressValue / 100f },
+                        modifier = Modifier
+                            .padding(2.dp)
+                            .height(13.dp)
+                            .fillMaxWidth(),
                     )
-                ) {
-                    // 遮罩内容
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (false) {
-                            LinearProgressIndicator(
-                                progress = { progressValue / 100f },
-                                modifier = Modifier
-                                    .padding(2.dp)
-                                    .height(13.dp)
-                                    .fillMaxWidth(),
-                            )
-                        } else {
-                            // 不设置progress参数，显示不确定进度
-                            LinearProgressIndicator(
-                                modifier = Modifier
-                                    .padding(bottom = 58.dp)
-                                    .height(13.dp)
-                                    .fillMaxWidth(),
-                            )
-                            Text(
-                                text = "操作正在进行……\n请勿退出",
-                                color = Color.Yellow,
-                                modifier = Modifier
-                                    .padding(bottom = 8.dp)
-                                    .align(Alignment.BottomCenter),
-                                letterSpacing = btn_lspace,
-                                fontSize = if (isLandscape) btn_TextFontsizeH else btn_TextFontsizeV
-                            )
-                        }
-                    }
+                } else {
+                    // 不设置progress参数，显示不确定进度
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .padding(bottom = 58.dp)
+                            .height(13.dp)
+                            .fillMaxWidth(),
+                    )
+                    Text(
+                        text = "操作正在进行……\n请勿退出",
+                        color = Color.Yellow,
+                        modifier = Modifier
+                            .padding(bottom = 8.dp)
+                            .align(Alignment.BottomCenter),
+                        letterSpacing = btn_lspace,
+                        fontSize = if (isLandscape) btn_TextFontsizeH else btn_TextFontsizeV
+                    )
                 }
+            }
+        }
     }
     if (!isButton4OnClickRunning && !isButton3OnClickRunning) {
         // 解除屏幕方向锁定
@@ -536,7 +577,7 @@ fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
     //// @D 通用按键部分
 
     // 保存到指定文件夹
-    Button(modifier= Modifier
+    Button(modifier = Modifier
         .width(Button_Width.dp)
         .padding(top = if (isLandscape) btn_PaddingTopH else btn_PaddingTopV),
         colors = ButtonDefaults.buttonColors(
@@ -555,20 +596,20 @@ fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
     }
 
     // 存入工作空间级资源目录
-    Button(modifier= Modifier
+    Button(modifier = Modifier
         .width(Button_Width.dp)
         .padding(top = if (isLandscape) btn_PaddingTopH else btn_PaddingTopV),
         colors = ButtonDefaults.buttonColors(
             containerColor = btn_bgColor4,
             contentColor = btn_Color1
         ), enabled = true, onClick = {
-            if (uri!=null) {
+            if (uri != null) {
 //                val handler = Handler(Looper.getMainLooper())
 //                handler.post {
-                    val directories = Us.getDirectoriesInPath(S.workspaceParentDir)
-                    val filteredDirectories = directories.filter { it != "home" }
-                if (filteredDirectories.isNotEmpty())
-                {var selectMenuIndex = 0
+                val directories = Us.getDirectoriesInPath(S.workspaceParentDir)
+                val filteredDirectories = directories.filter { it != "home" }
+                if (filteredDirectories.isNotEmpty()) {
+                    var selectMenuIndex = 0
                     var selectMenuText = "sillot"
                     BottomMenu.show(filteredDirectories)
                         .setMessage("sillot 是默认工作空间")
@@ -584,7 +625,8 @@ fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
                             OnBottomMenuButtonClickListener { menu, view ->
                                 Log.e(TAG, "${selectMenuText}")
 
-                                workspaceAssetsDir = "${S.workspaceParentDir}/${selectMenuText}/data/assets"
+                                workspaceAssetsDir =
+                                    "${S.workspaceParentDir}/${selectMenuText}/data/assets"
                                 isButton4OnClickRunning = true // 值变化时会触发重组
                                 false
                             })
@@ -593,7 +635,11 @@ fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
                                 false
                             })
                 } else {
-                    PopNotification.show(R.drawable.icon, "未发现任何工作空间", "请检查是否初始化了，或者路径存在异常 ${S.workspaceParentDir}/").noAutoDismiss()
+                    PopNotification.show(
+                        R.drawable.icon,
+                        "未发现任何工作空间",
+                        "请检查是否初始化了，或者路径存在异常 ${S.workspaceParentDir}/"
+                    ).noAutoDismiss()
                 }
 //                }
             }

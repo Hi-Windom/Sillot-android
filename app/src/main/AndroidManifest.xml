@@ -388,10 +388,14 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <!-- shortcutId 不能重复-->
+            <intent-filter>
+                <action android:name="android.intent.action.shortcut_ld246_dailycheck" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- shortcutId | android:name 不能重复-->
             <meta-data
-                android:name="android.app.shortcuts"
-                android:resource="@xml/shortcuts_4" />
+                android:name="android.app.shortcuts_ld246"
+                android:resource="@xml/shortcuts_ld246" />
         </activity>
         <!--        汐洛主入口-->
         <activity
@@ -418,7 +422,7 @@
                 <data android:scheme="sillot" />
                 <data android:scheme="sisi" />
             </intent-filter>
-            <!-- shortcutId 不能重复-->
+            <!-- shortcutId | android:name 不能重复-->
             <meta-data
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts_1" />
@@ -447,7 +451,7 @@
 
                 <data android:scheme="sithw" />
             </intent-filter>
-            <!-- shortcutId 不能重复-->
+            <!-- shortcutId | android:name 不能重复-->
             <meta-data
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts_2" />

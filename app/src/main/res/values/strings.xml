@@ -7,6 +7,8 @@
     <string name="activity_name_ld246Home">汐洛链滴社区客户端</string>
     <string name="shortcut_long_label_1">启动->汐洛</string>
     <string name="shortcut_short_label_1">启动汐洛</string>
+    <string name="shortcut_long_label_ld246_dailycheck">链滴每日签到</string>
+    <string name="shortcut_short_label_ld246_dailycheck">每日签到</string>
     <string name="ManageSpaceActivity">管理汐洛空间</string>
 
     <string name="open_source_license">开源许可</string>

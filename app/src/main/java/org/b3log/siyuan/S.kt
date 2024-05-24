@@ -79,8 +79,8 @@ object S {
         val btnTextVideo1 = compositionLocalOf { "播放" }
         val btnText5Apk1 = compositionLocalOf { "安装" }
         val small_iconSize = compositionLocalOf { 24.dp }
-        val Card_bgColor_green1 = compositionLocalOf { Color(0x9F237A58) }
-        val Card_bgColor_gold1 = compositionLocalOf { Color(0x88997758) }
+        val Card_bgColor_green1 = compositionLocalOf { Color(0x58237A58) }
+        val Card_bgColor_gold1 = compositionLocalOf { Color(0x58997758) }
     }
 
     data class UriMatchPattern(val scheme: String, val host: String)

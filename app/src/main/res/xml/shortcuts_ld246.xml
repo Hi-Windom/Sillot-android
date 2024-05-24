@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.preference.PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:key="first_preferencescreen">
+    <shortcut
+        android:shortcutId="shortcut_ld246_goHome"
+        android:enabled="true"
+        android:icon="@drawable/icon"
+        android:shortcutLongLabel="@string/shortcut_long_label_1"
+        android:shortcutShortLabel="@string/shortcut_short_label_1">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="org.b3log.siyuan"
+            android:targetClass="org.b3log.siyuan.SillotHomeActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="shortcut_ld246_dailycheck"
+        android:enabled="true"
+        android:icon="@drawable/icon"
+        android:shortcutLongLabel="@string/shortcut_long_label_ld246_dailycheck"
+        android:shortcutShortLabel="@string/shortcut_short_label_ld246_dailycheck">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="org.b3log.siyuan"
+            android:targetClass="org.b3log.siyuan.ld246.HomeActivity" />
+    </shortcut>
+</androidx.preference.PreferenceScreen>

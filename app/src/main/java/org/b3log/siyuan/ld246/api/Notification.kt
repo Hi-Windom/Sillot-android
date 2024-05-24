@@ -2,6 +2,7 @@ package org.b3log.siyuan.ld246.api
 
 import org.b3log.siyuan.ld246.ld246_Response
 import org.b3log.siyuan.ld246.ld246_Response_NoData
+import org.b3log.siyuan.ld246.ld246_Response_User
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -46,10 +47,23 @@ interface ApiServiceNotification {
         @Header("User-Agent") UA: String?,
     ): Call<ld246_Response>
 
+    @GET("api/v2/notifications/point")
+    fun apiV2NotificationsPointGet(
+        @Query("p") page: Int?,
+        @Header("Authorization") Authorization: String?,
+        @Header("User-Agent") UA: String?,
+    ): Call<ld246_Response>
+
     @GET("api/v2/notifications/make-read/{type}")
     fun apiV2NotificationsMakeRead(
         @Path("type") type: String,
         @Header("Authorization") Authorization: String?,
         @Header("User-Agent") UA: String?,
     ): Call<ld246_Response_NoData>
+
+    @GET("api/v2/user")
+    fun apiV2UserGet(
+        @Header("Authorization") Authorization: String?,
+        @Header("User-Agent") UA: String?,
+    ): Call<ld246_Response_User>
 }
