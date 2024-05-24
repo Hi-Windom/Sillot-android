@@ -1,18 +1,21 @@
-<!-- layout_full_screen.xml -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:background="@color/transparent"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <WebView
         android:id="@+id/webView"
+        android:background="@color/transparent"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:padding="1dp"
+        android:layout_marginTop="41dp"/>
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="41dp"
         android:background="@color/colorPrimary"
-        android:padding="10dp">
+        android:padding="12dp">
 
         <TextView
             android:id="@+id/btnRefresh"

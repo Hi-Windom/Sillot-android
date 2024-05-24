@@ -79,6 +79,7 @@ import org.b3log.siyuan.compose.LockScreenOrientation
 import org.b3log.siyuan.compose.SelectableText
 import org.b3log.siyuan.compose.VideoButtons
 import org.b3log.siyuan.compose.components.CommonTopAppBar
+import org.b3log.siyuan.ld246.HomeActivity
 import java.io.IOException
 
 
@@ -94,6 +95,20 @@ class MainPro : ComponentActivity() {
         val intent = intent
         val uri = intent.data
         Log.i(TAG, "onCreate() invoked")
+        val scheme = uri?.scheme
+        val host = uri?.host
+        Log.d(TAG, "scheme: $scheme, host:$host")
+        if (S.isUriMatched(uri, S.case_ld246_1) || S.isUriMatched(uri, S.case_ld246_2) || S.isUriMatched(uri, S.case_github_1)) {
+            // 转发处理
+            val homeIntent = Intent(this, HomeActivity::class.java)
+            homeIntent.data = uri // 将URI数据传递给HomeActivity
+            startActivity(homeIntent)
+            finish() // 如果不需要返回MainPro，可以在这里结束它
+        } else {
+            // 如果不是特定的scheme和host，处理其他逻辑或直接结束
+            // ...
+        }
+
 // 设置沉浸式通知栏
         window.setDecorFitsSystemWindows(false)
         window.decorView.setOnApplyWindowInsetsListener { _, insets ->

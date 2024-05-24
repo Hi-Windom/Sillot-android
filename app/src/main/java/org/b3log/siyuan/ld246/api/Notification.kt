@@ -1,6 +1,7 @@
 package org.b3log.siyuan.ld246.api
 
 import org.b3log.siyuan.ld246.ld246_Response
+import org.b3log.siyuan.ld246.ld246_Response_NoData
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -50,5 +51,5 @@ interface ApiServiceNotification {
         @Path("type") type: String,
         @Header("Authorization") Authorization: String?,
         @Header("User-Agent") UA: String?,
-    ): Call<Void>
+    ): Call<ld246_Response_NoData>
 }

@@ -54,6 +54,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.net.URLDecoder
+import java.net.URLEncoder
 import java.security.MessageDigest
 import java.text.DecimalFormat
 import javax.crypto.Cipher
@@ -65,13 +66,22 @@ import kotlin.math.sqrt
 
 
 object Us {
-    fun dropAndDecodeUrl(url: String, drop: String): String {
-        // 正则表达式匹配 "https://ld246.com/forward?goto=" 并去除
-        val regex = drop.toRegex()
-        val withoutPrefix = regex.replace(url, "")
+    fun replaceScheme_deepDecode(url: String, old: String, new: String): String {
+        // 解码URL
+        var decodedUrl = URLDecoder.decode(url, "UTF-8")
+        // 替换scheme
+        decodedUrl = decodedUrl.replace(old, new)
+        var previousUrl: String
+        do {
+            previousUrl = decodedUrl
+            // 再次解码URL
+            decodedUrl = URLDecoder.decode(decodedUrl, "UTF-8")
+        } while (decodedUrl != previousUrl)
 
-        // URL 解码
-        return URLDecoder.decode(withoutPrefix, "UTF-8")
+        return decodedUrl
+    }
+    fun replaceEncodeScheme(url: String, old: String, new: String): String {
+        return url.replace(URLEncoder.encode(old), URLEncoder.encode(new))
     }
     fun parseAndDecodeUrl(url: String, regex: Regex): String {
         val decodedUrls = regex.findAll(url).map { matchResult ->

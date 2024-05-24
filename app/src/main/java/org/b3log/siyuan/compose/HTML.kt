@@ -16,6 +16,7 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.widget.TextView
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
@@ -42,7 +43,7 @@ fun HtmlText(html: String, modifier: Modifier = Modifier) {
 @Composable
 fun SelectableHtmlText(html: String, modifier: Modifier = Modifier) {
     AndroidView(
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
         factory = { context ->
             TextView(context).apply {
                 // 允许长按复制文本，需放在前面
@@ -56,7 +57,7 @@ fun SelectableHtmlText(html: String, modifier: Modifier = Modifier) {
         },
         update = {  textView ->
             val _Html  = Us.parseAndDecodeUrl(html, """['"]https://ld246.com/forward\?goto=([^'"]*)['"]""".toRegex())
-            Log.i("HTML", _Html)
+//            Log.i("HTML", _Html)
             textView.text = HtmlCompat.fromHtml(_Html, HtmlCompat.FROM_HTML_MODE_COMPACT, null, MyTagHandler())
         }
     )

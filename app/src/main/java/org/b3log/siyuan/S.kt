@@ -1,6 +1,7 @@
 @file:Suppress("CompositionLocalNaming", "CompositionLocalNaming")
 package org.b3log.siyuan
 
+import android.net.Uri
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -81,4 +82,13 @@ object S {
         val Card_bgColor_green1 = compositionLocalOf { Color(0x9F237A58) }
         val Card_bgColor_gold1 = compositionLocalOf { Color(0x88997758) }
     }
+
+    data class UriMatchPattern(val scheme: String, val host: String)
+
+    fun isUriMatched(uri: Uri?, pattern: UriMatchPattern): Boolean {
+        return uri?.scheme == pattern.scheme && uri.host == pattern.host
+    }
+    val case_ld246_1 = UriMatchPattern("https", "ssl.ptlogin2.qq.com") // 目前必须将默认打开方式浏览器设置为汐洛，否则QQ回调进不来
+    val case_ld246_2 = UriMatchPattern("https", "ld246.com")
+    val case_github_1 = UriMatchPattern("https", "github.com")
 }

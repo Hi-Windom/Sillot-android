@@ -120,7 +120,7 @@ fun TopRightMenu(
         expanded = expanded,
         onDismissRequest = onDismiss
     ) {
-        if (uri != null) {
+        if (uri != null && !listOf("http","https","siyuan").contains(uri.scheme)) {
             DropdownMenuItem(
                 text = { Text("复制") },
                 leadingIcon = { Icon(Icons.TwoTone.ContentCopy, contentDescription = null) },

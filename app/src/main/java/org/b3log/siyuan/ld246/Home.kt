@@ -2,13 +2,16 @@ package org.b3log.siyuan.ld246
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.content.res.Configuration
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Base64
 import android.util.Log
 import android.view.View
+import android.webkit.CookieManager
+import android.webkit.CookieSyncManager
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -32,6 +35,7 @@ import androidx.compose.material.icons.automirrored.twotone.Article
 import androidx.compose.material.icons.automirrored.twotone.Reply
 import androidx.compose.material.icons.twotone.Attribution
 import androidx.compose.material.icons.twotone.CenterFocusWeak
+import androidx.compose.material.icons.twotone.Cookie
 import androidx.compose.material.icons.twotone.OpenInBrowser
 import androidx.compose.material.icons.twotone.Quickreply
 import androidx.compose.material.icons.twotone.Swipe
@@ -60,7 +64,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -68,9 +71,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -78,6 +79,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -142,6 +144,12 @@ class HomeActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val intent = intent
+        val uri = intent.data
+        Log.i(TAG, "onCreate() invoked")
+        val scheme = uri?.scheme
+        val host = uri?.host
+        Log.d(TAG, "scheme: $scheme, host:$host")
         // 设置沉浸式通知栏
         window.setDecorFitsSystemWindows(false)
         window.decorView.setOnApplyWindowInsetsListener { _, insets ->
@@ -206,6 +214,14 @@ class HomeActivity : ComponentActivity() {
                 )
             }
         })
+
+        if (S.isUriMatched(uri, S.case_ld246_1) || S.isUriMatched(
+                uri,
+                S.case_ld246_2
+            ) || S.isUriMatched(uri, S.case_github_1)
+        ) {
+            showFullScreenDialog(uri.toString())
+        }
     }
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -321,6 +337,14 @@ class HomeActivity : ComponentActivity() {
             }
         )
         DropdownMenuItem(
+            text = { Text("清除 Cookie") },
+            leadingIcon = { Icon(Icons.TwoTone.Cookie, contentDescription = null) },
+            onClick = {
+                onDismiss()
+                showFullScreenDialog("action?=Logout")
+            }
+        )
+        DropdownMenuItem(
             text = { Text("链滴 API TOKEN") },
             leadingIcon = { Icon(Icons.TwoTone.Token, contentDescription = null) },
             onClick = {
@@ -398,16 +422,16 @@ class HomeActivity : ComponentActivity() {
                         unselectedContentColor = unselectedContentColor,
                         text = {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    imageVector = titles_icons[index],
+                                    contentDescription = title
+                                )
                                 Text(
                                     text = title,
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,
-                                    fontSize = 18.sp,
+                                    fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold
-                                )
-                                Icon(
-                                    imageVector = titles_icons[index],
-                                    contentDescription = title
                                 )
                             }
                         }
@@ -488,6 +512,7 @@ class HomeActivity : ComponentActivity() {
                 }) {
                 Row(
                     modifier = Modifier
+                        .fillMaxWidth()
                         .clickable {
                             val url = "https://${S.HOST_ld246}/member/${notification.authorName}"
                             if (openUrlExternal) {
@@ -516,7 +541,8 @@ class HomeActivity : ComponentActivity() {
                     text = notification.title,
                     fontSize = 15.sp,
                     fontStyle = FontStyle.Italic,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.fillMaxWidth()
                 )
                 SelectableHtmlText(notification.content)
             }
@@ -534,7 +560,7 @@ class HomeActivity : ComponentActivity() {
 
         @OptIn(ExperimentalMaterial3Api::class)
         private fun updateNotificationsMap(state: PullToRefreshState?) {
-            Log.e(TAG, "updateNotificationsMap() -> ${map[LockNoteType]} ")
+//            Log.e(TAG, "updateNotificationsMap() -> ${map[LockNoteType]} ")
             _notificationsMap.postValue(map[LockNoteType])
             if (state != null) {
                 if (state.isRefreshing) {
@@ -588,18 +614,33 @@ class HomeActivity : ComponentActivity() {
                                             else -> listOf()
                                         }
                                     }
-                                    PopTip.show("<(￣︶￣)↗[GO!]")
-                                    apiService.apiV2NotificationsMakeRead(
-                                        LockNoteType_EN,
-                                        token,
-                                        ua
-                                    )
+                                    PopTip.show("<(￣︶￣)↗[${response.code()}]")
+                                    val _mr: Call<ld246_Response_NoData> =
+                                        apiService.apiV2NotificationsMakeRead(
+                                            LockNoteType_EN,
+                                            token,
+                                            ua
+                                        )
+                                    _mr.enqueue(object : Callback<ld246_Response_NoData> {
+                                        override fun onResponse(
+                                            p0: Call<ld246_Response_NoData>,
+                                            p1: Response<ld246_Response_NoData>
+                                        ) {
+                                            Log.i(TAG, "Make Read: ${p1}")
+                                        }
+
+                                        override fun onFailure(
+                                            p0: Call<ld246_Response_NoData>,
+                                            p1: Throwable
+                                        ) {
+                                            Log.w(TAG, "Make Read: ${p1}")
+                                        }
+                                    })
                                 } else {
-                                    Log.e(TAG, "onResponse: $response")
+//                                    Log.e(TAG, "onResponse: $response")
                                     handleErrorResponse(response)
                                 }
                                 updateNotificationsMap(state)
-                                Log.e("MAPMAP 1", map.toString())
                             }
 
                             override fun onFailure(call: Call<ld246_Response>, t: Throwable) {
@@ -611,7 +652,6 @@ class HomeActivity : ComponentActivity() {
                         })
                     } else {
                         updateNotificationsMap(state)
-                        Log.e("MAPMAP 2", map.toString())
                     }
                 } catch (e: Exception) {
                     // 处理错误
@@ -633,38 +673,84 @@ class HomeActivity : ComponentActivity() {
         UI(null)
     }
 
+    private fun handleUrlLoading(view: WebView, url: String): Boolean {
+        val _url = Us.replaceScheme_deepDecode(url, "googlechrome://", "slld246://")
+        val real_url = Us.replaceEncodeScheme(url, "googlechrome://", "slld246://")
+        Log.d(TAG, _url)
+
+        if (_url.startsWith("mqq://") || _url.startsWith("wtloginmqq://") || _url.startsWith("sinaweibo://")) {
+            return try {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(real_url))
+                ActivityCompat.startActivityForResult(view.context as Activity, intent, 1, null)
+                true
+            } catch (e: Exception) {
+                Log.e(TAG, e.toString())
+                false
+            }
+        } else {
+            return false
+        }
+    }
+
+    private fun webViewClient(): WebViewClient {
+        return object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(
+                view: WebView,
+                request: WebResourceRequest
+            ): Boolean {
+                return handleUrlLoading(view, request.url.toString())
+            }
+        }
+    }
+
+    private fun clearWebViewCookies(webView: WebView?) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            CookieManager.getInstance().apply {
+                removeAllCookies { success ->
+                    if (success) {
+                        webView?.clearCache(true)
+                        fullScreenDialog?.dismiss()
+                        PopTip.show("<(￣︶￣)↗[success]")
+                    } else {
+                        fullScreenDialog?.dismiss()
+                        PopTip.show(" ￣へ￣ [failed]")
+                    }
+                }
+            }
+        } else {
+            CookieSyncManager.createInstance(this)
+            CookieManager.getInstance().apply {
+                removeAllCookie()
+                webView?.clearCache(true)
+                fullScreenDialog?.dismiss()
+            }
+            CookieSyncManager.getInstance().sync()
+        }
+    }
+
     fun showFullScreenDialog(url: String) {
+        Log.w("showFullScreenDialog", url)
         if (fullScreenDialog == null) {
-            val _dialog = FullScreenDialog.build()
-            fullScreenDialog = _dialog
-            _dialog.apply {
+            fullScreenDialog = FullScreenDialog.build().apply {
                 setDialogLifecycleCallback(object : DialogLifecycleCallback<FullScreenDialog?>() {
                     override fun onShow(dialog: FullScreenDialog?) {
+                        when (url) {
+                            "action?=Logout" -> {
+                                dialog?.hide() // 隐藏处理过程
+                                val webView =
+                                    dialog?.getCustomView()?.findViewById<WebView>(R.id.webView)
+                                clearWebViewCookies(webView)
+                                return
+                            }
+
+                            else -> {}
+                        }
                         dialog?.setCustomView(object :
                             OnBindView<FullScreenDialog?>(R.layout.layout_full_screen) {
                             override fun onBind(dialog: FullScreenDialog?, v: View) {
                                 val webView = v.findViewById<WebView>(R.id.webView)
-                                webView.webViewClient = object : WebViewClient() {
-                                    override fun shouldOverrideUrlLoading(
-                                        view: WebView,
-                                        request: WebResourceRequest
-                                    ): Boolean {
-                                        val _url = request.url.toString()
-                                        if (_url.startsWith("mqq://") || _url.startsWith("wtloginmqq://") || _url.startsWith(
-                                                "sinaweibo://"
-                                            )
-                                        ) {
-                                            return try {
-                                                val intent = Intent(Intent.ACTION_VIEW, request.url)
-                                                view.context.startActivity(intent)
-                                                true
-                                            } catch (e: ActivityNotFoundException) {
-                                                false
-                                            }
-                                        }
-                                        return false
-                                    }
-                                }
+                                webView.webViewClient = webViewClient()
+                                webView.loadUrl(url)
 
                                 val btnRefresh = v.findViewById<TextView>(R.id.btnRefresh)
                                 btnRefresh.setOnClickListener {
@@ -685,12 +771,13 @@ class HomeActivity : ComponentActivity() {
                     }
                 })
             }.show()
+        } else {
+            fullScreenDialog?.let { dialog ->
+                val webView = dialog.getCustomView()?.findViewById<WebView>(R.id.webView)
+                Log.w(fullScreenDialog.toString(), webView.toString())
+                webView?.loadUrl(url)
+                dialog.refreshUI()
+            }
         }
-
-        val webView = fullScreenDialog!!.getCustomView()?.findViewById<WebView>(R.id.webView)
-        webView!!.loadUrl(url)
-        fullScreenDialog!!.show().refreshUI()
     }
-
-
 }
