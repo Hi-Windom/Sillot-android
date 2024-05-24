@@ -8,7 +8,7 @@ buildscript {
     // kotlin_v 设为 1.9+ 会报错 Inconsistent JVM-target compatibility detected for tasks 'compileDebugJavaWithJavac' (17) and 'kaptGenerateStubsDebugKotlin' (1.8).
     ext {
         kotlin_version = kotlin_v
-        versionSillot = "0.33" // Sillot 版本同步
+        versionSillot = "0.35" // Sillot 版本同步
         vC = 11 // Sillot-android 主要版本递增
     }
     repositories { // 这个块定义了用于Gradle脚本自身执行的仓库。这意味着它用于加载Gradle插件和它们的依赖项，而不是项目本身的依赖项。
