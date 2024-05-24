@@ -3,7 +3,6 @@ package org.b3log.siyuan.ld246
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ActivityNotFoundException
-import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
@@ -29,6 +28,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.OpenInBrowser
+import androidx.compose.material.icons.twotone.Swipe
 import androidx.compose.material.icons.twotone.Token
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -85,7 +85,6 @@ import org.b3log.siyuan.appUtils.HWs
 import org.b3log.siyuan.compose.SelectableHtmlText
 import org.b3log.siyuan.compose.components.CommonTopAppBar
 import org.b3log.siyuan.ld246.api.ApiServiceNotification
-import org.b3log.siyuan.ld246.utils.AuthorizedWebViewClient
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -234,6 +233,13 @@ class HomeActivity : ComponentActivity() {
 
     @Composable
     fun AddDropdownMenu() {
+        DropdownMenuItem(
+            text = { Text("切换类型") },
+            leadingIcon = { Icon(Icons.TwoTone.Swipe, contentDescription = null) },
+            onClick = {
+                // TODO
+            }
+        )
         DropdownMenuItem(
             text = { Text("切换链接打开方式") },
             leadingIcon = { Icon(Icons.TwoTone.OpenInBrowser, contentDescription = null) },

@@ -112,6 +112,7 @@ fun TopRightMenu(
 ) {
     val state = rememberCascadeState()
     val Lcc = LocalContext.current
+    // 只有直接在CascadeDropdownMenu中才能使用childrenHeader和children，抽离出去的additionalMenuItem不行
     CascadeDropdownMenu(
         state = state,
         modifier = modifier,
