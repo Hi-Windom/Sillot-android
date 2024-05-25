@@ -48,6 +48,7 @@ import androidx.compose.material.icons.twotone.CenterFocusWeak
 import androidx.compose.material.icons.twotone.Cookie
 import androidx.compose.material.icons.twotone.Navigation
 import androidx.compose.material.icons.twotone.OpenInBrowser
+import androidx.compose.material.icons.twotone.Person
 import androidx.compose.material.icons.twotone.Quickreply
 import androidx.compose.material.icons.twotone.SafetyCheck
 import androidx.compose.material.icons.twotone.Swipe
@@ -154,10 +155,10 @@ class HomeActivity : ComponentActivity() {
         Icons.TwoTone.Album
     )
     private var LockNoteType_EN: String = titles_type[0]
-    val mapEmpty = mutableMapOf<String, List<ld246_Response_Data_Notification>>().apply {
+    val mapEmpty = mutableMapOf<String, List<ld246_Response_Data_Notification>?>().apply {
         titles.associateWithTo(this) { emptyList() }
     }
-    var map: MutableMap<String, List<ld246_Response_Data_Notification>> = mapEmpty
+    var map: MutableMap<String, List<ld246_Response_Data_Notification>?> = mapEmpty
     private var job: Job? = null
     var viewmodel: NotificationsViewModel? = null
     var retrofit: Retrofit? = null
@@ -261,22 +262,28 @@ class HomeActivity : ComponentActivity() {
         var userPageData by remember { mutableStateOf<User>(User()) }
 
         LaunchedEffect(isUserPage.value) {
-            try {
-                val caller = apiService?.apiV2UserGet(token, ua)
-                caller?.enqueue(object : Callback<ld246_Response_User> {
-                    override fun onResponse(
-                        p0: Call<ld246_Response_User>,
-                        p1: Response<ld246_Response_User>
-                    ) {
-                        p1.body()?.data?.user?.let { userPageData = it };
-                    }
+            if (isUserPage.value) {
+                try {
+                    val caller = apiService?.apiV2UserGet(token, ua)
+                    caller?.enqueue(object : Callback<ld246_Response> {
+                        override fun onResponse(
+                            p0: Call<ld246_Response>,
+                            p1: Response<ld246_Response>
+                        ) {
+                            if (p1.isSuccessful) {
+                                p1.body()?.data?.user?.let { userPageData = it };
+                            } else {
+                                PopNotification.show(p1.code(), p1.toString()).noAutoDismiss()
+                            }
+                        }
 
-                    override fun onFailure(p0: Call<ld246_Response_User>, p1: Throwable) {
-                        //
-                    }
-                })
-            } catch (e: Exception) {
-                Log.e(TAG, e.toString())
+                        override fun onFailure(p0: Call<ld246_Response>, p1: Throwable) {
+                            //
+                        }
+                    })
+                } catch (e: Exception) {
+                    PopNotification.show(TAG, e.toString()).noAutoDismiss()
+                }
             }
         }
 
@@ -539,7 +546,7 @@ class HomeActivity : ComponentActivity() {
                         ) {
                             if (!isShowBottomText.value) {
                                 Icon(
-                                    imageVector = Icons.TwoTone.AccountCircle,
+                                    imageVector = Icons.TwoTone.Person,
                                     modifier = Modifier
                                         .fillMaxSize(),
                                     contentDescription = "user"
@@ -890,29 +897,28 @@ class HomeActivity : ComponentActivity() {
                                         }
                                     }
                                     PopTip.show("<(￣︶￣)↗[${response.code()}]")
-                                    val _mr: Call<ld246_Response_NoData> =
+                                    val _mr: Call<ld246_Response> =
                                         apiService.apiV2NotificationsMakeRead(
                                             LockNoteType_EN,
                                             token,
                                             ua
                                         )
-                                    _mr.enqueue(object : Callback<ld246_Response_NoData> {
+                                    _mr.enqueue(object : Callback<ld246_Response> {
                                         override fun onResponse(
-                                            p0: Call<ld246_Response_NoData>,
-                                            p1: Response<ld246_Response_NoData>
+                                            p0: Call<ld246_Response>,
+                                            p1: Response<ld246_Response>
                                         ) {
                                             Log.i(TAG, "Make Read: ${p1}")
                                         }
 
                                         override fun onFailure(
-                                            p0: Call<ld246_Response_NoData>,
+                                            p0: Call<ld246_Response>,
                                             p1: Throwable
                                         ) {
                                             Log.w(TAG, "Make Read: ${p1}")
                                         }
                                     })
                                 } else {
-//                                    Log.e(TAG, "onResponse: $response")
                                     handleErrorResponse(response)
                                 }
                                 updateNotificationsMap(isTabChanged, state)
@@ -920,7 +926,6 @@ class HomeActivity : ComponentActivity() {
 
                             override fun onFailure(call: Call<ld246_Response>, t: Throwable) {
                                 // 处理异常
-                                Log.e("onFailure", t.toString())
                                 PopNotification.show(call.toString(), t.toString()).noAutoDismiss()
                                 updateNotificationsMap(isTabChanged, state)
                             }
@@ -930,7 +935,6 @@ class HomeActivity : ComponentActivity() {
                     }
                 } catch (e: Exception) {
                     // 处理错误
-                    Log.e("catch viewModelScope.launch", e.toString())
                     PopNotification.show("任务失败", e.toString()).noAutoDismiss()
                     updateNotificationsMap(isTabChanged, state)
                 } finally {
@@ -959,7 +963,7 @@ class HomeActivity : ComponentActivity() {
                 ActivityCompat.startActivityForResult(view.context as Activity, intent, 1, null)
                 true
             } catch (e: Exception) {
-                Log.e(TAG, e.toString())
+                PopNotification.show(TAG, e.toString()).noAutoDismiss()
                 false
             }
         } else {

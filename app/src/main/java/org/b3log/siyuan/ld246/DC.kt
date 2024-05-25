@@ -1,26 +1,22 @@
 package org.b3log.siyuan.ld246
 
-data class ld246_Response_NoData(
-    val msg: String,
-    val random: String,
-    val code: Int,
-)
 data class ld246_Response(
     val msg: String,
     val random: String,
     val code: Int,
-    val data: ld246_Response_Data,
+    val data: ld246_Response_Data?,
 )
 data class ld246_Response_Data(
-    val notifications: List<ld246_Response_Data_Notification>, // 理想的字段，其实不存在
-    val commentedNotifications: List<ld246_Response_Data_Notification>, // 回帖
-    val comment2edNotifications: List<ld246_Response_Data_Notification>, // 评论
-    val replyNotifications: List<ld246_Response_Data_Notification>, // 回复
-    val atNotifications: List<ld246_Response_Data_Notification>, // 提及
-    val followingNotifications: List<ld246_Response_Data_Notification>, // 关注
-    val pointNotifications: List<ld246_Response_Data_Notification>, // 积分
-    val pagination: Pagination,
-    val unreadNotificationCount: UnreadNotificationCount,
+    val notifications: List<ld246_Response_Data_Notification>?, // 理想的字段，其实不存在
+    val commentedNotifications: List<ld246_Response_Data_Notification>?, // 回帖
+    val comment2edNotifications: List<ld246_Response_Data_Notification>?, // 评论
+    val replyNotifications: List<ld246_Response_Data_Notification>?, // 回复
+    val atNotifications: List<ld246_Response_Data_Notification>?, // 提及
+    val followingNotifications: List<ld246_Response_Data_Notification>?, // 关注
+    val pointNotifications: List<ld246_Response_Data_Notification>?, // 积分
+    val user: User?, // 用户信息
+    val pagination: Pagination?,
+    val unreadNotificationCount: UnreadNotificationCount?,
 )
 
 data class ld246_Response_Data_Notification(
@@ -42,15 +38,15 @@ data class UnreadNotificationCount(
     val unreadReviewNotificationCnt: Int,
     val unreadNotificationCnt: Int,
 )
-data class ld246_Response_User(
-    val msg: String,
-    val random: String,
-    val code: Int,
-    val data: ld246_Response_Data_User,
-)
-data class ld246_Response_Data_User(
-    val user: User, // 用户信息
-)
+//data class ld246_Response_User(
+//    val msg: String,
+//    val random: String,
+//    val code: Int,
+//    val data: ld246_Response_Data_User,
+//)
+//data class ld246_Response_Data_User(
+//    val user: User, // 用户信息
+//)
 
 data class User(
     val userNickname: String = "", //
