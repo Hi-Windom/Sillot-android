@@ -145,7 +145,6 @@ class HomeActivity : ComponentActivity() {
         Icons.TwoTone.CenterFocusWeak,
         Icons.TwoTone.Album
     )
-    private var LockNoteType: String = titles[0]
     private var LockNoteType_EN: String = titles_type[0]
     val mapEmpty = mutableMapOf<String, List<ld246_Response_Data_Notification>>().apply {
         titles.associateWithTo(this) { emptyList() }
@@ -246,7 +245,7 @@ class HomeActivity : ComponentActivity() {
     private fun UI(intent: Intent?) {
         val uri = intent?.data
         val Lcc = LocalContext.current
-        val isTabChanged = rememberSaveable { mutableStateOf(LockNoteType) }
+        val isTabChanged = rememberSaveable { mutableStateOf(titles[0]) }
         val PullToRefreshState = rememberPullToRefreshState()
         val isMenuVisible = rememberSaveable { mutableStateOf(false) }
         val isShowBottomText = rememberSaveable { mutableStateOf(false) }
@@ -283,7 +282,7 @@ class HomeActivity : ComponentActivity() {
         val observeNotifications = viewmodel!!.notificationsMap.observeAsState(listOf())
         if (PullToRefreshState.isRefreshing) {
             LaunchedEffect(true) {
-                viewmodel!!.fetchNotifications(PullToRefreshState, apiService!!)
+                viewmodel!!.fetchNotifications(PullToRefreshState, apiService!!, isTabChanged)
                 delay(200) // 避免接口请求频繁
             }
         }
@@ -293,7 +292,7 @@ class HomeActivity : ComponentActivity() {
                 .conflate() // 当新值到来时，如果上一个值还没被处理，就忽略它
                 .collectLatest { // collectLatest会取消当前正在进行的操作，并开始新的操作
                     Log.d("LaunchedEffect-snapshotFlow", isTabChanged.value)
-                    viewmodel!!.fetchNotifications(PullToRefreshState, apiService!!)
+                    viewmodel!!.fetchNotifications(PullToRefreshState, apiService!!, isTabChanged)
                     delay(200) // 避免接口请求频繁
                 }
         }
@@ -308,7 +307,7 @@ class HomeActivity : ComponentActivity() {
                     additionalMenuItem = {
                         AddDropdownMenu(onDismiss = {
                             isMenuVisible.value = false
-                        }, isShowBottomText)
+                        }, isShowBottomText, isTabChanged)
                     }) {
                     // 将Context对象安全地转换为Activity
                     if (Lcc is Activity) {
@@ -355,13 +354,14 @@ class HomeActivity : ComponentActivity() {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    fun AddDropdownMenu(onDismiss: () -> Unit, isShowBottomText: MutableState<Boolean>) {
+    fun AddDropdownMenu(onDismiss: () -> Unit, isShowBottomText: MutableState<Boolean>, isTabChanged: MutableState<String>
+    ) {
         DropdownMenuItem(
             text = { Text("手动刷新") },
             leadingIcon = { Icon(Icons.TwoTone.Swipe, contentDescription = null) },
             onClick = {
                 onDismiss()
-                viewmodel!!.fetchNotifications(null, apiService!!)
+                viewmodel!!.fetchNotifications(null, apiService!!, isTabChanged)
             }
         )
         DropdownMenuItem(
@@ -456,7 +456,7 @@ class HomeActivity : ComponentActivity() {
     fun SecondaryTextTabs(
         modifier: Modifier,
         isTabChanged: MutableState<String>,
-        isUserPage: MutableState<Boolean>, isShowBottomText: MutableState<Boolean>
+        isUserPage: MutableState<Boolean>, isShowBottomText: MutableState<Boolean>,
     ) {
         // REF https://www.composables.com/material3/tabrow
         var state by remember { mutableStateOf(0) }
@@ -481,7 +481,6 @@ class HomeActivity : ComponentActivity() {
                         selected = state == index,
                         onClick = {
                             state = index
-                            LockNoteType = title;
                             LockNoteType_EN = titles_type[index];
                             isTabChanged.value = title
                             isUserPage.value = false
@@ -818,9 +817,9 @@ class HomeActivity : ComponentActivity() {
             _notificationsMap
 
         @OptIn(ExperimentalMaterial3Api::class)
-        private fun updateNotificationsMap(state: PullToRefreshState?) {
-//            Log.e(TAG, "updateNotificationsMap() -> ${map[LockNoteType]} ")
-            _notificationsMap.postValue(map[LockNoteType])
+        private fun updateNotificationsMap(isTabChanged: MutableState<String>
+                                           ,state: PullToRefreshState?) {
+            _notificationsMap.postValue(map[isTabChanged.value])
             if (state != null) {
                 if (state.isRefreshing) {
                     state.endRefresh()
@@ -842,12 +841,13 @@ class HomeActivity : ComponentActivity() {
         }
 
         @OptIn(ExperimentalMaterial3Api::class)
-        fun fetchNotifications(state: PullToRefreshState?, apiService: ApiServiceNotification) {
+        fun fetchNotifications(state: PullToRefreshState?, apiService: ApiServiceNotification, isTabChanged: MutableState<String>
+        ) {
             job = viewModelScope.launch {
                 try {
-                    if (state == null || state.isRefreshing || !__init__ || map[LockNoteType]!!.isEmpty()) {
+                    if (state == null || state.isRefreshing || !__init__ || map[isTabChanged.value]!!.isEmpty()) {
                         // 执行网络请求
-                        val caller: Call<ld246_Response>? = when (LockNoteType) {
+                        val caller: Call<ld246_Response>? = when (isTabChanged.value) {
                             "回帖" -> apiService.apiV2NotificationsCommentedGet(1, token, ua)
                             "评论" -> apiService.apiV2NotificationsComment2edGet(1, token, ua)
                             "回复" -> apiService.apiV2NotificationsReplyGet(1, token, ua)
@@ -865,7 +865,7 @@ class HomeActivity : ComponentActivity() {
                                 if (response.isSuccessful) {
                                     Log.d(TAG, "onResponse: ${response.body().toString()}")
                                     response.body()?.data?.let {
-                                        map[LockNoteType] = when (LockNoteType) {
+                                        map[isTabChanged.value] = when (isTabChanged.value) {
                                             "回帖" -> it.commentedNotifications
                                             "评论" -> it.comment2edNotifications
                                             "回复" -> it.replyNotifications
@@ -901,24 +901,24 @@ class HomeActivity : ComponentActivity() {
 //                                    Log.e(TAG, "onResponse: $response")
                                     handleErrorResponse(response)
                                 }
-                                updateNotificationsMap(state)
+                                updateNotificationsMap(isTabChanged, state)
                             }
 
                             override fun onFailure(call: Call<ld246_Response>, t: Throwable) {
                                 // 处理异常
                                 Log.e("onFailure", t.toString())
                                 PopNotification.show(call.toString(), t.toString()).noAutoDismiss()
-                                updateNotificationsMap(state)
+                                updateNotificationsMap(isTabChanged, state)
                             }
                         })
                     } else {
-                        updateNotificationsMap(state)
+                        updateNotificationsMap(isTabChanged, state)
                     }
                 } catch (e: Exception) {
                     // 处理错误
                     Log.e("catch viewModelScope.launch", e.toString())
                     PopNotification.show("任务失败", e.toString()).noAutoDismiss()
-                    updateNotificationsMap(state)
+                    updateNotificationsMap(isTabChanged, state)
                 } finally {
                     // 此处执行则不会等待 onResponse
                 }
