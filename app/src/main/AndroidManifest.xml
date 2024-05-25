@@ -323,49 +323,49 @@
 <!--        “亲和性”表示 Activity 倾向于属于哪个任务。默认情况下，同一应用中的所有 Activity 彼此具有亲和性。因此，在默认情况下，同一应用中的所有 Activity 都倾向于位于同一任务。-->
 <!--        android:taskAffinity 分别设置了两个活动的任务亲和性，这样它们就会属于不同的任务。当用户点击桌面上的图标时，系统会检查该活动是否属于正在后台运行的任务，如果不是，则会创建一个新的任务来启动该活动。-->
 
-        <activity android:name=".USB_AUDIO_EXCLUSIVE"
-            android:icon="@drawable/icon"
-            android:label="@string/activity_name_USB_AUDIO_EXCLUSIVE"
-            android:exported="true"
-            android:supportsPictureInPicture="true"
-            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"
-            android:autoRemoveFromRecents="false"
-            android:taskAffinity=".sillot.task.USB_AUDIO_EXCLUSIVE"
-            android:launchMode="singleInstance">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+<!--        <activity android:name=".USB_AUDIO_EXCLUSIVE"-->
+<!--            android:icon="@drawable/icon"-->
+<!--            android:label="@string/activity_name_USB_AUDIO_EXCLUSIVE"-->
+<!--            android:exported="true"-->
+<!--            android:supportsPictureInPicture="true"-->
+<!--            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"-->
+<!--            android:autoRemoveFromRecents="false"-->
+<!--            android:taskAffinity=".sillot.task.USB_AUDIO_EXCLUSIVE"-->
+<!--            android:launchMode="singleInstance">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            <!-- shortcutId 不能重复-->
-            <meta-data
-                android:name="android.app.shortcuts"
-                android:resource="@xml/shortcuts_3" />
-        </activity>
-        <service
-            android:name=".MusicService"
-            android:foregroundServiceType="mediaPlayback"
-            android:enabled="true"
-            android:exported="false">
-        </service>
-        <receiver
-            android:name=".USBDeviceReceiver"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
-                <action android:name="android.hardware.usb.action.USB_DEVICE_DETACHED" />
-            </intent-filter>
-        </receiver>
-        <service
-            android:name=".NotificationAccessService"
-            android:label="通知辅助功能服务"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.service.notification.NotificationListenerService" />
-            </intent-filter>
-        </service>
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
+<!--            &lt;!&ndash; shortcutId 不能重复&ndash;&gt;-->
+<!--            <meta-data-->
+<!--                android:name="android.app.shortcuts"-->
+<!--                android:resource="@xml/shortcuts_3" />-->
+<!--        </activity>-->
+<!--        <service-->
+<!--            android:name=".MusicService"-->
+<!--            android:foregroundServiceType="mediaPlayback"-->
+<!--            android:enabled="true"-->
+<!--            android:exported="false">-->
+<!--        </service>-->
+<!--        <receiver-->
+<!--            android:name=".USBDeviceReceiver"-->
+<!--            android:enabled="true"-->
+<!--            android:exported="true">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />-->
+<!--                <action android:name="android.hardware.usb.action.USB_DEVICE_DETACHED" />-->
+<!--            </intent-filter>-->
+<!--        </receiver>-->
+<!--        <service-->
+<!--            android:name=".NotificationAccessService"-->
+<!--            android:label="通知辅助功能服务"-->
+<!--            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"-->
+<!--            android:exported="true">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.service.notification.NotificationListenerService" />-->
+<!--            </intent-filter>-->
+<!--        </service>-->
         <!--        汐洛链滴社区客户端主入口-->
         <activity
             android:name=".ld246.HomeActivity"
@@ -397,65 +397,65 @@
                 android:name="android.app.shortcuts_ld246"
                 android:resource="@xml/shortcuts_ld246" />
         </activity>
-        <!--        汐洛主入口-->
-        <activity
-            android:name=".SillotHomeActivity"
-            android:icon="@drawable/icon"
-            android:label="@string/activity_name_SillotHome"
-            android:autoRemoveFromRecents="false"
-            android:configChanges="orientation|screenSize"
-            android:exported="true"
-            android:hardwareAccelerated="true"
-            android:noHistory="false"
-            android:taskAffinity=".sillot.task"
-            android:theme="@style/Theme.SiYuan.Boot">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+<!--        &lt;!&ndash;        汐洛主入口&ndash;&gt;-->
+<!--        <activity-->
+<!--            android:name=".SillotHomeActivity"-->
+<!--            android:icon="@drawable/icon"-->
+<!--            android:label="@string/activity_name_SillotHome"-->
+<!--            android:autoRemoveFromRecents="false"-->
+<!--            android:configChanges="orientation|screenSize"-->
+<!--            android:exported="true"-->
+<!--            android:hardwareAccelerated="true"-->
+<!--            android:noHistory="false"-->
+<!--            android:taskAffinity=".sillot.task"-->
+<!--            android:theme="@style/Theme.SiYuan.Boot">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.VIEW" />-->
+<!--                <category android:name="android.intent.category.DEFAULT" />-->
+<!--                <category android:name="android.intent.category.BROWSABLE" />-->
 
-                <data android:scheme="sillot" />
-                <data android:scheme="sisi" />
-            </intent-filter>
-            <!-- shortcutId | android:name 不能重复-->
-            <meta-data
-                android:name="android.app.shortcuts"
-                android:resource="@xml/shortcuts_1" />
-        </activity>
-        <!--   司华入口-->
-        <activity
-            android:name=".sillot.ui.MainActivity"
-            android:icon="@drawable/icon"
-            android:label="@string/activity_name_Sithw"
-            android:autoRemoveFromRecents="false"
-            android:configChanges="orientation|screenSize"
-            android:exported="true"
-            android:hardwareAccelerated="true"
-            android:noHistory="false"
-            android:taskAffinity=".sillot.sithw.task"
-            android:theme="@style/Theme.SiYuan.Boot">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+<!--                <data android:scheme="sillot" />-->
+<!--                <data android:scheme="sisi" />-->
+<!--            </intent-filter>-->
+<!--            &lt;!&ndash; shortcutId | android:name 不能重复&ndash;&gt;-->
+<!--            <meta-data-->
+<!--                android:name="android.app.shortcuts"-->
+<!--                android:resource="@xml/shortcuts_1" />-->
+<!--        </activity>-->
+<!--        &lt;!&ndash;   司华入口&ndash;&gt;-->
+<!--        <activity-->
+<!--            android:name=".sillot.ui.MainActivity"-->
+<!--            android:icon="@drawable/icon"-->
+<!--            android:label="@string/activity_name_Sithw"-->
+<!--            android:autoRemoveFromRecents="false"-->
+<!--            android:configChanges="orientation|screenSize"-->
+<!--            android:exported="true"-->
+<!--            android:hardwareAccelerated="true"-->
+<!--            android:noHistory="false"-->
+<!--            android:taskAffinity=".sillot.sithw.task"-->
+<!--            android:theme="@style/Theme.SiYuan.Boot">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.VIEW" />-->
+<!--                <category android:name="android.intent.category.DEFAULT" />-->
+<!--                <category android:name="android.intent.category.BROWSABLE" />-->
 
-                <data android:scheme="sithw" />
-            </intent-filter>
-            <!-- shortcutId | android:name 不能重复-->
-            <meta-data
-                android:name="android.app.shortcuts"
-                android:resource="@xml/shortcuts_2" />
-        </activity>
+<!--                <data android:scheme="sithw" />-->
+<!--            </intent-filter>-->
+<!--            &lt;!&ndash; shortcutId | android:name 不能重复&ndash;&gt;-->
+<!--            <meta-data-->
+<!--                android:name="android.app.shortcuts"-->
+<!--                android:resource="@xml/shortcuts_2" />-->
+<!--        </activity>-->
 
 <!--        思源笔记入口-->
         <activity
