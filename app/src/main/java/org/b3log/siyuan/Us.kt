@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.KeyguardManager
+import android.content.ActivityNotFoundException
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Context
@@ -799,6 +800,10 @@ object Us {
 
         activity.startActivity(installIntent)
     }
+
+    /**
+    * 安装 apk 文件，需要申请权限。不申请权限安装请使用 installApk2
+    */
     fun installApk(activity: Activity, apkUri: Uri) {
         try {
             val installIntent: Intent
@@ -833,6 +838,33 @@ object Us {
             PopNotification.show("任务失败", e.toString()).noAutoDismiss()
         }
     }
+
+    /**
+     * 安装 apk 文件，无需申请权限，但是需要有对应处理软件（一般系统都自带）。申请权限安装请使用 installApk
+     */
+    fun installApk2(activity: Activity, apkUri: Uri) {
+        try {
+            val installIntent = Intent(Intent.ACTION_VIEW)
+            installIntent.setDataAndType(apkUri, "application/vnd.android.package-archive")
+            installIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+
+            // 如果是第三方软件提供的安装包，确保继承了读取权限
+            installIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+            // 创建一个选择器对话框，让用户选择使用哪个应用来打开APK文件
+            val chooserIntent = Intent.createChooser(installIntent, "选择安装应用的方式")
+
+            // 启动系统提供的对话框，让用户选择处理意图的应用
+            activity.startActivity(chooserIntent)
+        } catch (e: ActivityNotFoundException) {
+            // 如果没有找到可以处理的应用，提示用户
+            PopNotification.show("任务失败", "没有找到可以安装APK的应用，请尝试使用文件管理器或其他第三方应用打开APK文件。")
+        } catch (e: Exception) {
+            Log.e("Us.installApk", e.toString())
+            PopNotification.show("任务失败", e.toString()).noAutoDismiss()
+        }
+    }
+
 
 
     fun sendEmail(packageManager: PackageManager, recipient: String, subject: String?, body: String?) {

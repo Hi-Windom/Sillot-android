@@ -77,7 +77,8 @@ object S {
         val btnText4 = compositionLocalOf { "存入工作空间级资源目录" }
         val btnTextAudio1 = compositionLocalOf { "播放（旧）" }
         val btnTextVideo1 = compositionLocalOf { "播放" }
-        val btnText5Apk1 = compositionLocalOf { "安装" }
+        val btnText5Apk1 = compositionLocalOf { "通过第三方安装" }
+        val btnText5Apk2 = compositionLocalOf { "通过汐洛安装" }
         val small_iconSize = compositionLocalOf { 24.dp }
         val Card_bgColor_green1 = compositionLocalOf { Color(0x58237A58) }
         val Card_bgColor_gold1 = compositionLocalOf { Color(0x58997758) }

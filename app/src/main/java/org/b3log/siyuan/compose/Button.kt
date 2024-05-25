@@ -80,7 +80,7 @@ fun VideoButtons(uri: Uri) {
 }
 
 @Composable
-fun ApkButtons( ApkBTNonClick1: () -> Unit) {
+fun ApkButtons(btnText: String,  ApkBTNonClick1: () -> Unit) {
     val TAG = "MainPro-BtnPart-AudioButtons"
     val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
     val Button_Width = S.C.Button_Width.current
@@ -91,7 +91,6 @@ fun ApkButtons( ApkBTNonClick1: () -> Unit) {
     val btn_TextFontsizeV = S.C.btn_TextFontsizeV.current
     val btn_Color1 = S.C.btn_Color1.current
     val btn_bgColor1 = S.C.btn_bgColor_pink.current
-    val btnText1 = S.C.btnText5Apk1.current
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
     Button(modifier= Modifier
         .width(Button_Width.dp)
@@ -101,7 +100,7 @@ fun ApkButtons( ApkBTNonClick1: () -> Unit) {
             contentColor = btn_Color1
         ), enabled = true, onClick = ApkBTNonClick1) {
         Text(
-            text = btnText1,
+            text = btnText,
             letterSpacing = btn_lspace,
             fontSize = if (isLandscape) btn_TextFontsizeH else btn_TextFontsizeV
         )
