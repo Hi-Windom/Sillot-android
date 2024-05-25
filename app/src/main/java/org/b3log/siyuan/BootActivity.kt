@@ -31,9 +31,6 @@ import android.text.method.ScrollingMovementMethod
 import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.microsoft.clarity.Clarity
-import com.microsoft.clarity.ClarityConfig
-import com.microsoft.clarity.models.LogLevel
 import org.apache.commons.io.FileUtils
 import java.io.File
 

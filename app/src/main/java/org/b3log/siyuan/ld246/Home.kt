@@ -41,7 +41,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.twotone.Article
 import androidx.compose.material.icons.automirrored.twotone.Reply
-import androidx.compose.material.icons.twotone.AccountCircle
 import androidx.compose.material.icons.twotone.Album
 import androidx.compose.material.icons.twotone.Attribution
 import androidx.compose.material.icons.twotone.CenterFocusWeak
@@ -74,8 +73,8 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -100,7 +99,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
 import androidx.core.text.HtmlCompat
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil.compose.AsyncImage
@@ -118,6 +116,8 @@ import com.tencent.mmkv.MMKV
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.launch
@@ -138,7 +138,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class HomeActivity : ComponentActivity() {
     val TAG = "ld246-HomeActivity"
-    var mmkv: MMKV = MMKV.defaultMMKV()
+    private var mmkv: MMKV = MMKV.defaultMMKV()
     var token = Us.getDecryptedToken(mmkv, S.KEY_TOKEN_ld246, S.KEY_AES_TOKEN_ld246)
     val ua = "Sillot-anroid/0.35"
     private var exitTime: Long = 0
@@ -155,14 +155,14 @@ class HomeActivity : ComponentActivity() {
         Icons.TwoTone.Album
     )
     private var LockNoteType_EN: String = titles_type[0]
-    val mapEmpty = mutableMapOf<String, List<ld246_Response_Data_Notification>?>().apply {
+    private val mapEmpty = mutableMapOf<String, List<Any>?>().apply {
         titles.associateWithTo(this) { emptyList() }
     }
-    var map: MutableMap<String, List<ld246_Response_Data_Notification>?> = mapEmpty
+    var map: MutableMap<String, List<Any>?> = mapEmpty
     private var job: Job? = null
-    var viewmodel: NotificationsViewModel? = null
-    var retrofit: Retrofit? = null
-    var apiService: ApiServiceNotification? = null
+    private var viewmodel: NotificationsViewModel? = null
+    private var retrofit: Retrofit? = null
+    private var apiService: ApiServiceNotification? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -189,7 +189,7 @@ class HomeActivity : ComponentActivity() {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
         // 创建API服务实例
-        apiService = retrofit!!.create(ApiServiceNotification::class.java)
+        apiService = retrofit?.create(ApiServiceNotification::class.java)
         ActivityScreenShotImageView.hideContentView =
             true; // https://github.com/kongzue/DialogX/wiki/%E5%85%A8%E5%B1%8F%E5%AF%B9%E8%AF%9D%E6%A1%86-FullScreenDialog
         // 获取OnBackPressedDispatcher
@@ -220,8 +220,8 @@ class HomeActivity : ComponentActivity() {
                         )
                         try {
                             Thread.sleep(200)
-                        } catch (e: InterruptedException) {
-                            Log.w(TAG, e.toString())
+                        } catch (e: Exception) {
+                            PopNotification.show(e.cause.toString(), e.toString())
                         }
                         Log.w(TAG, "再见")
                         finish()
@@ -259,7 +259,7 @@ class HomeActivity : ComponentActivity() {
         val isMenuVisible = rememberSaveable { mutableStateOf(false) }
         val isShowBottomText = rememberSaveable { mutableStateOf(false) }
         val isUserPage = rememberSaveable { mutableStateOf(false) }
-        var userPageData by remember { mutableStateOf<User>(User()) }
+        var userPageData by remember { mutableStateOf(User()) }
 
         LaunchedEffect(isUserPage.value) {
             if (isUserPage.value) {
@@ -270,8 +270,8 @@ class HomeActivity : ComponentActivity() {
                             p0: Call<ld246_Response>,
                             p1: Response<ld246_Response>
                         ) {
-                            if (p1.isSuccessful) {
-                                p1.body()?.data?.user?.let { userPageData = it };
+                            if (p1.isSuccessful && p1.body() != null) {
+                                p1.body()?.data?.user?.let { userPageData = it }
                             } else {
                                 PopNotification.show(p1.code(), p1.toString()).noAutoDismiss()
                             }
@@ -293,11 +293,16 @@ class HomeActivity : ComponentActivity() {
                 job?.cancel()
             }
         }
-        // 将LiveData转换为Compose可以理解的State对象。这样，每当LiveData的值发生变化时，Compose就会自动重组使用该State的UI部分。
-        val observeNotifications = viewmodel!!.notificationsMap.observeAsState(listOf())
+        // 使用 collectAsState 来观察 StateFlow
+        val notificationsState = viewmodel?.notificationsState?.collectAsState(initial = listOf())
         if (PullToRefreshState.isRefreshing) {
             LaunchedEffect(true) {
-                viewmodel!!.fetchNotifications(PullToRefreshState, apiService!!, isTabChanged)
+                apiService?.let {
+                    viewmodel?.fetchNotifications(
+                        PullToRefreshState,
+                        it, isTabChanged
+                    )
+                }
                 delay(200) // 避免接口请求频繁
             }
         }
@@ -307,7 +312,12 @@ class HomeActivity : ComponentActivity() {
                 .conflate() // 当新值到来时，如果上一个值还没被处理，就忽略它
                 .collectLatest { // collectLatest会取消当前正在进行的操作，并开始新的操作
                     Log.d("LaunchedEffect-snapshotFlow", isTabChanged.value)
-                    viewmodel!!.fetchNotifications(PullToRefreshState, apiService!!, isTabChanged)
+                    apiService?.let { it1 ->
+                        viewmodel?.fetchNotifications(
+                            PullToRefreshState,
+                            it1, isTabChanged
+                        )
+                    }
                     delay(200) // 避免接口请求频繁
                 }
         }
@@ -342,7 +352,7 @@ class HomeActivity : ComponentActivity() {
                     if (isUserPage.value) {
                         UserPage(userPageData)
                     } else {
-                        NotificationsScreen(observeNotifications)
+                        notificationsState?.let { it1 -> NotificationsScreen(it1) }
                     }
 
                     SecondaryTextTabs(
@@ -379,7 +389,7 @@ class HomeActivity : ComponentActivity() {
             leadingIcon = { Icon(Icons.TwoTone.Swipe, contentDescription = null) },
             onClick = {
                 onDismiss()
-                viewmodel!!.fetchNotifications(null, apiService!!, isTabChanged)
+                apiService?.let { viewmodel?.fetchNotifications(null, it, isTabChanged) }
             }
         )
         DropdownMenuItem(
@@ -718,7 +728,7 @@ class HomeActivity : ComponentActivity() {
 
 
     @Composable
-    fun NotificationsScreen(n: State<List<ld246_Response_Data_Notification>?>) {
+    fun NotificationsScreen(n: State<List<Any>?>) {
         // 观察LiveData并更新状态
         val v = n.value
         if (v.isNullOrEmpty()) {
@@ -745,8 +755,8 @@ class HomeActivity : ComponentActivity() {
                 modifier = Modifier.padding(bottom = 70.dp) // 避免被底栏遮住
             ) {
                 item {
-                    v?.forEach { notification ->
-                        NotificationCard(notification)
+                    v.forEach { notification ->
+                        NotificationCard(notification as ld246_Response_Data_Notification)
                     }
                 }
             }
@@ -783,42 +793,43 @@ class HomeActivity : ComponentActivity() {
                         uriHandler
                     )
                 }) {
-                if (notification.authorName != null) { // 积分通知
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                _openURL(
-                                    "https://${S.HOST_ld246}/member/${notification.authorName}",
-                                    uriHandler
-                                )
-                            }
-                    ) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(notification.authorAvatarURL)
-                                .crossfade(true)
-                                .build(),
-                            contentDescription = "Author Avatar",
-                            modifier = Modifier.size(26.dp)
-                        )
+                // 积分通知
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            _openURL(
+                                "https://${S.HOST_ld246}/member/${notification.authorName}",
+                                uriHandler
+                            )
+                        }
+                ) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(notification.authorAvatarURL)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Author Avatar",
+                        modifier = Modifier.size(26.dp)
+                    )
+                    notification.authorName?.let {
                         Text(
-                            text = notification.authorName,
+                            text = it,
                             fontSize = 15.sp,
                             modifier = Modifier.padding(start = 8.dp) // 添加一些 padding 以增加间隔
                         )
                     }
-                    notification.title?.let {
-                        Text(
-                            text = it,
-                            fontSize = 15.sp,
-                            fontStyle = FontStyle.Italic,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-
                 }
+                notification.title?.let {
+                    Text(
+                        text = it,
+                        fontSize = 15.sp,
+                        fontStyle = FontStyle.Italic,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
                 SelectableUrlHandleHtmlText(notification.content)
             }
         }
@@ -828,19 +839,24 @@ class HomeActivity : ComponentActivity() {
     @SuppressLint("StaticFieldLeak")
     inner class NotificationsViewModel : ViewModel() {
         val TAG = "NotificationsViewModel"
-        var __init__ = false;
-        private val _notificationsMap = MutableLiveData<List<ld246_Response_Data_Notification>?>()
-        val notificationsMap: MutableLiveData<List<ld246_Response_Data_Notification>?> =
-            _notificationsMap
+        private var __init__ = false;
+
+        // 使用 StateFlow 来代替 MutableLiveData
+        private val _notificationsState =
+            MutableStateFlow<List<Any>?>(null)
+        val notificationsState: StateFlow<List<Any>?> =
+            _notificationsState
 
         @OptIn(ExperimentalMaterial3Api::class)
         private fun updateNotificationsMap(
             isTabChanged: MutableState<String>, state: PullToRefreshState?
         ) {
-            _notificationsMap.postValue(map[isTabChanged.value])
-            if (state != null) {
-                if (state.isRefreshing) {
-                    state.endRefresh()
+            viewModelScope.launch {
+                _notificationsState.emit(map[isTabChanged.value])
+                if (state != null) {
+                    if (state.isRefreshing) {
+                        state.endRefresh()
+                    }
                 }
             }
         }
@@ -883,18 +899,24 @@ class HomeActivity : ComponentActivity() {
                                 call: Call<ld246_Response>,
                                 response: Response<ld246_Response>
                             ) {
-                                if (response.isSuccessful) {
+                                if (response.isSuccessful && response.body() != null) {
                                     Log.d(TAG, "onResponse: ${response.body().toString()}")
-                                    response.body()?.data?.let {
-                                        map[isTabChanged.value] = when (isTabChanged.value) {
-                                            "回帖" -> it.commentedNotifications
-                                            "评论" -> it.comment2edNotifications
-                                            "回复" -> it.replyNotifications
-                                            "提及" -> it.atNotifications
-                                            "关注" -> it.followingNotifications
-                                            "积分" -> it.pointNotifications
-                                            else -> listOf()
+                                    val data = response.body()?.data
+                                    try {
+
+                                        val notifications = when (isTabChanged.value) {
+                                            "回帖" -> data?.commentedNotifications
+                                            "评论" -> data?.comment2edNotifications
+                                            "回复" -> data?.replyNotifications
+                                            "提及" -> data?.atNotifications
+                                            "关注" -> data?.followingNotifications
+                                            "积分" -> data?.pointNotifications
+                                            else -> null
                                         }
+                                        map[isTabChanged.value] = notifications
+                                    } catch (e: Exception) {
+                                        PopNotification.show(e.cause.toString(), e.toString())
+                                            .noAutoDismiss()
                                     }
                                     PopTip.show("<(￣︶￣)↗[${response.code()}]")
                                     val _mr: Call<ld246_Response> =
@@ -1007,7 +1029,7 @@ class HomeActivity : ComponentActivity() {
         }
     }
 
-    fun showFullScreenDialog(url: String) {
+    private fun showFullScreenDialog(url: String) {
         Log.w("showFullScreenDialog", url)
         if (fullScreenDialog == null) {
             fullScreenDialog = FullScreenDialog.build().apply {

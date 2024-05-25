@@ -20,6 +20,12 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
+# 保留所有公开类和方法名，仅用于 debug
+#-keepclasseswithmembers class * {
+#    public <methods>;
+#}
+-keep class org.b3log.siyuan.ld246.HomeActivity
+
 # UltimateBarX 混淆规则
 -keep class com.zackratos.ultimatebarx.ultimatebarx.** { *; }
 -keep public class * extends androidx.fragment.app.Fragment { *; }
