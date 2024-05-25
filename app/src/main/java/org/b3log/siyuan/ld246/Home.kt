@@ -721,7 +721,7 @@ class HomeActivity : ComponentActivity() {
     fun NotificationsScreen(n: State<List<ld246_Response_Data_Notification>?>) {
         // 观察LiveData并更新状态
         val v = n.value
-        if (v?.isEmpty() == true) {
+        if (v.isNullOrEmpty()) {
             // 显示空数据状态的占位符
             LazyColumn {
                 items(13) { index ->
@@ -866,9 +866,9 @@ class HomeActivity : ComponentActivity() {
         ) {
             job = viewModelScope.launch {
                 try {
-                    if (state == null || state.isRefreshing || !__init__ || map[isTabChanged.value]!!.isEmpty()) {
+                    if (state == null || state.isRefreshing || !__init__ || map[isTabChanged.value].isNullOrEmpty()) {
                         // 执行网络请求
-                        val caller: Call<ld246_Response>? = when (isTabChanged.value) {
+                        val caller: Call<ld246_Response> = when (isTabChanged.value) {
                             "回帖" -> apiService.apiV2NotificationsCommentedGet(1, token, ua)
                             "评论" -> apiService.apiV2NotificationsComment2edGet(1, token, ua)
                             "回复" -> apiService.apiV2NotificationsReplyGet(1, token, ua)
@@ -876,9 +876,9 @@ class HomeActivity : ComponentActivity() {
                             "关注" -> apiService.apiV2NotificationsFollowingGet(1, token, ua)
                             "积分" -> apiService.apiV2NotificationsPointGet(1, token, ua)
                             else -> null
-                        }
+                        } ?: return@launch
                         // enqueue 方法通常用于将一个网络请求加入到请求队列中，准备异步执行
-                        caller?.enqueue(object : Callback<ld246_Response> {
+                        caller.enqueue(object : Callback<ld246_Response> {
                             override fun onResponse(
                                 call: Call<ld246_Response>,
                                 response: Response<ld246_Response>
