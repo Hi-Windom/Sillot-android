@@ -6,8 +6,13 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.text.Spannable
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
+import android.text.style.URLSpan
 import android.util.Base64
 import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import android.webkit.CookieManager
 import android.webkit.CookieSyncManager
@@ -84,13 +89,16 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
+import androidx.core.text.HtmlCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -117,7 +125,7 @@ import org.b3log.siyuan.R
 import org.b3log.siyuan.S
 import org.b3log.siyuan.Us
 import org.b3log.siyuan.appUtils.HWs
-import org.b3log.siyuan.compose.SelectableHtmlText
+import org.b3log.siyuan.compose.MyTagHandler
 import org.b3log.siyuan.compose.components.CommonTopAppBar
 import org.b3log.siyuan.ld246.api.ApiServiceNotification
 import retrofit2.Call
@@ -354,7 +362,10 @@ class HomeActivity : ComponentActivity() {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    fun AddDropdownMenu(onDismiss: () -> Unit, isShowBottomText: MutableState<Boolean>, isTabChanged: MutableState<String>
+    fun AddDropdownMenu(
+        onDismiss: () -> Unit,
+        isShowBottomText: MutableState<Boolean>,
+        isTabChanged: MutableState<String>
     ) {
         DropdownMenuItem(
             text = { Text("手动刷新") },
@@ -577,15 +588,16 @@ class HomeActivity : ComponentActivity() {
                         .padding(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(modifier = Modifier
-                        .clickable {
-                            Lcc.startActivity(
-                                Intent(
-                                    Intent.ACTION_VIEW,
-                                    Uri.parse("https://${S.HOST_ld246}/member/${user.userName}")
+                    Box(
+                        modifier = Modifier
+                            .clickable {
+                                Lcc.startActivity(
+                                    Intent(
+                                        Intent.ACTION_VIEW,
+                                        Uri.parse("https://${S.HOST_ld246}/member/${user.userName}")
+                                    )
                                 )
-                            )
-                        }, contentAlignment = Alignment.Center
+                            }, contentAlignment = Alignment.Center
                     ) {
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
@@ -599,9 +611,11 @@ class HomeActivity : ComponentActivity() {
                                 .clip(CircleShape), // 使用圆形裁剪
                         )
                     }
-                    Spacer(modifier = Modifier
-                        .width(16.dp)
-                        .fillMaxWidth())
+                    Spacer(
+                        modifier = Modifier
+                            .width(16.dp)
+                            .fillMaxWidth()
+                    )
                     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         Column {
                             Text(
@@ -617,9 +631,11 @@ class HomeActivity : ComponentActivity() {
                     }
                 }
 
-                Spacer(modifier = Modifier
-                    .height(16.dp)
-                    .fillMaxWidth())
+                Spacer(
+                    modifier = Modifier
+                        .height(16.dp)
+                        .fillMaxWidth()
+                )
                 UserProfileScreen(user)
             }
         }
@@ -634,38 +650,38 @@ class HomeActivity : ComponentActivity() {
                 ProfileInfoItem(
                     "编号",
                     user.userNo
-                ) { Us.openUrl("https://${S.HOST_ld246}/member/${user.userName}") }
+                ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}") }
                 ProfileInfoItem(
                     "帖子",
                     user.userArticleCount
-                ) { Us.openUrl("https://${S.HOST_ld246}/member/${user.userName}/articles") }
+                ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}/articles") }
                 ProfileInfoItem(
                     "回帖",
                     user.userCommentCount
-                ) { Us.openUrl("https://${S.HOST_ld246}/member/${user.userName}/comments") }
+                ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}/comments") }
                 ProfileInfoItem(
                     "评论",
                     user.userComment2Count
-                ) { Us.openUrl("https://${S.HOST_ld246}/member/${user.userName}/comment2s") }
+                ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}/comment2s") }
             }
             // 右侧列
             Column(modifier = Modifier.weight(1f)) {
                 ProfileInfoItem(
                     "积分",
                     user.userPoint
-                ) { Us.openUrl("https://${S.HOST_ld246}/member/${user.userName}/points") }
+                ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}/points") }
                 ProfileInfoItem(
                     "综合贡献点",
                     user.userGeneralRank
-                ) { Us.openUrl("https://${S.HOST_ld246}/top/general") }
+                ) { _openURL("https://${S.HOST_ld246}/top/general") }
                 ProfileInfoItem(
                     "最近连签",
                     user.userCurrentCheckinStreak
-                ) { Us.openUrl("https://${S.HOST_ld246}/activity/checkin") }
+                ) { _openURL("https://${S.HOST_ld246}/activity/checkin") }
                 ProfileInfoItem(
                     "最长连签",
                     user.userLongestCheckinStreak
-                ) { Us.openUrl("https://${S.HOST_ld246}/activity/checkin") }
+                ) { _openURL("https://${S.HOST_ld246}/activity/checkin") }
             }
         }
     }
@@ -755,26 +771,20 @@ class HomeActivity : ComponentActivity() {
                 .padding(10.dp)
                 .clickable {
                     // SelectableHtmlText 需要响应内容的点击事件，因此打开文章得扩大到整个卡片。
-                    val url = "https://${S.HOST_ld246}/article/${notification.dataId}"
-                    if (openUrlExternal) {
-                        uriHandler.openUri(url)
-                    } else {
-                        showFullScreenDialog(url)
-                    }
+                    _openURL(
+                        "https://${S.HOST_ld246}/article/${notification.dataId}",
+                        uriHandler
+                    )
                 }) {
                 if (notification.authorName != null) { // 积分通知
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                val url =
-                                    "https://${S.HOST_ld246}/member/${notification.authorName}"
-                                if (openUrlExternal) {
-                                    // 使用 LocalUriHandler 打开链接，不需要手动阻止事件冒泡
-                                    uriHandler.openUri(url)
-                                } else {
-                                    showFullScreenDialog(url)
-                                }
+                                _openURL(
+                                    "https://${S.HOST_ld246}/member/${notification.authorName}",
+                                    uriHandler
+                                )
                             }
                     ) {
                         AsyncImage(
@@ -802,7 +812,7 @@ class HomeActivity : ComponentActivity() {
                     }
 
                 }
-                SelectableHtmlText(notification.content)
+                SelectableUrlHandleHtmlText(notification.content)
             }
         }
     }
@@ -817,8 +827,9 @@ class HomeActivity : ComponentActivity() {
             _notificationsMap
 
         @OptIn(ExperimentalMaterial3Api::class)
-        private fun updateNotificationsMap(isTabChanged: MutableState<String>
-                                           ,state: PullToRefreshState?) {
+        private fun updateNotificationsMap(
+            isTabChanged: MutableState<String>, state: PullToRefreshState?
+        ) {
             _notificationsMap.postValue(map[isTabChanged.value])
             if (state != null) {
                 if (state.isRefreshing) {
@@ -841,7 +852,10 @@ class HomeActivity : ComponentActivity() {
         }
 
         @OptIn(ExperimentalMaterial3Api::class)
-        fun fetchNotifications(state: PullToRefreshState?, apiService: ApiServiceNotification, isTabChanged: MutableState<String>
+        fun fetchNotifications(
+            state: PullToRefreshState?,
+            apiService: ApiServiceNotification,
+            isTabChanged: MutableState<String>
         ) {
             job = viewModelScope.launch {
                 try {
@@ -1038,6 +1052,84 @@ class HomeActivity : ComponentActivity() {
                 Log.w(fullScreenDialog.toString(), webView.toString())
                 webView?.loadUrl(url)
             }
+        }
+    }
+
+    fun _openURL(url: String, uriHandler: UriHandler? = null) {
+        if (openUrlExternal) {
+            if (uriHandler != null) {
+                uriHandler.openUri(url)
+            } else {
+                Us.openUrl(url)
+            }
+        } else {
+            showFullScreenDialog(url)
+        }
+    }
+
+    @Composable
+    fun SelectableUrlHandleHtmlText(html: String, modifier: Modifier = Modifier) {
+        // 完全体，因为需要共享一些数据不好抽离，基础版在 HTML.kt
+        AndroidView(
+            modifier = modifier.fillMaxWidth(),
+            factory = { context ->
+                TextView(context).apply {
+                    // 允许长按复制文本，需放在前面
+                    setTextIsSelectable(true)
+                    // 设置MovementMethod以使链接可点击，需放在后面
+                    // 尝试过自定义处理逻辑，结果替换个链接都费劲
+                    movementMethod = LinkMovementMethod.getInstance()
+                    // 设置全局字体大小
+                    textSize = 17f
+                }
+            },
+            update = { textView ->
+                // 设置自定义的MovementMethod
+                textView.movementMethod = CustomLinkMovementMethod()
+                val _Html = Us.parseAndDecodeUrl(
+                    html,
+                    """['"]https://ld246.com/forward\?goto=([^'"]*)['"]""".toRegex()
+                )
+//            Log.i("HTML", _Html)
+                textView.text = HtmlCompat.fromHtml(
+                    _Html,
+                    HtmlCompat.FROM_HTML_MODE_COMPACT,
+                    null,
+                    MyTagHandler()
+                )
+            }
+        )
+    }
+
+    inner class CustomLinkMovementMethod : LinkMovementMethod() {
+        override fun onTouchEvent(
+            widget: TextView,
+            buffer: Spannable,
+            event: MotionEvent
+        ): Boolean {
+            val action = event.action
+
+            if (action == MotionEvent.ACTION_UP) {
+                val x = event.x.toInt()
+                val y = event.y.toInt()
+
+                val layout = widget.layout
+                val line = layout.getLineForVertical(y)
+                val off = layout.getOffsetForHorizontal(line, x.toFloat())
+
+                val links = buffer.getSpans(off, off, ClickableSpan::class.java)
+
+                if (links.isNotEmpty()) {
+                    // 这里执行您的自定义逻辑，例如：
+                    // 获取链接的URL
+                    val urlSpan = links[0] as URLSpan
+                    val url = urlSpan.url
+                    _openURL(url)
+                    return true
+                }
+            }
+
+            return super.onTouchEvent(widget, buffer, event)
         }
     }
 }

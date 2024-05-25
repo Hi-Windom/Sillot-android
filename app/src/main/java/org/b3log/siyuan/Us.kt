@@ -720,10 +720,17 @@ object Us {
         }
     }
 
-    fun openUrl(url: String) {
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+    fun openUrl(url: String, noBrowser: Boolean=false) {
+        val i = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        if (noBrowser == true) {
+            i.addFlags(Intent.FLAG_ACTIVITY_REQUIRE_NON_BROWSER)
+        }
+        try {
+            startActivity(i)
+        } catch (e: Exception) {
+            PopNotification.show(e.message, e.stackTrace.toString()).noAutoDismiss()
+        }
     }
-
 
     fun isStorageSpaceAvailable(contentResolver: ContentResolver, uri: Uri): Boolean {
         contentResolver.openFileDescriptor(uri, "r").use { pfd ->
