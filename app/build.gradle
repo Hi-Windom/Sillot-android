@@ -68,7 +68,7 @@ android {
         action { // 防止第三方库debug模式导致action失败
 //            applicationIdSuffix ".debug"
             versionNameSuffix ".${vC}${genDateTime()}" // versionCode 一样也可以更新
-            resValue "string","app_name","汐洛内测版"
+            resValue "string","app_name","汐洛公测版"
             manifestPlaceholders = [
                     provider_name : "sc.windom.sillot.app.provider.debug",  // 暂时用不上
             ]
@@ -80,7 +80,7 @@ android {
         }
         debug {
             versionNameSuffix ".${vC}${genDateTime()}" // versionCode 一样也可以更新
-            resValue "string","app_name","汐洛公测版"
+            resValue "string","app_name","汐洛内测版"
         }
         release {
             minifyEnabled true
