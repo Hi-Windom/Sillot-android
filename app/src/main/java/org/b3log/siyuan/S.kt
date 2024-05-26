@@ -50,6 +50,12 @@ object S {
     const val REQUEST_POST_NOTIFICATIONS = 10005 // 读取通知
     const val REQUEST_CODE_INSTALL_PERMISSION = 10006 // 安装应用
 
+
+    object API {
+        val ld246_notification_type = listOf("回帖", "评论", "回复", "提及", "关注", "积分")
+        val ld246_notification_type_EN = listOf("commented", "comment2ed", "reply", "at", "following", "point")
+    }
+
     // compose 组件常量
     object C {
         // sp（缩放无关像素）：用于字体大小，会根据用户的字体大小偏好进行缩放。
