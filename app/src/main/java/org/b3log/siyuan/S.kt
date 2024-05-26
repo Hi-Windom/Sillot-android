@@ -88,6 +88,7 @@ object S {
         val small_iconSize = compositionLocalOf { 24.dp }
         val Card_bgColor_green1 = compositionLocalOf { Color(0x58237A58) }
         val Card_bgColor_gold1 = compositionLocalOf { Color(0x58997758) }
+        val Card_bgColor_red1 = compositionLocalOf { Color(0xC8791020) }
     }
 
     data class UriMatchPattern(val scheme: String, val host: String)

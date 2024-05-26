@@ -53,6 +53,8 @@ import androidx.compose.material.icons.twotone.SafetyCheck
 import androidx.compose.material.icons.twotone.Swipe
 import androidx.compose.material.icons.twotone.TextFields
 import androidx.compose.material.icons.twotone.Token
+import androidx.compose.material.icons.twotone.Warning
+import androidx.compose.material.icons.twotone.WifiOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -61,6 +63,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults.SecondaryIndicator
@@ -92,6 +96,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -126,6 +131,7 @@ import org.b3log.siyuan.S
 import org.b3log.siyuan.Us
 import org.b3log.siyuan.appUtils.HWs
 import org.b3log.siyuan.compose.MyTagHandler
+import org.b3log.siyuan.compose.NetworkViewModel
 import org.b3log.siyuan.compose.components.CommonTopAppBar
 import org.b3log.siyuan.ld246.api.ApiServiceNotification
 import retrofit2.Call
@@ -157,6 +163,7 @@ class HomeActivity : ComponentActivity() {
     var map: MutableMap<String, List<Any>?> = mapEmpty
     private var job: Job? = null
     private var viewmodel: NotificationsViewModel? = null
+    private var viewmodel_network: NetworkViewModel? = null
     private var retrofit: Retrofit? = null
     private var apiService: ApiServiceNotification? = null
 
@@ -179,6 +186,7 @@ class HomeActivity : ComponentActivity() {
             }
         }
         viewmodel = NotificationsViewModel()
+        viewmodel_network = NetworkViewModel(application)
         // 创建Retrofit实例
         retrofit = Retrofit.Builder()
             .baseUrl("https://${S.HOST_ld246}/")
@@ -245,25 +253,28 @@ class HomeActivity : ComponentActivity() {
     }
 
     @OptIn(ExperimentalMaterial3Api::class)
-    private fun updateUserPage(userPageData: MutableState<User>, pullToRefreshState: PullToRefreshState?) {
-            val caller = apiService?.apiV2UserGet(token, ua)
-            caller?.enqueue(object : Callback<ld246_Response> {
-                override fun onResponse(
-                    p0: Call<ld246_Response>,
-                    response: Response<ld246_Response>
-                ) {
-                    if (response.isSuccessful && response.body() != null) {
-                        response.body()?.data?.user?.let { userPageData.value = it }
-                    }
-                    pullToRefreshState?.endRefresh()
-                    handle_ld246_Response(response)
+    private fun updateUserPage(
+        userPageData: MutableState<User>,
+        pullToRefreshState: PullToRefreshState?
+    ) {
+        val caller = apiService?.apiV2UserGet(token, ua)
+        caller?.enqueue(object : Callback<ld246_Response> {
+            override fun onResponse(
+                p0: Call<ld246_Response>,
+                response: Response<ld246_Response>
+            ) {
+                if (response.isSuccessful && response.body() != null) {
+                    response.body()?.data?.user?.let { userPageData.value = it }
                 }
+                pullToRefreshState?.endRefresh()
+                handle_ld246_Response(response)
+            }
 
-                override fun onFailure(p0: Call<ld246_Response>, p1: Throwable) {
-                    //
-                    pullToRefreshState?.endRefresh()
-                }
-            })
+            override fun onFailure(p0: Call<ld246_Response>, p1: Throwable) {
+                //
+                pullToRefreshState?.endRefresh()
+            }
+        })
     }
 
 
@@ -331,8 +342,8 @@ class HomeActivity : ComponentActivity() {
 
         }
 
-        if (map.values.all { it.isNullOrEmpty() }) {
-            LaunchedEffect(true) {
+        LaunchedEffect(true) {
+            if (map.values.all { it.isNullOrEmpty() }) {
                 apiService?.let {
                     viewmodel?.fetchAllNotifications(
                         it,
@@ -402,6 +413,7 @@ class HomeActivity : ComponentActivity() {
                         isShowBottomText
                     )
                 }
+                viewmodel_network?.let { it1 -> NetworkAwareContent(it1) }
                 if (pullToRefreshState.isRefreshing) {
                     LinearProgressIndicator(Modifier.fillMaxWidth())
                 } else {
@@ -612,6 +624,32 @@ class HomeActivity : ComponentActivity() {
                         }
                     )
                 }
+            }
+        }
+    }
+
+    @Composable
+    fun NetworkAwareContent(viewModel: NetworkViewModel) {
+        val isNetworkAvailable by viewModel.isNetworkAvailable
+        if (!isNetworkAvailable) {
+            Row(
+                modifier = Modifier
+                    .background(S.C.Card_bgColor_red1.current)
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.TwoTone.WifiOff,
+                    contentDescription = "网络连接已断开",
+                    tint = Color.Yellow
+                )
+                Text(
+                    text = "当前无法连接网络，请检查网络设置",
+                    fontSize = 15.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(5.dp)
+                )
             }
         }
     }
@@ -875,7 +913,6 @@ class HomeActivity : ComponentActivity() {
         }
     }
 
-
     @SuppressLint("StaticFieldLeak")
     private inner class NotificationsViewModel : ViewModel() {
         val TAG = "NotificationsViewModel"
@@ -887,7 +924,11 @@ class HomeActivity : ComponentActivity() {
             _notificationsState
 
         @OptIn(ExperimentalMaterial3Api::class)
-        fun fetchAllNotifications(apiService: ApiServiceNotification, currentTab: MutableState<String>, pullToRefreshState: PullToRefreshState?) {
+        fun fetchAllNotifications(
+            apiService: ApiServiceNotification,
+            currentTab: MutableState<String>,
+            pullToRefreshState: PullToRefreshState?
+        ) {
             viewModelScope.launch {
                 val calls = mutableListOf<Call<ld246_Response>>()
                 calls.add(apiService.apiV2NotificationsCommentedGet(1, token, ua))
@@ -955,7 +996,15 @@ class HomeActivity : ComponentActivity() {
         ) {
             job = viewModelScope.launch {
                 try {
-                    if (pullToRefreshState != null && pullToRefreshState.isRefreshing) {
+                    if (map.values.all { it.isNullOrEmpty() }) {
+                        apiService.let {
+                            viewmodel?.fetchAllNotifications(
+                                it,
+                                currentTab,
+                                pullToRefreshState
+                            )
+                        }
+                    } else if (pullToRefreshState != null && pullToRefreshState.isRefreshing) {
                         // 执行当前tab的请求
                         val caller: Call<ld246_Response> = when (currentTab.value) {
                             "回帖" -> apiService.apiV2NotificationsCommentedGet(1, token, ua)
