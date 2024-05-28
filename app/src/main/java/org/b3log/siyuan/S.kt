@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.sp
 object S {
 
     const val packageName = "sc.windom.sillot"
+    const val siyuanPackage = "org.b3log.siyuan"
     const val gitRepoUrl = "https://github.com/Hi-Windom/Sillot-android"
     const val emailAdress = "694357845@qq.com"
     const val QQ = "694357845"
@@ -36,7 +37,7 @@ object S {
     const val SY_NOTIFICATION_CHANNEL_ID = "sillot_notification_channel_id_6806"  // 📚 思源内核服务
     const val FloatingWindowService_NOTIFICATION_CHANNEL_ID = "sillot_notification_channel_id_100001"
 
-    const val URIMainActivity = "org.b3log.siyuan.MainActivity"
+    const val URIMainActivity = "${siyuanPackage}.MainActivity"
 
     // REQUEST CODE
     const val REQUEST_SELECT_FILE = 100

@@ -11,6 +11,15 @@
     android:focusableInTouchMode="true">
 
     <TextView
+        android:id="@+id/lan_ip_textview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#FFFFFF"
+        android:text="LAN IP: "
+        android:textSize="11sp"
+        android:layout_below="@id/wifi_status_textview"
+        android:layout_marginBottom="10dp"/>
+    <TextView
         android:id="@+id/wifi_status_textview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -25,6 +34,13 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/wifi_status_textview"
         android:layout_alignParentEnd="true"
-        android:text="Close"/>
+        android:text="关闭"/>
+    <Button
+        android:id="@+id/hide_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/wifi_status_textview"
+        android:layout_toStartOf="@id/close_button"
+        android:text="折叠"/>
 
 </RelativeLayout>

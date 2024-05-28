@@ -1,0 +1,20 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/floating_ball_window_root"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="#80000000"
+    android:padding="5dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
+    <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/wifi_floating_ball"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:text="展开"
+        android:textColor="#FFFFFF"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center" /> <!-- 设置文字居中 -->
+
+</RelativeLayout>
