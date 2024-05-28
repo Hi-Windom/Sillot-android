@@ -23,7 +23,7 @@ import org.b3log.siyuan.compose.components.CommonTopAppBar
 // TODO: 实际清理逻辑
 class ManageSpaceActivity : ComponentActivity() {
 //     将"清除数据"项变为"管理空间"，自定义数据清除    https://github.com/Hi-Windom/Sillot-android/issues/49
-    val TAG = "ManageSpaceActivity"
+    val TAG = "ManageSpaceActivity.kt"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // 设置沉浸式通知栏
@@ -33,7 +33,7 @@ class ManageSpaceActivity : ComponentActivity() {
         }
         setContent {
             CascadeMaterialTheme {
-                UI(intent)
+                UI(intent, TAG)
             }
         }
 
@@ -45,15 +45,14 @@ class ManageSpaceActivity : ComponentActivity() {
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
 @Composable
-private fun UI(intent: Intent?) {
-    val TAG = "MainPro-MyUI"
+private fun UI(intent: Intent?, TAG: String) {
     val uri = intent?.data
     val Lcc = LocalContext.current
     var isMenuVisible = rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
-            CommonTopAppBar("汐洛存储清理助手", uri, isMenuVisible) {
+            CommonTopAppBar("汐洛存储清理助手", TAG, uri, isMenuVisible) {
                 // 将Context对象安全地转换为Activity
                 if (Lcc is Activity) {
                     Lcc.finish() // 结束活动

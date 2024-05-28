@@ -9,8 +9,8 @@ plugins {
 
 
 // 多渠道打包配置已引用的方式传递
-apply from: rootProject.file('flavors.gradle')
-apply from: rootProject.file('buildRelease.gradle')
+//apply from: rootProject.file('flavors.gradle')
+//apply from: rootProject.file('buildRelease.gradle')
 
 // REF https://kotlinlang.org/docs/gradle-configure-project.html?utm_campaign=gradle-jvm-target-validation&utm_medium=kgp&utm_source=warnings#check-for-jvm-target-compatibility-of-related-compile-tasks
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile.class).configureEach {
@@ -375,4 +375,5 @@ dependencies {
     implementation "me.saket.cascade:cascade:2.3.0"
     implementation "me.saket.cascade:cascade-compose:2.3.0"
 
+    implementation "com.github.skydoves:colorpicker-compose:1.0.8"
 }

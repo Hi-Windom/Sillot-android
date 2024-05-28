@@ -5,7 +5,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.view.MenuItem
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
@@ -14,11 +13,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.twotone.BugReport
 import androidx.compose.material.icons.twotone.Check
 import androidx.compose.material.icons.twotone.Close
+import androidx.compose.material.icons.twotone.Code
 import androidx.compose.material.icons.twotone.ContentCopy
 import androidx.compose.material.icons.twotone.Delete
 import androidx.compose.material.icons.twotone.Email
@@ -30,24 +29,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupProperties
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import me.saket.cascade.CascadeDropdownMenu
 import me.saket.cascade.rememberCascadeState
 import org.b3log.siyuan.R
@@ -62,12 +54,12 @@ data class MenuItem31(val title: String, val action: () -> Unit)
 @Composable
 fun CommonTopAppBar(
     title: String, // 应用栏标题
+    sourceFile: String, // 源代码文件名（包括后缀名），以 App.kt 为根目录，如果不在根目录请包含路径，例如 ld246/Home.kt
     uri: Uri?,
     isMenuVisible: MutableState<Boolean>,
     additionalMenuItem: @Composable (() -> Unit)? = null,
     onBackPressed: () -> Unit, // 返回按钮的点击事件
 ) {
-    val TAG = "CommonTopAppBar"
 //    var isMenuVisible by rememberSaveable { mutableStateOf(false) }
     val Lcc = LocalContext.current
     TopAppBar(
@@ -94,7 +86,7 @@ fun CommonTopAppBar(
             TopRightMenu(
                 expanded = isMenuVisible.value,
                 onDismiss = { isMenuVisible.value = false },
-                TAG = TAG,
+                sourceFile = sourceFile,
                 uri = uri,
                 additionalMenuItem = additionalMenuItem // 将额外的菜单项传递给 TopRightMenu
             )
@@ -105,7 +97,7 @@ fun CommonTopAppBar(
 @Composable
 fun TopRightMenu(
     expanded: Boolean,
-    TAG: String,
+    sourceFile: String,
     uri: Uri?,
     onDismiss: () -> Unit,
     additionalMenuItem: @Composable (() -> Unit)? = null,
@@ -219,7 +211,7 @@ fun TopRightMenu(
                         Lcc.packageManager,
                         S.emailAdress,
                         "汐洛安卓反馈 - 报告此页",
-                        "TAG: ${TAG}\n${Utils.getDeviceInfoString()}"
+                        "sourceFile: ${sourceFile}\n${Utils.getDeviceInfoString()}"
                     )
                     },
                 )
@@ -227,6 +219,11 @@ fun TopRightMenu(
                     text = { Text("反馈此页") },
                     leadingIcon = { Icon(Icons.TwoTone.BugReport, contentDescription = null) },
                     onClick = { onDismiss();Us.openUrl("${S.gitRepoUrl}/issues/new") },
+                )
+                DropdownMenuItem(
+                    text = { Text("查看源码") },
+                    leadingIcon = { Icon(Icons.TwoTone.Code, contentDescription = null) },
+                    onClick = { onDismiss();Us.openUrl("${S.gitRepoUrl}/blob/HEAD/app/src/main/java/org/b3log/siyuan/${sourceFile}") },
                 )
             },
         )

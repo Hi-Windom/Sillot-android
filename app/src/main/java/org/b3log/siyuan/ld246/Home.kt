@@ -142,7 +142,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 
 class HomeActivity : ComponentActivity() {
-    val TAG = "ld246-HomeActivity"
+    val TAG = "ld246/Home.kt"
     private var mmkv: MMKV = MMKV.defaultMMKV()
     var token = Us.getDecryptedToken(mmkv, S.KEY_TOKEN_ld246, S.KEY_AES_TOKEN_ld246)
     val ua = "Sillot-anroid/0.35"
@@ -182,7 +182,7 @@ class HomeActivity : ComponentActivity() {
         }
         setContent {
             CascadeMaterialTheme {
-                UI(intent)
+                UI(intent, TAG)
             }
         }
         viewmodel = NotificationsViewModel()
@@ -298,7 +298,7 @@ class HomeActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
     @Composable
-    private fun UI(intent: Intent?) {
+    private fun UI(intent: Intent?, TAG: String) {
         val uri = intent?.data
         val Lcc = LocalContext.current
         val currentTab = rememberSaveable { mutableStateOf("用户") }
@@ -358,6 +358,7 @@ class HomeActivity : ComponentActivity() {
             topBar = {
                 CommonTopAppBar(
                     "汐洛链滴社区客户端",
+                    TAG,
                     uri,
                     isMenuVisible,
                     additionalMenuItem = {
@@ -1075,7 +1076,7 @@ class HomeActivity : ComponentActivity() {
     @Preview(showBackground = true)
     @Composable
     private fun DefaultPreview() {
-        UI(null)
+        UI(null, "")
     }
 
     private fun handleUrlLoading(view: WebView, url: String): Boolean {

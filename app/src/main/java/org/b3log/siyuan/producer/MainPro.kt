@@ -91,7 +91,7 @@ import java.io.IOException
 // TODO: 如果是 workspaceParentDir 目录下的文件支持删除
 // TODO: 文件被删除时处理异常
 class MainPro : ComponentActivity() {
-    val TAG = "MainPro"
+    val TAG = "producer/MainPro.kt"
     private var in2_data: Uri? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -137,7 +137,7 @@ class MainPro : ComponentActivity() {
         if (in2_data != null) {
             setContent {
                 CascadeMaterialTheme {
-                    MyUI(intent)
+                    MyUI(intent, TAG)
                 }
             }
 //            if (ft == "视频") {
@@ -152,8 +152,7 @@ class MainPro : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
     @Composable
-    fun MyUI(intent: Intent?) {
-        val TAG = "MainPro-MyUI"
+    fun MyUI(intent: Intent?, TAG: String) {
         val uri = intent?.data
         val Lcc = LocalContext.current
         val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
@@ -171,7 +170,7 @@ class MainPro : ComponentActivity() {
 
         Scaffold(
             topBar = {
-                CommonTopAppBar("汐洛文件中转站", uri, isMenuVisible) {
+                CommonTopAppBar("汐洛文件中转站", TAG, uri, isMenuVisible) {
                     // 将Context对象安全地转换为Activity
                     if (Lcc is Activity) {
                         Lcc.finish() // 结束活动
@@ -693,7 +692,7 @@ class MainPro : ComponentActivity() {
             S.C.Thumbnail_Height provides 250,
             S.C.Button_Width providesDefault 300,
         ) {
-            MyUI(null)
+            MyUI(null, "")
         }
     }
 
