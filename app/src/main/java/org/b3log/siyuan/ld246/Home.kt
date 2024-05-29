@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.text.Spannable
 import android.text.method.LinkMovementMethod
@@ -15,7 +14,6 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.webkit.CookieManager
-import android.webkit.CookieSyncManager
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -130,9 +128,9 @@ import org.b3log.siyuan.appUtils.HWs
 import org.b3log.siyuan.compose.MyTagHandler
 import org.b3log.siyuan.compose.NetworkViewModel
 import org.b3log.siyuan.compose.components.CommonTopAppBar
-import org.b3log.siyuan.dataClass.ld246_User
 import org.b3log.siyuan.dataClass.ld246_Response
 import org.b3log.siyuan.dataClass.ld246_Response_Data_Notification
+import org.b3log.siyuan.dataClass.ld246_User
 import org.b3log.siyuan.ld246.api.ApiServiceNotification
 import retrofit2.Call
 import retrofit2.Callback
@@ -382,7 +380,7 @@ class HomeActivity : ComponentActivity() {
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     if (currentTab.value == "用户") {
-                        if (userPageData.value.userName.isBlank()) {
+                        if (userPageData.value.userName?.isBlank() == true) {
                             Box(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
@@ -685,7 +683,7 @@ class HomeActivity : ComponentActivity() {
                     Box(
                         modifier = Modifier
                             .clickable {
-                                if (user.userName.isNotBlank()) {
+                                if (user.userName?.isNotBlank() == true) {
                                     Lcc.startActivity(
                                         Intent(
                                             Intent.ACTION_VIEW,
@@ -714,15 +712,19 @@ class HomeActivity : ComponentActivity() {
                     )
                     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         Column {
-                            Text(
-                                text = "${user.userName} (${user.userNickname})",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 24.sp
-                            )
-                            Text(
-                                text = user.userIntro,
-                                fontSize = 16.sp
-                            )
+                            user.userName?.let {
+                                Text(
+                                    text = "$it (${user.userNickname})",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 24.sp
+                                )
+                            }
+                            user.userIntro?.let {
+                                Text(
+                                    text = it,
+                                    fontSize = 16.sp
+                                )
+                            }
                         }
                     }
                 }
@@ -743,41 +745,57 @@ class HomeActivity : ComponentActivity() {
         Row {
             // 左侧列
             Column(modifier = Modifier.weight(1f)) {
-                ProfileInfoItem(
-                    "编号",
-                    user.userNo
-                ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}") }
-                ProfileInfoItem(
-                    "帖子",
-                    user.userArticleCount
-                ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}/articles") }
-                ProfileInfoItem(
-                    "回帖",
-                    user.userCommentCount
-                ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}/comments") }
-                ProfileInfoItem(
-                    "评论",
-                    user.userComment2Count
-                ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}/comment2s") }
+                user.userNo?.let {
+                    ProfileInfoItem(
+                        "编号",
+                        it
+                    ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}") }
+                }
+                user.userArticleCount?.let {
+                    ProfileInfoItem(
+                        "帖子",
+                        it
+                    ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}/articles") }
+                }
+                user.userCommentCount?.let {
+                    ProfileInfoItem(
+                        "回帖",
+                        it
+                    ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}/comments") }
+                }
+                user.userComment2Count?.let {
+                    ProfileInfoItem(
+                        "评论",
+                        it
+                    ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}/comment2s") }
+                }
             }
             // 右侧列
             Column(modifier = Modifier.weight(1f)) {
-                ProfileInfoItem(
-                    "积分",
-                    user.userPoint
-                ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}/points") }
-                ProfileInfoItem(
-                    "综合贡献点",
-                    user.userGeneralRank
-                ) { _openURL("https://${S.HOST_ld246}/top/general") }
-                ProfileInfoItem(
-                    "最近连签",
-                    user.userCurrentCheckinStreak
-                ) { _openURL("https://${S.HOST_ld246}/activity/checkin") }
-                ProfileInfoItem(
-                    "最长连签",
-                    user.userLongestCheckinStreak
-                ) { _openURL("https://${S.HOST_ld246}/activity/checkin") }
+                user.userPoint?.let {
+                    ProfileInfoItem(
+                        "积分",
+                        it
+                    ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}/points") }
+                }
+                user.userGeneralRank?.let {
+                    ProfileInfoItem(
+                        "综合贡献点",
+                        it
+                    ) { _openURL("https://${S.HOST_ld246}/top/general") }
+                }
+                user.userCurrentCheckinStreak?.let {
+                    ProfileInfoItem(
+                        "最近连签",
+                        it
+                    ) { _openURL("https://${S.HOST_ld246}/activity/checkin") }
+                }
+                user.userLongestCheckinStreak?.let {
+                    ProfileInfoItem(
+                        "最长连签",
+                        it
+                    ) { _openURL("https://${S.HOST_ld246}/activity/checkin") }
+                }
             }
         }
     }
@@ -1084,8 +1102,8 @@ class HomeActivity : ComponentActivity() {
         val real_url = Us.replaceEncodeScheme(url, "googlechrome://", "slld246://")
         Log.d(TAG, _url)
 
-        if (_url.startsWith("mqq://") || _url.startsWith("wtloginmqq://") || _url.startsWith("sinaweibo://")) {
-            return try {
+        return if (_url.startsWith("mqq://") || _url.startsWith("wtloginmqq://") || _url.startsWith("sinaweibo://")) {
+            try {
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(real_url))
                 ActivityCompat.startActivityForResult(view.context as Activity, intent, 1, null)
                 true
@@ -1094,7 +1112,7 @@ class HomeActivity : ComponentActivity() {
                 false
             }
         } else {
-            return false
+            false
         }
     }
 
@@ -1110,27 +1128,17 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun clearWebViewCookies(webView: WebView?) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            CookieManager.getInstance().apply {
-                removeAllCookies { success ->
-                    if (success) {
-                        webView?.clearCache(true)
-                        fullScreenDialog?.dismiss()
-                        PopTip.show("<(￣︶￣)↗[success]")
-                    } else {
-                        fullScreenDialog?.dismiss()
-                        PopTip.show(" ￣へ￣ [failed]")
-                    }
+        CookieManager.getInstance().apply {
+            removeAllCookies { success ->
+                if (success) {
+                    webView?.clearCache(true)
+                    fullScreenDialog?.dismiss()
+                    PopTip.show("<(￣︶￣)↗[success]")
+                } else {
+                    fullScreenDialog?.dismiss()
+                    PopTip.show(" ￣へ￣ [failed]")
                 }
             }
-        } else {
-            CookieSyncManager.createInstance(this)
-            CookieManager.getInstance().apply {
-                removeAllCookie()
-                webView?.clearCache(true)
-                fullScreenDialog?.dismiss()
-            }
-            CookieSyncManager.getInstance().sync()
         }
     }
 
