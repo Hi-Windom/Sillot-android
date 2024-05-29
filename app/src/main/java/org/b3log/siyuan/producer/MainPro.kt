@@ -78,6 +78,7 @@ import org.b3log.siyuan.andapi.Toast
 import org.b3log.siyuan.compose.ApkButtons
 import org.b3log.siyuan.compose.AudioButtons
 import org.b3log.siyuan.compose.LockScreenOrientation
+import org.b3log.siyuan.compose.MagnetButtons
 import org.b3log.siyuan.compose.SelectableText
 import org.b3log.siyuan.compose.VideoButtons
 import org.b3log.siyuan.compose.components.CommonTopAppBar
@@ -355,6 +356,7 @@ class MainPro : ComponentActivity() {
         var showAudioButton by remember { mutableStateOf(false) }
         var showVideoButton by remember { mutableStateOf(false) }
         var showApkButton by remember { mutableStateOf(false) }
+        var showMagnetButton by remember { mutableStateOf(false) }
 
         val isLandscape =
             LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
@@ -376,6 +378,11 @@ class MainPro : ComponentActivity() {
                     mimeType == "application/vnd.android.package-archive" || (mimeType == "application/octet-stream" && fileName.endsWith(
                         ".apk.1"
                     ))
+            }
+            if ( uri != null) {
+                when (uri.scheme) {
+                    "magnet" -> showMagnetButton = true
+                }
             }
         }
 
@@ -671,6 +678,11 @@ class MainPro : ComponentActivity() {
                 PopNotification.show("安装失败", "无法获取安装包 uri")
             }
         }
+        fun MagnetBTNonClick1() {
+            uri?.let {
+                Us.openUrl(it.toString(), true)
+            }
+        }
         if (inspectionMode || showAudioButton) {
             AudioButtons()
         } else if (showVideoButton) {
@@ -678,6 +690,9 @@ class MainPro : ComponentActivity() {
         } else if (showApkButton) {
             ApkButtons(S.C.btnText5Apk1.current, ::ApkBTNonClick1)
             ApkButtons(S.C.btnText5Apk2.current, ::ApkBTNonClick2)
+        }
+        else if (showMagnetButton) {
+            MagnetButtons(S.C.btnTextMagnet1.current, ::MagnetBTNonClick1)
         }
 
     }

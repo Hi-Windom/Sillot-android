@@ -86,6 +86,7 @@ object S {
         val btnTextVideo1 = compositionLocalOf { "播放" }
         val btnText5Apk1 = compositionLocalOf { "通过第三方安装" }
         val btnText5Apk2 = compositionLocalOf { "通过汐洛安装" }
+        val btnTextMagnet1 = compositionLocalOf { "第三方打开" }
         val small_iconSize = compositionLocalOf { 24.dp }
         val Card_bgColor_green1 = compositionLocalOf { Color(0x58237A58) }
         val Card_bgColor_gold1 = compositionLocalOf { Color(0x58997758) }
