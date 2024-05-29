@@ -1,9 +1,14 @@
+import org.jetbrains.kotlin.gradle.dsl.jvm.JvmTargetValidationMode
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
     id "io.sentry.android.gradle" version "3.5.0"
     id 'io.realm.kotlin'
-    id 'kotlin-kapt'
+//    id 'kotlin-kapt'
+    id("com.google.devtools.ksp") // 使用 ksp 而不是 kapt
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.9.22'
 }
 
@@ -13,8 +18,8 @@ plugins {
 //apply from: rootProject.file('buildRelease.gradle')
 
 // REF https://kotlinlang.org/docs/gradle-configure-project.html?utm_campaign=gradle-jvm-target-validation&utm_medium=kgp&utm_source=warnings#check-for-jvm-target-compatibility-of-related-compile-tasks
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile.class).configureEach {
-    jvmTargetValidationMode = org.jetbrains.kotlin.gradle.dsl.jvm.JvmTargetValidationMode.WARNING
+tasks.withType(KotlinJvmCompile.class).configureEach {
+    jvmTargetValidationMode = JvmTargetValidationMode.ERROR
 }
 android {
     namespace 'org.b3log.siyuan' // 这里不要修改
@@ -108,15 +113,21 @@ android {
     compileOptions {
         sourceCompatibility JAVA_VERSION
         targetCompatibility JAVA_VERSION
+        kotlinOptions {
+            tasks.withType(KotlinCompile).configureEach {
+                kotlinOptions.jvmTarget = JAVA_VERSION.toString()
+            }
+        }
     }
     java {
         toolchain {
             languageVersion.set(JavaLanguageVersion.of(JAVA_VERSION))
         }
     }
-    kotlinOptions {
-        jvmTarget = JAVA_VERSION.toString()
-    }
+    // 应该是无效设置，在上面的compileOptions里才是对的，后续没问题就移除
+//    kotlinOptions {
+//        jvmTarget = JAVA_VERSION.toString()
+//    }
     kotlin {
         jvmToolchain(JAVA_VERSION)
     }
@@ -198,7 +209,7 @@ dependencies {
 
     // For developers using the Android Support Library
     implementation 'pub.devrel:easypermissions:3.0.0'
-    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.core:core-ktx:1.13.1'
 
     implementation 'io.reactivex.rxjava3:rxandroid:3.0.2'
     // Because RxAndroid releases are few and far between, it is recommended you also
@@ -214,7 +225,7 @@ dependencies {
 //Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     implementation "com.squareup.moshi:moshi-kotlin:${moshi_version}"
     // 如果你需要使用Moshi来处理JSON adapters，也添加这个依赖
-    kapt "com.squareup.moshi:moshi-kotlin-codegen:${moshi_version}"
+    ksp "com.squareup.moshi:moshi-kotlin-codegen:${moshi_version}"
 
     implementation 'com.tencent.bugly:crashreport:4.1.9.2'
     implementation "io.coil-kt:coil:2.6.0"
@@ -235,7 +246,7 @@ dependencies {
     implementation "com.couchbase.lite:couchbase-lite-android:${couchbase_lite_version}"
     implementation "io.realm.kotlin:library-base:${realm_version}"
     implementation "io.realm.kotlin:library-sync:${realm_version}"// If using Device Sync
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1' // If using coroutines with the SDK
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3' // If using coroutines with the SDK
 
     implementation 'com.tencent.tav:libpag:4.3.51'
 
@@ -256,7 +267,7 @@ dependencies {
     // Huawei scan kit
     implementation 'com.huawei.hms:scanplus:2.12.0.301'
 
-    def composeBom = platform('androidx.compose:compose-bom:2024.03.00')
+    def composeBom = platform('androidx.compose:compose-bom:2024.05.00')
     implementation composeBom
     androidTestImplementation composeBom
 
