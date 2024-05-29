@@ -1,10 +1,14 @@
 package sc.windom.sofill.compose.components
 
+import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.view.WindowInsets
+import android.view.WindowInsetsController
+import android.view.WindowManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
@@ -21,6 +25,7 @@ import androidx.compose.material.icons.twotone.Code
 import androidx.compose.material.icons.twotone.ContentCopy
 import androidx.compose.material.icons.twotone.Delete
 import androidx.compose.material.icons.twotone.Email
+import androidx.compose.material.icons.twotone.FitScreen
 import androidx.compose.material.icons.twotone.Share
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -30,7 +35,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,7 +58,37 @@ import org.b3log.siyuan.Us
 import org.b3log.siyuan.Utils
 import org.b3log.siyuan.andapi.Toast
 
+
 data class MenuItem31(val title: String, val action: () -> Unit)
+
+fun Activity.toggleFullScreen(fullScreen: Boolean) {
+    val windowInsetsController = window.insetsController
+    if (fullScreen) {
+        val params = window.attributes
+        params.layoutInDisplayCutoutMode =
+            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        window.attributes = params
+        windowInsetsController?.systemBarsBehavior =
+            WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE // 当用户从上往下滑动时，系统将短暂出现一个半透明的
+        windowInsetsController?.hide(WindowInsets.Type.statusBars())
+        windowInsetsController?.hide(WindowInsets.Type.systemBars())
+        windowInsetsController?.hide(WindowInsets.Type.navigationBars())
+        windowInsetsController?.hide(WindowInsets.Type.captionBar())
+        windowInsetsController?.hide(WindowInsets.Type.systemGestures())
+    } else {
+        val params = window.attributes
+        params.layoutInDisplayCutoutMode =
+            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT
+        window.attributes = params
+        windowInsetsController?.systemBarsBehavior =
+            WindowInsetsController.BEHAVIOR_DEFAULT
+        windowInsetsController?.show(WindowInsets.Type.statusBars())
+        windowInsetsController?.show(WindowInsets.Type.systemBars())
+        windowInsetsController?.show(WindowInsets.Type.navigationBars())
+        windowInsetsController?.show(WindowInsets.Type.captionBar())
+        windowInsetsController?.show(WindowInsets.Type.systemGestures())
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -105,6 +145,11 @@ fun TopRightMenu(
 ) {
     val state = rememberCascadeState()
     val Lcc = LocalContext.current
+    var isFullScreen by remember { mutableStateOf(false) }
+    LaunchedEffect(isFullScreen) {
+        val activity = Lcc as Activity
+        activity.toggleFullScreen(isFullScreen)
+    }
     // 只有直接在CascadeDropdownMenu中才能使用childrenHeader和children，抽离出去的additionalMenuItem不行
     CascadeDropdownMenu(
         state = state,
@@ -112,7 +157,7 @@ fun TopRightMenu(
         expanded = expanded,
         onDismissRequest = onDismiss
     ) {
-        if (uri != null && !listOf("http","https","siyuan").contains(uri.scheme)) {
+        if (uri != null && !listOf("http", "https", "siyuan").contains(uri.scheme)) {
             DropdownMenuItem(
                 text = { Text("复制") },
                 leadingIcon = { Icon(Icons.TwoTone.ContentCopy, contentDescription = null) },
@@ -190,7 +235,14 @@ fun TopRightMenu(
         if (additionalMenuItem != null) {
             additionalMenuItem()
         }
-
+        DropdownMenuItem(
+            text = { Text(if (isFullScreen) "正常模式" else "全屏模式") },
+            leadingIcon = { Icon(Icons.TwoTone.FitScreen, contentDescription = null) },
+            onClick = {
+                onDismiss()
+                isFullScreen = !isFullScreen
+            },
+        )
         DropdownMenuItem(
             text = { Text("帮助") },
             leadingIcon = {
@@ -229,7 +281,6 @@ fun TopRightMenu(
         )
     }
 }
-
 
 data class MenuItem58(
     val title: String,
