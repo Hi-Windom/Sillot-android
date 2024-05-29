@@ -69,7 +69,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.b3log.siyuan.CascadeMaterialTheme
+import sc.windom.sofill.compose.theme.CascadeMaterialTheme
 import org.b3log.siyuan.R
 import org.b3log.siyuan.S
 import org.b3log.siyuan.Us

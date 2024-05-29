@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.DelicateCoroutinesApi
 import sc.windom.sofill.compose.components.CommonTopAppBar
+import sc.windom.sofill.compose.theme.CascadeMaterialTheme
 
 // TODO: 仿哔哩哔哩界面
 // TODO: 实际清理逻辑

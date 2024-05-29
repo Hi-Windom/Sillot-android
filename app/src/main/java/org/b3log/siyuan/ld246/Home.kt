@@ -120,7 +120,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.launch
-import org.b3log.siyuan.CascadeMaterialTheme
+import sc.windom.sofill.compose.theme.CascadeMaterialTheme
 import org.b3log.siyuan.R
 import org.b3log.siyuan.S
 import org.b3log.siyuan.Us
