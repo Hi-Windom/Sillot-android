@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.DelicateCoroutinesApi
-import org.b3log.siyuan.compose.components.CommonTopAppBar
+import sc.windom.sofill.compose.components.CommonTopAppBar
 
 // TODO: 仿哔哩哔哩界面
 // TODO: 实际清理逻辑

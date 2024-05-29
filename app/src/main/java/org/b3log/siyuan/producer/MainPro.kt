@@ -6,7 +6,6 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.ActivityInfo
-import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
@@ -75,13 +74,13 @@ import org.b3log.siyuan.R
 import org.b3log.siyuan.S
 import org.b3log.siyuan.Us
 import org.b3log.siyuan.andapi.Toast
-import org.b3log.siyuan.compose.ApkButtons
-import org.b3log.siyuan.compose.AudioButtons
-import org.b3log.siyuan.compose.LockScreenOrientation
-import org.b3log.siyuan.compose.MagnetButtons
-import org.b3log.siyuan.compose.SelectableText
-import org.b3log.siyuan.compose.VideoButtons
-import org.b3log.siyuan.compose.components.CommonTopAppBar
+import sc.windom.sofill.compose.ApkButtons
+import sc.windom.sofill.compose.AudioButtons
+import sc.windom.sofill.compose.LockScreenOrientation
+import sc.windom.sofill.compose.MagnetButtons
+import sc.windom.sofill.compose.SelectableText
+import sc.windom.sofill.compose.VideoButtons
+import sc.windom.sofill.compose.components.CommonTopAppBar
 import org.b3log.siyuan.ld246.HomeActivity
 import java.io.IOException
 

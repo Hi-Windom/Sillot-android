@@ -125,9 +125,9 @@ import org.b3log.siyuan.R
 import org.b3log.siyuan.S
 import org.b3log.siyuan.Us
 import org.b3log.siyuan.appUtils.HWs
-import org.b3log.siyuan.compose.MyTagHandler
-import org.b3log.siyuan.compose.NetworkViewModel
-import org.b3log.siyuan.compose.components.CommonTopAppBar
+import sc.windom.sofill.compose.MyTagHandler
+import sc.windom.sofill.compose.NetworkViewModel
+import sc.windom.sofill.compose.components.CommonTopAppBar
 import org.b3log.siyuan.dataClass.ld246_Response
 import org.b3log.siyuan.dataClass.ld246_Response_Data_Notification
 import org.b3log.siyuan.dataClass.ld246_User
@@ -721,7 +721,7 @@ class HomeActivity : ComponentActivity() {
                             }
                             user.userIntro?.let {
                                 Text(
-                                    text = it,
+                                    text = it,  
                                     fontSize = 16.sp
                                 )
                             }
