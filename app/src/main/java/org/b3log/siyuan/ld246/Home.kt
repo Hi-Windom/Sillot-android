@@ -128,9 +128,9 @@ import org.b3log.siyuan.appUtils.HWs
 import sc.windom.sofill.compose.MyTagHandler
 import sc.windom.sofill.compose.NetworkViewModel
 import sc.windom.sofill.compose.components.CommonTopAppBar
-import org.b3log.siyuan.dataClass.ld246_Response
-import org.b3log.siyuan.dataClass.ld246_Response_Data_Notification
-import org.b3log.siyuan.dataClass.ld246_User
+import sc.windom.sofill.dataClass.ld246_Response
+import sc.windom.sofill.dataClass.ld246_Response_Data_Notification
+import sc.windom.sofill.dataClass.ld246_User
 import org.b3log.siyuan.ld246.api.ApiServiceNotification
 import retrofit2.Call
 import retrofit2.Callback

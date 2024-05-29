@@ -1,4 +1,4 @@
-package org.b3log.siyuan.dataClass
+package sc.windom.sofill.dataClass
 // 与服务器交互的 dataClass 应避免混淆
 data class ld246_Response(
     val msg: String,

@@ -101,6 +101,9 @@ android {
         }
     }
 
+    // SB Android
+    // SB Java
+    // SB JVM Target
     def JAVA_VERSION = 17
     compileOptions {
         sourceCompatibility JAVA_VERSION
@@ -112,7 +115,7 @@ android {
         }
     }
     kotlinOptions {
-        jvmTarget = JAVA_VERSION
+        jvmTarget = JAVA_VERSION.toString()
     }
     kotlin {
         jvmToolchain(JAVA_VERSION)
