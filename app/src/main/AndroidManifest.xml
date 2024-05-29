@@ -575,7 +575,7 @@
             </intent-filter>
         </service>
 
-        <service android:name=".FloatingWindowService" android:foregroundServiceType="dataSync|location">
+        <service android:name=".services.FloatingWindowService" android:foregroundServiceType="dataSync|location">
             <property
                 android:name="android.app.PROPERTY_DATA_SYNC_FGS_SUBTYPE"
                 android:value="hosting" />

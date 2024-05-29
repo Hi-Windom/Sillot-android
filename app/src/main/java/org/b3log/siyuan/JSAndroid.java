@@ -40,7 +40,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
 import android.provider.Settings;
-import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.widget.LinearLayout;
 
@@ -59,10 +58,11 @@ import com.kongzue.dialogx.dialogs.WaitDialog;
 import com.kongzue.dialogx.util.TextInfo;
 import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
 
+import org.b3log.siyuan.services.FloatingWindowService;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.Date;
