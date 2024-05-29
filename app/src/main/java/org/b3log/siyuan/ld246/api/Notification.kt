@@ -1,6 +1,6 @@
 package org.b3log.siyuan.ld246.api
 
-import org.b3log.siyuan.ld246.ld246_Response
+import org.b3log.siyuan.dataClass.ld246_Response
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Header

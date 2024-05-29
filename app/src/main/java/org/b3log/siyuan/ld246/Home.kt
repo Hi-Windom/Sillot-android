@@ -53,7 +53,6 @@ import androidx.compose.material.icons.twotone.SafetyCheck
 import androidx.compose.material.icons.twotone.Swipe
 import androidx.compose.material.icons.twotone.TextFields
 import androidx.compose.material.icons.twotone.Token
-import androidx.compose.material.icons.twotone.Warning
 import androidx.compose.material.icons.twotone.WifiOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -63,8 +62,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults.SecondaryIndicator
@@ -133,6 +130,9 @@ import org.b3log.siyuan.appUtils.HWs
 import org.b3log.siyuan.compose.MyTagHandler
 import org.b3log.siyuan.compose.NetworkViewModel
 import org.b3log.siyuan.compose.components.CommonTopAppBar
+import org.b3log.siyuan.dataClass.ld246_User
+import org.b3log.siyuan.dataClass.ld246_Response
+import org.b3log.siyuan.dataClass.ld246_Response_Data_Notification
 import org.b3log.siyuan.ld246.api.ApiServiceNotification
 import retrofit2.Call
 import retrofit2.Callback
@@ -254,7 +254,7 @@ class HomeActivity : ComponentActivity() {
 
     @OptIn(ExperimentalMaterial3Api::class)
     private fun updateUserPage(
-        userPageData: MutableState<User>,
+        userPageData: MutableState<ld246_User>,
         pullToRefreshState: PullToRefreshState?
     ) {
         val caller = apiService?.apiV2UserGet(token, ua)
@@ -305,7 +305,7 @@ class HomeActivity : ComponentActivity() {
         val pullToRefreshState = rememberPullToRefreshState()
         val isMenuVisible = rememberSaveable { mutableStateOf(false) }
         val isShowBottomText = rememberSaveable { mutableStateOf(false) }
-        val userPageData = remember { mutableStateOf(User()) }
+        val userPageData = remember { mutableStateOf(ld246_User()) }
 
         DisposableEffect(viewmodel) {
             onDispose {
@@ -434,7 +434,7 @@ class HomeActivity : ComponentActivity() {
         onDismiss: () -> Unit,
         isShowBottomText: MutableState<Boolean>,
         currentTab: MutableState<String>,
-        userPageData: MutableState<User>,
+        userPageData: MutableState<ld246_User>,
         pullToRefreshState: PullToRefreshState
     ) {
         DropdownMenuItem(
@@ -657,7 +657,7 @@ class HomeActivity : ComponentActivity() {
 
 
     @Composable
-    private fun UserPage(user: User) {
+    private fun UserPage(user: ld246_User) {
         val Lcc = LocalContext.current
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             // 高斯模糊背景
@@ -738,7 +738,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun UserProfileScreen(user: User) {
+    private fun UserProfileScreen(user: ld246_User) {
         // 两列布局
         Row {
             // 左侧列

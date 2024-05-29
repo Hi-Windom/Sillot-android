@@ -1,5 +1,5 @@
-package org.b3log.siyuan.ld246
-
+package org.b3log.siyuan.dataClass
+// 与服务器交互的 dataClass 应避免混淆
 data class ld246_Response(
     val msg: String,
     val random: String,
@@ -14,7 +14,7 @@ data class ld246_Response_Data(
     val atNotifications: List<ld246_Response_Data_Notification>?, // 提及
     val followingNotifications: List<ld246_Response_Data_Notification>?, // 关注
     val pointNotifications: List<ld246_Response_Data_Notification>?, // 积分
-    val user: User?, // 用户信息
+    val user: ld246_User?, // 用户信息
     val pagination: Pagination?,
     val unreadNotificationCount: UnreadNotificationCount?,
 )
@@ -48,7 +48,7 @@ data class UnreadNotificationCount(
 //    val user: User, // 用户信息
 //)
 
-data class User(
+data class ld246_User(
     val userNickname: String = "", //
     val userAppRole: Int = -1,
     val userCardBImgURL: String = "", //

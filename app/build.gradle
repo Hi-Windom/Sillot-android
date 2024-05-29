@@ -74,7 +74,7 @@ android {
             ]
             jniDebuggable false
             renderscriptDebuggable true
-            minifyEnabled true
+            minifyEnabled true  // R8代码缩减功能
             shrinkResources true
             matchingFallbacks = ['release'] // 第三方库处理
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro' // 混淆规则

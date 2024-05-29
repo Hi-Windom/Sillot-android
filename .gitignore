@@ -78,3 +78,7 @@ lint/tmp/
 app/src/main/assets/app.zip
 /.history
 signings.gradle
+
+# 构建产物
+*.dm
+output-*.json
