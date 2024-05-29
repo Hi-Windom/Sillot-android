@@ -129,6 +129,9 @@ android {
                          'META-INF/notice.txt',
                          'plugin.properties']
         }
+        jniLibs {
+            useLegacyPackaging true
+        }
     }
 
     lint {

@@ -178,7 +178,6 @@
         android:localeConfig="@xml/locales_config"
         android:usesCleartextTraffic="true"
         tools:targetApi="tiramisu"
-        android:extractNativeLibs="true"
         android:enableOnBackInvokedCallback="true"
         android:requestLegacyExternalStorage="true"
         tools:ignore="HardcodedDebugMode">
