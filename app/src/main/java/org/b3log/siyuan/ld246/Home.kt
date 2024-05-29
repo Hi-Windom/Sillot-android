@@ -721,7 +721,7 @@ class HomeActivity : ComponentActivity() {
                             }
                             user.userIntro?.let {
                                 Text(
-                                    text = it,  
+                                    text = it,
                                     fontSize = 16.sp
                                 )
                             }

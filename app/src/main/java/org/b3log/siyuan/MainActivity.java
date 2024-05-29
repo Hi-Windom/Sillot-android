@@ -89,7 +89,7 @@ package org.b3log.siyuan;
  import org.apache.commons.io.filefilter.DirectoryFileFilter;
  import org.apache.commons.io.filefilter.TrueFileFilter;
  import org.b3log.siyuan.appUtils.HWs;
- import org.b3log.siyuan.permission.Ps;
+ import sc.windom.sofill.android.permission.Ps;
  import org.greenrobot.eventbus.EventBus;
  import org.greenrobot.eventbus.Subscribe;
  import org.greenrobot.eventbus.ThreadMode;
