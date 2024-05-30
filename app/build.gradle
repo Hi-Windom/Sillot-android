@@ -29,6 +29,7 @@ android {
     buildFeatures {
 //        dataBinding true // 数据绑定
         compose true
+        buildConfig true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.11" // 需要对齐 kotlin 版本  REF https://developer.android.com/jetpack/androidx/releases/compose-kotlin?hl=zh-cn
@@ -130,6 +131,18 @@ android {
 //    }
     kotlin {
         jvmToolchain(JAVA_VERSION)
+    }
+
+//    全局配置强制使用某个版本的依赖来解决依赖冲突中出现的依赖
+    configurations.configureEach {
+        // https://www.jianshu.com/p/322472456915
+        resolutionStrategy {
+//            failOnVersionConflict() // 快速找到冲突的库以及各版本号，实际上没什么卵用 SB
+            //远程依赖替换成本地依赖
+            //substitute module('org.gradle:util:3.0') with project(':util')
+            //也可以将远程依赖换成另外的远程依赖，假设我们修改过的代码发布到自己的 maven 中央仓库后叫：com.xxx.xxx:util:3.0
+            //substitute module('org.gradle:util:3.0') with module('com.xxx.xxx:util:3.0')
+        }
     }
 
     packagingOptions {
@@ -303,7 +316,7 @@ dependencies {
     // Optional - Integration with LiveData
     implementation 'androidx.compose.runtime:runtime-livedata'
     // Optional - Integration with RxJava
-    implementation 'androidx.compose.runtime:runtime-rxjava2'
+//    implementation 'androidx.compose.runtime:runtime-rxjava2'
     implementation "androidx.compose.runtime:runtime-rxjava3"
 
     implementation 'androidx.annotation:annotation'

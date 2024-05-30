@@ -37,9 +37,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.twotone.Article
-import androidx.compose.material.icons.automirrored.twotone.Reply
 import androidx.compose.material.icons.twotone.Album
+import androidx.compose.material.icons.twotone.Article
 import androidx.compose.material.icons.twotone.Attribution
 import androidx.compose.material.icons.twotone.CenterFocusWeak
 import androidx.compose.material.icons.twotone.Cookie
@@ -47,6 +46,7 @@ import androidx.compose.material.icons.twotone.Navigation
 import androidx.compose.material.icons.twotone.OpenInBrowser
 import androidx.compose.material.icons.twotone.Person
 import androidx.compose.material.icons.twotone.Quickreply
+import androidx.compose.material.icons.twotone.Reply
 import androidx.compose.material.icons.twotone.SafetyCheck
 import androidx.compose.material.icons.twotone.Swipe
 import androidx.compose.material.icons.twotone.TextFields
@@ -148,9 +148,9 @@ class HomeActivity : ComponentActivity() {
     private var fullScreenDialog: FullScreenDialog? = null
     private var openUrlExternal: Boolean = false
     private val titles_icons = listOf(
-        Icons.AutoMirrored.TwoTone.Article,
+        Icons.TwoTone.Article,
         Icons.TwoTone.Quickreply,
-        Icons.AutoMirrored.TwoTone.Reply,
+        Icons.TwoTone.Reply,
         Icons.TwoTone.Attribution,
         Icons.TwoTone.CenterFocusWeak,
         Icons.TwoTone.Album

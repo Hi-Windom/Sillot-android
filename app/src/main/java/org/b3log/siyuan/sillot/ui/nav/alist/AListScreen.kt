@@ -16,11 +16,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AddBusiness
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.twotone.Send
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -200,7 +200,7 @@ fun AListScreen() {
 @Composable
 fun SwitchFloatingButton(modifier: Modifier, switch: Boolean, onSwitchChange: (Boolean) -> Unit) {
     val targetIcon =
-        if (switch) Icons.Filled.Stop else Icons.AutoMirrored.Filled.Send
+        if (switch) Icons.Filled.Stop else Icons.TwoTone.Send
     val rotationAngle by animateFloatAsState(targetValue = if (switch) 360f else 0f, label = "")
 
     val color =

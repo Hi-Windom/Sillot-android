@@ -24,7 +24,6 @@ import android.provider.Settings
 import android.util.Base64
 import android.util.Log
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Book
@@ -37,6 +36,7 @@ import androidx.compose.material.icons.filled.Javascript
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.Tab
 import androidx.compose.material.icons.filled.TableChart
 import androidx.compose.material.icons.filled.TextFields
@@ -642,7 +642,7 @@ object Us {
             fileType.endsWith("图像") -> Icons.Default.Image
             fileType.endsWith("程序") -> Icons.Default.Android
             fileType.endsWith("音频") -> Icons.Default.MusicNote
-            else -> Icons.AutoMirrored.Filled.InsertDriveFile // 默认图标
+            else -> Icons.Default.QuestionMark // 默认图标
         }
     }
 
