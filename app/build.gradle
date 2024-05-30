@@ -125,10 +125,10 @@ android {
             languageVersion.set(JavaLanguageVersion.of(JAVA_VERSION))
         }
     }
-    // 应该是无效设置，在上面的compileOptions里才是对的，后续没问题就移除
-//    kotlinOptions {
-//        jvmTarget = JAVA_VERSION.toString()
-//    }
+    // https://developer.android.google.cn/jetpack/androidx/releases/compose?hl=zh-cn#groovy
+    kotlinOptions {
+        jvmTarget = JAVA_VERSION.toString()
+    }
     kotlin {
         jvmToolchain(JAVA_VERSION)
     }
@@ -300,10 +300,6 @@ dependencies {
     androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
     debugImplementation 'androidx.compose.ui:ui-test-manifest'
 
-    // Optional - Included automatically by material, only add when you need
-    // the icons but not the material library (e.g. when using Material3 or a
-    // custom design system based on Foundation)
-    implementation 'androidx.compose.material:material-icons-core'
     // Optional - Add full set of material icons
     implementation 'androidx.compose.material:material-icons-extended'
     // Optional - Add window size utils
