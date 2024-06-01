@@ -1208,7 +1208,7 @@ class HomeActivity : ComponentActivity() {
 
     @Composable
     private fun SelectableUrlHandleHtmlText(html: String, modifier: Modifier = Modifier) {
-        // 完全体，因为需要共享一些数据不好抽离，基础版在 HTML.kt
+        // 完全体（CustomLinkMovementMethod），因为需要共享一些数据不好抽离，基础版在 sc.windom.sofill.compose.HTML.kt
         AndroidView(
             modifier = modifier.fillMaxWidth(),
             factory = { context ->

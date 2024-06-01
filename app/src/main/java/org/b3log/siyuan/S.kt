@@ -82,6 +82,7 @@ object S {
         val btnText2 = compositionLocalOf { "复制到剪贴板" }
         val btnText3 = compositionLocalOf { "保存到指定文件夹" }
         val btnText4 = compositionLocalOf { "存入工作空间级资源目录" }
+        val btnText5 = compositionLocalOf { "存入思源汐洛版" }
         val btnTextAudio1 = compositionLocalOf { "播放（旧）" }
         val btnTextVideo1 = compositionLocalOf { "播放" }
         val btnText5Apk1 = compositionLocalOf { "通过第三方安装" }

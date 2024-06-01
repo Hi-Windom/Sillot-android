@@ -402,4 +402,7 @@ dependencies {
     implementation "me.saket.cascade:cascade-compose:2.3.0"
 
     implementation "com.github.skydoves:colorpicker-compose:1.0.8"
+
+    implementation 'org.jsoup:jsoup:1.17.2'
+    implementation 'org.commonmark:commonmark:0.22.0'
 }

@@ -82,6 +82,12 @@ import sc.windom.sofill.compose.SelectableText
 import sc.windom.sofill.compose.VideoButtons
 import sc.windom.sofill.compose.components.CommonTopAppBar
 import org.b3log.siyuan.ld246.HomeActivity
+import org.commonmark.node.Node
+import org.commonmark.parser.Parser
+import org.commonmark.renderer.html.HtmlRenderer
+import org.jsoup.Jsoup
+import org.jsoup.safety.Safelist
+import sc.windom.sofill.compose.SelectableHtmlText
 import java.io.IOException
 
 
@@ -93,14 +99,21 @@ import java.io.IOException
 class MainPro : ComponentActivity() {
     val TAG = "producer/MainPro.kt"
     private var in2_data: Uri? = null
+    private var in2_action: String? = null
+    private var in2_type: String? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val intent = intent
+        Log.i(TAG, "onCreate() invoked. @ $intent")
+        if (intent == null) {
+            return
+        }
+        in2_action = intent.action
+        in2_type = intent.type
         in2_data = intent.data
-        Log.i(TAG, "onCreate() invoked")
         val scheme = in2_data?.scheme
         val host = in2_data?.host
-        Log.d(TAG, "scheme: $scheme, host: $host")
+        Log.d(TAG, "scheme: $scheme, host: $host, action: $in2_action, type: $in2_type")
+
         if (S.isUriMatched(in2_data, S.case_ld246_1) || S.isUriMatched(
                 in2_data,
                 S.case_ld246_2
@@ -110,13 +123,13 @@ class MainPro : ComponentActivity() {
             val homeIntent = Intent(this, HomeActivity::class.java)
             homeIntent.data = in2_data // 将URI数据传递给HomeActivity
             startActivity(homeIntent)
-            finish() // 如果不需要返回MainPro，可以在这里结束它
-        } else if (in2_data != null && in2_data!!.scheme.isNullOrEmpty() || listOf(
+            finish() // 不需要返回MainPro，在这里结束它
+        } else if (in2_data != null && in2_data?.scheme.isNullOrEmpty() || listOf(
                 "http",
                 "https",
                 "siyuan"
             ).contains(
-                in2_data!!.scheme
+                in2_data?.scheme
             )
         ) {
             // 转发处理
@@ -124,41 +137,108 @@ class MainPro : ComponentActivity() {
             val homeIntent = Intent(this, HomeActivity::class.java)
             homeIntent.data = in2_data // 将URI数据传递给HomeActivity
             startActivity(homeIntent)
-            finish() // 如果不需要返回MainPro，可以在这里结束它
+            finish() // 不需要返回MainPro，在这里结束它
         } else {
             // ...
         }
 
-// 设置沉浸式通知栏
+        // 设置沉浸式通知栏
         window.setDecorFitsSystemWindows(false)
         window.decorView.setOnApplyWindowInsetsListener { _, insets ->
             insets
         }
-        if (in2_data != null) {
-            setContent {
-                CascadeMaterialTheme {
-                    MyUI(intent, TAG)
-                }
-            }
-//            if (ft == "视频") {
-//                handleVideo(uri) // 不再直接播放
-//            }
-        } else {
-        }
 
-//        finish()
+        setContent {
+            CascadeMaterialTheme {
+                MyUI(TAG)
+            }
+        }
+    }
+
+    private fun isMarkdown(text: String): Boolean {
+        // 检查文本中是否包含Markdown特有的语法特征
+        val containsMarkdownSyntax =
+            text.contains(Regex("^(#{1,6})\\s|\\*\\s|_\\s|[\\[]\\([^\\)]+\\)[\\]]"))
+        // 检查文本的开始和末尾是否是HTML标签
+        val startsWithHtmlTag = Regex("^<[a-zA-Z]").find(text) != null
+        val endsWithHtmlTag = Regex("[a-zA-Z]>$").find(text) != null
+
+        // 如果文本包含Markdown语法，并且开始和末尾不是HTML标签，则判定为Markdown
+        return containsMarkdownSyntax && !startsWithHtmlTag && !endsWithHtmlTag
+    }
+
+    private fun checkContentFormat(text: String): String {
+        // 首先检查文本是否包含Markdown特有的语法
+        if (isMarkdown(text)) {
+            return "Markdown"
+        } else {
+            // 创建一个只允许特定HTML标签的Safelist
+            val safelist = Safelist.relaxed()
+            // 使用Jsoup尝试解析文本，并保留允许的HTML标签
+            val cleanText = Jsoup.clean(text, safelist)
+            if (cleanText != text) {
+                // 文本包含HTML标签，因此是HTML内容
+                return "HTML"
+            }
+        }
+        // 如果没有HTML标签，也不是Markdown，则返回其他
+        return "Other"
+    }
+
+    private fun processHtml(html: String): String {
+        // 对HTML进行校验和清理
+        val safeHtml = sanitizeHtml(html)
+        // 处理安全的HTML文本
+        Log.e(TAG, "HTML: $safeHtml")
+        return safeHtml
+    }
+
+    private fun processMarkdown(markdown: String): String {
+        val validMarkdown = validateMarkdown2HTML(markdown)
+        Log.e(TAG, "Markdown: $validMarkdown")
+        return validMarkdown
+    }
+
+    private fun processPlainText(text: String): String {
+        // 处理普通文本
+        Log.e(TAG, text)
+        return text
+    }
+
+    private fun sanitizeHtml(html: String): String {
+        // 使用Jsoup的Safelist清理HTML，只允许安全的标签和属性
+        val whitelist = Safelist.relaxed()
+        return Jsoup.clean(html, whitelist)
+    }
+
+    private fun validateMarkdown2HTML(markdown: String): String {
+        // 使用CommonMark解析器解析Markdown
+        val parser = Parser.builder().build()
+        val renderer = HtmlRenderer.builder().build()
+
+        try {
+            // 解析Markdown文本
+            val document: Node = parser.parse(markdown)
+            // 渲染Markdown为HTML
+            val html: String = renderer.render(document)
+            // 如果没有异常，返回渲染后的HTML
+            return html
+        } catch (e: Exception) {
+            // 如果解析过程中发生异常，返回错误信息
+            return "Error: ${e.message}"
+        }
     }
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
     @Composable
-    fun MyUI(intent: Intent?, TAG: String) {
-        val uri = intent?.data
+    fun MyUI(TAG: String) {
         val Lcc = LocalContext.current
         val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
         val coroutineScope = rememberCoroutineScope()
-        val fileName = uri?.let { Us.getFileName(Lcc, it) }
-        val fileSize = uri?.let { Us.getFileSize(Lcc, it) }
+        var head_title = "汐洛中转站"
+        val fileName = in2_data?.let { Us.getFileName(Lcc, it) }
+        val fileSize = in2_data?.let { Us.getFileSize(Lcc, it) }
         val mimeType = intent?.data?.let { Us.getMimeType(Lcc, it) } ?: ""
         val fileType =
             fileName?.let { Us.getFileMIMEType(mimeType, it) }
@@ -168,9 +248,15 @@ class MainPro : ComponentActivity() {
 
         var isMenuVisible = rememberSaveable { mutableStateOf(false) }
 
+        // 检查Intent的action和type
+        if (in2_action == Intent.ACTION_SEND) {
+            head_title = "汐洛受赏中转站"
+        } else if (in2_data != null) {
+            head_title = "汐洛文件中转站"
+        }
         Scaffold(
             topBar = {
-                CommonTopAppBar("汐洛文件中转站", TAG, uri, isMenuVisible) {
+                CommonTopAppBar(head_title, TAG, in2_data, isMenuVisible) {
                     // 将Context对象安全地转换为Activity
                     if (Lcc is Activity) {
                         Lcc.finish() // 结束活动
@@ -184,7 +270,56 @@ class MainPro : ComponentActivity() {
                     .padding(it),
                 contentAlignment = Alignment.Center
             ) {
-                if (isLandscape) {
+                if (in2_action == Intent.ACTION_SEND) {
+
+                    // 根据mimeType处理不同的数据
+                    when {
+                        in2_type?.startsWith("text/") == true -> {
+                            // 获取extra中的文本数据
+                            val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT) ?: return@Box
+                            val html: String
+                            // 判断文本类型并进行合法性校验
+                            when (checkContentFormat(sharedText)) {
+                                "HTML" -> {
+                                    // 处理HTML文本
+                                    html = processHtml(sharedText)
+                                }
+
+                                "Markdown" -> {
+                                    // 处理Markdown文本
+                                    html = processMarkdown(sharedText)
+                                }
+
+                                else -> {
+                                    // 处理普通文本
+                                    html = processPlainText(sharedText)
+                                }
+                            }
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                item {
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    SelectableHtmlText(
+                                        html,
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .height(200.dp)
+                                            .padding(10.dp)
+                                    )
+                                    SendBtnPart(sharedText)
+                                }
+                            }
+                        }
+
+                        in2_type?.startsWith("image/") == true -> {
+                        }
+                    }
+                } else if (isLandscape) {
                     Row(
                         modifier = Modifier.fillMaxSize(),
                         horizontalArrangement = Arrangement.Center
@@ -198,7 +333,7 @@ class MainPro : ComponentActivity() {
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             InfoPart(
-                                uri = uri,
+                                uri = in2_data,
                                 fileType = fileType,
                                 fileName = fileName,
                                 fileSize = fileSize
@@ -215,7 +350,7 @@ class MainPro : ComponentActivity() {
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             BtnPart(
-                                uri = uri,
+                                uri = in2_data,
                                 mimeType = mimeType,
                                 fileName = fileName
                             )
@@ -232,13 +367,13 @@ class MainPro : ComponentActivity() {
                         item {
                             Spacer(modifier = Modifier.height(16.dp))
                             InfoPart(
-                                uri = uri,
+                                uri = in2_data,
                                 fileType = fileType,
                                 fileName = fileName,
                                 fileSize = fileSize
                             )
                             BtnPart(
-                                uri = uri,
+                                uri = in2_data,
                                 mimeType = mimeType,
                                 fileName = fileName
                             )
@@ -248,6 +383,61 @@ class MainPro : ComponentActivity() {
             }
 
 
+        }
+    }
+
+    @Composable
+    fun SendBtnPart(markdown: String?) {
+        val isLandscape =
+            LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
+        // 保存到指定文件夹
+        Button(modifier = Modifier
+            .width(S.C.Button_Width.current.dp)
+            .padding(top = if (isLandscape) S.C.btn_PaddingTopH.current else S.C.btn_PaddingTopV.current),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = S.C.btn_bgColor3.current,
+                contentColor = S.C.btn_Color1.current
+            ), enabled = true, onClick = {
+                if (markdown != null) {
+                    val directories = Us.getDirectoriesInPath(S.workspaceParentDir)
+                    val filteredDirectories = directories.filter { it != "home" }
+                    if (filteredDirectories.isNotEmpty()) {
+                        var selectMenuIndex = 0
+                        var selectMenuText = "sillot"
+                        BottomMenu.show(filteredDirectories)
+                            .setMessage("sillot 是默认工作空间")
+                            .setTitle("选择要存入的工作空间")
+                            .setSelection(selectMenuIndex) //指定已选择的位置
+                            .setOnMenuItemClickListener { dialog, text, index ->
+                                selectMenuIndex = index
+                                selectMenuText = text as String
+                                dialog.refreshUI() // 在 compose 里需要强制刷新
+                                true // 点击菜单后不会自动关闭
+                            }
+                            .setOkButton("确定",
+                                OnBottomMenuButtonClickListener { menu, view ->
+                                    Log.e(TAG, "${selectMenuText}")
+
+                                    false
+                                })
+                            .setCancelButton("取消",
+                                OnBottomMenuButtonClickListener { menu, view ->
+                                    false
+                                })
+                    } else {
+                        PopNotification.show(
+                            R.drawable.icon,
+                            "未发现任何工作空间",
+                            "请检查是否初始化了，或者路径存在异常 ${S.workspaceParentDir}/"
+                        ).noAutoDismiss()
+                    }
+                }
+            }) {
+            Text(
+                text = S.C.btnText5.current,
+                letterSpacing = S.C.btn_lspace.current,
+                fontSize = if (isLandscape) S.C.btn_TextFontsizeH.current else S.C.btn_TextFontsizeV.current
+            )
         }
     }
 
@@ -336,22 +526,8 @@ class MainPro : ComponentActivity() {
         val Lcc = LocalContext.current
         val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
         val coroutineScope = rememberCoroutineScope()
-        val Button_Width = S.C.Button_Width.current
-        val btn_lspace = S.C.btn_lspace.current
-        val btn_PaddingTopH = S.C.btn_PaddingTopH.current
-        val btn_PaddingTopV = S.C.btn_PaddingTopV.current
-        val btn_TextFontsizeH = S.C.btn_TextFontsizeH.current
-        val btn_TextFontsizeV = S.C.btn_TextFontsizeV.current
-        val btn_Color1 = S.C.btn_Color1.current
-        val btn_bgColor1 = S.C.btn_bgColor1.current
-        val btn_bgColor2 = S.C.btn_bgColor2.current
-        val btn_bgColor3 = S.C.btn_bgColor3.current
-        val btn_bgColor4 = S.C.btn_bgColor4.current
-        val btnText1 = S.C.btnText1.current
-        val btnText2 = S.C.btnText2.current
-        val btnText3 = S.C.btnText3.current
-        val btnText4 = S.C.btnText4.current
 
+        var showSaveButton by remember { mutableStateOf(false) }
         var showAudioButton by remember { mutableStateOf(false) }
         var showVideoButton by remember { mutableStateOf(false) }
         var showApkButton by remember { mutableStateOf(false) }
@@ -370,6 +546,7 @@ class MainPro : ComponentActivity() {
 
 
         LaunchedEffect(key1 = mimeType) {
+            showSaveButton = uri != null
             if (fileName != null) {
                 showAudioButton = mimeType.startsWith("audio/")
                 showVideoButton = mimeType.startsWith("video/")
@@ -378,7 +555,7 @@ class MainPro : ComponentActivity() {
                         ".apk.1"
                     ))
             }
-            if ( uri != null) {
+            if (uri != null) {
                 when (uri.scheme) {
                     "magnet" -> showMagnetButton = true
                 }
@@ -568,8 +745,8 @@ class MainPro : ComponentActivity() {
                             modifier = Modifier
                                 .padding(bottom = 8.dp)
                                 .align(Alignment.BottomCenter),
-                            letterSpacing = btn_lspace,
-                            fontSize = if (isLandscape) btn_TextFontsizeH else btn_TextFontsizeV
+                            letterSpacing = S.C.btn_lspace.current,
+                            fontSize = if (isLandscape) S.C.btn_TextFontsizeH.current else S.C.btn_TextFontsizeV.current
                         )
                     }
                 }
@@ -582,79 +759,78 @@ class MainPro : ComponentActivity() {
 
         //// @D 通用按键部分
 
-        // 保存到指定文件夹
-        Button(modifier = Modifier
-            .width(Button_Width.dp)
-            .padding(top = if (isLandscape) btn_PaddingTopH else btn_PaddingTopV),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = btn_bgColor3,
-                contentColor = btn_Color1
-            ), enabled = true, onClick = {
-                val btn3_intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-                bt3TaskLauncher.launch(btn3_intent)
-                // 非阻塞
-            }) {
-            Text(
-                text = btnText3,
-                letterSpacing = btn_lspace,
-                fontSize = if (isLandscape) btn_TextFontsizeH else btn_TextFontsizeV
-            )
-        }
+        if (showSaveButton) {
+            // 保存到指定文件夹
+            Button(modifier = Modifier
+                .width(S.C.Button_Width.current.dp)
+                .padding(top = if (isLandscape) S.C.btn_PaddingTopH.current else S.C.btn_PaddingTopV.current),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = S.C.btn_bgColor3.current,
+                    contentColor = S.C.btn_Color1.current
+                ), enabled = true, onClick = {
+                    val btn3_intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                    bt3TaskLauncher.launch(btn3_intent)
+                    // 非阻塞
+                }) {
+                Text(
+                    text = S.C.btnText3.current,
+                    letterSpacing = S.C.btn_lspace.current,
+                    fontSize = if (isLandscape) S.C.btn_TextFontsizeH.current else S.C.btn_TextFontsizeV.current
+                )
+            }
 
-        // 存入工作空间级资源目录
-        Button(modifier = Modifier
-            .width(Button_Width.dp)
-            .padding(top = if (isLandscape) btn_PaddingTopH else btn_PaddingTopV),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = btn_bgColor4,
-                contentColor = btn_Color1
-            ), enabled = true, onClick = {
-                if (uri != null) {
-//                val handler = Handler(Looper.getMainLooper())
-//                handler.post {
-                    val directories = Us.getDirectoriesInPath(S.workspaceParentDir)
-                    val filteredDirectories = directories.filter { it != "home" }
-                    if (filteredDirectories.isNotEmpty()) {
-                        var selectMenuIndex = 0
-                        var selectMenuText = "sillot"
-                        BottomMenu.show(filteredDirectories)
-                            .setMessage("sillot 是默认工作空间")
-                            .setTitle("选择要存入的工作空间")
-                            .setSelection(selectMenuIndex) //指定已选择的位置
-                            .setOnMenuItemClickListener { dialog, text, index ->
-                                selectMenuIndex = index
-                                selectMenuText = text as String
-                                dialog.refreshUI() // 在 compose 里需要强制刷新
-                                true // 点击菜单后不会自动关闭
-                            }
-                            .setOkButton("确定",
-                                OnBottomMenuButtonClickListener { menu, view ->
-                                    Log.e(TAG, "${selectMenuText}")
+            // 存入工作空间级资源目录
+            Button(modifier = Modifier
+                .width(S.C.Button_Width.current.dp)
+                .padding(top = if (isLandscape) S.C.btn_PaddingTopH.current else S.C.btn_PaddingTopV.current),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = S.C.btn_bgColor4.current,
+                    contentColor = S.C.btn_Color1.current
+                ), enabled = true, onClick = {
+                    if (uri != null) {
+                        val directories = Us.getDirectoriesInPath(S.workspaceParentDir)
+                        val filteredDirectories = directories.filter { it != "home" }
+                        if (filteredDirectories.isNotEmpty()) {
+                            var selectMenuIndex = 0
+                            var selectMenuText = "sillot"
+                            BottomMenu.show(filteredDirectories)
+                                .setMessage("sillot 是默认工作空间")
+                                .setTitle("选择要存入的工作空间")
+                                .setSelection(selectMenuIndex) //指定已选择的位置
+                                .setOnMenuItemClickListener { dialog, text, index ->
+                                    selectMenuIndex = index
+                                    selectMenuText = text as String
+                                    dialog.refreshUI() // 在 compose 里需要强制刷新
+                                    true // 点击菜单后不会自动关闭
+                                }
+                                .setOkButton("确定",
+                                    OnBottomMenuButtonClickListener { menu, view ->
+                                        Log.e(TAG, "${selectMenuText}")
 
-                                    workspaceAssetsDir =
-                                        "${S.workspaceParentDir}/${selectMenuText}/data/assets"
-                                    isButton4OnClickRunning = true // 值变化时会触发重组
-                                    false
-                                })
-                            .setCancelButton("取消",
-                                OnBottomMenuButtonClickListener { menu, view ->
-                                    false
-                                })
-                    } else {
-                        PopNotification.show(
-                            R.drawable.icon,
-                            "未发现任何工作空间",
-                            "请检查是否初始化了，或者路径存在异常 ${S.workspaceParentDir}/"
-                        ).noAutoDismiss()
+                                        workspaceAssetsDir =
+                                            "${S.workspaceParentDir}/${selectMenuText}/data/assets"
+                                        isButton4OnClickRunning = true // 值变化时会触发重组
+                                        false
+                                    })
+                                .setCancelButton("取消",
+                                    OnBottomMenuButtonClickListener { menu, view ->
+                                        false
+                                    })
+                        } else {
+                            PopNotification.show(
+                                R.drawable.icon,
+                                "未发现任何工作空间",
+                                "请检查是否初始化了，或者路径存在异常 ${S.workspaceParentDir}/"
+                            ).noAutoDismiss()
+                        }
                     }
-//                }
-                }
-            }) {
-            Text(
-                text = btnText4,
-                letterSpacing = btn_lspace,
-                fontSize = if (isLandscape) btn_TextFontsizeH else btn_TextFontsizeV
-            )
+                }) {
+                Text(
+                    text = S.C.btnText4.current,
+                    letterSpacing = S.C.btn_lspace.current,
+                    fontSize = if (isLandscape) S.C.btn_TextFontsizeH.current else S.C.btn_TextFontsizeV.current
+                )
+            }
         }
 
 
@@ -662,21 +838,26 @@ class MainPro : ComponentActivity() {
 
         fun ApkBTNonClick1() {
             in2_data?.let {
-                Us.installApk2(Lcc as Activity,
-                     it)
-            } ?: run {
-                PopNotification.show("安装失败", "无法获取安装包 uri")
-            }
-        }
-        fun ApkBTNonClick2() {
-            uri?.let {
-                Us.installApk(Lcc as Activity,
+                Us.installApk2(
+                    Lcc as Activity,
                     it
                 )
             } ?: run {
                 PopNotification.show("安装失败", "无法获取安装包 uri")
             }
         }
+
+        fun ApkBTNonClick2() {
+            uri?.let {
+                Us.installApk(
+                    Lcc as Activity,
+                    it
+                )
+            } ?: run {
+                PopNotification.show("安装失败", "无法获取安装包 uri")
+            }
+        }
+
         fun MagnetBTNonClick1() {
             uri?.let {
                 Us.openUrl(it.toString(), true)
@@ -689,8 +870,7 @@ class MainPro : ComponentActivity() {
         } else if (showApkButton) {
             ApkButtons(S.C.btnText5Apk1.current, ::ApkBTNonClick1)
             ApkButtons(S.C.btnText5Apk2.current, ::ApkBTNonClick2)
-        }
-        else if (showMagnetButton) {
+        } else if (showMagnetButton) {
             MagnetButtons(S.C.btnTextMagnet1.current, ::MagnetBTNonClick1)
         }
 
@@ -706,7 +886,7 @@ class MainPro : ComponentActivity() {
             S.C.Thumbnail_Height provides 250,
             S.C.Button_Width providesDefault 300,
         ) {
-            MyUI(null, "")
+            MyUI("")
         }
     }
 
