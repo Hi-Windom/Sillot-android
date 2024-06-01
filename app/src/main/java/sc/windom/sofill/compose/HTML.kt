@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.text.HtmlCompat
-import org.b3log.siyuan.Us
+import sc.windom.sofill.U
 import org.xml.sax.XMLReader
 import java.util.Stack
 
@@ -47,7 +47,7 @@ fun SelectableHtmlText(html: String, modifier: Modifier = Modifier) {
             }
         },
         update = { textView ->
-            val _Html = Us.parseAndDecodeUrl(
+            val _Html = U.parseAndDecodeUrl(
                 html,
                 """['"]https://ld246.com/forward\?goto=([^'"]*)['"]""".toRegex()
             )

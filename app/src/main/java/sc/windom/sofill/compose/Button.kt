@@ -14,7 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
 import sc.windom.sofill.S
-import org.b3log.siyuan.Us
+import sc.windom.sofill.U
 
 
 @Composable
@@ -67,7 +67,7 @@ fun VideoButtons(uri: Uri) {
             containerColor = btn_bgColor1,
             contentColor = btn_Color1
         ), enabled = true, onClick = {
-            Us.handleVideo(Lcc, uri)
+            U.handleVideo(Lcc, uri)
         }) {
         Text(
             text = btnText1,

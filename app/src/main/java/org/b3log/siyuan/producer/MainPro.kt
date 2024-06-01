@@ -72,7 +72,7 @@ import kotlinx.coroutines.withContext
 import sc.windom.sofill.compose.theme.CascadeMaterialTheme
 import org.b3log.siyuan.R
 import sc.windom.sofill.S
-import org.b3log.siyuan.Us
+import sc.windom.sofill.U
 import org.b3log.siyuan.andapi.Toast
 import sc.windom.sofill.compose.ApkButtons
 import sc.windom.sofill.compose.AudioButtons
@@ -237,12 +237,12 @@ class MainPro : ComponentActivity() {
         val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
         val coroutineScope = rememberCoroutineScope()
         var head_title = "汐洛中转站"
-        val fileName = in2_data?.let { Us.getFileName(Lcc, it) }
-        val fileSize = in2_data?.let { Us.getFileSize(Lcc, it) }
-        val mimeType = intent?.data?.let { Us.getMimeType(Lcc, it) } ?: ""
+        val fileName = in2_data?.let { U.getFileName(Lcc, it) }
+        val fileSize = in2_data?.let { U.getFileSize(Lcc, it) }
+        val mimeType = intent?.data?.let { U.getMimeType(Lcc, it) } ?: ""
         val fileType =
-            fileName?.let { Us.getFileMIMEType(mimeType, it) }
-                ?: run { Us.getFileMIMEType(mimeType) }
+            fileName?.let { U.getFileMIMEType(mimeType, it) }
+                ?: run { U.getFileMIMEType(mimeType) }
         val isLandscape =
             LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
 
@@ -399,7 +399,7 @@ class MainPro : ComponentActivity() {
                 contentColor = S.C.btn_Color1.current
             ), enabled = true, onClick = {
                 if (markdown != null) {
-                    val directories = Us.getDirectoriesInPath(S.workspaceParentDir)
+                    val directories = U.getDirectoriesInPath(S.workspaceParentDir)
                     val filteredDirectories = directories.filter { it != "home" }
                     if (filteredDirectories.isNotEmpty()) {
                         var selectMenuIndex = 0
@@ -482,7 +482,7 @@ class MainPro : ComponentActivity() {
                             )
                         }
                     } else {
-                        val icon = Us.getIconForFileType(fileType)
+                        val icon = U.getIconForFileType(fileType)
                         Icon(
                             imageVector = icon,
                             contentDescription = "File Type Icon",
@@ -568,16 +568,16 @@ class MainPro : ComponentActivity() {
                 withContext(Dispatchers.IO) {
 
                     try {
-                        if (!Us.isStorageSpaceAvailable(Lcc.contentResolver, uri_from_file)) {
+                        if (!U.isStorageSpaceAvailable(Lcc.contentResolver, uri_from_file)) {
                             // 存储空间不足，处理逻辑
                             Toast.Show(Lcc, "存储空间不足，请先清理")
                             return@withContext
                         }
-                        val sourceFilePath = Us.getPathFromUri(Lcc, uri_from_file)
+                        val sourceFilePath = U.getPathFromUri(Lcc, uri_from_file)
                         // 复制文件到所选文件夹
                         fileName?.let {
                             sourceFilePath?.let { it1 ->
-                                Us.copyFileToFolderByDocumentTree(
+                                U.copyFileToFolderByDocumentTree(
                                     Lcc, uri_to_dir, it,
                                     it1, mimeType
                                 )
@@ -603,17 +603,17 @@ class MainPro : ComponentActivity() {
             coroutineScope.launch {
                 withContext(Dispatchers.IO) {
                     try {
-                        if (!Us.isStorageSpaceAvailable(Lcc.contentResolver, uri_from_file)) {
+                        if (!U.isStorageSpaceAvailable(Lcc.contentResolver, uri_from_file)) {
                             // 存储空间不足，处理逻辑
                             PopNotification.show(R.drawable.icon, "存储空间不足，请先清理")
                             return@withContext
                         }
-                        val sourceFilePath = Us.getPathFromUri(Lcc, uri_from_file)
+                        val sourceFilePath = U.getPathFromUri(Lcc, uri_from_file)
                         // 复制文件到所选文件夹
                         fileName?.let {
                             sourceFilePath?.let { it1 ->
                                 try {
-                                    Us.copyFileToMyAppFolder(
+                                    U.copyFileToMyAppFolder(
                                         workspaceAssetsDir, it, it1
                                     )
                                     PopNotification.show(
@@ -644,7 +644,7 @@ class MainPro : ComponentActivity() {
 
         var manageAllFilesPermissionLauncher =
             rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (Us.canManageAllFiles(Lcc)) {
+                if (U.canManageAllFiles(Lcc)) {
                     if (isButton3OnClickRunning) {
                         onCopyFileToFolderByDocumentTree()
                     } else if (isButton4OnClickRunning) {
@@ -679,7 +679,7 @@ class MainPro : ComponentActivity() {
 
                         uri_from_file = uri
                         uri_to_dir = _uri
-                        if (Us.canManageAllFiles(Lcc)) {
+                        if (U.canManageAllFiles(Lcc)) {
                             onCopyFileToFolderByDocumentTree()
                         } else {
                             val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
@@ -694,7 +694,7 @@ class MainPro : ComponentActivity() {
             if (isButton4OnClickRunning) {
                 uri_from_file = uri
                 uri_to_dir = Uri.parse(workspaceAssetsDir)
-                if (Us.canManageAllFiles(Lcc)) {
+                if (U.canManageAllFiles(Lcc)) {
                     onCopyFileToMyAppFolder()
                 } else {
                     val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
@@ -788,7 +788,7 @@ class MainPro : ComponentActivity() {
                     contentColor = S.C.btn_Color1.current
                 ), enabled = true, onClick = {
                     if (uri != null) {
-                        val directories = Us.getDirectoriesInPath(S.workspaceParentDir)
+                        val directories = U.getDirectoriesInPath(S.workspaceParentDir)
                         val filteredDirectories = directories.filter { it != "home" }
                         if (filteredDirectories.isNotEmpty()) {
                             var selectMenuIndex = 0
@@ -838,7 +838,7 @@ class MainPro : ComponentActivity() {
 
         fun ApkBTNonClick1() {
             in2_data?.let {
-                Us.installApk2(
+                U.installApk2(
                     Lcc as Activity,
                     it
                 )
@@ -849,7 +849,7 @@ class MainPro : ComponentActivity() {
 
         fun ApkBTNonClick2() {
             uri?.let {
-                Us.installApk(
+                U.installApk(
                     Lcc as Activity,
                     it
                 )
@@ -860,7 +860,7 @@ class MainPro : ComponentActivity() {
 
         fun MagnetBTNonClick1() {
             uri?.let {
-                Us.openUrl(it.toString(), true)
+                U.openUrl(it.toString(), true)
             }
         }
         if (inspectionMode || showAudioButton) {

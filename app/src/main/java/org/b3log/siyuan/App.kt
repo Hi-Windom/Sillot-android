@@ -24,6 +24,7 @@ import io.realm.kotlin.types.annotations.Ignore
 import io.realm.kotlin.types.annotations.PrimaryKey
 import org.b3log.siyuan.common.ForegroundPushManager
 import sc.windom.sofill.S
+import sc.windom.sofill.U
 import java.net.InetAddress
 import java.net.UnknownHostException
 
@@ -183,7 +184,7 @@ class App : Application() {
 
         })
 
-        if (Us.isMIUI(applicationContext) || Us.isLargeScreenMachine(this)) {
+        if (U.isMIUI(applicationContext) || U.isLargeScreenMachine(this)) {
             DialogX.globalStyle = MIUIStyle()
         } else {
             // 其他主题感觉都不好看，暂时默认，以后可能自己弄个

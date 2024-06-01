@@ -123,7 +123,7 @@ import kotlinx.coroutines.launch
 import sc.windom.sofill.compose.theme.CascadeMaterialTheme
 import org.b3log.siyuan.R
 import sc.windom.sofill.S
-import org.b3log.siyuan.Us
+import sc.windom.sofill.U
 import org.b3log.siyuan.appUtils.HWs
 import sc.windom.sofill.compose.MyTagHandler
 import sc.windom.sofill.compose.NetworkViewModel
@@ -142,7 +142,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 class HomeActivity : ComponentActivity() {
     val TAG = "ld246/Home.kt"
     private var mmkv: MMKV = MMKV.defaultMMKV()
-    var token = Us.getDecryptedToken(mmkv, S.KEY_TOKEN_ld246, S.KEY_AES_TOKEN_ld246)
+    var token = U.getDecryptedToken(mmkv, S.KEY_TOKEN_ld246, S.KEY_AES_TOKEN_ld246)
     val ua = "Sillot-anroid/0.35"
     private var exitTime: Long = 0
     private var fullScreenDialog: FullScreenDialog? = null
@@ -494,7 +494,7 @@ class HomeActivity : ComponentActivity() {
             leadingIcon = { Icon(Icons.TwoTone.Token, contentDescription = null) },
             onClick = {
                 onDismiss()
-                val deToken = Us.getDecryptedToken(mmkv, S.KEY_TOKEN_ld246, S.KEY_AES_TOKEN_ld246)
+                val deToken = U.getDecryptedToken(mmkv, S.KEY_TOKEN_ld246, S.KEY_AES_TOKEN_ld246)
                 InputDialog(
                     "🛸 API TOKEN",
                     "可在社区 设置 - 账号 中找到 API Token，固定以 'token ' 开头\n\n温馨提示：应用存储 Token 时进行了一定的处理，且不会传输到网络，但用户仍需注意防止 Token 泄露！建议使用前先阅读源代码",
@@ -506,18 +506,18 @@ class HomeActivity : ComponentActivity() {
                     .setOkButton { baseDialog, v, inputStr ->
                         token = inputStr
                         // 生成AES密钥
-                        val aesKey = Us.generateAesKey()
+                        val aesKey = U.generateAesKey()
                         // 注意：这里需要将SecretKey转换为可以存储的格式，例如转换为字节数组然后进行Base64编码
                         val encodedKey = Base64.encodeToString(aesKey.encoded, Base64.DEFAULT)
                         // 加密Token
-                        val encryptedToken = Us.encryptAes(inputStr, aesKey)
+                        val encryptedToken = U.encryptAes(inputStr, aesKey)
                         // 将加密后的Token存储到MMKV中
                         mmkv.encode(S.KEY_AES_TOKEN_ld246, encodedKey)
                         mmkv.encode(S.KEY_TOKEN_ld246, encryptedToken)
                         pullToRefreshState.startRefresh()
                         PopNotification.show(
                             "TOKEN已更新（${
-                                Us.displayTokenLimiter(
+                                U.displayTokenLimiter(
                                     inputStr,
                                     "token ".length + 4,
                                     4
@@ -1098,8 +1098,8 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun handleUrlLoading(view: WebView, url: String): Boolean {
-        val _url = Us.replaceScheme_deepDecode(url, "googlechrome://", "slld246://")
-        val real_url = Us.replaceEncodeScheme(url, "googlechrome://", "slld246://")
+        val _url = U.replaceScheme_deepDecode(url, "googlechrome://", "slld246://")
+        val real_url = U.replaceEncodeScheme(url, "googlechrome://", "slld246://")
         Log.d(TAG, _url)
 
         return if (_url.startsWith("mqq://") || _url.startsWith("wtloginmqq://") || _url.startsWith("sinaweibo://")) {
@@ -1199,7 +1199,7 @@ class HomeActivity : ComponentActivity() {
             if (uriHandler != null) {
                 uriHandler.openUri(url)
             } else {
-                Us.openUrl(url)
+                U.openUrl(url)
             }
         } else {
             showFullScreenDialog(url)
@@ -1225,7 +1225,7 @@ class HomeActivity : ComponentActivity() {
             update = { textView ->
                 // 设置自定义的MovementMethod
                 textView.movementMethod = CustomLinkMovementMethod()
-                val _Html = Us.parseAndDecodeUrl(
+                val _Html = U.parseAndDecodeUrl(
                     html,
                     """['"]https://ld246.com/forward\?goto=([^'"]*)['"]""".toRegex()
                 )

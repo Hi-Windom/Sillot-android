@@ -1,4 +1,4 @@
-package org.b3log.siyuan
+package sc.windom.sofill
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -51,7 +51,6 @@ import com.tencent.mmkv.MMKV
 import org.b3log.siyuan.andapi.Toast
 import org.b3log.siyuan.sillot.util.FileUtil
 import org.b3log.siyuan.videoPlayer.SimplePlayer
-import sc.windom.sofill.S
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -67,7 +66,7 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 
-object Us {
+object U {
     fun replaceScheme_deepDecode(url: String, old: String, new: String): String {
         // 解码URL
         var decodedUrl = URLDecoder.decode(url, "UTF-8")

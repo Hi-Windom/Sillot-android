@@ -54,7 +54,7 @@ import me.saket.cascade.CascadeDropdownMenu
 import me.saket.cascade.rememberCascadeState
 import org.b3log.siyuan.R
 import sc.windom.sofill.S
-import org.b3log.siyuan.Us
+import sc.windom.sofill.U
 import org.b3log.siyuan.Utils
 import org.b3log.siyuan.andapi.Toast
 
@@ -210,7 +210,7 @@ fun TopRightMenu(
                         leadingIcon = { Icon(Icons.TwoTone.Check, contentDescription = null) },
                         onClick = {
                             onDismiss()
-                            Us.deleteFileByUri(Lcc, uri).let {
+                            U.deleteFileByUri(Lcc, uri).let {
                                 onDismiss()
                                 if (it) {
 //                                    Us.notifyGallery(Lcc, uri)
@@ -259,7 +259,7 @@ fun TopRightMenu(
                     text = { Text("报告此页") },
                     leadingIcon = { Icon(Icons.TwoTone.Email, contentDescription = null) },
                     onClick = {
-                        onDismiss();Us.sendEmail(
+                        onDismiss();U.sendEmail(
                         Lcc.packageManager,
                         S.emailAdress,
                         "汐洛安卓反馈 - 报告此页",
@@ -270,12 +270,12 @@ fun TopRightMenu(
                 DropdownMenuItem(
                     text = { Text("反馈此页") },
                     leadingIcon = { Icon(Icons.TwoTone.BugReport, contentDescription = null) },
-                    onClick = { onDismiss();Us.openUrl("${S.gitRepoUrl}/issues/new") },
+                    onClick = { onDismiss();U.openUrl("${S.gitRepoUrl}/issues/new") },
                 )
                 DropdownMenuItem(
                     text = { Text("查看源码") },
                     leadingIcon = { Icon(Icons.TwoTone.Code, contentDescription = null) },
-                    onClick = { onDismiss();Us.openUrl("${S.gitRepoUrl}/blob/HEAD/app/src/main/java/org/b3log/siyuan/${sourceFile}") },
+                    onClick = { onDismiss();U.openUrl("${S.gitRepoUrl}/blob/HEAD/app/src/main/java/org/b3log/siyuan/${sourceFile}") },
                 )
             },
         )

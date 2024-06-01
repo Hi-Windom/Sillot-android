@@ -71,6 +71,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
 import kotlinx.coroutines.launch
 import sc.windom.sofill.S
+import sc.windom.sofill.U
 
 class USB_AUDIO_EXCLUSIVE : AppCompatActivity() {
     private lateinit var usbManager: UsbManager
@@ -291,7 +292,7 @@ fun MyUI_USB_AUDIO_EXCLUSIVE(activity: USB_AUDIO_EXCLUSIVE) {
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            fileName = Us.getFileName(activity, uri) ?: ""
+            fileName = U.getFileName(activity, uri) ?: ""
             isPlaying.value = true
             isStopped.value = false
             // 启动 MusicService 并传递音乐文件的 URI
