@@ -72,6 +72,7 @@ import io.reactivex.rxjava3.core.Observable;
 
 import io.reactivex.rxjava3.disposables.Disposable;
 import mobile.Mobile;
+import sc.windom.sofill.S;
 
 /**
  * JavaScript 接口.

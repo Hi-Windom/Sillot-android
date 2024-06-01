@@ -71,7 +71,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import sc.windom.sofill.compose.theme.CascadeMaterialTheme
 import org.b3log.siyuan.R
-import org.b3log.siyuan.S
+import sc.windom.sofill.S
 import org.b3log.siyuan.Us
 import org.b3log.siyuan.andapi.Toast
 import sc.windom.sofill.compose.ApkButtons

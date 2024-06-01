@@ -11,7 +11,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import org.b3log.siyuan.S
+import sc.windom.sofill.S
 import org.b3log.siyuan.R
 
 

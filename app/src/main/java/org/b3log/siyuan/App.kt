@@ -23,6 +23,7 @@ import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.annotations.Ignore
 import io.realm.kotlin.types.annotations.PrimaryKey
 import org.b3log.siyuan.common.ForegroundPushManager
+import sc.windom.sofill.S
 import java.net.InetAddress
 import java.net.UnknownHostException
 

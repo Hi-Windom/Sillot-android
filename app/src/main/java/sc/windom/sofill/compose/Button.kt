@@ -13,7 +13,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
-import org.b3log.siyuan.S
+import sc.windom.sofill.S
 import org.b3log.siyuan.Us
 
 

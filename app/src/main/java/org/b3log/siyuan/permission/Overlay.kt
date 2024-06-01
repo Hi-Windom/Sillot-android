@@ -10,7 +10,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import org.b3log.siyuan.S
+import sc.windom.sofill.S
 import org.b3log.siyuan.OnSiYuanMainRequestEvent
 import org.b3log.siyuan.andapi.Toast
 import org.greenrobot.eventbus.EventBus

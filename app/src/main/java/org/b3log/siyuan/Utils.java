@@ -26,10 +26,8 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.app.KeyguardManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.os.Build;
 import android.os.Environment;
@@ -65,6 +63,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import mobile.Mobile;
+import sc.windom.sofill.S;
 
 /**
  * 工具类.

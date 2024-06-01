@@ -37,7 +37,7 @@ import io.reactivex.rxjava3.core.ObservableEmitter
 import io.reactivex.rxjava3.core.ObservableOnSubscribe
 import io.reactivex.rxjava3.disposables.Disposable
 import org.b3log.siyuan.R
-import org.b3log.siyuan.S
+import sc.windom.sofill.S
 import org.b3log.siyuan.WifiStateReceiver
 import java.net.Inet4Address
 import java.net.NetworkInterface

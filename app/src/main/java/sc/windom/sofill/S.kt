@@ -1,5 +1,5 @@
 @file:Suppress("CompositionLocalNaming", "CompositionLocalNaming")
-package org.b3log.siyuan
+package sc.windom.sofill
 
 import android.net.Uri
 import androidx.compose.runtime.compositionLocalOf
@@ -16,7 +16,7 @@ object S {
     const val emailAdress = "694357845@qq.com"
     const val QQ = "694357845"
     const val TTK = "AsyncTTk" // 抖音
-    const val workspaceParentDir = "/storage/emulated/0/Android/data/${packageName}/files"
+    const val workspaceParentDir = "/storage/emulated/0/Android/data/$packageName/files"
 
     const val DefaultHTTPPort = 58131
     const val initCrashReportID = "26ae2b5fb4"
@@ -32,12 +32,12 @@ object S {
     const val USB_AUDIO_EXCLUSIVE_notificationId = 7654321
 
     // 通知频道ID
-    const val XLQTFW_notificationChannelId = "sillot_notification_channel_id_58131${XLQTFW_notificationId}" // 🦢 汐洛前台通知服务
-    const val SILLOT_MUSIC_PLAYER_NOTIFICATION_CHANNEL_ID = "sillot_notification_channel_id_${USB_AUDIO_EXCLUSIVE_notificationId}" // 🦢 汐洛音乐播放服务
+    const val XLQTFW_notificationChannelId = "sillot_notification_channel_id_58131$XLQTFW_notificationId" // 🦢 汐洛前台通知服务
+    const val SILLOT_MUSIC_PLAYER_NOTIFICATION_CHANNEL_ID = "sillot_notification_channel_id_$USB_AUDIO_EXCLUSIVE_notificationId" // 🦢 汐洛音乐播放服务
     const val SY_NOTIFICATION_CHANNEL_ID = "sillot_notification_channel_id_6806"  // 📚 思源内核服务
     const val FloatingWindowService_NOTIFICATION_CHANNEL_ID = "sillot_notification_channel_id_100001"
 
-    const val URIMainActivity = "${siyuanPackage}.MainActivity"
+    const val URIMainActivity = "$siyuanPackage.MainActivity"
 
     // REQUEST CODE
     const val REQUEST_SELECT_FILE = 100

@@ -89,6 +89,8 @@ package org.b3log.siyuan;
  import org.apache.commons.io.filefilter.DirectoryFileFilter;
  import org.apache.commons.io.filefilter.TrueFileFilter;
  import org.b3log.siyuan.appUtils.HWs;
+
+ import sc.windom.sofill.S;
  import sc.windom.sofill.android.permission.Ps;
 
  import org.b3log.siyuan.services.FloatingWindowService;

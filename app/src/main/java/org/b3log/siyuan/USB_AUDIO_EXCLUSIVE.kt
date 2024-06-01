@@ -70,6 +70,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
 import kotlinx.coroutines.launch
+import sc.windom.sofill.S
 
 class USB_AUDIO_EXCLUSIVE : AppCompatActivity() {
     private lateinit var usbManager: UsbManager

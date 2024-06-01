@@ -53,7 +53,7 @@ import androidx.core.content.ContextCompat
 import me.saket.cascade.CascadeDropdownMenu
 import me.saket.cascade.rememberCascadeState
 import org.b3log.siyuan.R
-import org.b3log.siyuan.S
+import sc.windom.sofill.S
 import org.b3log.siyuan.Us
 import org.b3log.siyuan.Utils
 import org.b3log.siyuan.andapi.Toast
