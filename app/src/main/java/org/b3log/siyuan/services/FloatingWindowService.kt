@@ -224,7 +224,7 @@ class FloatingWindowService : Service() {
         val executorService: ExecutorService = Executors.newSingleThreadExecutor()
         executorService.execute {
             try {
-                var ipAddress = "Not Connected"
+                var ipAddress = "0.0.0.0"
                 val networkInterfaces = NetworkInterface.getNetworkInterfaces()
                 for (networkInterface in Collections.list(networkInterfaces)) {
                     if (!networkInterface.name.equals("wlan0", ignoreCase = true)) continue
@@ -397,13 +397,13 @@ class FloatingWindowService : Service() {
         } else if (signalStrength >= -60) {
             "很好"
         } else if (signalStrength >= -70) {
-            "好"
+            "正常"
         } else if (signalStrength >= -80) {
             "一般"
         } else if (signalStrength >= -90) {
-            "较差"
+            "较弱"
         } else {
-            "非常差"
+            "极弱"
         }
         return signalStrengthLevel
     }

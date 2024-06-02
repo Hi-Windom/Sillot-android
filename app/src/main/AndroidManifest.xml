@@ -581,6 +581,12 @@
                 android:value="hosting" />
         </service>
 
+        <service
+            android:name=".services.BootService"
+            android:foregroundServiceType="dataSync|location"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="TODO" />
 
         <!-- Support opening assets through other apps on the Android https://github.com/siyuan-note/siyuan/issues/10657 -->
         <provider

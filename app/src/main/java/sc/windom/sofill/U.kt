@@ -23,6 +23,7 @@ import android.provider.OpenableColumns
 import android.provider.Settings
 import android.util.Base64
 import android.util.Log
+import android.webkit.WebSettings
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Badge
@@ -48,6 +49,7 @@ import com.blankj.utilcode.util.ActivityUtils.startActivity
 import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.dialogs.PopTip
 import com.tencent.mmkv.MMKV
+import org.b3log.siyuan.Utils
 import org.b3log.siyuan.andapi.Toast
 import org.b3log.siyuan.sillot.util.FileUtil
 import org.b3log.siyuan.videoPlayer.SimplePlayer
@@ -67,6 +69,32 @@ import kotlin.math.sqrt
 
 
 object U {
+    fun checkWebViewVer(ws: WebSettings): String {
+        // Android check WebView version 75+ https://github.com/siyuan-note/siyuan/issues/7840
+        val ua = ws.userAgentString
+        var webViewVer = ""
+        if (ua.contains("Chrome/")) {
+            val minVer = 95
+            try {
+                val chromeVersion = ua.split("Chrome/".toRegex()).dropLastWhile { it.isEmpty() }
+                    .toTypedArray()[1].split(" ".toRegex()).dropLastWhile { it.isEmpty() }
+                    .toTypedArray()[0]
+                if (chromeVersion.contains(".")) {
+                    val chromeVersionParts =
+                        chromeVersion.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }
+                            .toTypedArray()
+                    webViewVer = chromeVersionParts[0]
+                    if (webViewVer.toInt() < minVer) {
+                        PopTip.show("WebView version $webViewVer is too low, please upgrade to $minVer+")
+                    }
+                }
+            } catch (e: java.lang.Exception) {
+                Utils.LogError("boot", "check webview version failed", e)
+                PopTip.show("Check WebView version failed: " + e.message)
+            }
+        }
+        return webViewVer
+    }
     fun replaceScheme_deepDecode(url: String, old: String, new: String): String {
         // 解码URL
         var decodedUrl = URLDecoder.decode(url, "UTF-8")

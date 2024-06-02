@@ -21,9 +21,11 @@ package org.b3log.siyuan;
  import android.app.Activity;
  import android.content.ClipData;
  import android.content.ClipboardManager;
+ import android.content.ComponentName;
  import android.content.ContentValues;
  import android.content.Context;
  import android.content.Intent;
+ import android.content.ServiceConnection;
  import android.content.pm.PackageManager;
  import android.content.res.Configuration;
  import android.graphics.Bitmap;
@@ -31,10 +33,7 @@ package org.b3log.siyuan;
  import android.net.Uri;
  import android.os.Build;
  import android.os.Bundle;
- import android.os.Handler;
- import android.os.LocaleList;
- import android.os.Looper;
- import android.os.Message;
+ import android.os.IBinder;
  import android.provider.MediaStore;
  import android.util.Log;
  import android.view.Display;
@@ -53,6 +52,7 @@ package org.b3log.siyuan;
  import android.webkit.WebSettings;
  import android.webkit.WebView;
  import android.webkit.WebViewClient;
+ import android.widget.FrameLayout;
  import android.widget.ImageView;
  import android.widget.ProgressBar;
  import android.widget.TextView;
@@ -75,44 +75,35 @@ package org.b3log.siyuan;
  import com.kongzue.dialogx.dialogs.BottomMenu;
  import com.kongzue.dialogx.dialogs.PopTip;
  import com.kongzue.dialogx.interfaces.OnMenuItemClickListener;
- import com.koushikdutta.async.AsyncServer;
  import com.koushikdutta.async.http.AsyncHttpClient;
  import com.koushikdutta.async.http.AsyncHttpPost;
  import com.koushikdutta.async.http.body.JSONObjectBody;
- import com.koushikdutta.async.http.server.AsyncHttpServer;
- import com.koushikdutta.async.util.Charsets;
  import com.tencent.bugly.crashreport.CrashReport;
  import com.tencent.mmkv.MMKV;
  import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
 
  import org.apache.commons.io.FileUtils;
- import org.apache.commons.io.filefilter.DirectoryFileFilter;
- import org.apache.commons.io.filefilter.TrueFileFilter;
  import org.b3log.siyuan.appUtils.HWs;
 
  import sc.windom.sofill.S;
  import sc.windom.sofill.android.permission.Ps;
 
+ import org.b3log.siyuan.services.BootService;
  import org.b3log.siyuan.services.FloatingWindowService;
  import org.greenrobot.eventbus.EventBus;
  import org.greenrobot.eventbus.Subscribe;
  import org.greenrobot.eventbus.ThreadMode;
- import org.json.JSONArray;
  import org.json.JSONObject;
 
  import java.io.ByteArrayOutputStream;
  import java.io.File;
  import java.io.UnsupportedEncodingException;
- import java.lang.reflect.Field;
- import java.net.InetAddress;
- import java.net.ServerSocket;
  import java.net.URLEncoder;
  import java.nio.charset.StandardCharsets;
  import java.text.SimpleDateFormat;
  import java.util.Date;
  import java.util.HashSet;
  import java.util.Locale;
- import java.util.TimeZone;
 
  import mobile.Mobile;
 
@@ -125,14 +116,11 @@ package org.b3log.siyuan;
  */
 public class MainActivity extends AppCompatActivity implements com.blankj.utilcode.util.Utils.OnAppStatusChangedListener {
     private final String TAG = "MainActivity-SiYuan";
-    private AsyncHttpServer server;
-    private int serverPort = S.DefaultHTTPPort;
     public WebView webView;
+    private FrameLayout webViewContainer;
     private ImageView bootLogo;
     private ProgressBar bootProgressBar;
     private TextView bootDetailsText;
-    private String webViewVer;
-    private String userAgent;
     private ValueCallback<Uri[]> uploadMessage;
     private static final int REQUEST_SELECT_FILE = S.REQUEST_SELECT_FILE;
     private static final int REQUEST_CAMERA = S.REQUEST_CAMERA;
@@ -243,6 +231,64 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 });
     }
 
+    private BootService bootService;
+    private boolean serviceBound = false;
+
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            BootService.LocalBinder binder = (BootService.LocalBinder) service;
+            bootService = binder.getService();
+            serviceBound = true;
+            webView = bootService.getWebView();
+            // 服务绑定后，执行依赖于bootService的代码
+            performActionWithService();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            serviceBound = false;
+        }
+    };
+
+    // 在这里执行依赖于bootService的代码
+    private void performActionWithService() {
+        if (serviceBound && bootService != null) {
+            // 使用bootService实例
+
+            // 初始化 UI 元素
+            Log.w(TAG, "onStart() -> initUIElements() invoked");
+            initUIElements();
+
+            // 初始化外观资源
+            Log.w(TAG, "onStart() -> initAppearance() invoked");
+            initAppearance();
+
+            AppUtils.registerAppStatusChangedListener(this);
+
+            // 使用 Chromium 调试 WebView
+            if (Utils.isDebugPackageAndMode(this)) {
+                WebView.setWebContentsDebuggingEnabled(true);
+            }
+
+            // 注册工具栏显示/隐藏跟随软键盘状态
+            // Fix https://github.com/siyuan-note/siyuan/issues/9765
+            Utils.registerSoftKeyboardToolbar(this, webView);
+
+            // 沉浸式状态栏设置
+            UltimateBarX.statusBarOnly(this).transparent().light(false).color(Color.parseColor(S.ColorStringHex.INSTANCE.getBgColor_light())).apply();
+            if (webView != null) {
+                ((ViewGroup) webView.getParent()).setPadding(0, UltimateBarX.getStatusBarHeight(), 0, 0);
+            }
+
+            // Fix https://github.com/siyuan-note/siyuan/issues/9726
+            // KeyboardUtils.fixAndroidBug5497(this);
+            AndroidBug5497Workaround.assistActivity(this);
+        } else {
+            // 服务尚未绑定或实例为空，处理错误或等待绑定
+        }
+    }
+
     @Override
     protected void onCreate(final Bundle savedInstanceState) { // 只执行一次。在这里设置布局和初始化数据。在大多数情况下，不需要在 onRestart 中做太多事情，因为 onStart 已经处理了活动可见时的初始化。
         Log.w(TAG, "onCreate() invoked");
@@ -301,41 +347,9 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             }
         });
 
-
-        // 启动 HTTP Server
-        Log.w(TAG, "onStart() -> startHttpServer() invoked");
-        startHttpServer();
-
-        // 初始化 UI 元素
-        Log.w(TAG, "onStart() -> initUIElements() invoked");
-        initUIElements();
-
-        // 拉起内核
-        Log.w(TAG, "onStart() -> startKernel() invoked");
-        startKernel();
-
-        // 初始化外观资源
-        Log.w(TAG, "onStart() -> initAppearance() invoked");
-        initAppearance();
-
-        AppUtils.registerAppStatusChangedListener(this);
-
-        // 使用 Chromium 调试 WebView
-        if (Utils.isDebugPackageAndMode(this)) {
-            WebView.setWebContentsDebuggingEnabled(true);
-        }
-
-        // 注册工具栏显示/隐藏跟随软键盘状态
-        // Fix https://github.com/siyuan-note/siyuan/issues/9765
-        Utils.registerSoftKeyboardToolbar(this, webView);
-
-        // 沉浸式状态栏设置
-        UltimateBarX.statusBarOnly(this).transparent().light(false).color(Color.parseColor("#1e1e1e")).apply();
-        ((ViewGroup) webView.getParent()).setPadding(0, UltimateBarX.getStatusBarHeight(), 0, 0);
-
-        // Fix https://github.com/siyuan-note/siyuan/issues/9726
-        // KeyboardUtils.fixAndroidBug5497(this);
-        AndroidBug5497Workaround.assistActivity(this);
+        // 绑定服务
+        Intent intent = new Intent(getApplicationContext(), BootService.class);
+        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
 
 
         HashSet<String> permissionsToCheck = new HashSet<>(Ps.PG_Core); // 核心权限组，每次启动都要检查
@@ -379,8 +393,18 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         bootLogo = findViewById(R.id.bootLogo);
         bootProgressBar = findViewById(R.id.progressBar);
         bootDetailsText = findViewById(R.id.bootDetails);
-        webView = findViewById(R.id.webView);
-        webView.setBackgroundColor(Color.parseColor("#1e1e1e"));
+        if (webView != null) {
+            // 设置WebView的布局参数
+            webView.setLayoutParams(new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT));
+
+            // 将WebView添加到容器中
+            webViewContainer = findViewById(R.id.webViewContainer);
+            webViewContainer.addView(webView);
+
+//        webView = findViewById(R.id.webView);
+//        webView.setBackgroundColor(Color.parseColor("#1e1e1e"));
         webView.setWebChromeClient(new WebChromeClient() {
             // setWebViewClient 和 setWebChromeClient 并不同，别看走眼了
             @Override
@@ -454,16 +478,17 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             // 禁用拖拽 https://github.com/siyuan-note/siyuan/issues/6436
             return DragEvent.ACTION_DRAG_ENDED != event.getAction();
         });
-
-        final WebSettings ws = webView.getSettings();
-        checkWebViewVer(ws);
-        userAgent = ws.getUserAgentString();
+        showBootIndex();
+        }
+//        final WebSettings ws = webView.getSettings();
+//        checkWebViewVer(ws);
+//        userAgent = ws.getUserAgentString();
     }
 
     @SuppressLint("SetJavaScriptEnabled")
     void showBootIndex() {
         Log.w(TAG, "showBootIndex() invoked");
-        webView.setVisibility(View.VISIBLE);
+        webViewContainer.setVisibility(View.VISIBLE);
         webView.setWebViewClient(new WebViewClient() {
             // setWebViewClient 和 setWebChromeClient 并不同，别看走眼了
             @Override
@@ -562,174 +587,133 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         WebView.setWebContentsDebuggingEnabled(true);
         webView.loadUrl("http://127.0.0.1:58131/appearance/boot/index.html?v=" + Utils.version);
 
-        new Thread(this::keepLive).start();
+//        new Thread(this::keepLive).start();
         isWebviewReady = true;
     }
 
-    private Handler bootHandler = new Handler(Looper.getMainLooper()) {
-        @Override
-        public void handleMessage(final Message msg) {
-            final String cmd = msg.getData().getString("cmd");
-            if ("startKernel".equals(cmd)) {
-                bootKernel();
-            } else {
-                showBootIndex();
-            }
-        }
-    };
+//    private Handler bootHandler = new Handler(Looper.getMainLooper()) {
+//        @Override
+//        public void handleMessage(final Message msg) {
+//            final String cmd = msg.getData().getString("cmd");
+//            if ("startKernel".equals(cmd)) {
+//                bootKernel();
+//            } else {
+//                showBootIndex();
+//            }
+//        }
+//    };
 
-    private void startHttpServer() {
-        if (null != server) {
-            server.stop();
-            Log.w(TAG, "startHttpServer() stop exist server");
-        }
+//    private void startHttpServer() {
+//        if (null != server) {
+//            server.stop();
+//            Log.w(TAG, "startHttpServer() stop exist server");
+//        }
+//
+//        try {
+//            // 解决乱码问题 https://github.com/koush/AndroidAsync/issues/656#issuecomment-523325452
+//            final Class<Charsets> charsetClass = Charsets.class;
+//            Field usAscii = charsetClass.getDeclaredField("US_ASCII");
+//            usAscii.setAccessible(true);
+//            usAscii.set(Charsets.class, Charsets.UTF_8);
+//        } catch (final Exception e) {
+//            Utils.LogError("http", "init charset failed", e);
+//        }
+//
+//        server = new AsyncHttpServer();
+//        server.post("/api/walkDir", (request, response) -> {
+//            try {
+//                final long start = System.currentTimeMillis();
+//                final JSONObject requestJSON = (JSONObject) request.getBody().get();
+//                final String dir = requestJSON.optString("dir");
+//                final JSONObject data = new JSONObject();
+//                final JSONArray files = new JSONArray();
+//                FileUtils.listFilesAndDirs(new File(dir), TrueFileFilter.INSTANCE, DirectoryFileFilter.DIRECTORY).forEach(file -> {
+//                    final String path = file.getAbsolutePath();
+//                    final JSONObject info = new JSONObject();
+//                    try {
+//                        info.put("path", path);
+//                        info.put("name", file.getName());
+//                        info.put("size", file.length());
+//                        info.put("updated", file.lastModified());
+//                        info.put("isDir", file.isDirectory());
+//                    } catch (final Exception e) {
+//                        Utils.LogError("http", "walk dir failed", e);
+//                    }
+//                    files.put(info);
+//                });
+//                data.put("files", files);
+//                final JSONObject responseJSON = new JSONObject().put("code", 0).put("msg", "").put("data", data);
+//                response.send(responseJSON);
+//                Utils.LogInfo("http", "walk dir [" + dir + "] in [" + (System.currentTimeMillis() - start) + "] ms");
+//            } catch (final Exception e) {
+//                Utils.LogError("http", "walk dir failed", e);
+//                try {
+//                    response.send(new JSONObject().put("code", -1).put("msg", e.getMessage()));
+//                } catch (final Exception e2) {
+//                    Utils.LogError("http", "walk dir failed", e2);
+//                }
+//            }
+//        });
+//
+//        serverPort = getAvailablePort();
+//        final AsyncServer s = AsyncServer.getDefault();
+//        // 生产环境绑定 ipv6 回环地址 [::1] 以防止被远程访问
+//        s.listen(InetAddress.getLoopbackAddress(), serverPort, server.getListenCallback());
+//        // 开发环境绑定所有网卡以便调试
+////        s.listen(null, serverPort, server.getListenCallback());
+//        Log.w(TAG, "startHttpServer() -> HTTP server is listening on port [" + serverPort + "]");
+//        Utils.LogInfo("http", "HTTP server is listening on port [" + serverPort + "]");
+//    }
 
-        try {
-            // 解决乱码问题 https://github.com/koush/AndroidAsync/issues/656#issuecomment-523325452
-            final Class<Charsets> charsetClass = Charsets.class;
-            Field usAscii = charsetClass.getDeclaredField("US_ASCII");
-            usAscii.setAccessible(true);
-            usAscii.set(Charsets.class, Charsets.UTF_8);
-        } catch (final Exception e) {
-            Utils.LogError("http", "init charset failed", e);
-        }
+//    private int getAvailablePort() {
+//        int ret = 6906;
+//        try {
+//            ServerSocket s = new ServerSocket(0);
+//            ret = s.getLocalPort();
+//            s.close();
+//        } catch (final Exception e) {
+//            Utils.LogError("http", "get available port failed", e);
+//        }
+//        return ret;
+//    }
+//
+//    private void startKernel() {
+//        final Bundle b = new Bundle();
+//        b.putString("cmd", "startKernel");
+//        final Message msg = new Message();
+//        msg.setData(b);
+//        bootHandler.sendMessage(msg);
+//    }
 
-        server = new AsyncHttpServer();
-        server.post("/api/walkDir", (request, response) -> {
-            try {
-                final long start = System.currentTimeMillis();
-                final JSONObject requestJSON = (JSONObject) request.getBody().get();
-                final String dir = requestJSON.optString("dir");
-                final JSONObject data = new JSONObject();
-                final JSONArray files = new JSONArray();
-                FileUtils.listFilesAndDirs(new File(dir), TrueFileFilter.INSTANCE, DirectoryFileFilter.DIRECTORY).forEach(file -> {
-                    final String path = file.getAbsolutePath();
-                    final JSONObject info = new JSONObject();
-                    try {
-                        info.put("path", path);
-                        info.put("name", file.getName());
-                        info.put("size", file.length());
-                        info.put("updated", file.lastModified());
-                        info.put("isDir", file.isDirectory());
-                    } catch (final Exception e) {
-                        Utils.LogError("http", "walk dir failed", e);
-                    }
-                    files.put(info);
-                });
-                data.put("files", files);
-                final JSONObject responseJSON = new JSONObject().put("code", 0).put("msg", "").put("data", data);
-                response.send(responseJSON);
-                Utils.LogInfo("http", "walk dir [" + dir + "] in [" + (System.currentTimeMillis() - start) + "] ms");
-            } catch (final Exception e) {
-                Utils.LogError("http", "walk dir failed", e);
-                try {
-                    response.send(new JSONObject().put("code", -1).put("msg", e.getMessage()));
-                } catch (final Exception e2) {
-                    Utils.LogError("http", "walk dir failed", e2);
-                }
-            }
-        });
-
-        serverPort = getAvailablePort();
-        final AsyncServer s = AsyncServer.getDefault();
-        // 生产环境绑定 ipv6 回环地址 [::1] 以防止被远程访问
-        s.listen(InetAddress.getLoopbackAddress(), serverPort, server.getListenCallback());
-        // 开发环境绑定所有网卡以便调试
-//        s.listen(null, serverPort, server.getListenCallback());
-        Log.w(TAG, "startHttpServer() -> HTTP server is listening on port [" + serverPort + "]");
-        Utils.LogInfo("http", "HTTP server is listening on port [" + serverPort + "]");
-    }
-
-    private int getAvailablePort() {
-        int ret = 6906;
-        try {
-            ServerSocket s = new ServerSocket(0);
-            ret = s.getLocalPort();
-            s.close();
-        } catch (final Exception e) {
-            Utils.LogError("http", "get available port failed", e);
-        }
-        return ret;
-    }
-
-    private void startKernel() {
-        final Bundle b = new Bundle();
-        b.putString("cmd", "startKernel");
-        final Message msg = new Message();
-        msg.setData(b);
-        bootHandler.sendMessage(msg);
-    }
-
-    private void bootKernel() {
-        Mobile.setHttpServerPort(serverPort);
-        if (Mobile.isHttpServing()) {
-            Utils.LogInfo("boot", "kernel HTTP server is running");
-            showBootIndex();
-            return;
-        }
-        startHttpServer();
-        final String appDir = getFilesDir().getAbsolutePath() + "/app";
-//        final Locale locale = LocaleList.getDefault().get(0);
-        // As of API 24 (Nougat) and later
-        LocaleList locales = getResources().getConfiguration().getLocales();
-        // Now you can access the first locale in the list as follows:
-        Locale locale = locales.get(0);
-        final String workspaceBaseDir = getExternalFilesDir(null).getAbsolutePath();
-        final String timezone = TimeZone.getDefault().getID();
-        new Thread(() -> {
-            final String localIPs = Utils.getIPAddressList();
-            String lang = locale.getLanguage() + "_" + locale.getCountry();
-            if (lang.toLowerCase().contains("cn")) {
-                lang = "zh_CN";
-            } else if (lang.toLowerCase().contains("es")) {
-                lang = "es_ES";
-            } else if (lang.toLowerCase().contains("fr")) {
-                lang = "fr_FR";
-            } else {
-                lang = "en_US";
-            }
-
-            Mobile.startKernel("android", appDir, workspaceBaseDir, timezone, localIPs, lang,
-                    Build.VERSION.RELEASE +
-                            "/SDK " + Build.VERSION.SDK_INT +
-                            "/WebView " + webViewVer +
-                            "/Manufacturer " + android.os.Build.MANUFACTURER +
-                            "/Brand " + android.os.Build.BRAND +
-                            "/UA " + userAgent);
-        }).start();
-
-        final Bundle b = new Bundle();
-        b.putString("cmd", "bootIndex");
-        final Message msg = new Message();
-        msg.setData(b);
-        bootHandler.sendMessage(msg);
-    }
-    void bootKernel(String i) {
-        Mobile.setHttpServerPort(serverPort);
-        if (Mobile.isHttpServing()) {
-            Log.w(TAG, "bootKernel(i) Mobile.isHttpServing , not need showBootIndex()");
-            webView.evaluateJavascript("javascript:window.reconnectWebSocket()", null);
+//    private void bootKernel() {
+//        Mobile.setHttpServerPort(serverPort);
+//        if (Mobile.isHttpServing()) {
+//            Utils.LogInfo("boot", "kernel HTTP server is running");
 //            showBootIndex();
-            return;
-        }
-        final String appDir = getFilesDir().getAbsolutePath() + "/app";
-//        final Locale locale = getResources().getConfiguration().locale;
-        // As of API 24 (Nougat) and later
-        LocaleList locales = getResources().getConfiguration().getLocales();
-        // Now you can access the first locale in the list as follows:
-        Locale locale = locales.get(0);
-        final String workspaceBaseDir = getExternalFilesDir(null).getAbsolutePath();
-        final String timezone = TimeZone.getDefault().getID();
-        new Thread(() -> {
-            final String localIPs = Utils.getIPAddressList();
-            String lang = locale.getLanguage() + "_" + locale.getCountry();
-            if (lang.toLowerCase().contains("cn")) {
-                lang = "zh_CN";
-            } else {
-                lang = "en_US";
-            }
-
-            Mobile.startKernelFast("android", appDir, workspaceBaseDir, localIPs);
+//            return;
+//        }
+//        startHttpServer();
+//        final String appDir = getFilesDir().getAbsolutePath() + "/app";
+////        final Locale locale = LocaleList.getDefault().get(0);
+//        // As of API 24 (Nougat) and later
+//        LocaleList locales = getResources().getConfiguration().getLocales();
+//        // Now you can access the first locale in the list as follows:
+//        Locale locale = locales.get(0);
+//        final String workspaceBaseDir = getExternalFilesDir(null).getAbsolutePath();
+//        final String timezone = TimeZone.getDefault().getID();
+//        new Thread(() -> {
+//            final String localIPs = Utils.getIPAddressList();
+//            String lang = locale.getLanguage() + "_" + locale.getCountry();
+//            if (lang.toLowerCase().contains("cn")) {
+//                lang = "zh_CN";
+//            } else if (lang.toLowerCase().contains("es")) {
+//                lang = "es_ES";
+//            } else if (lang.toLowerCase().contains("fr")) {
+//                lang = "fr_FR";
+//            } else {
+//                lang = "en_US";
+//            }
+//
 //            Mobile.startKernel("android", appDir, workspaceBaseDir, timezone, localIPs, lang,
 //                    Build.VERSION.RELEASE +
 //                            "/SDK " + Build.VERSION.SDK_INT +
@@ -737,12 +721,53 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 //                            "/Manufacturer " + android.os.Build.MANUFACTURER +
 //                            "/Brand " + android.os.Build.BRAND +
 //                            "/UA " + userAgent);
-        }).start();
-//        initUIElements();
-//        if (null != webView) {
+//        }).start();
+//
+//        final Bundle b = new Bundle();
+//        b.putString("cmd", "bootIndex");
+//        final Message msg = new Message();
+//        msg.setData(b);
+//        bootHandler.sendMessage(msg);
+//    }
+//    void bootKernel(String i) {
+//        Mobile.setHttpServerPort(serverPort);
+//        if (Mobile.isHttpServing()) {
+//            Log.w(TAG, "bootKernel(i) Mobile.isHttpServing , not need showBootIndex()");
 //            webView.evaluateJavascript("javascript:window.reconnectWebSocket()", null);
+////            showBootIndex();
+//            return;
 //        }
-    }
+//        final String appDir = getFilesDir().getAbsolutePath() + "/app";
+////        final Locale locale = getResources().getConfiguration().locale;
+//        // As of API 24 (Nougat) and later
+//        LocaleList locales = getResources().getConfiguration().getLocales();
+//        // Now you can access the first locale in the list as follows:
+//        Locale locale = locales.get(0);
+//        final String workspaceBaseDir = getExternalFilesDir(null).getAbsolutePath();
+//        final String timezone = TimeZone.getDefault().getID();
+//        new Thread(() -> {
+//            final String localIPs = Utils.getIPAddressList();
+//            String lang = locale.getLanguage() + "_" + locale.getCountry();
+//            if (lang.toLowerCase().contains("cn")) {
+//                lang = "zh_CN";
+//            } else {
+//                lang = "en_US";
+//            }
+//
+//            Mobile.startKernelFast("android", appDir, workspaceBaseDir, localIPs);
+////            Mobile.startKernel("android", appDir, workspaceBaseDir, timezone, localIPs, lang,
+////                    Build.VERSION.RELEASE +
+////                            "/SDK " + Build.VERSION.SDK_INT +
+////                            "/WebView " + webViewVer +
+////                            "/Manufacturer " + android.os.Build.MANUFACTURER +
+////                            "/Brand " + android.os.Build.BRAND +
+////                            "/UA " + userAgent);
+//        }).start();
+////        initUIElements();
+////        if (null != webView) {
+////            webView.evaluateJavascript("javascript:window.reconnectWebSocket()", null);
+////        }
+//    }
 
     /**
      * 通知栏保活。
@@ -1055,8 +1080,13 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             webView.removeAllViews();
             webView.destroy();
         }
-        if (null != server) {
-            server.stop();
+//        if (null != server) {
+//            server.stop();
+//        }
+        // 解绑服务
+        if (serviceBound) {
+            unbindService(serviceConnection);
+            serviceBound = false;
         }
     }
 
@@ -1148,26 +1178,26 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     }
 
 
-    private void checkWebViewVer(final WebSettings ws) {
-        // Android check WebView version 75+ https://github.com/siyuan-note/siyuan/issues/7840
-        final String ua = ws.getUserAgentString();
-        if (ua.contains("Chrome/")) {
-            final int minVer = 95;
-            try {
-                final String chromeVersion = ua.split("Chrome/")[1].split(" ")[0];
-                if (chromeVersion.contains(".")) {
-                    final String[] chromeVersionParts = chromeVersion.split("\\.");
-                    webViewVer = chromeVersionParts[0];
-                    if (Integer.parseInt(webViewVer) < minVer) {
-                        PopTip.show("WebView version " + webViewVer + " is too low, please upgrade to " + minVer + "+");
-                    }
-                }
-            } catch (final Exception e) {
-                Utils.LogError("boot", "check webview version failed", e);
-                PopTip.show("Check WebView version failed: " + e.getMessage());
-            }
-        }
-    }
+//    private void checkWebViewVer(final WebSettings ws) {
+//        // Android check WebView version 75+ https://github.com/siyuan-note/siyuan/issues/7840
+//        final String ua = ws.getUserAgentString();
+//        if (ua.contains("Chrome/")) {
+//            final int minVer = 95;
+//            try {
+//                final String chromeVersion = ua.split("Chrome/")[1].split(" ")[0];
+//                if (chromeVersion.contains(".")) {
+//                    final String[] chromeVersionParts = chromeVersion.split("\\.");
+//                    webViewVer = chromeVersionParts[0];
+//                    if (Integer.parseInt(webViewVer) < minVer) {
+//                        PopTip.show("WebView version " + webViewVer + " is too low, please upgrade to " + minVer + "+");
+//                    }
+//                }
+//            } catch (final Exception e) {
+//                Utils.LogError("boot", "check webview version failed", e);
+//                PopTip.show("Check WebView version failed: " + e.getMessage());
+//            }
+//        }
+//    }
 
     private static boolean syncing;
 

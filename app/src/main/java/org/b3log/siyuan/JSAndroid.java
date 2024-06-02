@@ -431,7 +431,7 @@ public final class JSAndroid {
     public void androidReboot() {
         Log.d("JSAndroid", "restartSillotAndroid() invoked");
         runOnUiThread(() -> {
-            activity.bootKernel("");
+//            activity.bootKernel("");
 //            activity.showBootIndex();
         });
     }

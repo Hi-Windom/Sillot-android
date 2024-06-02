@@ -216,7 +216,9 @@ public final class Utils {
         KeyboardUtils.registerSoftInputChangedListener(activity, height -> {
             if (!activity.isInMultiWindowMode()) {
                 String javascriptCommand = KeyboardUtils.isSoftInputVisible(activity) ? "showKeyboardToolbar()" : "hideKeyboardToolbar()";
-                webView.evaluateJavascript("javascript:" + javascriptCommand, null);
+                if (webView != null){
+                    webView.evaluateJavascript("javascript:" + javascriptCommand, null);
+                }
             }
         });
     }
