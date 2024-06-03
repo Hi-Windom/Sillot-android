@@ -37,7 +37,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.twotone.Swipe
 import androidx.compose.material.icons.twotone.Token
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -46,11 +45,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -114,7 +111,6 @@ import sc.windom.sofill.dataClass.INbList
 import sc.windom.sofill.dataClass.INotebook
 import sc.windom.sofill.dataClass.IPayload
 import sc.windom.sofill.dataClass.IResponse
-import sc.windom.sofill.dataClass.ld246_User
 import java.io.IOException
 import java.util.Date
 
@@ -127,7 +123,8 @@ import java.util.Date
 class MainPro : ComponentActivity() {
     val TAG = "producer/MainPro.kt"
     private var mmkv: MMKV = MMKV.defaultMMKV()
-    private var token = U.getDecryptedToken(mmkv, S.KEY_TOKEN_Sillot_Gibbet, S.KEY_AES_TOKEN_Sillot_Gibbet)
+    private var token =
+        U.getDecryptedToken(mmkv, S.KEY_TOKEN_Sillot_Gibbet, S.KEY_AES_TOKEN_Sillot_Gibbet)
     private lateinit var thisActivity: Activity
     private var in2_data: Uri? = null
     private var in2_action: String? = null
@@ -179,9 +176,13 @@ class MainPro : ComponentActivity() {
         window.decorView.setOnApplyWindowInsetsListener { _, insets ->
             insets
         }
-        // 绑定服务
-        val intent = Intent(applicationContext, BootService::class.java)
-        bindService(intent, serviceConnection, BIND_AUTO_CREATE)
+        if (bootService == null) {
+            // 绑定服务
+            val intent = Intent(applicationContext, BootService::class.java)
+            bindService(intent, serviceConnection, BIND_AUTO_CREATE)
+        } else {
+            performActionWithService()
+        }
     }
 
     override fun onDestroy() {
@@ -193,6 +194,7 @@ class MainPro : ComponentActivity() {
             serviceBound = false
         }
     }
+
     private var bootService: BootService? = null
     private var serviceBound = false
 
@@ -467,7 +469,11 @@ class MainPro : ComponentActivity() {
             icon = { Icon(Icons.TwoTone.Token, contentDescription = null) },
             cb = {
                 onDismiss()
-                val deToken = U.getDecryptedToken(mmkv, S.KEY_TOKEN_Sillot_Gibbet, S.KEY_AES_TOKEN_Sillot_Gibbet)
+                val deToken = U.getDecryptedToken(
+                    mmkv,
+                    S.KEY_TOKEN_Sillot_Gibbet,
+                    S.KEY_AES_TOKEN_Sillot_Gibbet
+                )
                 InputDialog(
                     "🛸 API TOKEN",
                     "可在汐洛绞架 设置 - 关于 中找到 API Token，固定以 'token ' 开头\n\n温馨提示：应用存储 Token 时进行了一定的处理，且不会传输到网络，但用户仍需注意防止 Token 泄露！建议使用前先阅读源代码",
@@ -512,97 +518,131 @@ class MainPro : ComponentActivity() {
     }
 
     // 获取笔记本列表
-    fun getNotebooks(api: SiyuanNoteAPI, token: String, callback: (List<INotebook>?) -> Unit) {
+    fun getNotebooks(
+        api: SiyuanNoteAPI,
+        token: String,
+        callback: (notebooks: List<INotebook>?, info: String) -> Unit
+    ) {
         val body = mapOf("flashcard" to false)
         val notebooksCall = api.getNotebooks(token, body)
         notebooksCall.enqueue(object : Callback<IResponse<INbList>> {
-            override fun onResponse(call: Call<IResponse<INbList>>, response: Response<IResponse<INbList>>) {
-                if (response.isSuccessful && response.body() != null) {
-                    callback(response.body()?.data?.notebooks)
+            override fun onResponse(
+                call: Call<IResponse<INbList>>,
+                response: Response<IResponse<INbList>>
+            ) {
+                if (response.isSuccessful && response.body()?.code == 0) {
+                    callback(response.body()?.data?.notebooks, "${response.body()}")
                 } else {
-                    Log.w(TAG, "Failed to get notebooks: ${response.code()}${response.message()}")
-                    callback(null)
+                    callback(
+                        null,
+                        "Failed to get notebooks: ${response.code()} ${response.message()} \n ${response.body()}"
+                    )
                 }
             }
 
             override fun onFailure(call: Call<IResponse<INbList>>, t: Throwable) {
-                Log.e(TAG, "getNotebooks Error: ${t.message}")
-                callback(null)
+                callback(null, "getNotebooks Error: ${t.message}")
             }
         })
     }
 
     // 创建新的 Markdown 笔记
-    fun createNote(api: SiyuanNoteAPI, payload: IPayload, token: String, callback: (Boolean) -> Unit) {
+    fun createNote(
+        api: SiyuanNoteAPI,
+        payload: IPayload,
+        token: String,
+        callback: (success: Boolean, info: String) -> Unit
+    ) {
         val createNoteCall = api.createNote(payload, token)
         createNoteCall.enqueue(object : Callback<IResponse<String>> {
-            override fun onResponse(call: Call<IResponse<String>>, response: Response<IResponse<String>>) {
-                if (response.isSuccessful) {
-                    Log.i(TAG, "Note created successfully. ${response.body()}")
-                    response.body()?.data?.let { U.startMainActivityWithBlock("siyuan://blocks/$it", applicationContext) }
-                    callback(true)
+            override fun onResponse(
+                call: Call<IResponse<String>>,
+                response: Response<IResponse<String>>
+            ) {
+                if (response.isSuccessful && response.body()?.code == 0) {
+                    response.body()?.data?.let {
+                        U.startMainActivityWithBlock(
+                            "siyuan://blocks/$it",
+                            applicationContext
+                        )
+                    }
+                    callback(true, "Note created successfully. ${response.body()}")
                 } else {
-                    Log.w(TAG, "Failed to create note: ${response.code()} ${response.message()}")
-                    callback(false)
+                    callback(
+                        false,
+                        "Failed to create note: ${response.code()} ${response.message()} \n ${response.body()}"
+                    )
                 }
             }
 
             override fun onFailure(call: Call<IResponse<String>>, t: Throwable) {
-                Log.e(TAG, "createNote Error: ${t.message}")
-                callback(false)
+                callback(false, "createNote Error: ${t.message}")
             }
         })
     }
+
     // 在协程中调用sendMD2siyuan
     fun runSendMD2siyuan(markdownContent: String) = runBlocking<Unit> { // 启动主协程
         launch { // 启动一个新协程并运行挂起函数
             sendMD2siyuan(markdownContent)
         }
     }
+
     fun sendMD2siyuan(markdownContent: String) {
         val retrofit = createRetrofit("http://0.0.0.0:58131/")
         val api = retrofit.create(SiyuanNoteAPI::class.java)
-
-        token?.let {
-            getNotebooks(api, it) { notebooks ->
+        val helpInfo =
+            "请注意：（1）TOKEN是否正确；（2）当前工作空间是否存在有效笔记本；（3）笔记本是否被关闭了"
+        token?.let { _token ->
+            getNotebooks(api, _token) { notebooks, info ->
                 if (notebooks.isNullOrEmpty()) {
                     // 处理笔记本列表为空的情况
                     thisActivity.runOnUiThread {
-                        PopNotification.show(TAG, "No notebooks received.").noAutoDismiss()
+                        PopNotification.show(
+                            TAG,
+                            "No notebooks received. reason:\n$info\n$helpInfo"
+                        ).noAutoDismiss()
                     }
                 } else {
                     // 处理获取到的笔记本列表
                     Log.i(TAG, "Received ${notebooks.size} notebooks.")
-                    val notebookNames: Array<String> = notebooks.map { it.name }.toTypedArray()
+                    val notebookIDs: Array<String> = notebooks.map { it.id }.toTypedArray()
+                    val notebookInfos: Array<String> = notebooks.map {
+                        "（${if (it.closed) "不可用" else "可使用"}）${it.name}"
+                    }.toTypedArray()
                     var selectMenuIndex = 0
-                    var selectMenuText = notebookNames[0]
-                    BottomMenu.show(notebookNames)
+                    BottomMenu.show(notebookInfos)
                         .setMessage("仅支持当前工作空间")
                         .setTitle("选择要存入的笔记本")
                         .setSelection(selectMenuIndex) //指定已选择的位置
                         .setOnMenuItemClickListener { dialog, text, index ->
                             selectMenuIndex = index
-                            selectMenuText = text as String
                             dialog.refreshUI() // 在 compose 里需要强制刷新
                             true // 点击菜单后不会自动关闭
                         }
                         .setOkButton("确定",
                             OnBottomMenuButtonClickListener { menu, view ->
-                                Log.e(TAG, "${selectMenuText}")
-                                val targetNotebook = notebooks.find { it.name == selectMenuText }
-                                val notebookId = targetNotebook?.id ?: notebooks[0].id
-                                val payload = IPayload(markdownContent, notebookId, "/来自汐洛受赏 ${U.dateFormat_full1.format(
-                                    Date()
-                                )}")
+                                val notebookId = notebookIDs[selectMenuIndex]
+                                Log.e(TAG, notebookId)
+                                val payload = IPayload(
+                                    markdownContent, notebookId, "/来自汐洛受赏 ${
+                                        U.dateFormat_full1.format(
+                                            Date()
+                                        )
+                                    }"
+                                )
 
-                                createNote(api, payload, token!!) { success ->
+                                createNote(api, payload, token!!) { success, info ->
                                     if (success) {
                                         // 处理创建笔记成功的情况
-                                        Log.i(TAG, "Note creation succeeded.")
+                                        Log.i(TAG, "Note creation succeeded. $info")
                                     } else {
                                         // 处理创建笔记失败的情况
                                         thisActivity.runOnUiThread {
-                                            PopNotification.show(TAG, "Note creation failed.").noAutoDismiss()
+                                            PopNotification.show(
+                                                TAG,
+                                                "Note creation failed. reason:\n$info\n$helpInfo"
+                                            ).noAutoDismiss()
                                         }
                                     }
                                 }
@@ -620,6 +660,7 @@ class MainPro : ComponentActivity() {
             }
         }
     }
+
     @Composable
     fun SendBtnPart(markdown: String?) {
         val isLandscape =

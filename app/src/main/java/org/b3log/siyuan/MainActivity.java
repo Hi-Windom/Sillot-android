@@ -82,12 +82,7 @@ package org.b3log.siyuan;
  import com.tencent.mmkv.MMKV;
  import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
 
- import org.apache.commons.io.FileUtils;
  import org.b3log.siyuan.appUtils.HWs;
-
- import sc.windom.sofill.S;
- import sc.windom.sofill.android.permission.Ps;
-
  import org.b3log.siyuan.services.BootService;
  import org.b3log.siyuan.services.FloatingWindowService;
  import org.greenrobot.eventbus.EventBus;
@@ -96,16 +91,16 @@ package org.b3log.siyuan;
  import org.json.JSONObject;
 
  import java.io.ByteArrayOutputStream;
- import java.io.File;
  import java.io.UnsupportedEncodingException;
  import java.net.URLEncoder;
- import java.nio.charset.StandardCharsets;
  import java.text.SimpleDateFormat;
  import java.util.Date;
  import java.util.HashSet;
  import java.util.Locale;
 
  import mobile.Mobile;
+ import sc.windom.sofill.S;
+ import sc.windom.sofill.android.permission.Ps;
  import sc.windom.sofill.android.webview.WebViewPool;
 
  /**
@@ -299,9 +294,13 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 绑定服务
-        Intent intent = new Intent(getApplicationContext(), BootService.class);
-        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        if (bootService == null){
+            // 绑定服务
+            Intent intent = new Intent(getApplicationContext(), BootService.class);
+            bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        } else {
+            performActionWithService();
+        }
 
         mmkv = MMKV.defaultMMKV();
 
