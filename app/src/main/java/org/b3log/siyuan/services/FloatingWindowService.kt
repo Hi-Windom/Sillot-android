@@ -11,6 +11,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.graphics.PixelFormat
 import android.net.ConnectivityManager
 import android.net.Network
@@ -36,9 +37,12 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.ObservableEmitter
 import io.reactivex.rxjava3.core.ObservableOnSubscribe
 import io.reactivex.rxjava3.disposables.Disposable
+import io.reactivex.rxjava3.schedulers.Schedulers
+import org.b3log.siyuan.App
 import org.b3log.siyuan.R
 import sc.windom.sofill.S
 import org.b3log.siyuan.WifiStateReceiver
+import sc.windom.sofill.U
 import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.util.Collections
@@ -58,16 +62,13 @@ class FloatingWindowService : Service() {
     private var wifiStatusTextView: TextView? = null
     private var closeButton: Button? = null
     private var hideButton: Button? = null
+    private var kill_kernel_button: Button? = null
     private var isBallVisible = false
     private var wifiDisposable: Disposable? = null
     private var lanIpTextView: TextView? = null
     private lateinit var notificationManager: NotificationManager
     private lateinit var notificationBuilder: NotificationCompat.Builder
-    private val wifiStateReceiver: BroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            updateWifiInfo()
-        }
-    }
+    private lateinit var wifiStateReceiver: WifiStateReceiver
     private val layoutParams = WindowManager.LayoutParams(
         WindowManager.LayoutParams.WRAP_CONTENT,
         WindowManager.LayoutParams.WRAP_CONTENT,
@@ -80,36 +81,17 @@ class FloatingWindowService : Service() {
 
     override fun onBind(intent: Intent): IBinder? {
         Log.i(TAG, "onBind called")
-        updateWifiInfo()
         return null
     }
 
     override fun onCreate() {
         super.onCreate()
         Log.i(TAG, "onCreate called")
-        instance = this
-        createNotificationChannel()
-        // 初始化NotificationManager
-        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        // 创建NotificationBuilder
-        val notificationIntent = Intent(this, FloatingWindowService::class.java)
-        notificationIntent.action = ACTION_TOGGLE_WINDOW
-        val pendingIntent =
-            PendingIntent.getService(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
-        notificationBuilder = NotificationCompat.Builder(this, S.SY_NOTIFICATION_CHANNEL_ID)
-            .setContentTitle("伺服 Wifi : 没有诶")
-            .setContentText(lanIpTextView?.text)
-            .setSmallIcon(R.drawable.icon)
-            .setContentIntent(pendingIntent)
-        // 启动前台服务
-        startForeground(1, notificationBuilder.build())
-        initializeWindow()
-        initializeUI()
-        registerNetworkCallback()
+        works()
     }
 
     private fun createNotificationChannel() {
+        Log.i(TAG, "createNotificationChannel called")
         val serviceChannel = NotificationChannel(
             S.FloatingWindowService_NOTIFICATION_CHANNEL_ID,
             "显示悬浮窗",
@@ -123,13 +105,15 @@ class FloatingWindowService : Service() {
 
     // 启动服务
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        Log.i(TAG, "onStartCommand called")
+        Log.i(TAG, "onStartCommand() -> intent: $intent")
+        if (intent.action.isNullOrEmpty()) {
+            works()
+        }
         if (intent.action == ACTION_TOGGLE_WINDOW) {
             floatingView?.let { it.visibility = View.VISIBLE }
         }
         super.onStartCommand(intent, flags, startId)
-        updateWifiInfo()
-        return START_STICKY
+        return START_REDELIVER_INTENT // 如果 Service 被杀死，系统会尝试重新创建 Service，并且会重新传递最后一个 Intent 给 Service 的 onStartCommand() 方法。
     }
 
     override fun onDestroy() {
@@ -139,6 +123,32 @@ class FloatingWindowService : Service() {
             getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         connectivityManager.unregisterNetworkCallback(networkCallback)
         //        unregisterWifiReceiverIfNeeded();
+    }
+
+    @SuppressLint("LaunchActivityFromNotification")
+    private fun works() {
+        Log.i(TAG, "works called")
+        instance = this
+        createNotificationChannel()
+        // 初始化NotificationManager
+        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        // 创建NotificationBuilder
+        val notificationIntent = Intent(this, FloatingWindowService::class.java)
+        notificationIntent.action = ACTION_TOGGLE_WINDOW
+        val pendingIntent =
+            PendingIntent.getService(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
+        notificationBuilder = NotificationCompat.Builder(this, S.FloatingWindowService_NOTIFICATION_CHANNEL_ID)
+            .setContentTitle("伺服 Wifi : 没有诶")
+            .setContentText(lanIpTextView?.text)
+            .setSmallIcon(R.drawable.icon)
+            .setContentIntent(pendingIntent)
+        // 启动前台服务
+        startService(notificationIntent)
+        startForeground(1, notificationBuilder.build()) // 必须首先始终调用 startService(Intent) 来告诉系统应该让服务持续运行，然后使用此方法告诉它要更努力地保持运行。
+        initializeWindow()
+        initializeUI()
+        registerNetworkCallback()
     }
 
     private fun stopService() {
@@ -155,6 +165,7 @@ class FloatingWindowService : Service() {
     }
 
     // 初始化窗口
+    @SuppressLint("InflateParams")
     private fun initializeWindow() {
         Log.i(TAG, "initializeWindow called")
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
@@ -171,6 +182,7 @@ class FloatingWindowService : Service() {
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun initializeUI() {
         Log.i(TAG, "initializeUI called")
         wifiStatusTextView = floatingView?.findViewById(R.id.wifi_status_textview)
@@ -221,6 +233,7 @@ class FloatingWindowService : Service() {
 
     @SuppressLint("SetTextI18n")
     private fun updateIpAddress(notificationText: String? = "Wifi : 没有诶") {
+        Log.i(TAG, "updateIpAddress called -> notificationText: $notificationText")
         val executorService: ExecutorService = Executors.newSingleThreadExecutor()
         executorService.execute {
             try {
@@ -232,7 +245,7 @@ class FloatingWindowService : Service() {
                     val inetAddresses = networkInterface.inetAddresses
                     for (inetAddress in Collections.list(inetAddresses)) {
                         if (inetAddress is Inet4Address && !inetAddress.isLoopbackAddress) {
-                            ipAddress = inetAddress.hostAddress
+                            ipAddress = inetAddress.hostAddress as String
                             break
                         }
                     }
@@ -256,6 +269,7 @@ class FloatingWindowService : Service() {
 
     // 切换悬浮窗和悬浮球的函数
     private fun toggleFloatingWindowAndBall() {
+        Log.i(TAG, "toggleFloatingWindowAndBall called")
         layoutParams.gravity = Gravity.TOP or Gravity.START
         layoutParams.x = 0
         layoutParams.y = 0
@@ -286,16 +300,17 @@ class FloatingWindowService : Service() {
         if (!isWifiReceiverRegistered) {
             val intentFilter = IntentFilter()
             intentFilter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION)
-            registerReceiver(WifiStateReceiver(), intentFilter)
+            wifiStateReceiver = WifiStateReceiver()
+            registerReceiver(wifiStateReceiver, intentFilter)
         }
     }
 
     // 检查接收器是否已经注册
     private fun isReceiverRegistered(receiverClass: Class<*>): Boolean {
         Log.i(TAG, "isReceiverRegistered called")
-        val intent = Intent(applicationContext, receiverClass)
+        val intent = Intent(this, receiverClass) // 确保使用与注册时相同的Context
         val pendingIntent = PendingIntent.getBroadcast(
-            applicationContext,
+            this,
             0,
             intent,
             PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
@@ -306,16 +321,16 @@ class FloatingWindowService : Service() {
     // 取消注册WiFi接收器（如果需要）
     private fun unregisterWifiReceiverIfNeeded() {
         Log.i(TAG, "unregisterWifiReceiverIfNeeded called")
-        if (isReceiverRegistered(WifiStateReceiver::class.java)) {
+        if (::wifiStateReceiver.isInitialized && isReceiverRegistered(WifiStateReceiver::class.java)) {
             unregisterReceiver(wifiStateReceiver)
         }
     }
 
     // 更新WiFi信息 rxJava 版
-    private fun updateWifiInfo() {
+    private fun updateWifiInfo_old() {
         Log.i(TAG, "updateWifiInfo called")
         wifiDisposable =
-            Observable.create(ObservableOnSubscribe { emitter: ObservableEmitter<String> ->
+            Observable.create { emitter: ObservableEmitter<String> ->
                 if (ActivityCompat.checkSelfPermission(
                         applicationContext, Manifest.permission.ACCESS_FINE_LOCATION
                     ) == PackageManager.PERMISSION_GRANTED
@@ -333,7 +348,7 @@ class FloatingWindowService : Service() {
                         }
                     }, 1000)
                 }
-            })
+            }
                 .repeatWhen { objectObservable: Observable<Any> ->
                     objectObservable.delay(
                         500,
@@ -349,7 +364,50 @@ class FloatingWindowService : Service() {
                 }
     }
 
+    private fun updateWifiInfo() {
+        Log.i(TAG, "updateWifiInfo called")
+
+        // 创建 Observable，检查定位权限
+        val permissionCheckObservable = Observable.create { emitter ->
+            if (ActivityCompat.checkSelfPermission(
+                    applicationContext, Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                emitter.onNext("PermissionGranted")
+            } else {
+                emitter.onNext("PermissionDenied")
+            }
+        }
+
+        // 订阅 Observable，处理权限结果
+        wifiDisposable = permissionCheckObservable
+            .subscribeOn(Schedulers.io()) // 在 IO 线程检查权限
+            .observeOn(AndroidSchedulers.mainThread()) // 在主线程处理结果
+            .doOnTerminate {
+                // 在 Observable 完成时执行清理操作
+                // 例如，取消注册的接收器或取消网络请求
+                Log.d(TAG, "Permission check Observable terminated")
+            }
+            .subscribe { permission ->
+                when (permission) {
+                    "PermissionGranted" -> {
+                        Log.d(TAG, "Location permission granted, registering receiver and performing wifi scan")
+                        registerWifiReceiverIfNeeded()
+                        performWifiScan()
+                    }
+                    "PermissionDenied" -> {
+                        // 处理权限被拒绝的情况，例如显示一个对话框或 toast
+                        Log.i(TAG, "Location permission denied")
+                    }
+                }
+            }
+    }
+
+
+
+
     // 执行WiFi扫描操作
+    @SuppressLint("SetTextI18n")
     private fun performWifiScan() {
         Log.i(TAG, "performWifiScan called")
         val wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
@@ -359,7 +417,7 @@ class FloatingWindowService : Service() {
             val ssid = wifiInfo.getSSID()
             val bssid = wifiInfo.bssid
             val signalStrength = wifiInfo.rssi // 获取连接的WiFi信号强度
-            val readableSS = getSignalStrengthLevel(signalStrength)
+            val readableSS = U.getSignalStrengthLevel(signalStrength)
             // 显示当前连接的WiFi信息以及信号强度
             val wifiDetails = StringBuilder()
             wifiDetails.append("Connected to: ").append(ssid).append("\nBSSID: ").append(bssid)
@@ -390,23 +448,7 @@ class FloatingWindowService : Service() {
         }
     }
 
-    private fun getSignalStrengthLevel(signalStrength: Int): String {
-        val signalStrengthLevel: String
-        signalStrengthLevel = if (signalStrength >= -50) {
-            "极好"
-        } else if (signalStrength >= -60) {
-            "很好"
-        } else if (signalStrength >= -70) {
-            "正常"
-        } else if (signalStrength >= -80) {
-            "一般"
-        } else if (signalStrength >= -90) {
-            "较弱"
-        } else {
-            "极弱"
-        }
-        return signalStrengthLevel
-    }
+
 
     companion object {
         @SuppressLint("StaticFieldLeak")
@@ -425,6 +467,7 @@ class FloatingWindowService : Service() {
         private val touchSlop =
             floatingView?.let { ViewConfiguration.get(it.context).scaledTouchSlop }
 
+        @SuppressLint("ClickableViewAccessibility")
         override fun onTouch(v: View, event: MotionEvent): Boolean {
             val layoutParams = v.layoutParams as WindowManager.LayoutParams
 

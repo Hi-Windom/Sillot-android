@@ -1,5 +1,6 @@
 package org.b3log.siyuan
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.content.Context
@@ -23,6 +24,7 @@ import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.annotations.Ignore
 import io.realm.kotlin.types.annotations.PrimaryKey
 import org.b3log.siyuan.common.ForegroundPushManager
+import org.b3log.siyuan.services.BootService
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 import java.net.InetAddress
@@ -59,6 +61,8 @@ class App : Application() {
 
         lateinit var application: Application
             private set // 确保application只能在App类内部被设置
+        @SuppressLint("StaticFieldLeak")
+        lateinit var bootService: BootService // 在 activity 中 get / set
 
         fun getByName(ip: String?): InetAddress? {
             return try {

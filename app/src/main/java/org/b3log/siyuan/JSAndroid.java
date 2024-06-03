@@ -58,8 +58,6 @@ import com.kongzue.dialogx.dialogs.WaitDialog;
 import com.kongzue.dialogx.util.TextInfo;
 import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
 
-import org.b3log.siyuan.services.FloatingWindowService;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -168,59 +166,6 @@ public final class JSAndroid {
             // 从 Android 12 开始，经过验证的链接现在会自动在相应的应用中打开，以获得更简化、更快速的用户体验。谷歌还更改了未经Android应用链接验证或用户手动批准的链接的默认处理方式。谷歌表示，Android 12将始终在默认浏览器中打开此类未经验证的链接，而不是向您显示应用程序选择对话框。
         }
     }
-
-    @JavascriptInterface
-    public void showWifi() {
-        Log.d("JSAndroid", "showWifi() invoked");
-
-        if (activity == null) {
-            Log.e("JSAndroid", "showWifi() -> Activity is null");
-            return;
-        }
-
-        Observable<Boolean> locationPermissionObservable = Observable.create(emitter -> {
-            if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                emitter.onNext(true);
-            } else {
-                ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, S.REQUEST_LOCATION);
-            }
-        });
-
-        Observable<Boolean> overlayPermissionObservable = Observable.create(emitter -> {
-            if (Settings.canDrawOverlays(activity)) {
-                emitter.onNext(true);
-            } else {
-                // 请求悬浮窗权限
-                activity.runOnUiThread(() -> {
-                    Intent intent = new Intent("sc.windom.sillot.intent.permission.Overlay");
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
-//                    intent.setData(Uri.parse("package:" + activity.getPackageName()));
-                    startActivityForResult(activity, intent, S.REQUEST_OVERLAY, null);
-                });
-            }
-        });
-
-
-        Disposable disposable = Observable.combineLatest(locationPermissionObservable, overlayPermissionObservable, (locationGranted, overlayGranted) -> locationGranted && overlayGranted)
-                .filter(granted -> granted) // 过滤掉未授予权限的情况
-                .flatMap(granted -> {
-                    // 启动悬浮窗服务
-                    Intent intent = new Intent(activity, FloatingWindowService.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-                    ServiceUtils.startService(intent);
-                    return Observable.just(true);
-                })
-                .subscribeOn(AndroidSchedulers.mainThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        granted -> Log.d("JSAndroid", "showWifi() -> Permissions granted and service started."),
-                        throwable -> Log.e("JSAndroid", "showWifi() -> Error occurred: " + throwable.getMessage())
-                );
-    }
-
-
-
 
     @JavascriptInterface
     public void setMMKV(final String key, final String value) {

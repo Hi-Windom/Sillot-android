@@ -106,8 +106,9 @@ package org.b3log.siyuan;
  import java.util.Locale;
 
  import mobile.Mobile;
+ import sc.windom.sofill.android.webview.WebViewPool;
 
-/**
+ /**
  * 主程序.
  *
  * @author <a href="https://88250.b3log.org">Liang Ding</a>
@@ -240,6 +241,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             BootService.LocalBinder binder = (BootService.LocalBinder) service;
             bootService = binder.getService();
             serviceBound = true;
+            App.bootService = bootService;
             webView = bootService.getWebView();
             // 服务绑定后，执行依赖于bootService的代码
             performActionWithService();
@@ -247,7 +249,9 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
+            bootService = null;
             serviceBound = false;
+            webView = null;
         }
     };
 
@@ -256,13 +260,14 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         if (serviceBound && bootService != null) {
             // 使用bootService实例
 
+            bootService.showWifi(this);
             // 初始化 UI 元素
             Log.w(TAG, "onStart() -> initUIElements() invoked");
             initUIElements();
 
             // 初始化外观资源
-            Log.w(TAG, "onStart() -> initAppearance() invoked");
-            initAppearance();
+//            Log.w(TAG, "onStart() -> initAppearance() invoked");
+//            initAppearance();
 
             AppUtils.registerAppStatusChangedListener(this);
 
@@ -295,10 +300,10 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         MainActivityLifeState = "onCreate";
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//        getWindow().setFlags(
-//                WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
-//                WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
-//        );
+
+        // 绑定服务
+        Intent intent = new Intent(getApplicationContext(), BootService.class);
+        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
 
         mmkv = MMKV.defaultMMKV();
 
@@ -347,11 +352,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             }
         });
 
-        // 绑定服务
-        Intent intent = new Intent(getApplicationContext(), BootService.class);
-        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
-
-
         HashSet<String> permissionsToCheck = new HashSet<>(Ps.PG_Core); // 核心权限组，每次启动都要检查
         if (Build.VERSION.SDK_INT >= 33) {
             permissionsToCheck.addAll(Ps.useAPI33);
@@ -398,14 +398,13 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             webView.setLayoutParams(new FrameLayout.LayoutParams(
                     FrameLayout.LayoutParams.MATCH_PARENT,
                     FrameLayout.LayoutParams.MATCH_PARENT));
-
-            // 将WebView添加到容器中
             webViewContainer = findViewById(R.id.webViewContainer);
-            webViewContainer.addView(webView);
+            if (webView.getParent() == null) {
+                webViewContainer.addView(webView); // 将WebView添加到容器中
+            }
 
-//        webView = findViewById(R.id.webView);
-//        webView.setBackgroundColor(Color.parseColor("#1e1e1e"));
-        webView.setWebChromeClient(new WebChromeClient() {
+
+            webView.setWebChromeClient(new WebChromeClient() {
             // setWebViewClient 和 setWebChromeClient 并不同，别看走眼了
             @Override
             public boolean onShowFileChooser(final WebView mWebView, final ValueCallback<Uri[]> filePathCallback, final FileChooserParams fileChooserParams) {
@@ -591,184 +590,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         isWebviewReady = true;
     }
 
-//    private Handler bootHandler = new Handler(Looper.getMainLooper()) {
-//        @Override
-//        public void handleMessage(final Message msg) {
-//            final String cmd = msg.getData().getString("cmd");
-//            if ("startKernel".equals(cmd)) {
-//                bootKernel();
-//            } else {
-//                showBootIndex();
-//            }
-//        }
-//    };
-
-//    private void startHttpServer() {
-//        if (null != server) {
-//            server.stop();
-//            Log.w(TAG, "startHttpServer() stop exist server");
-//        }
-//
-//        try {
-//            // 解决乱码问题 https://github.com/koush/AndroidAsync/issues/656#issuecomment-523325452
-//            final Class<Charsets> charsetClass = Charsets.class;
-//            Field usAscii = charsetClass.getDeclaredField("US_ASCII");
-//            usAscii.setAccessible(true);
-//            usAscii.set(Charsets.class, Charsets.UTF_8);
-//        } catch (final Exception e) {
-//            Utils.LogError("http", "init charset failed", e);
-//        }
-//
-//        server = new AsyncHttpServer();
-//        server.post("/api/walkDir", (request, response) -> {
-//            try {
-//                final long start = System.currentTimeMillis();
-//                final JSONObject requestJSON = (JSONObject) request.getBody().get();
-//                final String dir = requestJSON.optString("dir");
-//                final JSONObject data = new JSONObject();
-//                final JSONArray files = new JSONArray();
-//                FileUtils.listFilesAndDirs(new File(dir), TrueFileFilter.INSTANCE, DirectoryFileFilter.DIRECTORY).forEach(file -> {
-//                    final String path = file.getAbsolutePath();
-//                    final JSONObject info = new JSONObject();
-//                    try {
-//                        info.put("path", path);
-//                        info.put("name", file.getName());
-//                        info.put("size", file.length());
-//                        info.put("updated", file.lastModified());
-//                        info.put("isDir", file.isDirectory());
-//                    } catch (final Exception e) {
-//                        Utils.LogError("http", "walk dir failed", e);
-//                    }
-//                    files.put(info);
-//                });
-//                data.put("files", files);
-//                final JSONObject responseJSON = new JSONObject().put("code", 0).put("msg", "").put("data", data);
-//                response.send(responseJSON);
-//                Utils.LogInfo("http", "walk dir [" + dir + "] in [" + (System.currentTimeMillis() - start) + "] ms");
-//            } catch (final Exception e) {
-//                Utils.LogError("http", "walk dir failed", e);
-//                try {
-//                    response.send(new JSONObject().put("code", -1).put("msg", e.getMessage()));
-//                } catch (final Exception e2) {
-//                    Utils.LogError("http", "walk dir failed", e2);
-//                }
-//            }
-//        });
-//
-//        serverPort = getAvailablePort();
-//        final AsyncServer s = AsyncServer.getDefault();
-//        // 生产环境绑定 ipv6 回环地址 [::1] 以防止被远程访问
-//        s.listen(InetAddress.getLoopbackAddress(), serverPort, server.getListenCallback());
-//        // 开发环境绑定所有网卡以便调试
-////        s.listen(null, serverPort, server.getListenCallback());
-//        Log.w(TAG, "startHttpServer() -> HTTP server is listening on port [" + serverPort + "]");
-//        Utils.LogInfo("http", "HTTP server is listening on port [" + serverPort + "]");
-//    }
-
-//    private int getAvailablePort() {
-//        int ret = 6906;
-//        try {
-//            ServerSocket s = new ServerSocket(0);
-//            ret = s.getLocalPort();
-//            s.close();
-//        } catch (final Exception e) {
-//            Utils.LogError("http", "get available port failed", e);
-//        }
-//        return ret;
-//    }
-//
-//    private void startKernel() {
-//        final Bundle b = new Bundle();
-//        b.putString("cmd", "startKernel");
-//        final Message msg = new Message();
-//        msg.setData(b);
-//        bootHandler.sendMessage(msg);
-//    }
-
-//    private void bootKernel() {
-//        Mobile.setHttpServerPort(serverPort);
-//        if (Mobile.isHttpServing()) {
-//            Utils.LogInfo("boot", "kernel HTTP server is running");
-//            showBootIndex();
-//            return;
-//        }
-//        startHttpServer();
-//        final String appDir = getFilesDir().getAbsolutePath() + "/app";
-////        final Locale locale = LocaleList.getDefault().get(0);
-//        // As of API 24 (Nougat) and later
-//        LocaleList locales = getResources().getConfiguration().getLocales();
-//        // Now you can access the first locale in the list as follows:
-//        Locale locale = locales.get(0);
-//        final String workspaceBaseDir = getExternalFilesDir(null).getAbsolutePath();
-//        final String timezone = TimeZone.getDefault().getID();
-//        new Thread(() -> {
-//            final String localIPs = Utils.getIPAddressList();
-//            String lang = locale.getLanguage() + "_" + locale.getCountry();
-//            if (lang.toLowerCase().contains("cn")) {
-//                lang = "zh_CN";
-//            } else if (lang.toLowerCase().contains("es")) {
-//                lang = "es_ES";
-//            } else if (lang.toLowerCase().contains("fr")) {
-//                lang = "fr_FR";
-//            } else {
-//                lang = "en_US";
-//            }
-//
-//            Mobile.startKernel("android", appDir, workspaceBaseDir, timezone, localIPs, lang,
-//                    Build.VERSION.RELEASE +
-//                            "/SDK " + Build.VERSION.SDK_INT +
-//                            "/WebView " + webViewVer +
-//                            "/Manufacturer " + android.os.Build.MANUFACTURER +
-//                            "/Brand " + android.os.Build.BRAND +
-//                            "/UA " + userAgent);
-//        }).start();
-//
-//        final Bundle b = new Bundle();
-//        b.putString("cmd", "bootIndex");
-//        final Message msg = new Message();
-//        msg.setData(b);
-//        bootHandler.sendMessage(msg);
-//    }
-//    void bootKernel(String i) {
-//        Mobile.setHttpServerPort(serverPort);
-//        if (Mobile.isHttpServing()) {
-//            Log.w(TAG, "bootKernel(i) Mobile.isHttpServing , not need showBootIndex()");
-//            webView.evaluateJavascript("javascript:window.reconnectWebSocket()", null);
-////            showBootIndex();
-//            return;
-//        }
-//        final String appDir = getFilesDir().getAbsolutePath() + "/app";
-////        final Locale locale = getResources().getConfiguration().locale;
-//        // As of API 24 (Nougat) and later
-//        LocaleList locales = getResources().getConfiguration().getLocales();
-//        // Now you can access the first locale in the list as follows:
-//        Locale locale = locales.get(0);
-//        final String workspaceBaseDir = getExternalFilesDir(null).getAbsolutePath();
-//        final String timezone = TimeZone.getDefault().getID();
-//        new Thread(() -> {
-//            final String localIPs = Utils.getIPAddressList();
-//            String lang = locale.getLanguage() + "_" + locale.getCountry();
-//            if (lang.toLowerCase().contains("cn")) {
-//                lang = "zh_CN";
-//            } else {
-//                lang = "en_US";
-//            }
-//
-//            Mobile.startKernelFast("android", appDir, workspaceBaseDir, localIPs);
-////            Mobile.startKernel("android", appDir, workspaceBaseDir, timezone, localIPs, lang,
-////                    Build.VERSION.RELEASE +
-////                            "/SDK " + Build.VERSION.SDK_INT +
-////                            "/WebView " + webViewVer +
-////                            "/Manufacturer " + android.os.Build.MANUFACTURER +
-////                            "/Brand " + android.os.Build.BRAND +
-////                            "/UA " + userAgent);
-//        }).start();
-////        initUIElements();
-////        if (null != webView) {
-////            webView.evaluateJavascript("javascript:window.reconnectWebSocket()", null);
-////        }
-//    }
-
     /**
      * 通知栏保活。
      */
@@ -794,47 +615,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 break;
             }
         }
-    }
-
-    private void initAppearance() {
-        if (needUnzipAssets()) {
-            bootLogo.setVisibility(View.VISIBLE);
-            // 不要进度条更平滑一些
-            //bootProgressBar.setVisibility(View.VISIBLE);
-            //bootDetailsText.setVisibility(View.VISIBLE);
-
-            final String dataDir = getFilesDir().getAbsolutePath();
-            final String appDir = dataDir + "/app";
-            final File appVerFile = new File(appDir, "VERSION");
-
-            setBootProgress("Clearing appearance...", 20);
-            try {
-                FileUtils.deleteDirectory(new File(appDir));
-            } catch (final Exception e) {
-                Utils.LogError("boot", "delete dir [" + appDir + "] failed, exit application", e);
-                exit();
-                return;
-            }
-
-            setBootProgress("Initializing appearance...", 60);
-            Utils.unzipAsset(getAssets(), "app.zip", appDir + "/app");
-
-            try {
-                FileUtils.writeStringToFile(appVerFile, Utils.version, StandardCharsets.UTF_8);
-            } catch (final Exception e) {
-                Utils.LogError("boot", "write version failed", e);
-            }
-
-            setBootProgress("Booting kernel...", 80);
-        }
-
-    }
-
-    private void setBootProgress(final String text, final int progressPercent) {
-        runOnUiThread(() -> {
-            bootDetailsText.setText(text);
-            bootProgressBar.setProgress(progressPercent);
-        });
     }
 
     private void sleep(final long time) {
@@ -995,30 +775,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         super.onActivityResult(requestCode, resultCode, intent);
     }
 
-    private boolean needUnzipAssets() {
-        final String dataDir = getFilesDir().getAbsolutePath();
-        final String appDir = dataDir + "/app";
-        final File appDirFile = new File(appDir);
-        appDirFile.mkdirs();
-
-        boolean ret = true;
-        if (Utils.isDebugPackageAndMode(this)) {
-            Log.i("boot", "always unzip assets in debug mode");
-            return ret;
-        }
-
-        final File appVerFile = new File(appDir, "VERSION");
-        if (appVerFile.exists()) {
-            try {
-                final String ver = FileUtils.readFileToString(appVerFile, StandardCharsets.UTF_8);
-                ret = !ver.equals(Utils.version);
-            } catch (final Exception e) {
-                Utils.LogError("boot", "check version failed", e);
-            }
-        }
-        return ret;
-    }
-
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(OnSiYuanMainRequestEvent event) {
         // 检查权限请求的结果
@@ -1066,6 +822,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         }
     }
 
+    private WebViewPool.WebViewWrapper webViewWrapper;
 
     @Override
     protected void onDestroy() {
@@ -1076,17 +833,24 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         EventBus.getDefault().unregister(this);
         KeyboardUtils.unregisterSoftInputChangedListener(getWindow());
         AppUtils.unregisterAppStatusChangedListener(this);
-        if (null != webView) {
-            webView.removeAllViews();
-            webView.destroy();
-        }
+//        if (null != webView) {
+//            webView.removeAllViews();
+//            webView.destroy();
+//        }
 //        if (null != server) {
 //            server.stop();
 //        }
+        webViewContainer.removeAllViews();
         // 解绑服务
         if (serviceBound) {
             unbindService(serviceConnection);
             serviceBound = false;
+        }
+        // 销毁WebView并从池中移除
+        if (webViewWrapper != null) {
+            WebViewPool webViewPool = WebViewPool.getInstance();
+            webViewPool.releaseWebView(webView);
+            webViewWrapper.destroy();
         }
     }
 

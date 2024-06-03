@@ -12,12 +12,12 @@
 
     <TextView
         android:id="@+id/lan_ip_textview"
+        android:layout_below="@id/wifi_status_textview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="#FFFFFF"
         android:text="LAN IP: "
-        android:textSize="11sp"
-        android:layout_below="@id/wifi_status_textview"
+        android:textSize="15sp"
         android:layout_marginBottom="10dp"/>
     <TextView
         android:id="@+id/wifi_status_textview"
@@ -25,7 +25,7 @@
         android:layout_height="wrap_content"
         android:textColor="#FFFFFF"
         android:text="WiFi Status"
-        android:textSize="11sp"
+        android:textSize="13sp"
         android:layout_marginBottom="10dp"/>
 
     <Button
@@ -34,13 +34,13 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/wifi_status_textview"
         android:layout_alignParentEnd="true"
-        android:text="关闭"/>
+        android:text="关闭浮窗"/>
     <Button
         android:id="@+id/hide_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/wifi_status_textview"
         android:layout_toStartOf="@id/close_button"
-        android:text="折叠"/>
+        android:text="折叠浮窗"/>
 
 </RelativeLayout>

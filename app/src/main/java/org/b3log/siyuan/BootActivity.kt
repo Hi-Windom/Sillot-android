@@ -68,12 +68,12 @@ class BootActivity : AppCompatActivity() {
         val isChannelVersion = requiredChannels.contains(channel)
 
         // 不存在且第一次运行
-        if (!isChannelVersion && isFirstRun) {
-            // 首次运行弹窗提示用户隐私条款和使用授权
-            setContentView(R.layout.activity_agreement)
-            showAgreements()
-            return
-        }
+//        if (!isChannelVersion && isFirstRun) {
+//            // 首次运行弹窗提示用户隐私条款和使用授权
+//            setContentView(R.layout.activity_agreement)
+//            showAgreements()
+//            return
+//        }
 
         // 获取可能存在的 block URL（通过 siyuan://blocks/xxx 打开应用时传递的）
         val blockURL = blockURL

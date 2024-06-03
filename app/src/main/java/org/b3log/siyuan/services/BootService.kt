@@ -1,7 +1,10 @@
 package org.b3log.siyuan.services
 
+import android.Manifest
+import android.app.Activity
 import android.app.Service
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
 import android.os.Binder
@@ -11,18 +14,25 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.os.Message
+import android.provider.Settings
 import android.util.Log
 import android.webkit.ValueCallback
+import android.webkit.WebView
+import androidx.core.app.ActivityCompat
+import com.blankj.utilcode.util.ServiceUtils
+import com.blankj.utilcode.util.ThreadUtils.runOnUiThread
 import com.koushikdutta.async.AsyncServer
 import com.koushikdutta.async.http.server.AsyncHttpServer
 import com.koushikdutta.async.http.server.AsyncHttpServerRequest
 import com.koushikdutta.async.http.server.AsyncHttpServerResponse
 import com.koushikdutta.async.util.Charsets
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.core.ObservableEmitter
 import mobile.Mobile
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.filefilter.DirectoryFileFilter
 import org.apache.commons.io.filefilter.TrueFileFilter
-import org.b3log.siyuan.App
 import org.b3log.siyuan.Utils
 import org.json.JSONArray
 import org.json.JSONObject
@@ -32,6 +42,7 @@ import sc.windom.sofill.android.webview.WebViewPool
 import java.io.File
 import java.net.InetAddress
 import java.net.ServerSocket
+import java.nio.charset.StandardCharsets
 import java.util.Locale
 import java.util.TimeZone
 import java.util.function.Consumer
@@ -40,31 +51,25 @@ class BootService : Service() {
     private val TAG = "BootService-SiYuan"
     var server: AsyncHttpServer? = null
     var serverPort = S.DefaultHTTPPort
-    val webView by lazy { WebViewPool.getInstance().getWebView(this) }
+    var webView: WebView? = null
     var webViewVer: String? = null
     var userAgent: String? = null
     var kernelStarted = false
     private val uploadMessage: ValueCallback<Array<Uri>>? = null
     override fun onCreate() {
         super.onCreate()
-        // 初始化 UI 元素
-        Log.w(TAG, "onStart() -> initUIElements() invoked")
-        init_webView()
-
-        // 拉起内核
-        Log.w(TAG, "onStart() -> startKernel() invoked")
-        startKernel()
+        works()
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        // Call the method to start the kernel or other necessary tasks
-        startKernel()
-        return START_NOT_STICKY
+        Log.i(TAG, "onStartCommand() -> intent: $intent")
+        works()
+        return START_REDELIVER_INTENT // 如果 Service 被杀死，系统会尝试重新创建 Service，并且会重新传递最后一个 Intent 给 Service 的 onStartCommand() 方法。
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // Stop the server and release resources if necessary...
+        server?.stop()
     }
 
     private val binder = LocalBinder()
@@ -76,11 +81,23 @@ class BootService : Service() {
         fun getService(): BootService = this@BootService
     }
 
+    private fun works() {
+        // 初始化 UI 元素
+        Log.w(TAG, "onStart() -> initUIElements() invoked")
+        init_webView()
+
+        // 拉起内核
+        Log.w(TAG, "onStart() -> startKernel() invoked")
+        startKernel()
+
+    }
+
     private fun init_webView() {
-        webView.setBackgroundColor(Color.parseColor(S.ColorStringHex.bgColor_light))
-        val ws = webView.getSettings()
-        userAgent = ws.userAgentString
-        webViewVer = U.checkWebViewVer(ws)
+        webView = WebViewPool.getInstance().getWebView(this)
+        webView?.setBackgroundColor(Color.parseColor(S.ColorStringHex.bgColor_light))
+        val ws = webView?.getSettings()
+        userAgent = ws?.userAgentString
+        webViewVer = ws?.let { U.checkWebViewVer(it) }
     }
 
     private val bootHandler: Handler = object : Handler(Looper.getMainLooper()) {
@@ -179,6 +196,7 @@ class BootService : Service() {
     }
 
     private fun startKernel() {
+        Log.w(TAG, "startKernel() invoked")
         if (kernelStarted) {
             return
         }
@@ -203,6 +221,7 @@ class BootService : Service() {
             Log.w(TAG, "showBootIndex();")
             return
         }
+        initAppAssets()
         startHttpServer(isServable)
         val appDir = filesDir.absolutePath + "/app"
         // As of API 24 (Nougat) and later 获取用户的设备首选语言
@@ -237,5 +256,124 @@ class BootService : Service() {
         val msg = Message()
         msg.data = b
         bootHandler.sendMessage(msg)
+    }
+
+    private fun needUnzipAssets(): Boolean {
+        Log.i(TAG, "needUnzipAssets() invoked")
+        val dataDir = filesDir.absolutePath
+        val appDir = "$dataDir/app"
+        val appDirFile = File(appDir)
+        appDirFile.mkdirs()
+        var ret = true
+        if (Utils.isDebugPackageAndMode(this)) {
+            Log.i("boot", "always unzip assets in debug mode")
+            return ret
+        }
+        val appVerFile = File(appDir, "VERSION")
+        if (appVerFile.exists()) {
+            try {
+                val ver = FileUtils.readFileToString(appVerFile, StandardCharsets.UTF_8)
+                ret = ver != Utils.version
+            } catch (e: java.lang.Exception) {
+                Utils.LogError("boot", "check version failed", e)
+            }
+        }
+        return ret
+    }
+    private fun initAppAssets() {
+        if (needUnzipAssets()) {
+            val dataDir = filesDir.absolutePath
+            val appDir = "$dataDir/app"
+            val appVerFile = File(appDir, "VERSION")
+            Log.i(TAG, "Clearing appearance... 20%")
+            try {
+                FileUtils.deleteDirectory(File(appDir))
+            } catch (e: java.lang.Exception) {
+                Utils.LogError(
+                    "boot",
+                    "delete dir [$appDir] failed, exit application", e
+                )
+                stopSelf()
+                return
+            }
+            Log.i(TAG, "Initializing appearance... 60%")
+            Utils.unzipAsset(assets, "app.zip", "$appDir/app")
+            try {
+                FileUtils.writeStringToFile(appVerFile, Utils.version, StandardCharsets.UTF_8)
+            } catch (e: java.lang.Exception) {
+                Utils.LogError("boot", "write version failed", e)
+            }
+            Log.i(TAG, "Booting kernel... 80%")
+        }
+    }
+
+    /**
+     * 请在 activity 中调用
+     */
+    fun showWifi(activity: Activity) {
+        Log.d(TAG, "showWifi() invoked")
+        val locationPermissionObservable = Observable.create { emitter: ObservableEmitter<Boolean> ->
+            if (ActivityCompat.checkSelfPermission(
+                    activity,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                emitter.onNext(true)
+            } else {
+                ActivityCompat.requestPermissions(
+                    activity,
+                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                    S.REQUEST_LOCATION
+                )
+            }
+        }
+        val overlayPermissionObservable = Observable.create { emitter: ObservableEmitter<Boolean> ->
+            if (Settings.canDrawOverlays(activity)) {
+                emitter.onNext(true)
+            } else {
+                // 请求悬浮窗权限
+                runOnUiThread {
+                    val intent = Intent("sc.windom.sillot.intent.permission.Overlay")
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    ActivityCompat.startActivityForResult(
+                        activity,
+                        intent,
+                        S.REQUEST_OVERLAY,
+                        null
+                    )
+                }
+            }
+        }
+        val disposable = Observable.combineLatest(
+            locationPermissionObservable,
+            overlayPermissionObservable
+        ) { locationGranted: Boolean, overlayGranted: Boolean ->
+            locationGranted && overlayGranted
+        }
+
+            .filter { granted: Boolean? -> granted!! } // 过滤掉未授予权限的情况
+            .flatMap { granted: Boolean? ->
+                // 启动悬浮窗服务
+                val intent = Intent(activity, FloatingWindowService::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+                ServiceUtils.startService(intent)
+                Observable.just(true)
+            }
+            .subscribeOn(AndroidSchedulers.mainThread())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                { granted: Boolean? ->
+                    Log.d(
+                        TAG,
+                        "showWifi() -> Permissions granted and service started."
+                    )
+                },
+                { throwable: Throwable ->
+                    Log.e(
+                        TAG,
+                        "showWifi() -> Error occurred: " + throwable.message
+                    )
+                }
+            )
     }
 }

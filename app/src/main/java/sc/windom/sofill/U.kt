@@ -69,6 +69,23 @@ import kotlin.math.sqrt
 
 
 object U {
+    fun getSignalStrengthLevel(signalStrength: Int): String {
+        val signalStrengthLevel: String
+        signalStrengthLevel = if (signalStrength >= -50) {
+            "极好"
+        } else if (signalStrength >= -60) {
+            "很好"
+        } else if (signalStrength >= -70) {
+            "正常"
+        } else if (signalStrength >= -80) {
+            "一般"
+        } else if (signalStrength >= -90) {
+            "较弱"
+        } else {
+            "极弱"
+        }
+        return signalStrengthLevel
+    }
     fun checkWebViewVer(ws: WebSettings): String {
         // Android check WebView version 75+ https://github.com/siyuan-note/siyuan/issues/7840
         val ua = ws.userAgentString
