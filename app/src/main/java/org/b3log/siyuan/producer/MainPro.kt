@@ -13,6 +13,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
 import android.provider.Settings
+import android.util.Base64
 import android.util.Log
 import android.util.Size
 import androidx.activity.ComponentActivity
@@ -35,6 +36,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.twotone.Swipe
+import androidx.compose.material.icons.twotone.Token
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -42,9 +46,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,11 +72,15 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.documentfile.provider.DocumentFile
 import com.kongzue.dialogx.dialogs.BottomMenu
+import com.kongzue.dialogx.dialogs.InputDialog
 import com.kongzue.dialogx.dialogs.PopNotification
+import com.kongzue.dialogx.dialogs.PopTip
 import com.kongzue.dialogx.interfaces.OnBottomMenuButtonClickListener
+import com.tencent.mmkv.MMKV
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.b3log.siyuan.App
 import org.b3log.siyuan.R
@@ -82,8 +92,14 @@ import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.HtmlRenderer
 import org.jsoup.Jsoup
 import org.jsoup.safety.Safelist
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import sc.windom.sofill.S
 import sc.windom.sofill.U
+import sc.windom.sofill.api.siyuan.SiyuanNoteAPI
 import sc.windom.sofill.compose.ApkButtons
 import sc.windom.sofill.compose.AudioButtons
 import sc.windom.sofill.compose.LockScreenOrientation
@@ -92,8 +108,15 @@ import sc.windom.sofill.compose.SelectableHtmlText
 import sc.windom.sofill.compose.SelectableText
 import sc.windom.sofill.compose.VideoButtons
 import sc.windom.sofill.compose.components.CommonTopAppBar
+import sc.windom.sofill.compose.partialCom.DdMenuI
 import sc.windom.sofill.compose.theme.CascadeMaterialTheme
+import sc.windom.sofill.dataClass.INbList
+import sc.windom.sofill.dataClass.INotebook
+import sc.windom.sofill.dataClass.IPayload
+import sc.windom.sofill.dataClass.IResponse
+import sc.windom.sofill.dataClass.ld246_User
 import java.io.IOException
+import java.util.Date
 
 
 // TODO: 多选文件打开的处理
@@ -103,11 +126,15 @@ import java.io.IOException
 // TODO: 文件被删除时处理异常
 class MainPro : ComponentActivity() {
     val TAG = "producer/MainPro.kt"
+    private var mmkv: MMKV = MMKV.defaultMMKV()
+    private var token = U.getDecryptedToken(mmkv, S.KEY_TOKEN_Sillot_Gibbet, S.KEY_AES_TOKEN_Sillot_Gibbet)
+    private lateinit var thisActivity: Activity
     private var in2_data: Uri? = null
     private var in2_action: String? = null
     private var in2_type: String? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        thisActivity = this
         Log.i(TAG, "onCreate() invoked. @ $intent")
         if (intent == null) {
             return
@@ -152,13 +179,6 @@ class MainPro : ComponentActivity() {
         window.decorView.setOnApplyWindowInsetsListener { _, insets ->
             insets
         }
-
-        setContent {
-            CascadeMaterialTheme {
-                MyUI(TAG)
-            }
-        }
-
         // 绑定服务
         val intent = Intent(applicationContext, BootService::class.java)
         bindService(intent, serviceConnection, BIND_AUTO_CREATE)
@@ -194,7 +214,11 @@ class MainPro : ComponentActivity() {
 
     fun performActionWithService() {
         Log.w(TAG, "performActionWithService() invoked")
-        //
+        setContent {
+            CascadeMaterialTheme {
+                MyUI(TAG)
+            }
+        }
     }
 
     private fun isMarkdown(text: String): Boolean {
@@ -298,7 +322,12 @@ class MainPro : ComponentActivity() {
         }
         Scaffold(
             topBar = {
-                CommonTopAppBar(head_title, TAG, in2_data, isMenuVisible) {
+                CommonTopAppBar(head_title, TAG, in2_data, isMenuVisible,
+                    additionalMenuItem = {
+                        AddDropdownMenu(onDismiss = {
+                            isMenuVisible.value = false
+                        })
+                    }) {
                     // 将Context对象安全地转换为Activity
                     if (Lcc is Activity) {
                         Lcc.finish() // 结束活动
@@ -428,6 +457,169 @@ class MainPro : ComponentActivity() {
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    private fun AddDropdownMenu(
+        onDismiss: () -> Unit,
+    ) {
+        DdMenuI(
+            text = { Text("汐洛绞架内核 API TOKEN") },
+            icon = { Icon(Icons.TwoTone.Token, contentDescription = null) },
+            cb = {
+                onDismiss()
+                val deToken = U.getDecryptedToken(mmkv, S.KEY_TOKEN_Sillot_Gibbet, S.KEY_AES_TOKEN_Sillot_Gibbet)
+                InputDialog(
+                    "🛸 API TOKEN",
+                    "可在汐洛绞架 设置 - 关于 中找到 API Token，固定以 'token ' 开头\n\n温馨提示：应用存储 Token 时进行了一定的处理，且不会传输到网络，但用户仍需注意防止 Token 泄露！建议使用前先阅读源代码",
+                    "确定",
+                    "取消",
+                    deToken?.let { deToken } ?: run { "token " }
+                )
+                    .setCancelable(false)
+                    .setOkButton { baseDialog, v, inputStr ->
+                        token = inputStr
+                        // 生成AES密钥
+                        val aesKey = U.generateAesKey()
+                        // 注意：这里需要将SecretKey转换为可以存储的格式，例如转换为字节数组然后进行Base64编码
+                        val encodedKey = Base64.encodeToString(aesKey.encoded, Base64.DEFAULT)
+                        // 加密Token
+                        val encryptedToken = U.encryptAes(inputStr, aesKey)
+                        // 将加密后的Token存储到MMKV中
+                        mmkv.encode(S.KEY_AES_TOKEN_Sillot_Gibbet, encodedKey)
+                        mmkv.encode(S.KEY_TOKEN_Sillot_Gibbet, encryptedToken)
+                        PopNotification.show(
+                            "TOKEN已更新（${
+                                U.displayTokenLimiter(
+                                    inputStr,
+                                    "token ".length + 4,
+                                    4
+                                )
+                            }）"
+                        ).noAutoDismiss()
+                        false
+                    }
+                    .show()
+            },
+        )
+    }
+
+    // 创建 Retrofit 实例
+    fun createRetrofit(baseUrl: String): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    // 获取笔记本列表
+    fun getNotebooks(api: SiyuanNoteAPI, token: String, callback: (List<INotebook>?) -> Unit) {
+        val body = mapOf("flashcard" to false)
+        val notebooksCall = api.getNotebooks(token, body)
+        notebooksCall.enqueue(object : Callback<IResponse<INbList>> {
+            override fun onResponse(call: Call<IResponse<INbList>>, response: Response<IResponse<INbList>>) {
+                if (response.isSuccessful && response.body() != null) {
+                    callback(response.body()?.data?.notebooks)
+                } else {
+                    Log.w(TAG, "Failed to get notebooks: ${response.code()}${response.message()}")
+                    callback(null)
+                }
+            }
+
+            override fun onFailure(call: Call<IResponse<INbList>>, t: Throwable) {
+                Log.e(TAG, "getNotebooks Error: ${t.message}")
+                callback(null)
+            }
+        })
+    }
+
+    // 创建新的 Markdown 笔记
+    fun createNote(api: SiyuanNoteAPI, payload: IPayload, token: String, callback: (Boolean) -> Unit) {
+        val createNoteCall = api.createNote(payload, token)
+        createNoteCall.enqueue(object : Callback<IResponse<String>> {
+            override fun onResponse(call: Call<IResponse<String>>, response: Response<IResponse<String>>) {
+                if (response.isSuccessful) {
+                    Log.i(TAG, "Note created successfully. ${response.body()}")
+                    response.body()?.data?.let { U.startMainActivityWithBlock("siyuan://blocks/$it", applicationContext) }
+                    callback(true)
+                } else {
+                    Log.w(TAG, "Failed to create note: ${response.code()} ${response.message()}")
+                    callback(false)
+                }
+            }
+
+            override fun onFailure(call: Call<IResponse<String>>, t: Throwable) {
+                Log.e(TAG, "createNote Error: ${t.message}")
+                callback(false)
+            }
+        })
+    }
+    // 在协程中调用sendMD2siyuan
+    fun runSendMD2siyuan(markdownContent: String) = runBlocking<Unit> { // 启动主协程
+        launch { // 启动一个新协程并运行挂起函数
+            sendMD2siyuan(markdownContent)
+        }
+    }
+    fun sendMD2siyuan(markdownContent: String) {
+        val retrofit = createRetrofit("http://0.0.0.0:58131/")
+        val api = retrofit.create(SiyuanNoteAPI::class.java)
+
+        token?.let {
+            getNotebooks(api, it) { notebooks ->
+                if (notebooks.isNullOrEmpty()) {
+                    // 处理笔记本列表为空的情况
+                    thisActivity.runOnUiThread {
+                        PopNotification.show(TAG, "No notebooks received.").noAutoDismiss()
+                    }
+                } else {
+                    // 处理获取到的笔记本列表
+                    Log.i(TAG, "Received ${notebooks.size} notebooks.")
+                    val notebookNames: Array<String> = notebooks.map { it.name }.toTypedArray()
+                    var selectMenuIndex = 0
+                    var selectMenuText = notebookNames[0]
+                    BottomMenu.show(notebookNames)
+                        .setMessage("仅支持当前工作空间")
+                        .setTitle("选择要存入的笔记本")
+                        .setSelection(selectMenuIndex) //指定已选择的位置
+                        .setOnMenuItemClickListener { dialog, text, index ->
+                            selectMenuIndex = index
+                            selectMenuText = text as String
+                            dialog.refreshUI() // 在 compose 里需要强制刷新
+                            true // 点击菜单后不会自动关闭
+                        }
+                        .setOkButton("确定",
+                            OnBottomMenuButtonClickListener { menu, view ->
+                                Log.e(TAG, "${selectMenuText}")
+                                val targetNotebook = notebooks.find { it.name == selectMenuText }
+                                val notebookId = targetNotebook?.id ?: notebooks[0].id
+                                val payload = IPayload(markdownContent, notebookId, "/来自汐洛受赏 ${U.dateFormat_full1.format(
+                                    Date()
+                                )}")
+
+                                createNote(api, payload, token!!) { success ->
+                                    if (success) {
+                                        // 处理创建笔记成功的情况
+                                        Log.i(TAG, "Note creation succeeded.")
+                                    } else {
+                                        // 处理创建笔记失败的情况
+                                        thisActivity.runOnUiThread {
+                                            PopNotification.show(TAG, "Note creation failed.").noAutoDismiss()
+                                        }
+                                    }
+                                }
+                                false
+                            })
+                        .setCancelButton("取消",
+                            OnBottomMenuButtonClickListener { menu, view ->
+                                false
+                            })
+                }
+            }
+        } ?: {
+            thisActivity.runOnUiThread {
+                PopTip("TOKEN为空，请在右上角设置 TOKEN 后重试")
+            }
+        }
+    }
     @Composable
     fun SendBtnPart(markdown: String?) {
         val isLandscape =
@@ -444,28 +636,7 @@ class MainPro : ComponentActivity() {
                     val directories = U.getDirectoriesInPath(S.workspaceParentDir)
                     val filteredDirectories = directories.filter { it != "home" }
                     if (filteredDirectories.isNotEmpty()) {
-                        var selectMenuIndex = 0
-                        var selectMenuText = "sillot"
-                        BottomMenu.show(filteredDirectories)
-                            .setMessage("sillot 是默认工作空间")
-                            .setTitle("选择要存入的工作空间")
-                            .setSelection(selectMenuIndex) //指定已选择的位置
-                            .setOnMenuItemClickListener { dialog, text, index ->
-                                selectMenuIndex = index
-                                selectMenuText = text as String
-                                dialog.refreshUI() // 在 compose 里需要强制刷新
-                                true // 点击菜单后不会自动关闭
-                            }
-                            .setOkButton("确定",
-                                OnBottomMenuButtonClickListener { menu, view ->
-                                    Log.e(TAG, "${selectMenuText}")
-                                    PopNotification.show(markdown).noAutoDismiss()
-                                    false
-                                })
-                            .setCancelButton("取消",
-                                OnBottomMenuButtonClickListener { menu, view ->
-                                    false
-                                })
+                        runSendMD2siyuan(markdown)
                     } else {
                         PopNotification.show(
                             R.drawable.icon,

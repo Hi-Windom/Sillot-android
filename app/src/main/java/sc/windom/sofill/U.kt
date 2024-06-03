@@ -49,6 +49,7 @@ import com.blankj.utilcode.util.ActivityUtils.startActivity
 import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.dialogs.PopTip
 import com.tencent.mmkv.MMKV
+import org.b3log.siyuan.MainActivity
 import org.b3log.siyuan.Utils
 import org.b3log.siyuan.andapi.Toast
 import org.b3log.siyuan.sillot.util.FileUtil
@@ -60,6 +61,7 @@ import java.net.URLDecoder
 import java.net.URLEncoder
 import java.security.MessageDigest
 import java.text.DecimalFormat
+import java.text.SimpleDateFormat
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -69,6 +71,15 @@ import kotlin.math.sqrt
 
 
 object U {
+    val dateFormat_full1 = SimpleDateFormat("yyyyMMdd-HHmmss")
+    /**
+     * @param blockURL: 格式为 siyuan://blocks/xxx
+     */
+    fun startMainActivityWithBlock(blockURL: String, applicationContext: Context) {
+        val intent = Intent(applicationContext, MainActivity::class.java)
+        intent.putExtra("blockURL", blockURL)
+        startActivity(intent)
+    }
     fun getSignalStrengthLevel(signalStrength: Int): String {
         val signalStrengthLevel: String
         signalStrengthLevel = if (signalStrength >= -50) {

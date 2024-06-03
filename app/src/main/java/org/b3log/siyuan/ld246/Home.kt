@@ -131,12 +131,13 @@ import sc.windom.sofill.compose.components.CommonTopAppBar
 import sc.windom.sofill.dataClass.ld246_Response
 import sc.windom.sofill.dataClass.ld246_Response_Data_Notification
 import sc.windom.sofill.dataClass.ld246_User
-import org.b3log.siyuan.ld246.api.ApiServiceNotification
+import sc.windom.sofill.api.ld246.ApiServiceNotification
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import sc.windom.sofill.compose.partialCom.DdMenuI
 
 
 class HomeActivity : ComponentActivity() {
@@ -435,15 +436,15 @@ class HomeActivity : ComponentActivity() {
         userPageData: MutableState<ld246_User>,
         pullToRefreshState: PullToRefreshState
     ) {
-        DropdownMenuItem(
+        DdMenuI(
             text = { Text("手动刷新") },
-            leadingIcon = { Icon(Icons.TwoTone.Swipe, contentDescription = null) },
-            onClick = {
+            icon = { Icon(Icons.TwoTone.Swipe, contentDescription = null) },
+            cb = {
                 onDismiss()
                 pullToRefreshState.startRefresh()
             }
         )
-        DropdownMenuItem(
+        DdMenuI(
             text = {
                 if (isShowBottomText.value) {
                     Text("图标底部导航")
@@ -451,17 +452,17 @@ class HomeActivity : ComponentActivity() {
                     Text("文字底部导航")
                 }
             },
-            leadingIcon = if (isShowBottomText.value) {
+            icon = if (isShowBottomText.value) {
                 { Icon(Icons.TwoTone.Navigation, contentDescription = null) }
             } else {
                 { Icon(Icons.TwoTone.TextFields, contentDescription = null) }
             },
-            onClick = {
+            cb = {
                 onDismiss()
                 isShowBottomText.value = !isShowBottomText.value
             }
         )
-        DropdownMenuItem(
+        DdMenuI(
             text = {
                 if (openUrlExternal) {
                     Text("应用内打开链接")
@@ -469,30 +470,30 @@ class HomeActivity : ComponentActivity() {
                     Text("浏览器打开链接")
                 }
             },
-            leadingIcon = {
+            icon = {
                 if (openUrlExternal) {
                     Icon(Icons.TwoTone.SafetyCheck, contentDescription = null)
                 } else {
                     Icon(Icons.TwoTone.OpenInBrowser, contentDescription = null)
                 }
             },
-            onClick = {
+            cb = {
                 onDismiss()
                 openUrlExternal = !openUrlExternal
             }
         )
-        DropdownMenuItem(
+        DdMenuI(
             text = { Text("清除 Cookie") },
-            leadingIcon = { Icon(Icons.TwoTone.Cookie, contentDescription = null) },
-            onClick = {
+            icon = { Icon(Icons.TwoTone.Cookie, contentDescription = null) },
+            cb = {
                 onDismiss()
                 showFullScreenDialog("action?=Logout")
             }
         )
-        DropdownMenuItem(
+        DdMenuI(
             text = { Text("链滴 API TOKEN") },
-            leadingIcon = { Icon(Icons.TwoTone.Token, contentDescription = null) },
-            onClick = {
+            icon = { Icon(Icons.TwoTone.Token, contentDescription = null) },
+            cb = {
                 onDismiss()
                 val deToken = U.getDecryptedToken(mmkv, S.KEY_TOKEN_ld246, S.KEY_AES_TOKEN_ld246)
                 InputDialog(

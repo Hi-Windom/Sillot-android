@@ -19,7 +19,6 @@ package org.b3log.siyuan
 
 import android.app.AlertDialog
 import android.content.DialogInterface
-import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -32,6 +31,7 @@ import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import org.apache.commons.io.FileUtils
+import sc.windom.sofill.U
 import java.io.File
 
 
@@ -78,7 +78,7 @@ class BootActivity : AppCompatActivity() {
         // 获取可能存在的 block URL（通过 siyuan://blocks/xxx 打开应用时传递的）
         val blockURL = blockURL
         // 启动主界面
-        startMainActivity(blockURL)
+        U.startMainActivityWithBlock(blockURL, applicationContext)
     }
 
     override fun onDestroy() {
@@ -108,19 +108,14 @@ class BootActivity : AppCompatActivity() {
             val appDirFile = File(appDir)
             return !appDirFile.exists()
         }
-    private fun startMainActivity(blockURL: String) {
-        val intent = Intent(applicationContext, MainActivity::class.java)
-        intent.putExtra("blockURL", blockURL)
-        startActivity(intent)
-    }
 
     private var agreementDialog: AlertDialog? = null
     private val handler: Handler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
             val cmd = msg.data.getString("cmd")
             if ("agreement-y" == cmd) {
-                agreementDialog!!.dismiss()
-                startMainActivity("")
+                agreementDialog?.dismiss()
+                U.startMainActivityWithBlock("", applicationContext)
             } else if ("agreement-n" == cmd) {
                 val dataDir = filesDir.absolutePath
                 val appDir = "$dataDir/app"

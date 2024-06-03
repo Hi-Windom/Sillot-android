@@ -1,4 +1,4 @@
-package org.b3log.siyuan.ld246.api
+package sc.windom.sofill.api.ld246
 
 import sc.windom.sofill.dataClass.ld246_Response
 import retrofit2.Call
