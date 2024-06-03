@@ -4,11 +4,14 @@ package org.b3log.siyuan.producer
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ComponentName
 import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
+import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
 import android.util.Size
@@ -69,25 +72,27 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import sc.windom.sofill.compose.theme.CascadeMaterialTheme
+import org.b3log.siyuan.App
 import org.b3log.siyuan.R
-import sc.windom.sofill.S
-import sc.windom.sofill.U
 import org.b3log.siyuan.andapi.Toast
-import sc.windom.sofill.compose.ApkButtons
-import sc.windom.sofill.compose.AudioButtons
-import sc.windom.sofill.compose.LockScreenOrientation
-import sc.windom.sofill.compose.MagnetButtons
-import sc.windom.sofill.compose.SelectableText
-import sc.windom.sofill.compose.VideoButtons
-import sc.windom.sofill.compose.components.CommonTopAppBar
 import org.b3log.siyuan.ld246.HomeActivity
+import org.b3log.siyuan.services.BootService
 import org.commonmark.node.Node
 import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.HtmlRenderer
 import org.jsoup.Jsoup
 import org.jsoup.safety.Safelist
+import sc.windom.sofill.S
+import sc.windom.sofill.U
+import sc.windom.sofill.compose.ApkButtons
+import sc.windom.sofill.compose.AudioButtons
+import sc.windom.sofill.compose.LockScreenOrientation
+import sc.windom.sofill.compose.MagnetButtons
 import sc.windom.sofill.compose.SelectableHtmlText
+import sc.windom.sofill.compose.SelectableText
+import sc.windom.sofill.compose.VideoButtons
+import sc.windom.sofill.compose.components.CommonTopAppBar
+import sc.windom.sofill.compose.theme.CascadeMaterialTheme
 import java.io.IOException
 
 
@@ -153,6 +158,43 @@ class MainPro : ComponentActivity() {
                 MyUI(TAG)
             }
         }
+
+        // 绑定服务
+        val intent = Intent(applicationContext, BootService::class.java)
+        bindService(intent, serviceConnection, BIND_AUTO_CREATE)
+    }
+
+    override fun onDestroy() {
+        Log.w(TAG, "onDestroy() invoked")
+        super.onDestroy()
+        // 解绑服务
+        if (serviceBound) {
+            unbindService(serviceConnection)
+            serviceBound = false
+        }
+    }
+    private var bootService: BootService? = null
+    private var serviceBound = false
+
+    private val serviceConnection: ServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            val binder = service as BootService.LocalBinder
+            bootService = binder.getService()
+            serviceBound = true
+            App.bootService = bootService!!
+            // 服务绑定后，执行依赖于bootService的代码
+            performActionWithService()
+        }
+
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            bootService = null
+            serviceBound = false
+        }
+    }
+
+    fun performActionWithService() {
+        Log.w(TAG, "performActionWithService() invoked")
+        //
     }
 
     private fun isMarkdown(text: String): Boolean {
@@ -417,7 +459,7 @@ class MainPro : ComponentActivity() {
                             .setOkButton("确定",
                                 OnBottomMenuButtonClickListener { menu, view ->
                                     Log.e(TAG, "${selectMenuText}")
-
+                                    PopNotification.show(markdown).noAutoDismiss()
                                     false
                                 })
                             .setCancelButton("取消",
