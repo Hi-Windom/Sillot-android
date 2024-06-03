@@ -234,6 +234,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     private final ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName className, IBinder service) {
+            Log.i(TAG, "onServiceConnected invoked");
             BootService.LocalBinder binder = (BootService.LocalBinder) service;
             bootService = binder.getService();
             serviceBound = true;
@@ -244,19 +245,36 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
-            bootService = null;
-            serviceBound = false;
-            webView = null;
+            Log.i(TAG, "onServiceDisconnected invoked");
+            releaseBootService();
         }
     };
 
+    private void releaseBootService() {
+        Log.i(TAG, "releaseBootService invoked");
+        // 解绑服务
+        if (serviceBound) {
+            unbindService(serviceConnection);
+            serviceBound = false;
+            bootService = null;
+        }
+        // 销毁WebView并从池中移除
+        if (webViewWrapper != null) {
+            ViewGroup parent = (ViewGroup) webView.getParent();
+            parent.removeView(webView); // 从原来的容器中移除WebView
+            WebViewPool webViewPool = WebViewPool.getInstance();
+            webViewPool.releaseWebView(webView);
+            webViewWrapper.destroy();
+        }
+    }
+
     // 在这里执行依赖于bootService的代码
     private void performActionWithService() {
+        Log.w(TAG, "performActionWithService invoked");
         if (serviceBound && bootService != null) {
-            webView = bootService.getWebView();
             bootService.showWifi(this);
             // 初始化 UI 元素
-            Log.w(TAG, "onStart() -> initUIElements() invoked");
+            Log.w(TAG, "performActionWithService() -> initUIElements() invoked");
             initUIElements();
 
             AppUtils.registerAppStatusChangedListener(this);
@@ -388,14 +406,25 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         bootLogo = findViewById(R.id.bootLogo);
         bootProgressBar = findViewById(R.id.progressBar);
         bootDetailsText = findViewById(R.id.bootDetails);
+        webView = bootService.getWebView();
         if (webView != null) {
             // 设置WebView的布局参数
             webView.setLayoutParams(new FrameLayout.LayoutParams(
                     FrameLayout.LayoutParams.MATCH_PARENT,
                     FrameLayout.LayoutParams.MATCH_PARENT));
             webViewContainer = findViewById(R.id.webViewContainer);
-            if (webView.getParent() == null) {
+            ViewGroup parent = (ViewGroup) webView.getParent();
+            if (parent == null) {
+                Log.d(TAG, "将WebView添加到容器中");
                 webViewContainer.addView(webView); // 将WebView添加到容器中
+            } else {
+                if (parent != webViewContainer) {
+                    Log.d(TAG, "WebView已在其他容器中，先移除再添加");
+                    parent.removeView(webView); // 从原来的容器中移除WebView
+                } else {
+                    Log.d(TAG, "WebView已在当前容器中，无需再次添加");
+                }
+                webViewContainer.addView(webView); // 将WebView添加到当前容器中
             }
 
 
@@ -813,25 +842,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         EventBus.getDefault().unregister(this);
         KeyboardUtils.unregisterSoftInputChangedListener(getWindow());
         AppUtils.unregisterAppStatusChangedListener(this);
-//        if (null != webView) {
-//            webView.removeAllViews();
-//            webView.destroy();
-//        }
-//        if (null != server) {
-//            server.stop();
-//        }
-        webViewContainer.removeAllViews();
-        // 解绑服务
-        if (serviceBound) {
-            unbindService(serviceConnection);
-            serviceBound = false;
-        }
-        // 销毁WebView并从池中移除
-        if (webViewWrapper != null) {
-            WebViewPool webViewPool = WebViewPool.getInstance();
-            webViewPool.releaseWebView(webView);
-            webViewWrapper.destroy();
-        }
+        releaseBootService();
     }
 
     @Override
@@ -920,28 +931,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             // 接下来由 webview 发起 "siyuan://androidRestartSiYuan"
         }
     }
-
-
-//    private void checkWebViewVer(final WebSettings ws) {
-//        // Android check WebView version 75+ https://github.com/siyuan-note/siyuan/issues/7840
-//        final String ua = ws.getUserAgentString();
-//        if (ua.contains("Chrome/")) {
-//            final int minVer = 95;
-//            try {
-//                final String chromeVersion = ua.split("Chrome/")[1].split(" ")[0];
-//                if (chromeVersion.contains(".")) {
-//                    final String[] chromeVersionParts = chromeVersion.split("\\.");
-//                    webViewVer = chromeVersionParts[0];
-//                    if (Integer.parseInt(webViewVer) < minVer) {
-//                        PopTip.show("WebView version " + webViewVer + " is too low, please upgrade to " + minVer + "+");
-//                    }
-//                }
-//            } catch (final Exception e) {
-//                Utils.LogError("boot", "check webview version failed", e);
-//                PopTip.show("Check WebView version failed: " + e.getMessage());
-//            }
-//        }
-//    }
 
     private static boolean syncing;
 

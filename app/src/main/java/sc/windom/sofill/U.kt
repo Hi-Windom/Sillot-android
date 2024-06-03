@@ -98,7 +98,6 @@ object U {
         return signalStrengthLevel
     }
     fun checkWebViewVer(ws: WebSettings): String {
-        // Android check WebView version 75+ https://github.com/siyuan-note/siyuan/issues/7840
         val ua = ws.userAgentString
         var webViewVer = ""
         if (ua.contains("Chrome/")) {
