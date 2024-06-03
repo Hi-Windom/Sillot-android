@@ -73,6 +73,7 @@ package org.b3log.siyuan;
  import com.blankj.utilcode.util.ServiceUtils;
  import com.blankj.utilcode.util.StringUtils;
  import com.kongzue.dialogx.dialogs.BottomMenu;
+ import com.kongzue.dialogx.dialogs.PopNotification;
  import com.kongzue.dialogx.dialogs.PopTip;
  import com.kongzue.dialogx.interfaces.OnMenuItemClickListener;
  import com.koushikdutta.async.http.AsyncHttpClient;
@@ -258,10 +259,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             Log.w(TAG, "onStart() -> initUIElements() invoked");
             initUIElements();
 
-            // 初始化外观资源
-//            Log.w(TAG, "onStart() -> initAppearance() invoked");
-//            initAppearance();
-
             AppUtils.registerAppStatusChangedListener(this);
 
             // 使用 Chromium 调试 WebView
@@ -284,6 +281,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             AndroidBug5497Workaround.assistActivity(this);
         } else {
             // 服务尚未绑定或实例为空，处理错误或等待绑定
+            PopNotification.show("服务尚未绑定或实例为空").noAutoDismiss();
         }
     }
 
@@ -585,21 +583,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
 //        new Thread(this::keepLive).start();
         isWebviewReady = true;
-    }
-
-    /**
-     * 通知栏保活。
-     */
-    private void keepLive() {
-        while (true) {
-            try {
-                final Intent intent = new Intent(MainActivity.this, KeepLiveService.class);
-                ContextCompat.startForegroundService(this, intent);
-                sleep(31 * 1000);
-                stopService(intent);
-            } catch (final Throwable t) {
-            }
-        }
     }
 
     /**
