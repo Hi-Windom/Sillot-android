@@ -242,7 +242,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             bootService = binder.getService();
             serviceBound = true;
             App.bootService = bootService;
-            webView = bootService.getWebView();
             // 服务绑定后，执行依赖于bootService的代码
             performActionWithService();
         }
@@ -258,8 +257,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     // 在这里执行依赖于bootService的代码
     private void performActionWithService() {
         if (serviceBound && bootService != null) {
-            // 使用bootService实例
-
+            webView = bootService.getWebView();
             bootService.showWifi(this);
             // 初始化 UI 元素
             Log.w(TAG, "onStart() -> initUIElements() invoked");
