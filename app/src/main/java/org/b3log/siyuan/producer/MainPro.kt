@@ -317,11 +317,14 @@ class MainPro : ComponentActivity() {
 
         var isMenuVisible = rememberSaveable { mutableStateOf(false) }
 
-        // 检查Intent的action和type
-        if (in2_action == Intent.ACTION_SEND) {
-            head_title = "汐洛受赏中转站"
+        head_title = if (in2_action == Intent.ACTION_SEND) {
+            "汐洛受赏中转站"
+        } else if (!in2_data?.scheme.isNullOrEmpty() && in2_type.isNullOrEmpty()){
+            "汐洛链接中转站"
         } else if (in2_data != null) {
-            head_title = "汐洛文件中转站"
+            "汐洛文件中转站"
+        } else {
+            "汐洛中转站"
         }
         Scaffold(
             topBar = {
