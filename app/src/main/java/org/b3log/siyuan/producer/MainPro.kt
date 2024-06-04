@@ -106,6 +106,7 @@ import sc.windom.sofill.compose.SelectableText
 import sc.windom.sofill.compose.VideoButtons
 import sc.windom.sofill.compose.components.CommonTopAppBar
 import sc.windom.sofill.compose.partialCom.DdMenuI
+import sc.windom.sofill.compose.partialCom.NetworkAware
 import sc.windom.sofill.compose.theme.CascadeMaterialTheme
 import sc.windom.sofill.dataClass.INbList
 import sc.windom.sofill.dataClass.INotebook
@@ -341,8 +342,8 @@ class MainPro : ComponentActivity() {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(it),
-                contentAlignment = Alignment.Center
             ) {
+                NetworkAware()
                 if (in2_action == Intent.ACTION_SEND) {
 
                     // 根据mimeType处理不同的数据

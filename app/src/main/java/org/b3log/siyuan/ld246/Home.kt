@@ -138,6 +138,7 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import sc.windom.sofill.compose.partialCom.DdMenuI
+import sc.windom.sofill.compose.partialCom.NetworkAware
 
 
 class HomeActivity : ComponentActivity() {
@@ -162,7 +163,6 @@ class HomeActivity : ComponentActivity() {
     var map: MutableMap<String, List<Any>?> = mapEmpty
     private var job: Job? = null
     private var viewmodel: NotificationsViewModel? = null
-    private var viewmodel_network: NetworkViewModel? = null
     private var retrofit: Retrofit? = null
     private var apiService: ApiServiceNotification? = null
 
@@ -185,7 +185,6 @@ class HomeActivity : ComponentActivity() {
             }
         }
         viewmodel = NotificationsViewModel()
-        viewmodel_network = NetworkViewModel(application)
         // 创建Retrofit实例
         retrofit = Retrofit.Builder()
             .baseUrl("https://${S.HOST_ld246}/")
@@ -379,6 +378,7 @@ class HomeActivity : ComponentActivity() {
                     .padding(it)
                     .fillMaxSize()
             ) {
+                NetworkAware()
                 Box(modifier = Modifier.fillMaxSize()) {
                     if (currentTab.value == "用户") {
                         if (userPageData.value.userName?.isBlank() == true) {
@@ -413,7 +413,6 @@ class HomeActivity : ComponentActivity() {
                         isShowBottomText
                     )
                 }
-                viewmodel_network?.let { it1 -> NetworkAwareContent(it1) }
                 if (pullToRefreshState.isRefreshing) {
                     LinearProgressIndicator(Modifier.fillMaxWidth())
                 } else {
@@ -628,31 +627,6 @@ class HomeActivity : ComponentActivity() {
         }
     }
 
-    @Composable
-    fun NetworkAwareContent(viewModel: NetworkViewModel) {
-        val isNetworkAvailable by viewModel.isNetworkAvailable
-        if (!isNetworkAvailable) {
-            Row(
-                modifier = Modifier
-                    .background(S.C.Card_bgColor_red1.current)
-                    .fillMaxWidth()
-                    .padding(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.TwoTone.WifiOff,
-                    contentDescription = "网络连接已断开",
-                    tint = Color.Yellow
-                )
-                Text(
-                    text = "当前无法连接网络，请检查网络设置",
-                    fontSize = 15.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(5.dp)
-                )
-            }
-        }
-    }
 
 
     @Composable
