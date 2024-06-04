@@ -19,6 +19,11 @@ import android.util.Log
 import android.webkit.ValueCallback
 import android.webkit.WebView
 import androidx.core.app.ActivityCompat
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequest
+import androidx.work.WorkManager
 import com.blankj.utilcode.util.ServiceUtils
 import com.blankj.utilcode.util.ThreadUtils.runOnUiThread
 import com.koushikdutta.async.AsyncServer
@@ -34,6 +39,7 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.io.filefilter.DirectoryFileFilter
 import org.apache.commons.io.filefilter.TrueFileFilter
 import org.b3log.siyuan.Utils
+import org.b3log.siyuan.workers.SyncDataWorker
 import org.json.JSONArray
 import org.json.JSONObject
 import sc.windom.sofill.S
@@ -45,6 +51,7 @@ import java.net.ServerSocket
 import java.nio.charset.StandardCharsets
 import java.util.Locale
 import java.util.TimeZone
+import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 
 class BootService : Service() {
@@ -77,6 +84,7 @@ class BootService : Service() {
     override fun onBind(intent: Intent): IBinder {
         return binder
     }
+
     inner class LocalBinder : Binder() {
         fun getService(): BootService = this@BootService
     }
@@ -90,6 +98,8 @@ class BootService : Service() {
         Log.w(TAG, "onStart() -> startKernel() invoked")
         startKernel()
 
+        // 周期同步数据
+        scheduleSyncDataWork()
     }
 
     private fun init_webView() {
@@ -173,11 +183,17 @@ class BootService : Service() {
         if (isServable) {
             // 绑定所有网卡以便通过局域网IP访问
             s.listen(null, serverPort, server!!.listenCallback)
-            Log.w(TAG, "startHttpServer() -> HTTP server is listening on all interfaces, port [$serverPort]")
+            Log.w(
+                TAG,
+                "startHttpServer() -> HTTP server is listening on all interfaces, port [$serverPort]"
+            )
         } else {
             // 绑定 ipv6 回环地址 [::1] 以防止被远程访问
             s.listen(InetAddress.getLoopbackAddress(), serverPort, server!!.listenCallback)
-            Log.w(TAG, "startHttpServer() -> HTTP server is listening on loopback address, port [$serverPort]")
+            Log.w(
+                TAG,
+                "startHttpServer() -> HTTP server is listening on loopback address, port [$serverPort]"
+            )
         }
         Log.w(TAG, "startHttpServer() -> HTTP server is listening on port [$serverPort]")
         Utils.LogInfo("http", "HTTP server is listening on port [$serverPort]")
@@ -280,6 +296,7 @@ class BootService : Service() {
         }
         return ret
     }
+
     private fun initAppAssets() {
         if (needUnzipAssets()) {
             val dataDir = filesDir.absolutePath
@@ -312,21 +329,22 @@ class BootService : Service() {
      */
     fun showWifi(activity: Activity) {
         Log.d(TAG, "showWifi() invoked")
-        val locationPermissionObservable = Observable.create { emitter: ObservableEmitter<Boolean> ->
-            if (ActivityCompat.checkSelfPermission(
-                    activity,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                emitter.onNext(true)
-            } else {
-                ActivityCompat.requestPermissions(
-                    activity,
-                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                    S.REQUEST_LOCATION
-                )
+        val locationPermissionObservable =
+            Observable.create { emitter: ObservableEmitter<Boolean> ->
+                if (ActivityCompat.checkSelfPermission(
+                        activity,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    emitter.onNext(true)
+                } else {
+                    ActivityCompat.requestPermissions(
+                        activity,
+                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                        S.REQUEST_LOCATION
+                    )
+                }
             }
-        }
         val overlayPermissionObservable = Observable.create { emitter: ObservableEmitter<Boolean> ->
             if (Settings.canDrawOverlays(activity)) {
                 emitter.onNext(true)
@@ -375,5 +393,22 @@ class BootService : Service() {
                     )
                 }
             )
+    }
+
+    private fun scheduleSyncDataWork() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED) // 确保在网络连接时运行
+            .setRequiresBatteryNotLow(true) // 低电量时不运行
+            .build()
+        // 可以定义的最短重复间隔是 15 分钟
+        val periodicWorkRequest = PeriodicWorkRequest.Builder(SyncDataWorker::class.java, 15, TimeUnit.MINUTES)
+            .setConstraints(constraints)
+            .build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "SyncDataWork",
+            ExistingPeriodicWorkPolicy.KEEP, // 如果已经存在，则保持
+            periodicWorkRequest
+        )
     }
 }

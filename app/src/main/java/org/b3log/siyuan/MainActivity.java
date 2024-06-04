@@ -67,6 +67,9 @@ package org.b3log.siyuan;
  import androidx.appcompat.app.AppCompatActivity;
  import androidx.core.app.ActivityCompat;
  import androidx.core.content.ContextCompat;
+ import androidx.work.OneTimeWorkRequest;
+ import androidx.work.OutOfQuotaPolicy;
+ import androidx.work.WorkManager;
 
  import com.blankj.utilcode.util.AppUtils;
  import com.blankj.utilcode.util.KeyboardUtils;
@@ -86,6 +89,7 @@ package org.b3log.siyuan;
  import org.b3log.siyuan.appUtils.HWs;
  import org.b3log.siyuan.services.BootService;
  import org.b3log.siyuan.services.FloatingWindowService;
+ import org.b3log.siyuan.workers.SyncDataWorker;
  import org.greenrobot.eventbus.EventBus;
  import org.greenrobot.eventbus.Subscribe;
  import org.greenrobot.eventbus.ThreadMode;
@@ -923,35 +927,10 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         }
     }
 
-    private static boolean syncing;
-
-    public static void startSyncData() {
-        new Thread(MainActivity::syncData).start();
-    }
-
-    public static void syncData() {
-        try {
-            if (syncing) {
-                Log.i("sync", "data is syncing...");
-                return;
-            }
-            syncing = true;
-
-            final AsyncHttpPost req = new com.koushikdutta.async.http.AsyncHttpPost("http://127.0.0.1:58131/api/sync/performSync");
-            req.setBody(new JSONObjectBody(new JSONObject().put("mobileSwitch", true)));
-            AsyncHttpClient.getDefaultInstance().executeJSONObject(req,
-                    new com.koushikdutta.async.http.AsyncHttpClient.JSONObjectCallback() {
-                        @Override
-                        public void onCompleted(Exception e, com.koushikdutta.async.http.AsyncHttpResponse source, JSONObject result) {
-                            if (null != e) {
-                                Utils.LogError("sync", "data sync failed", e);
-                            }
-                        }
-                    });
-        } catch (final Throwable e) {
-            Utils.LogError("sync", "data sync failed", e);
-        } finally {
-            syncing = false;
-        }
+    public void startSyncData() {
+        OneTimeWorkRequest syncDataWork = new OneTimeWorkRequest.Builder(SyncDataWorker.class)
+//                .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST) // 加急工作。如果配额允许，它将立即开始在后台运行。但是可能会在 Android 12 上抛出运行时异常，并且在启动受到限制时可能会抛出异常。
+                .build();
+        WorkManager.getInstance(this).enqueue(syncDataWork);
     }
 }
