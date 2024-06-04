@@ -123,7 +123,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     private static final int REQUEST_CAMERA = S.REQUEST_CAMERA;
     private long exitTime;
     public MMKV mmkv;
-    private String MainActivityLifeState = "";
     private boolean needColdRestart = false;
     private boolean isWebviewReady = false;
     private int works = 0;
@@ -306,7 +305,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Override
     protected void onCreate(final Bundle savedInstanceState) { // 只执行一次。在这里设置布局和初始化数据。在大多数情况下，不需要在 onRestart 中做太多事情，因为 onStart 已经处理了活动可见时的初始化。
         Log.w(TAG, "onCreate() invoked");
-        MainActivityLifeState = "onCreate";
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -835,20 +833,22 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     protected void onDestroy() {
-        Log.w(TAG, "onDestroy() invoked");
-        MainActivityLifeState = "onDestroy";
-        super.onDestroy();
+        Log.w(TAG, "onDestroy() invoked"); // 大概率不会输出
         // 注销 EventBus
         EventBus.getDefault().unregister(this);
         KeyboardUtils.unregisterSoftInputChangedListener(getWindow());
         AppUtils.unregisterAppStatusChangedListener(this);
         releaseBootService();
+        super.onDestroy();
+        // 结束当前任务中的所有Activity
+//        finishAffinity();
+        // 从任务列表中移除
+//        finishAndRemoveTask();
     }
 
     @Override
     public void onForeground(Activity activity) {
         Log.w(TAG, "onForeground() invoked");
-        MainActivityLifeState = "onForeground";
         startSyncData();
         if (null != webView) {
             webView.evaluateJavascript("javascript:window.reconnectWebSocket()", null);
@@ -858,7 +858,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Override
     public void onBackground(Activity activity) {
         Log.w(TAG, "onBackground() invoked");
-        MainActivityLifeState = "onBackground";
         startSyncData();
     }
 
@@ -871,52 +870,44 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Override
     protected void onStart() { // 当活动变得对用户可见时，系统会调用这个方法。这是在活动即将进入前台并且用户可以看到它时进行最后准备的地方。在这里进行用户可见时的初始化，比如开始动画、注册广播接收器等。
         super.onStart();
-        MainActivityLifeState = "onStart";
-
         Log.w(TAG, "onStart() -> canPopInBackground "+Utils.canPopInBackground(this));
         Log.w(TAG, "onStart() -> canShowOnTop "+Utils.canShowOnTop(this));
         Log.w(TAG, "onStart() -> isShowingOnLockScreen "+Utils.isShowingOnLockScreen(this));
         Log.w(TAG, "onStart() -> canManageAllFiles "+Utils.canManageAllFiles(this));
         Log.w(TAG, "onStart() -> canAccessDeviceState "+Utils.canAccessDeviceState(this));
         Log.w(TAG, "onStart() -> canRequestPackageInstalls "+Utils.canRequestPackageInstalls(this));
-
-
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         Log.w(TAG, "onStop() invoked");
-        MainActivityLifeState = "onStop";
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         Log.w(TAG, "onResume() invoked");
-        MainActivityLifeState = "onResume";
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         Log.w(TAG, "onPause() invoked");
-        MainActivityLifeState = "onPause";
     }
 
     @Override
     protected void onRestart() { // 当活动重新启动时调用（一般是onStop后）。在这里恢复活动之前的状态，比如重新获取数据、恢复界面状态等。
         super.onRestart();
         Log.w(TAG, "onRestart() invoked");
-        MainActivityLifeState = "onRestart";
     }
 
     public void exit() {
-        finishAffinity();
-        finishAndRemoveTask();
+//        finish();
     }
 
     public void coldRestart() {
+        Log.w(TAG, "coldRestart() invoked");
         finishAffinity(); //  这个方法用于结束当前活动所在的亲和性任务中的所有活动。亲和性任务是指具有相同 taskAffinity 属性的一组活动。当调用 finishAffinity() 时，系统会结束当前活动所在任务中所有与当前活动具有相同 taskAffinity 的活动，但不会结束其他任务中的活动。
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
