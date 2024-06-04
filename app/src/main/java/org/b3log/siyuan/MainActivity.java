@@ -556,7 +556,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 if (uri.getScheme().toLowerCase().startsWith("http")) {
                     final Intent i = new Intent(Intent.ACTION_VIEW, uri);
                     i.addCategory(Intent.CATEGORY_BROWSABLE);
-                    i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REQUIRE_NON_BROWSER |
+                    i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
                             Intent.FLAG_ACTIVITY_REQUIRE_DEFAULT);
                     startActivity(i); // https://developer.android.google.cn/training/app-links/verify-android-applinks?hl=zh-cn
                     // 从 Android 12 开始，经过验证的链接现在会自动在相应的应用中打开，以获得更简化、更快速的用户体验。谷歌还更改了未经Android应用链接验证或用户手动批准的链接的默认处理方式。谷歌表示，Android 12将始终在默认浏览器中打开此类未经验证的链接，而不是向您显示应用程序选择对话框。
