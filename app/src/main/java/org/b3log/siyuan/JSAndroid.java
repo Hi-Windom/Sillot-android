@@ -82,7 +82,7 @@ import sc.windom.sofill.S;
  */
 public final class JSAndroid {
     private MainActivity activity;
-
+    private final String TAG = "JSAndroid.java";
     public JSAndroid(final MainActivity activity) {
         this.activity = activity;
     }
@@ -95,12 +95,12 @@ public final class JSAndroid {
     }
     @JavascriptInterface
     public boolean requestPermissionActivity(final String id, final String Msg, final String callback) {
-        Log.w("JSAndroid", "requestPermissionActivity() invoked");
+        Log.w(TAG, "requestPermissionActivity() invoked");
         if (Msg != null && !Msg.isEmpty()) {
             PopTip.show(Msg);
         }
         if (id.equals("Battery")) {
-            if (callback.equals("coldRestart")) {
+            if (callback.equals("androidReboot")) {
                 if (Utils.isIgnoringBatteryOptimizations(activity)) {
                     // 应用在电池优化的豁免列表中
                     MessageDialog messageDialog = new MessageDialog("伺服已开启，重启后生效"
@@ -110,7 +110,7 @@ public final class JSAndroid {
                             .setMaskColor(Color.parseColor("#3D000000"))
                             ;
                     messageDialog.show().setCancelButton((baseDialog, v) -> false).setOkButton((baseDialog, v) -> {
-                        activity.RestartSiyuanInWebview();
+                        androidReboot();
                         return false;
                     }).setCancelTextInfo(new TextInfo().setFontColor(Color.RED));
                 } else {
@@ -130,7 +130,7 @@ public final class JSAndroid {
                         });
                         return false;
                     }).setCancelButton((baseDialog, v) -> false).setOtherButton((baseDialog, v) -> {
-                        activity.RestartSiyuanInWebview();
+                        androidReboot();
                         return false;
                     }).setCancelTextInfo(new TextInfo().setFontColor(Color.RED));
                 }
@@ -140,21 +140,21 @@ public final class JSAndroid {
                 startActivityForResult(activity, battery, S.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, null);
             }
         }
-        Log.w("JSAndroid", "requestPermissionActivity()  return true");
+        Log.w(TAG, "requestPermissionActivity()  return true");
         return true; // 返回真表示已经发起申请，不代表结果
     }
     @JavascriptInterface
     public boolean requestPermission(final String id, final String Msg) {
-        Log.d("JSAndroid", "requestPermission() invoked");
+        Log.d(TAG, "requestPermission() invoked");
         if (Utils.isValidPermission(id)) {
-            Log.d("JSAndroid", "requestPermission("+id+")  return false");
+            Log.d(TAG, "requestPermission("+id+")  return false");
             return false;
         }
         if (Msg != null && !Msg.isEmpty()) {
             PopTip.show(Msg);
         }
         ActivityCompat.requestPermissions(activity, new String[]{ id }, 1001);
-        Log.d("JSAndroid", "requestPermission()  return true");
+        Log.d(TAG, "requestPermission()  return true");
         return true; // 返回真表示已经发起申请，不代表结果
     }
     @JavascriptInterface
@@ -169,20 +169,20 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void setMMKV(final String key, final String value) {
-        Log.d("JSAndroid", "setMMKV() invoked");
+        Log.d(TAG, "setMMKV() invoked");
         activity.mmkv.encode(key, value);
     }
 
     @JavascriptInterface
     public String getMMKV(final String key) {
-        Log.d("JSAndroid", "getMMKV() invoked");
+        Log.d(TAG, "getMMKV() invoked");
         // 出于安全考虑禁止实现
         return "";
     }
 
     @JavascriptInterface
     public void showBiometricPrompt(final String captcha) {
-        Log.d("JSAndroid", "showBiometricPrompt() invoked");
+        Log.d(TAG, "showBiometricPrompt() invoked");
         Handler mainHandler = new Handler(Looper.getMainLooper());
         // 在主线程中执行
         mainHandler.post(() -> {
@@ -284,7 +284,7 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void savePictureByURL(final String imageUrl) throws IOException {
-        Log.d("JSAndroid", "savePictureByURL() invoked");
+        Log.d(TAG, "savePictureByURL() invoked");
         // 下载图片
         Bitmap IMG = BitmapFactory.decodeStream(new URL("http://127.0.0.1:58131"+imageUrl).openConnection().getInputStream());
         // 获取内部存储的 DCIM/Sillot 目录
@@ -348,54 +348,32 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void exitSillotAndroid() {
-        Log.d("JSAndroid", "exitSillotAndroid() invoked");
-        // 使用runOnUiThread确保在主线程中获取WebView的URL
+        Log.d(TAG, "exitSillotAndroid() invoked");
         activity.runOnUiThread(() -> {
-            String webViewUrl = activity.webView.getUrl();
-            if (webViewUrl != null && webViewUrl.contains("/check-auth?")) {
-                activity.mmkv.putString("AppCheckInState","lockScreen");
-                Log.d("JSAndroid", "exitSillotAndroid() AppCheckInState->lockScreen");
-            } else {
-                activity.mmkv.putString("AppCheckInState","unlockScreen");
-                Log.d("JSAndroid", "exitSillotAndroid() AppCheckInState->unlockScreen");
-            }
-            activity.finishAffinity();
-            activity.finishAndRemoveTask();
-//            System.exit(0);
-        });
-    }
-
-
-
-    @JavascriptInterface
-    public void restartSillotAndroid() {
-        Log.d("JSAndroid", "restartSillotAndroid() invoked");
-        runOnUiThread(() -> {
-            activity.RestartSiyuanInWebview();
+            activity.exit();
         });
     }
     @JavascriptInterface
     public void androidReboot() {
-        Log.d("JSAndroid", "restartSillotAndroid() invoked");
+        Log.d(TAG, "androidReboot() invoked");
         runOnUiThread(() -> {
             activity.coldRestart();
         });
     }
-
 
     //// Sillot extend end
 
     @JavascriptInterface
     public String getBlockURL() {
         var url = activity.getIntent().getStringExtra("blockURL");
-        Log.d("JSAndroid", "getBlockURL() invoked. original url="+url);
+        Log.d(TAG, "getBlockURL() invoked. original url="+url);
         if (url == null) { url = ""; }
         return url;
     }
 
     @JavascriptInterface
     public String readClipboard() {
-        Log.d("JSAndroid", "readClipboard() invoked");
+        Log.d(TAG, "readClipboard() invoked");
         final ClipboardManager clipboard = (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
         final ClipData clipData = clipboard.getPrimaryClip();
         if (null == clipData) {
@@ -425,7 +403,7 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void writeImageClipboard(final String uri) {
-        Log.d("JSAndroid", "writeImageClipboard() invoked");
+        Log.d(TAG, "writeImageClipboard() invoked");
         final ClipboardManager clipboard = (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
         final ClipData clip = ClipData.newUri(activity.getContentResolver(), "Copied img from SiYuan", Uri.parse("http://127.0.0.1:58131/" + uri));
         clipboard.setPrimaryClip(clip);
@@ -433,7 +411,7 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void writeClipboard(final String content) {
-        Log.d("JSAndroid", "writeClipboard() invoked");
+        Log.d(TAG, "writeClipboard() invoked");
         final ClipboardManager clipboard = (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
         final ClipData clip = ClipData.newPlainText("Copied text from SiYuan", content);
         clipboard.setPrimaryClip(clip);
@@ -441,7 +419,7 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void returnDesktop() {
-        Log.d("JSAndroid", "returnDesktop() invoked");
+        Log.d(TAG, "returnDesktop() invoked");
         final Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_HOME);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -450,7 +428,7 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void openExternal(String url) {
-        Log.d("JSAndroid", "openExternal() invoked");
+        Log.d(TAG, "openExternal() invoked");
         if (StringUtils.isEmpty(url)) {
             return;
         }
@@ -492,8 +470,8 @@ public final class JSAndroid {
                     return;
                 }
             } catch (Exception e) {
-                Log.e("JSAndroid", String.valueOf(e));
-                Utils.LogError("JSAndroid", "openExternal failed", e);
+                Log.e(TAG, String.valueOf(e));
+                Utils.LogError(TAG, "openExternal failed", e);
             }
         }
 
@@ -521,7 +499,7 @@ public final class JSAndroid {
                     return;
                 }
             } catch (Exception e) {
-                Log.e("JSAndroid", String.valueOf(e));
+                Log.e(TAG, String.valueOf(e));
             }
         }
 
@@ -538,7 +516,7 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void changeStatusBarColor(final String color, final int appearanceMode) {
-        Log.d("JSAndroid", "changeStatusBarColor() invoked");
+        Log.d(TAG, "changeStatusBarColor() invoked");
         activity.runOnUiThread(() -> {
             UltimateBarX.statusBarOnly(activity).transparent().light(appearanceMode == 0).color(parseColor(color)).apply();
 

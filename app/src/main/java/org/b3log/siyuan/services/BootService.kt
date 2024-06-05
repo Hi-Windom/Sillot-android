@@ -11,6 +11,7 @@ import android.os.Binder
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.HandlerThread
 import android.os.IBinder
 import android.os.Looper
 import android.os.Message
@@ -59,16 +60,21 @@ import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 
 class BootService : Service() {
-    private val TAG = "BootService-SiYuan"
+    private val TAG = "services/BootService.kt"
     var server: AsyncHttpServer? = null
     var serverPort = S.DefaultHTTPPort
     var webView: WebView? = null
     var webViewVer: String? = null
     var userAgent: String? = null
     var kernelStarted = false
+    private lateinit var mHandlerThread: HandlerThread
+    private lateinit var mHandler: Handler
     private val uploadMessage: ValueCallback<Array<Uri>>? = null
     override fun onCreate() {
         super.onCreate()
+        mHandlerThread = HandlerThread("MyHandlerThread")
+        mHandlerThread.start()
+        mHandler = Handler(mHandlerThread.looper)
         works()
     }
 
@@ -131,6 +137,7 @@ class BootService : Service() {
     fun isHttpServerRunning(): Boolean {
         return server != null
     }
+
     fun startHttpServer(isServable: Boolean) {
         if (isHttpServerRunning()) {
             server?.stop()
@@ -230,7 +237,6 @@ class BootService : Service() {
             if (kernelStarted) {
                 return
             }
-
             kernelStarted = true
             val b = Bundle()
             b.putString("cmd", "startKernel")
@@ -243,7 +249,7 @@ class BootService : Service() {
     fun bootKernel(isServable: Boolean) {
         Mobile.setHttpServerPort(serverPort.toLong())
         if (Mobile.isHttpServing()) {
-            Utils.LogInfo("boot", "kernel HTTP server is running")
+            Utils.LogInfo(TAG, "kernel HTTP server is running")
             return
         }
         initAppAssets()
@@ -252,35 +258,43 @@ class BootService : Service() {
         // As of API 24 (Nougat) and later 获取用户的设备首选语言
         val locales = resources.configuration.getLocales()
         val locale = locales[0]
-        val workspaceBaseDir = getExternalFilesDir(null)!!.absolutePath
+        val workspaceBaseDir = getExternalFilesDir(null)?.absolutePath
         val timezone = TimeZone.getDefault().id
-        Thread {
-            val localIPs = Utils.getIPAddressList()
-            var lang = locale.language + "_" + locale.country
-            lang = if (lang.lowercase(Locale.getDefault()).contains("cn")) {
-                "zh_CN"
-            } else if (lang.lowercase(Locale.getDefault()).contains("es")) {
-                "es_ES"
-            } else if (lang.lowercase(Locale.getDefault()).contains("fr")) {
-                "fr_FR"
-            } else {
-                "en_US"
+        mHandler.post {
+            try {
+                val localIPs = Utils.getIPAddressList()
+                val lang = determineLanguage(locale)
+                Log.d(TAG, "Mobile.startKernel() -> workspaceBaseDir -> $workspaceBaseDir")
+                Mobile.startKernel(
+                    "android", appDir, workspaceBaseDir, timezone, localIPs, lang,
+                    Build.VERSION.RELEASE +
+                            "/SDK " + Build.VERSION.SDK_INT +
+                            "/WebView " + webViewVer +
+                            "/Manufacturer " + Build.MANUFACTURER +
+                            "/Brand " + Build.BRAND +
+                            "/UA " + userAgent
+                )
+                Log.d(TAG, "Mobile.startKernel() ok")
+            } catch (e: Exception) {
+                // 处理异常
+                Log.e(TAG, "Error in background thread", e)
             }
-            Mobile.startKernel(
-                "android", appDir, workspaceBaseDir, timezone, localIPs, lang,
-                Build.VERSION.RELEASE +
-                        "/SDK " + Build.VERSION.SDK_INT +
-                        "/WebView " + webViewVer +
-                        "/Manufacturer " + Build.MANUFACTURER +
-                        "/Brand " + Build.BRAND +
-                        "/UA " + userAgent
-            )
-        }.start()
+        }
         val b = Bundle()
         b.putString("cmd", "bootIndex")
         val msg = Message()
         msg.data = b
         bootHandler.sendMessage(msg)
+    }
+
+    private fun determineLanguage(locale: Locale): String {
+        val lang = locale.language + "_" + locale.country
+        return when {
+            lang.lowercase(Locale.getDefault()).contains("cn") -> "zh_CN"
+            lang.lowercase(Locale.getDefault()).contains("es") -> "es_ES"
+            lang.lowercase(Locale.getDefault()).contains("fr") -> "fr_FR"
+            else -> "en_US"
+        }
     }
 
     private fun needUnzipAssets(): Boolean {
@@ -337,6 +351,9 @@ class BootService : Service() {
      * 请在 activity 中调用
      */
     fun showWifi(activity: Activity) {
+        if (!kernelStarted) {
+            return
+        }
         Log.d(TAG, "showWifi() invoked")
         val locationPermissionObservable =
             Observable.create { emitter: ObservableEmitter<Boolean> ->
@@ -410,9 +427,11 @@ class BootService : Service() {
             .setRequiresBatteryNotLow(true) // 低电量时不运行
             .build()
         // 可以定义的最短重复间隔是 15 分钟
-        val periodicWorkRequest = PeriodicWorkRequest.Builder(SyncDataWorker::class.java, 15, TimeUnit.MINUTES)
-            .setConstraints(constraints)
-            .build()
+        val periodicWorkRequest =
+            PeriodicWorkRequest.Builder(SyncDataWorker::class.java, 15, TimeUnit.MINUTES)
+                .setConstraints(constraints)
+                .setInitialDelay(10, TimeUnit.MINUTES) // 在加入队列后至少经过 10 分钟后再运行
+                .build()
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             "SyncDataWork",

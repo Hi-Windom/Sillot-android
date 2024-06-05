@@ -64,6 +64,10 @@ object S {
         val bgColor_light = "#1e1e1e"
     }
 
+    object EVENTS {
+        val CALL_MainActivity_siyuan_1 = "MainActivity-Siyuan-coldRestart"
+    }
+
     // compose 组件常量
     object C {
         // sp（缩放无关像素）：用于字体大小，会根据用户的字体大小偏好进行缩放。

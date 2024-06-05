@@ -67,8 +67,9 @@ package org.b3log.siyuan;
  import androidx.appcompat.app.AppCompatActivity;
  import androidx.core.app.ActivityCompat;
  import androidx.core.content.ContextCompat;
+ import androidx.work.Constraints;
+ import androidx.work.NetworkType;
  import androidx.work.OneTimeWorkRequest;
- import androidx.work.OutOfQuotaPolicy;
  import androidx.work.WorkManager;
 
  import com.blankj.utilcode.util.AppUtils;
@@ -79,9 +80,6 @@ package org.b3log.siyuan;
  import com.kongzue.dialogx.dialogs.PopNotification;
  import com.kongzue.dialogx.dialogs.PopTip;
  import com.kongzue.dialogx.interfaces.OnMenuItemClickListener;
- import com.koushikdutta.async.http.AsyncHttpClient;
- import com.koushikdutta.async.http.AsyncHttpPost;
- import com.koushikdutta.async.http.body.JSONObjectBody;
  import com.tencent.bugly.crashreport.CrashReport;
  import com.tencent.mmkv.MMKV;
  import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
@@ -93,7 +91,6 @@ package org.b3log.siyuan;
  import org.greenrobot.eventbus.EventBus;
  import org.greenrobot.eventbus.Subscribe;
  import org.greenrobot.eventbus.ThreadMode;
- import org.json.JSONObject;
 
  import java.io.ByteArrayOutputStream;
  import java.io.UnsupportedEncodingException;
@@ -102,6 +99,7 @@ package org.b3log.siyuan;
  import java.util.Date;
  import java.util.HashSet;
  import java.util.Locale;
+ import java.util.concurrent.atomic.AtomicReference;
 
  import mobile.Mobile;
  import sc.windom.sofill.S;
@@ -127,8 +125,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     private static final int REQUEST_CAMERA = S.REQUEST_CAMERA;
     private long exitTime;
     public MMKV mmkv;
-    private boolean needColdRestart = false;
-    private boolean isWebviewReady = false;
     private int works = 0;
     private final HashSet<String> permissionList = new HashSet<>();
 
@@ -231,10 +227,10 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 });
     }
 
-    private BootService bootService;
+    public BootService bootService;
     private boolean serviceBound = false;
 
-    private final ServiceConnection serviceConnection = new ServiceConnection() {
+    final ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName className, IBinder service) {
             Log.i(TAG, "onServiceConnected invoked");
@@ -249,18 +245,17 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
             Log.i(TAG, "onServiceDisconnected invoked");
+            serviceBound = false;
+            bootService.setKernelStarted(false);
+            bootService.stopSelf();
+            bootService = null;
+            App.bootService = null;
             releaseBootService();
         }
     };
 
-    private void releaseBootService() {
+    void releaseBootService() {
         Log.i(TAG, "releaseBootService invoked");
-        // 解绑服务
-        if (serviceBound) {
-            unbindService(serviceConnection);
-            serviceBound = false;
-            bootService = null;
-        }
         // 销毁WebView并从池中移除
         if (webViewWrapper != null) {
             ViewGroup parent = (ViewGroup) webView.getParent();
@@ -268,6 +263,16 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             WebViewPool webViewPool = WebViewPool.getInstance();
             webViewPool.releaseWebView(webView);
             webViewWrapper.destroy();
+        }
+    }
+
+    void bindBootService() {
+        if (bootService == null){
+            // 绑定服务
+            Intent intent = new Intent(getApplicationContext(), BootService.class);
+            bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        } else {
+            performActionWithService();
         }
     }
 
@@ -311,14 +316,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         Log.w(TAG, "onCreate() invoked");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        if (bootService == null){
-            // 绑定服务
-            Intent intent = new Intent(getApplicationContext(), BootService.class);
-            bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
-        } else {
-            performActionWithService();
-        }
+        bindBootService();
 
         mmkv = MMKV.defaultMMKV();
 
@@ -423,10 +421,10 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 if (parent != webViewContainer) {
                     Log.d(TAG, "WebView已在其他容器中，先移除再添加");
                     parent.removeView(webView); // 从原来的容器中移除WebView
+                    webViewContainer.addView(webView); // 将WebView添加到当前容器中
                 } else {
                     Log.d(TAG, "WebView已在当前容器中，无需再次添加");
                 }
-                webViewContainer.addView(webView); // 将WebView添加到当前容器中
             }
 
 
@@ -516,6 +514,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         webViewContainer.setVisibility(View.VISIBLE);
         webView.setWebViewClient(new WebViewClient() {
             // setWebViewClient 和 setWebChromeClient 并不同，别看走眼了
+            // 对于 POST 请求不会调用此方法
             @Override
             public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request) {
                 final Uri uri = request.getUrl();
@@ -543,10 +542,9 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                     exit();
                     return true;
                 }
-                if (url.contains("siyuan://androidRestartSiYuan")) {
-//                    sleep(2000);
-                    coldRestart();
-                    return false;
+                if (url.contains("siyuan://coldRestart")) {
+//                    coldRestart();
+                    return true; // 这里返回 true 阻止网页导航
                 }
                 if (url.contains("siyuan://androidFeedback")) {
                     androidFeedback();
@@ -562,7 +560,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                     // 从 Android 12 开始，经过验证的链接现在会自动在相应的应用中打开，以获得更简化、更快速的用户体验。谷歌还更改了未经Android应用链接验证或用户手动批准的链接的默认处理方式。谷歌表示，Android 12将始终在默认浏览器中打开此类未经验证的链接，而不是向您显示应用程序选择对话框。
                     return true;
                 }
-                return true;
+                return false;
             }
 
             @Override
@@ -611,9 +609,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         waitFotKernelHttpServing();
         WebView.setWebContentsDebuggingEnabled(true);
         webView.loadUrl("http://127.0.0.1:58131/appearance/boot/index.html?v=" + Utils.version);
-
-//        new Thread(this::keepLive).start();
-        isWebviewReady = true;
     }
 
     /**
@@ -621,7 +616,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
      */
     private void waitFotKernelHttpServing() {
         while (true) {
-            sleep(10);
+            sleep(100);
             if (Mobile.isHttpServing()) {
                 break;
             }
@@ -636,7 +631,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         }
     }
 
-    // 用于保存拍照图片的 uri
+     // 用于保存拍照图片的 uri
     private Uri mCameraUri;
 
     private boolean hasPermissions(String[] permissions) {
@@ -804,8 +799,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             }
         } else if (event.getRequestCode() == S.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT) {
             // 不管结果是什么都重启
-            if (event.getCallback().equals("RestartSiyuanInWebview")) {
-                RestartSiyuanInWebview();
+            if (event.getCallback().equals(S.EVENTS.INSTANCE.getCALL_MainActivity_siyuan_1())) {
+                coldRestart();
             }
         }
     }
@@ -844,10 +839,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         AppUtils.unregisterAppStatusChangedListener(this);
         releaseBootService();
         super.onDestroy();
-        // 结束当前任务中的所有Activity
-//        finishAffinity();
-        // 从任务列表中移除
-//        finishAndRemoveTask();
     }
 
     @Override
@@ -907,28 +898,50 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     }
 
     public void exit() {
-        finish();
+        runOnUiThread(() -> {
+            setSillotGibbetCheckInState();
+            finish();
+            finishAndRemoveTask();
+//            System.exit(0);
+        });
+    }
+
+    public boolean setSillotGibbetCheckInState() {
+        AtomicReference<Boolean> result = new AtomicReference<>(false);
+        runOnUiThread(() -> {
+            // 使用runOnUiThread确保在主线程中获取WebView的URL
+            String webViewUrl = webView.getUrl();
+            if (webViewUrl != null && webViewUrl.contains("/check-auth?")) {
+                mmkv.putString("AppCheckInState","lockScreen");
+                result.set(true);
+                Log.d(TAG, "exit() AppCheckInState->lockScreen");
+            } else {
+                mmkv.putString("AppCheckInState","unlockScreen");
+                result.set(false);
+                Log.d(TAG, "exit() AppCheckInState->unlockScreen");
+            }
+        });
+        return result.get();
     }
 
     public void coldRestart() {
         Log.w(TAG, "coldRestart() invoked");
-        finishAffinity(); //  这个方法用于结束当前活动所在的亲和性任务中的所有活动。亲和性任务是指具有相同 taskAffinity 属性的一组活动。当调用 finishAffinity() 时，系统会结束当前活动所在任务中所有与当前活动具有相同 taskAffinity 的活动，但不会结束其他任务中的活动。
+        setSillotGibbetCheckInState();
+        // 从任务列表中移除，禁止放在 onDestroy
+        finishAndRemoveTask(); //  这个方法用于结束当前活动，并从任务栈中移除整个任务。这意味着，当前活动所在的任务中所有的活动都会被结束，并且任务本身也会被移除。如果这个任务是最顶层的任务，那么用户将返回到主屏幕。
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
-//        finishAndRemoveTask(); //  这个方法用于结束当前活动，并从任务栈中移除整个任务。这意味着，当前活动所在的任务中所有的活动都会被结束，并且任务本身也会被移除。如果这个任务是最顶层的任务，那么用户将返回到主屏幕。
 //       android.os.Process.killProcess(android.os.Process.myPid()); // 暂时无法解决杀死其他任务栈的冲突，不加这句重启活动会崩溃
     }
 
-    public void RestartSiyuanInWebview() {
-        if (webView != null) {
-            webView.evaluateJavascript("javascript:window.Sillot.androidRestartSiYuan();", null);
-            // 接下来由 网页端 发起 "siyuan://androidRestartSiYuan"
-        }
-    }
-
     public void startSyncData() {
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED) // 确保在网络连接时运行
+                .setRequiresBatteryNotLow(false) // 低电量时也运行
+                .build();
         OneTimeWorkRequest syncDataWork = new OneTimeWorkRequest.Builder(SyncDataWorker.class)
+                .setConstraints(constraints)
 //                .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST) // 加急工作。如果配额允许，它将立即开始在后台运行。但是可能会在 Android 12 上抛出运行时异常，并且在启动受到限制时可能会抛出异常。
                 .build();
         WorkManager.getInstance(this).enqueue(syncDataWork);

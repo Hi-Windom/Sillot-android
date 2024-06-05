@@ -34,7 +34,7 @@ class Battery : AppCompatActivity() {
                     OnSiYuanMainRequestEvent(
                         S.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT,
                         RESULT_OK,
-                        "RestartSiyuanInWebview"
+                        S.EVENTS.CALL_MainActivity_siyuan_1
                     )
                 )
             } else {
@@ -44,7 +44,7 @@ class Battery : AppCompatActivity() {
                     OnSiYuanMainRequestEvent(
                         S.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT,
                         RESULT_CANCELED,
-                        "RestartSiyuanInWebview"
+                        S.EVENTS.CALL_MainActivity_siyuan_1
                     )
                 )
             }
