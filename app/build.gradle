@@ -191,10 +191,9 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-process:${lifecycle_version}"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:${lifecycle_version}"
     implementation "androidx.lifecycle:lifecycle-service:${lifecycle_version}"
-    implementation 'androidx.work:work-runtime:2.8.1'
+    implementation 'androidx.work:work-runtime:2.9.0'
 
     implementation(name: 'kernel', ext: 'aar', group: '', version: '')
-    implementation(name: 'baidu-push-sdk-8.2.9.3', ext: 'aar', group: '', version: '')
 
     implementation("commons-io:commons-io:2.13.0")
     implementation "com.squareup.okhttp3:okhttp:4.12.0"

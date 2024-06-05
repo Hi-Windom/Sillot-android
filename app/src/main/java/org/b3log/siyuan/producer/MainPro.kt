@@ -59,7 +59,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -96,6 +95,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import sc.windom.sofill.S
 import sc.windom.sofill.U
+import sc.windom.sofill.U.workspaceParentDir
 import sc.windom.sofill.api.siyuan.SiyuanNoteAPI
 import sc.windom.sofill.compose.ApkButtons
 import sc.windom.sofill.compose.AudioButtons
@@ -302,13 +302,12 @@ class MainPro : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
     @Composable
     fun MyUI(TAG: String) {
-        val Lcc = LocalContext.current
         val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
         val coroutineScope = rememberCoroutineScope()
         var head_title = "汐洛中转站"
-        val fileName = in2_data?.let { U.getFileName(Lcc, it) }
-        val fileSize = in2_data?.let { U.getFileSize(Lcc, it) }
-        val mimeType = intent?.data?.let { U.getMimeType(Lcc, it) } ?: ""
+        val fileName = in2_data?.let { U.getFileName(thisActivity, it) }
+        val fileSize = in2_data?.let { U.getFileSize(thisActivity, it) }
+        val mimeType = intent?.data?.let { U.getMimeType(thisActivity, it) } ?: ""
         val fileType =
             fileName?.let { U.getFileMIMEType(mimeType, it) }
                 ?: run { U.getFileMIMEType(mimeType) }
@@ -335,9 +334,7 @@ class MainPro : ComponentActivity() {
                         })
                     }) {
                     // 将Context对象安全地转换为Activity
-                    if (Lcc is Activity) {
-                        Lcc.finish() // 结束活动
-                    }
+                    thisActivity.finish() // 结束活动
                 }
             }, modifier = Modifier.background(Color.Gray)
         ) {
@@ -678,7 +675,7 @@ class MainPro : ComponentActivity() {
                 contentColor = S.C.btn_Color1.current
             ), enabled = true, onClick = {
                 if (markdown != null) {
-                    val directories = U.getDirectoriesInPath(S.workspaceParentDir)
+                    val directories = U.getDirectoriesInPath(thisActivity.workspaceParentDir())
                     val filteredDirectories = directories.filter { it != "home" }
                     if (filteredDirectories.isNotEmpty()) {
                         runSendMD2siyuan(markdown)
@@ -686,7 +683,7 @@ class MainPro : ComponentActivity() {
                         PopNotification.show(
                             R.drawable.icon,
                             "未发现任何工作空间",
-                            "请检查是否初始化了，或者路径存在异常 ${S.workspaceParentDir}/"
+                            "请检查是否初始化了，或者路径存在异常 ${thisActivity.workspaceParentDir()}/"
                         ).noAutoDismiss()
                     }
                 }
@@ -702,7 +699,6 @@ class MainPro : ComponentActivity() {
     @Composable
     fun InfoPart(uri: Uri?, fileType: String?, fileName: String?, fileSize: String?) {
         val TAG = "MainPro-InfoPart"
-        val Lcc = LocalContext.current
         val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
         val Thumbnail_Height = S.C.Thumbnail_Height.current
         val Thumbnail_Height_IMG = S.C.Thumbnail_Height_IMG.current
@@ -722,7 +718,7 @@ class MainPro : ComponentActivity() {
                 if (fileType != null) {
                     if (fileType.endsWith("图像")) {
                         val bitmap = uri?.let { it1 ->
-                            Lcc.contentResolver?.loadThumbnail(
+                            thisActivity.contentResolver?.loadThumbnail(
                                 it1,
                                 Size(
                                     if (isLandscape) Thumbnail_Height else Thumbnail_Height_IMG,
@@ -781,7 +777,6 @@ class MainPro : ComponentActivity() {
     @Composable
     fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
         val TAG = "MainPro-BtnPart"
-        val Lcc = LocalContext.current
         val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
         val coroutineScope = rememberCoroutineScope()
 
@@ -797,7 +792,7 @@ class MainPro : ComponentActivity() {
         var progressValue by remember { mutableStateOf(0) }
         var isButton3OnClickRunning by remember { mutableStateOf(false) }
         var isButton4OnClickRunning by remember { mutableStateOf(false) }
-        var workspaceAssetsDir by remember { mutableStateOf("${S.workspaceParentDir}/sillot/data/assets") }
+        var workspaceAssetsDir by remember { mutableStateOf("${thisActivity.workspaceParentDir()}/sillot/data/assets") }
         var uri_from_file by remember { mutableStateOf(Uri.parse("")) }
         var uri_to_dir by remember { mutableStateOf(Uri.parse("")) }
         var selectedFolder by remember { mutableStateOf<Uri?>(null) }
@@ -826,23 +821,23 @@ class MainPro : ComponentActivity() {
                 withContext(Dispatchers.IO) {
 
                     try {
-                        if (!U.isStorageSpaceAvailable(Lcc.contentResolver, uri_from_file)) {
+                        if (!U.isStorageSpaceAvailable(thisActivity.contentResolver, uri_from_file)) {
                             // 存储空间不足，处理逻辑
-                            Toast.Show(Lcc, "存储空间不足，请先清理")
+                            Toast.Show(thisActivity, "存储空间不足，请先清理")
                             return@withContext
                         }
-                        val sourceFilePath = U.getPathFromUri(Lcc, uri_from_file)
+                        val sourceFilePath = U.getPathFromUri(thisActivity, uri_from_file)
                         // 复制文件到所选文件夹
                         fileName?.let {
                             sourceFilePath?.let { it1 ->
                                 U.copyFileToFolderByDocumentTree(
-                                    Lcc, uri_to_dir, it,
+                                    thisActivity, uri_to_dir, it,
                                     it1, mimeType
                                 )
                             }
                         }
                         withContext(Dispatchers.Main) {
-                            Toast.Show(Lcc, "已复制到指定文件夹")
+                            Toast.Show(thisActivity, "已复制到指定文件夹")
                         }
                     } catch (e: IOException) {
                         Log.e(TAG, e.toString())
@@ -861,12 +856,12 @@ class MainPro : ComponentActivity() {
             coroutineScope.launch {
                 withContext(Dispatchers.IO) {
                     try {
-                        if (!U.isStorageSpaceAvailable(Lcc.contentResolver, uri_from_file)) {
+                        if (!U.isStorageSpaceAvailable(thisActivity.contentResolver, uri_from_file)) {
                             // 存储空间不足，处理逻辑
                             PopNotification.show(R.drawable.icon, "存储空间不足，请先清理")
                             return@withContext
                         }
-                        val sourceFilePath = U.getPathFromUri(Lcc, uri_from_file)
+                        val sourceFilePath = U.getPathFromUri(thisActivity, uri_from_file)
                         // 复制文件到所选文件夹
                         fileName?.let {
                             sourceFilePath?.let { it1 ->
@@ -902,7 +897,7 @@ class MainPro : ComponentActivity() {
 
         var manageAllFilesPermissionLauncher =
             rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (U.canManageAllFiles(Lcc)) {
+                if (U.canManageAllFiles(thisActivity)) {
                     if (isButton3OnClickRunning) {
                         onCopyFileToFolderByDocumentTree()
                     } else if (isButton4OnClickRunning) {
@@ -918,14 +913,14 @@ class MainPro : ComponentActivity() {
                         if (uri == null) return@let
                         isButton3OnClickRunning = true  // 没有设置 LaunchedEffect 但是需要显示遮罩
                         // 通过 SAF 获取持久性权限
-                        Lcc.contentResolver.takePersistableUriPermission(
+                        thisActivity.contentResolver.takePersistableUriPermission(
                             _uri,
                             Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                         )
 
-//                Us.requestExternalStoragePermission(Lcc as Activity)
+//                Us.requestExternalStoragePermission(thisActivity)
                         // 使用DocumentFile处理URI
-                        val rootDocument = DocumentFile.fromTreeUri(Lcc, _uri)
+                        val rootDocument = DocumentFile.fromTreeUri(thisActivity, _uri)
                         // 例如，列出根目录下的文件和文件夹
                         rootDocument?.listFiles()?.forEach { file ->
                             // 处理文件或文件夹
@@ -937,7 +932,7 @@ class MainPro : ComponentActivity() {
 
                         uri_from_file = uri
                         uri_to_dir = _uri
-                        if (U.canManageAllFiles(Lcc)) {
+                        if (U.canManageAllFiles(thisActivity)) {
                             onCopyFileToFolderByDocumentTree()
                         } else {
                             val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
@@ -952,7 +947,7 @@ class MainPro : ComponentActivity() {
             if (isButton4OnClickRunning) {
                 uri_from_file = uri
                 uri_to_dir = Uri.parse(workspaceAssetsDir)
-                if (U.canManageAllFiles(Lcc)) {
+                if (U.canManageAllFiles(thisActivity)) {
                     onCopyFileToMyAppFolder()
                 } else {
                     val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
@@ -1046,7 +1041,8 @@ class MainPro : ComponentActivity() {
                     contentColor = S.C.btn_Color1.current
                 ), enabled = true, onClick = {
                     if (uri != null) {
-                        val directories = U.getDirectoriesInPath(S.workspaceParentDir)
+                        Log.e(TAG, thisActivity.workspaceParentDir())
+                        val directories = U.getDirectoriesInPath(thisActivity.workspaceParentDir())
                         val filteredDirectories = directories.filter { it != "home" }
                         if (filteredDirectories.isNotEmpty()) {
                             var selectMenuIndex = 0
@@ -1066,7 +1062,7 @@ class MainPro : ComponentActivity() {
                                         Log.e(TAG, "${selectMenuText}")
 
                                         workspaceAssetsDir =
-                                            "${S.workspaceParentDir}/${selectMenuText}/data/assets"
+                                            "${thisActivity.workspaceParentDir()}/${selectMenuText}/data/assets"
                                         isButton4OnClickRunning = true // 值变化时会触发重组
                                         false
                                     })
@@ -1078,7 +1074,7 @@ class MainPro : ComponentActivity() {
                             PopNotification.show(
                                 R.drawable.icon,
                                 "未发现任何工作空间",
-                                "请检查是否初始化了，或者路径存在异常 ${S.workspaceParentDir}/"
+                                "请检查是否初始化了，或者路径存在异常 ${thisActivity.workspaceParentDir()}/"
                             ).noAutoDismiss()
                         }
                     }
@@ -1097,7 +1093,7 @@ class MainPro : ComponentActivity() {
         fun ApkBTNonClick1() {
             in2_data?.let {
                 U.installApk2(
-                    Lcc as Activity,
+                    thisActivity,
                     it
                 )
             } ?: run {
@@ -1108,7 +1104,7 @@ class MainPro : ComponentActivity() {
         fun ApkBTNonClick2() {
             uri?.let {
                 U.installApk(
-                    Lcc as Activity,
+                    thisActivity,
                     it
                 )
             } ?: run {

@@ -8,8 +8,6 @@ import android.os.Bundle
 import android.os.Looper
 import android.util.Log
 import cn.jpush.android.api.JPushInterface
-import com.baidu.android.pushservice.PushConstants
-import com.baidu.android.pushservice.PushManager
 import com.blankj.utilcode.util.Utils
 import com.kongzue.dialogx.DialogX
 import com.kongzue.dialogx.style.MIUIStyle
@@ -84,8 +82,6 @@ class App : Application() {
         JPushInterface.setDebugMode(true)
         JPushInterface.init(this)
         MMKV.initialize(this)
-        // 初始化 baidu PUSH
-        PushManager.startWork(this, PushConstants.LOGIN_TYPE_API_KEY, S.initBaiduPushID);
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityPaused(activity: Activity) {
                 Log.w(

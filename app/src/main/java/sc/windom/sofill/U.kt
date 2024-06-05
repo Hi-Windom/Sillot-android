@@ -72,6 +72,24 @@ import kotlin.math.sqrt
 
 object U {
     val dateFormat_full1 = SimpleDateFormat("yyyyMMdd-HHmmss")
+
+    /**
+     * 获取应用文件目录，它会自动处理多用户的情况。注意，应用文件目录包括了其外部存储的文件目录
+     * @return 例如 /data/user/$userId/$packageName/files
+     */
+    fun Context.usertDir(): String {
+        return this.filesDir.absolutePath
+    }
+
+    /**
+     * 本质上是获取外部存储的文件目录的绝对路径，它会自动处理多用户的情况。如果外部存储不可用，则返回内部存储的文件目录
+     * @return 例如 /storage/emulated/$userId/Android/data/$packageName/files
+     */
+    fun Context.workspaceParentDir(): String {
+        val externalFilesDir = this.getExternalFilesDir(null)
+        val filesDir = externalFilesDir ?: this.filesDir
+        return filesDir.absolutePath
+    }
     /**
      * @param blockURL: 格式为 siyuan://blocks/xxx
      */

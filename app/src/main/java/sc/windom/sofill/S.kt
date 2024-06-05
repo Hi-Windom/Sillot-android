@@ -16,7 +16,6 @@ object S {
     const val emailAdress = "694357845@qq.com"
     const val QQ = "694357845"
     const val TTK = "AsyncTTk" // 抖音
-    const val workspaceParentDir = "/storage/emulated/0/Android/data/$packageName/files"
 
     const val DefaultHTTPPort = 58131
     const val initCrashReportID = "26ae2b5fb4"

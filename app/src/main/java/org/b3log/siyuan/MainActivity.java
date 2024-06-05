@@ -99,6 +99,7 @@ package org.b3log.siyuan;
  import java.util.Date;
  import java.util.HashSet;
  import java.util.Locale;
+ import java.util.UUID;
  import java.util.concurrent.atomic.AtomicReference;
 
  import mobile.Mobile;
@@ -229,6 +230,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     public BootService bootService;
     private boolean serviceBound = false;
+    private String instanceId; // 用于区分不同实例的ID
 
     final ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
@@ -268,9 +270,12 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     void bindBootService() {
         if (bootService == null){
-            // 绑定服务
+            // 生成一个唯一的instanceId
+            instanceId = UUID.randomUUID().toString();
+            // 绑定服务时传递instanceId
             Intent intent = new Intent(getApplicationContext(), BootService.class);
-            bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+            intent.putExtra("INSTANCE_ID", instanceId);
+            bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE); // TODO: 双开共存时内核固定端口冲突
         } else {
             performActionWithService();
         }
