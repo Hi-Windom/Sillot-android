@@ -907,7 +907,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     }
 
     public void exit() {
-//        finish();
+        finish();
     }
 
     public void coldRestart() {
@@ -917,13 +917,13 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
 //        finishAndRemoveTask(); //  这个方法用于结束当前活动，并从任务栈中移除整个任务。这意味着，当前活动所在的任务中所有的活动都会被结束，并且任务本身也会被移除。如果这个任务是最顶层的任务，那么用户将返回到主屏幕。
-       android.os.Process.killProcess(android.os.Process.myPid()); // 暂时无法解决杀死其他任务栈的冲突，不加这句重启活动会崩溃
+//       android.os.Process.killProcess(android.os.Process.myPid()); // 暂时无法解决杀死其他任务栈的冲突，不加这句重启活动会崩溃
     }
 
     public void RestartSiyuanInWebview() {
         if (webView != null) {
             webView.evaluateJavascript("javascript:window.Sillot.androidRestartSiYuan();", null);
-            // 接下来由 webview 发起 "siyuan://androidRestartSiYuan"
+            // 接下来由 网页端 发起 "siyuan://androidRestartSiYuan"
         }
     }
 

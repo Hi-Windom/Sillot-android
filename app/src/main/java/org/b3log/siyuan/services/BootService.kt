@@ -21,8 +21,11 @@ import android.webkit.WebView
 import androidx.core.app.ActivityCompat
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequest
 import androidx.work.PeriodicWorkRequest
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.blankj.utilcode.util.ServiceUtils
 import com.blankj.utilcode.util.ThreadUtils.runOnUiThread
@@ -39,6 +42,7 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.io.filefilter.DirectoryFileFilter
 import org.apache.commons.io.filefilter.TrueFileFilter
 import org.b3log.siyuan.Utils
+import org.b3log.siyuan.workers.CheckHttpServerWorker
 import org.b3log.siyuan.workers.SyncDataWorker
 import org.json.JSONArray
 import org.json.JSONObject
@@ -100,6 +104,9 @@ class BootService : Service() {
 
         // 周期同步数据
         scheduleSyncDataWork()
+
+        // 内核心跳检测
+        scheduleCheckHttpServerWork()
     }
 
     private fun init_webView() {
@@ -121,8 +128,11 @@ class BootService : Service() {
         }
     }
 
-    private fun startHttpServer(isServable: Boolean) {
-        if (null != server) {
+    fun isHttpServerRunning(): Boolean {
+        return server != null
+    }
+    fun startHttpServer(isServable: Boolean) {
+        if (isHttpServerRunning()) {
             server?.stop()
             Log.w(TAG, "startHttpServer() stop exist server")
         }
@@ -230,11 +240,10 @@ class BootService : Service() {
         }
     }
 
-    private fun bootKernel(isServable: Boolean) {
+    fun bootKernel(isServable: Boolean) {
         Mobile.setHttpServerPort(serverPort.toLong())
         if (Mobile.isHttpServing()) {
             Utils.LogInfo("boot", "kernel HTTP server is running")
-            Log.w(TAG, "showBootIndex();")
             return
         }
         initAppAssets()
@@ -410,5 +419,36 @@ class BootService : Service() {
             ExistingPeriodicWorkPolicy.KEEP, // 如果已经存在，则保持
             periodicWorkRequest
         )
+    }
+
+    /**
+     * 这种方法并不是官方推荐的，因为它可能会导致任务之间的延迟，并且在高频率下可能会对系统资源造成压力。
+     */
+    private fun scheduleCheckHttpServerWork() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        // 创建一个OneTimeWorkRequest
+        val oneTimeWorkRequest = OneTimeWorkRequest.Builder(CheckHttpServerWorker::class.java)
+            .setConstraints(constraints)
+            .build()
+
+        // 将任务加入到WorkManager中，并设置一个UniqueWork名称
+        WorkManager.getInstance(this).enqueueUniqueWork(
+            "CheckHttpServerWork",
+            ExistingWorkPolicy.REPLACE, // 每次都替换之前的任务
+            oneTimeWorkRequest
+        )
+
+        // 任务完成后，延迟10秒再次启动同一个任务
+        WorkManager.getInstance(this).getWorkInfoByIdLiveData(oneTimeWorkRequest.id)
+            .observeForever { workInfo ->
+                if (workInfo != null && workInfo.state == WorkInfo.State.SUCCEEDED) {
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        scheduleCheckHttpServerWork()
+                    }, 10000)
+                }
+            }
     }
 }

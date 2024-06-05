@@ -119,9 +119,10 @@ class FloatingWindowService : Service() {
     override fun onDestroy() {
         Log.i(TAG, "onDestroy called")
         super.onDestroy()
-        val connectivityManager =
-            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        connectivityManager.unregisterNetworkCallback(networkCallback)
+        unregisterNetworkCallback()
+//        val connectivityManager =
+//            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+//        connectivityManager.unregisterNetworkCallback(networkCallback)
         //        unregisterWifiReceiverIfNeeded();
     }
 
@@ -221,14 +222,41 @@ class FloatingWindowService : Service() {
         }
     }
 
+//    private fun registerNetworkCallback() {
+//        val connectivityManager =
+//            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+//        val networkRequest = NetworkRequest.Builder()
+//            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+//            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+//            .build()
+//        connectivityManager.registerNetworkCallback(networkRequest, networkCallback)
+//    }
+
+    private var isNetworkCallbackRegistered = false
+
     private fun registerNetworkCallback() {
+        if (isNetworkCallbackRegistered) {
+            // NetworkCallback 已经注册，无需再次注册
+            return
+        }
+
         val connectivityManager =
             getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val networkRequest = NetworkRequest.Builder()
             .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
             .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
             .build()
+
         connectivityManager.registerNetworkCallback(networkRequest, networkCallback)
+        isNetworkCallbackRegistered = true
+    }
+
+    // 在适当的生命周期函数中注销NetworkCallback，例如在Activity的onDestroy中
+    private fun unregisterNetworkCallback() {
+        val connectivityManager =
+            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        connectivityManager.unregisterNetworkCallback(networkCallback)
+        isNetworkCallbackRegistered = false
     }
 
     @SuppressLint("SetTextI18n")

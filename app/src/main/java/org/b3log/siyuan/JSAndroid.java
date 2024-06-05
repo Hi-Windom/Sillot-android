@@ -361,23 +361,24 @@ public final class JSAndroid {
             }
             activity.finishAffinity();
             activity.finishAndRemoveTask();
-            System.exit(0);
+//            System.exit(0);
         });
     }
 
 
 
-//    @JavascriptInterface
-//    public void restartSillotAndroid() {
-//        Log.d("JSAndroid", "restartSillotAndroid() invoked");
-//        activity.RestartSiyuanInWebview();
-//    }
+    @JavascriptInterface
+    public void restartSillotAndroid() {
+        Log.d("JSAndroid", "restartSillotAndroid() invoked");
+        runOnUiThread(() -> {
+            activity.RestartSiyuanInWebview();
+        });
+    }
     @JavascriptInterface
     public void androidReboot() {
         Log.d("JSAndroid", "restartSillotAndroid() invoked");
         runOnUiThread(() -> {
-//            activity.bootKernel("");
-//            activity.showBootIndex();
+            activity.coldRestart();
         });
     }
 
