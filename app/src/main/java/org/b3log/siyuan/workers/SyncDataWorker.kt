@@ -35,7 +35,7 @@ class SyncDataWorker(context: Context, params: WorkerParameters) : Worker(contex
             req.setBody(JSONObjectBody(JSONObject().put("mobileSwitch", true)))
             AsyncHttpClient.getDefaultInstance().executeJSONObject(req, object :
                 AsyncHttpClient.JSONObjectCallback() {
-                override fun onCompleted(e: Exception?, source: AsyncHttpResponse, result: JSONObject) {
+                override fun onCompleted(e: Exception?, source: AsyncHttpResponse?, result: JSONObject?) {
                     if (e != null) {
                         Utils.LogError(TAG, "data sync failed", e)
                     }
