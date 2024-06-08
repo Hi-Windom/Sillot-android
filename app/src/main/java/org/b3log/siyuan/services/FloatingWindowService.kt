@@ -32,6 +32,7 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
+import com.kongzue.dialogx.dialogs.PopNotification
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.ObservableEmitter
@@ -140,7 +141,7 @@ class FloatingWindowService : Service() {
         val pendingIntent =
             PendingIntent.getService(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
         notificationBuilder = NotificationCompat.Builder(this, S.FloatingWindowService_NOTIFICATION_CHANNEL_ID)
-            .setContentTitle("伺服 Wifi : 没有诶")
+            .setContentTitle("初始化通知，看到这个说明有问题")
             .setContentText(lanIpTextView?.text)
             .setSmallIcon(R.drawable.icon)
             .setContentIntent(pendingIntent)
@@ -290,7 +291,7 @@ class FloatingWindowService : Service() {
                 // 使用notify方法更新通知
                 notificationManager.notify(1, newNotification)
             } catch (e: Exception) {
-                Log.e(TAG, "Error getting LAN IP address", e)
+                PopNotification(TAG, "Error getting LAN IP address : $e")
             }
         }
     }
