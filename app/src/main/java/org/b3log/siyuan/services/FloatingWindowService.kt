@@ -281,15 +281,15 @@ class FloatingWindowService : Service() {
                 }
                 Handler(Looper.getMainLooper()).post {
                     lanIpTextView?.text = "IP: $ipAddress"
-                }
-                // IP地址更新后，更新通知内容
-                val newNotification = notificationBuilder
-                    .setContentTitle("IP: $ipAddress")
-                    .setContentText(notificationText) // 更新内容文本
-                    .build()
+                    // IP地址更新后，更新通知内容
+                    val newNotification = notificationBuilder
+                        .setContentTitle("IP: $ipAddress")
+                        .setContentText(notificationText) // 更新内容文本
+                        .build()
 
-                // 使用notify方法更新通知
-                notificationManager.notify(1, newNotification)
+                    // 使用notify方法更新通知
+                    notificationManager.notify(1, newNotification)
+                }
             } catch (e: Exception) {
                 PopNotification(TAG, "Error getting LAN IP address : $e")
             }
