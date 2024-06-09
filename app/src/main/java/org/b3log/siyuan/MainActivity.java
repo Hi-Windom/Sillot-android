@@ -619,7 +619,9 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
      public void applySystemThemeToWebView() {
          int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
          String OSTheme = currentNightMode == Configuration.UI_MODE_NIGHT_YES ? "dark" : "light";
+         Integer isAndroidDarkMode = currentNightMode == Configuration.UI_MODE_NIGHT_YES ? 1 : 0;
          webView.evaluateJavascript("javascript:document.documentElement.setAttribute('data-theme-mode', '" + OSTheme + "')", null);
+         webView.evaluateJavascript("javascript:window.Sillot.android.isAndroidDarkMode = " + isAndroidDarkMode, null);
          if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
              // 系统处于暗色模式
              PopNotification.show("系统深色模式");
