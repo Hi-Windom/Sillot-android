@@ -418,4 +418,6 @@ dependencies {
     // androidTestImplementation "androidx.work:work-testing:$work_version"
     // optional - Multiprocess support
     // implementation "androidx.work:work-multiprocess:$work_version"
+
+    implementation "androidx.webkit:webkit:1.9.0"
 }

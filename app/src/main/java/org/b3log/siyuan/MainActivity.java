@@ -65,8 +65,11 @@ package org.b3log.siyuan;
  import androidx.annotation.NonNull;
  import androidx.appcompat.app.AlertDialog;
  import androidx.appcompat.app.AppCompatActivity;
+ import androidx.appcompat.app.AppCompatDelegate;
  import androidx.core.app.ActivityCompat;
  import androidx.core.content.ContextCompat;
+ import androidx.webkit.WebSettingsCompat;
+ import androidx.webkit.WebViewFeature;
  import androidx.work.Constraints;
  import androidx.work.NetworkType;
  import androidx.work.OneTimeWorkRequest;
@@ -321,10 +324,10 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         Log.w(TAG, "onCreate() invoked");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        // 设置应用的主题模式跟随系统
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         bindBootService();
-
         mmkv = MMKV.defaultMMKV();
-
         // 注册 EventBus
         EventBus.getDefault().register(this);
         // 这段代码并不会直接导致高刷率的生效，它只是在获取支持的显示模式中寻找高刷率最大的模式，并将其设置为首选模式。
@@ -502,15 +505,12 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
         });
 
-        webView.setOnDragListener((v, event) -> {
-            // 禁用拖拽 https://github.com/siyuan-note/siyuan/issues/6436
-            return DragEvent.ACTION_DRAG_ENDED != event.getAction();
-        });
-        showBootIndex();
+            webView.setOnDragListener((v, event) -> {
+                // 禁用拖拽 https://github.com/siyuan-note/siyuan/issues/6436
+                return DragEvent.ACTION_DRAG_ENDED != event.getAction();
+            });
+            showBootIndex();
         }
-//        final WebSettings ws = webView.getSettings();
-//        checkWebViewVer(ws);
-//        userAgent = ws.getUserAgentString();
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -616,7 +616,26 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         webView.loadUrl("http://127.0.0.1:58131/appearance/boot/index.html?v=" + Utils.version);
     }
 
-    /**
+     public void applySystemThemeToWebView() {
+         int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+         String OSTheme = currentNightMode == Configuration.UI_MODE_NIGHT_YES ? "dark" : "light";
+         webView.evaluateJavascript("javascript:document.documentElement.setAttribute('data-theme-mode', '" + OSTheme + "')", null);
+         if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
+             // 系统处于暗色模式
+             PopNotification.show("系统深色模式");
+             if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+                 WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), true);
+             }
+         } else {
+             // 系统处于亮色模式
+             PopNotification.show("系统明亮模式");
+             if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+                 WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), false);
+             }
+         }
+     }
+
+     /**
      * 等待内核 HTTP 服务伺服。
      */
     private void waitFotKernelHttpServing() {
@@ -814,6 +833,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         Log.w(TAG,"onConfigurationChanged -> invoked");
+        // 当系统配置发生变化时，更新WebView的样式
+        applySystemThemeToWebView();
         // 检测屏幕方向是否发生改变
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             // 当前为横屏，在这里处理横屏时的布局变化

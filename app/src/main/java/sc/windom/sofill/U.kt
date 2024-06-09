@@ -24,6 +24,7 @@ import android.provider.Settings
 import android.util.Base64
 import android.util.Log
 import android.webkit.WebSettings
+import android.webkit.WebView
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Badge
@@ -72,6 +73,11 @@ import kotlin.math.sqrt
 
 object U {
     val dateFormat_full1 = SimpleDateFormat("yyyyMMdd-HHmmss")
+
+    fun WebView.isAndroidDarkMode(): Boolean {
+        val currentNightMode = this.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+        return currentNightMode == Configuration.UI_MODE_NIGHT_YES
+    }
 
     /**
      * 获取应用文件目录，它会自动处理多用户的情况。注意，应用文件目录包括了其外部存储的文件目录
