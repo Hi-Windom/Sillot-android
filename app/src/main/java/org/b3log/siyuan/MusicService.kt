@@ -143,7 +143,7 @@ class MusicService : LifecycleService(), MediaPlayer.OnCompletionListener,
 
         createNotificationChannel(
             S.SILLOT_MUSIC_PLAYER_NOTIFICATION_CHANNEL_ID,
-            "🦢 汐洛音乐播放服务"
+            S.SILLOT_MUSIC_PLAYER_NOTIFICATION_CHANEL_NAME
         )
         mediaSession = MediaSessionCompat(this, "MusicService")
         // 创建 MediaController

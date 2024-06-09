@@ -144,6 +144,11 @@ class FloatingWindowService : Service() {
             .setContentTitle("初始化通知，看到这个说明有问题")
             .setContentText(lanIpTextView?.text)
             .setSmallIcon(R.drawable.icon)
+            .setOngoing(true) //不能清除通知
+            .setPriority(NotificationManager.IMPORTANCE_HIGH) // 通知类别，适用“勿扰模式”
+            .setCategory(NotificationCompat.CATEGORY_MESSAGE) // 通知类别，"勿扰模式"时系统会决定要不要显示你的通知
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC) // 屏幕可见性，适用“锁屏状态”
+            .setSilent(true) // 静默通知 https://github.com/Hi-Windom/Sillot-android/issues/80
             .setContentIntent(pendingIntent)
         // 启动前台服务
         startService(notificationIntent)
@@ -222,16 +227,6 @@ class FloatingWindowService : Service() {
             updateWifiInfo()
         }
     }
-
-//    private fun registerNetworkCallback() {
-//        val connectivityManager =
-//            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-//        val networkRequest = NetworkRequest.Builder()
-//            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-//            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-//            .build()
-//        connectivityManager.registerNetworkCallback(networkRequest, networkCallback)
-//    }
 
     private var isNetworkCallbackRegistered = false
 

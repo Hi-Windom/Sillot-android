@@ -29,12 +29,16 @@ object S {
     const val HOST_ld246 = "ld246.com"
 
 
-    const val XLQTFW_notificationId = 58131
+    const val SILLOT_GIBBET_notificationId = 58131
     const val USB_AUDIO_EXCLUSIVE_notificationId = 7654321
 
+    // 用户可见的通道名称
+    const val SILLOT_GIBBET_NOTIFICATION_CHANEL_NAME = "🦢 汐洛绞架通知服务"
+    const val SILLOT_MUSIC_PLAYER_NOTIFICATION_CHANEL_NAME = "🦢 汐洛音乐播放服务"
+
     // 通知频道ID
-    const val XLQTFW_notificationChannelId = "sillot_notification_channel_id_58131$XLQTFW_notificationId" // 🦢 汐洛前台通知服务
-    const val SILLOT_MUSIC_PLAYER_NOTIFICATION_CHANNEL_ID = "sillot_notification_channel_id_$USB_AUDIO_EXCLUSIVE_notificationId" // 🦢 汐洛音乐播放服务
+    const val SILLOT_GIBBET_NOTIFICATION_CHANNEL_ID = "sillot_notification_channel_id_58131$SILLOT_GIBBET_notificationId"
+    const val SILLOT_MUSIC_PLAYER_NOTIFICATION_CHANNEL_ID = "sillot_notification_channel_id_$USB_AUDIO_EXCLUSIVE_notificationId"
     const val SY_NOTIFICATION_CHANNEL_ID = "sillot_notification_channel_id_6806"  // 📚 思源内核服务
     const val FloatingWindowService_NOTIFICATION_CHANNEL_ID = "sillot_notification_channel_id_100001"
 
