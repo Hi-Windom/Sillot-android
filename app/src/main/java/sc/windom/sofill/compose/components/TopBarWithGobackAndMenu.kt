@@ -26,6 +26,7 @@ import androidx.compose.material.icons.twotone.ContentCopy
 import androidx.compose.material.icons.twotone.Delete
 import androidx.compose.material.icons.twotone.Email
 import androidx.compose.material.icons.twotone.FitScreen
+import androidx.compose.material.icons.twotone.Screenshot
 import androidx.compose.material.icons.twotone.Share
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -57,6 +58,8 @@ import sc.windom.sofill.S
 import sc.windom.sofill.U
 import org.b3log.siyuan.Utils
 import org.b3log.siyuan.andapi.Toast
+import sc.windom.sofill.U.disableScreenshot
+import sc.windom.sofill.U.enableScreenshot
 
 
 data class MenuItem31(val title: String, val action: () -> Unit)
@@ -146,9 +149,18 @@ fun TopRightMenu(
     val state = rememberCascadeState()
     val Lcc = LocalContext.current
     var isFullScreen by remember { mutableStateOf(false) }
+    var canCaptureScreenshot by remember { mutableStateOf(true) }
     LaunchedEffect(isFullScreen) {
         val activity = Lcc as Activity
         activity.toggleFullScreen(isFullScreen)
+    }
+    LaunchedEffect(canCaptureScreenshot) {
+        val activity = Lcc as Activity
+        if (canCaptureScreenshot) {
+            activity.enableScreenshot()
+        } else {
+            activity.disableScreenshot()
+        }
     }
     // 只有直接在CascadeDropdownMenu中才能使用childrenHeader和children，抽离出去的additionalMenuItem不行
     CascadeDropdownMenu(
@@ -241,6 +253,14 @@ fun TopRightMenu(
             onClick = {
                 onDismiss()
                 isFullScreen = !isFullScreen
+            },
+        )
+        DropdownMenuItem(
+            text = { Text(if (canCaptureScreenshot) "禁用截屏" else "允许截屏") },
+            leadingIcon = { Icon(Icons.TwoTone.Screenshot, contentDescription = null) },
+            onClick = {
+                onDismiss()
+                canCaptureScreenshot = !canCaptureScreenshot
             },
         )
         DropdownMenuItem(

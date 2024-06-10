@@ -12,6 +12,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.database.Cursor
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
@@ -23,6 +25,7 @@ import android.provider.OpenableColumns
 import android.provider.Settings
 import android.util.Base64
 import android.util.Log
+import android.view.WindowManager
 import android.webkit.WebSettings
 import android.webkit.WebView
 import androidx.compose.material.icons.Icons
@@ -73,6 +76,42 @@ import kotlin.math.sqrt
 
 object U {
     val dateFormat_full1 = SimpleDateFormat("yyyyMMdd-HHmmss")
+    /**
+     * 截取webView快照(webView加载的整个内容的大小)，本方法不适用于动态加载的网页
+     * @param webView
+     * @return
+     */
+    fun captureWebView(webView: WebView): Bitmap {
+        val bmp: Bitmap
+        val width = webView.width
+        val height = webView.height
+
+        // 如果WebView尚未测量其内容，则调用measure和layout以确保尺寸是正确的
+        webView.measure(width, height)
+        webView.layout(0, 0, width, height)
+
+        // 创建与WebView尺寸相同的Bitmap
+        bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+
+        // 在Bitmap上创建一个Canvas，并通过WebView的draw方法绘制内容
+        val canvas = Canvas(bmp)
+        webView.draw(canvas)
+        return bmp
+    }
+
+    /**
+     * 禁止截屏
+     */
+    fun Activity.disableScreenshot() {
+        this.window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+    }
+
+    /**
+     * 允许截屏
+     */
+    fun Activity.enableScreenshot() {
+        this.window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+    }
 
     fun WebView.isAndroidDarkMode(): Boolean {
         val currentNightMode = this.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
