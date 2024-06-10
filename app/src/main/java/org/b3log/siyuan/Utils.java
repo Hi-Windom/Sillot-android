@@ -42,6 +42,7 @@ import android.webkit.WebView;
 import com.blankj.utilcode.util.KeyboardUtils;
 import com.blankj.utilcode.util.StringUtils;
 import com.blankj.utilcode.util.TimeUtils;
+import com.github.lany92.keyboard.KeyboardWatcher;
 import com.kongzue.dialogx.dialogs.PopTip;
 
 import org.apache.commons.io.FileUtils;
@@ -213,9 +214,10 @@ public final class Utils {
 
 
     public static void registerSoftKeyboardToolbar(final Activity activity, final WebView webView) {
-        KeyboardUtils.registerSoftInputChangedListener(activity, height -> {
+        // 比 com.blankj.utilcode.util.KeyboardUtils.registerSoftInputChangedListener 更高效
+        new KeyboardWatcher(activity, (showKeyboard, height) -> {
             if (!activity.isInMultiWindowMode()) {
-                String javascriptCommand = KeyboardUtils.isSoftInputVisible(activity) ? "showKeyboardToolbar()" : "hideKeyboardToolbar()";
+                String javascriptCommand = showKeyboard ? "showKeyboardToolbar()" : "hideKeyboardToolbar()";
                 if (webView != null){
                     webView.evaluateJavascript("javascript:" + javascriptCommand, null);
                 }

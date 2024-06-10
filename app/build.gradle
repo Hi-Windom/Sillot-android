@@ -420,4 +420,6 @@ dependencies {
     // implementation "androidx.work:work-multiprocess:$work_version"
 
     implementation "androidx.webkit:webkit:1.9.0"
+
+    implementation 'com.github.lany192:KeyboardWatcher:1.0.0'
 }

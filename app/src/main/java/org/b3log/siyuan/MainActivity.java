@@ -30,6 +30,7 @@ package org.b3log.siyuan;
  import android.content.res.Configuration;
  import android.graphics.Bitmap;
  import android.graphics.Color;
+ import android.graphics.Rect;
  import android.net.Uri;
  import android.os.Build;
  import android.os.Bundle;
@@ -41,6 +42,7 @@ package org.b3log.siyuan;
  import android.view.KeyEvent;
  import android.view.View;
  import android.view.ViewGroup;
+ import android.view.ViewTreeObserver;
  import android.view.WindowManager;
  import android.webkit.CookieManager;
  import android.webkit.JsResult;
@@ -120,6 +122,7 @@ package org.b3log.siyuan;
 public class MainActivity extends AppCompatActivity implements com.blankj.utilcode.util.Utils.OnAppStatusChangedListener {
     private final String TAG = "MainActivity-SiYuan";
     public WebView webView;
+    private int webViewOriginalHeight;
     private FrameLayout webViewContainer;
     private ImageView bootLogo;
     private ProgressBar bootProgressBar;
@@ -295,24 +298,49 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
             AppUtils.registerAppStatusChangedListener(this);
 
-            // 使用 Chromium 调试 WebView
-            if (Utils.isDebugPackageAndMode(this)) {
-                WebView.setWebContentsDebuggingEnabled(true);
-            }
-
-            // 注册工具栏显示/隐藏跟随软键盘状态
-            // Fix https://github.com/siyuan-note/siyuan/issues/9765
-            Utils.registerSoftKeyboardToolbar(this, webView);
-
             // 沉浸式状态栏设置
             UltimateBarX.statusBarOnly(this).transparent().light(false).color(Color.parseColor(S.ColorStringHex.INSTANCE.getBgColor_light())).apply();
             if (webView != null) {
                 ((ViewGroup) webView.getParent()).setPadding(0, UltimateBarX.getStatusBarHeight(), 0, 0);
-            }
 
-            // Fix https://github.com/siyuan-note/siyuan/issues/9726
-            // KeyboardUtils.fixAndroidBug5497(this);
-            AndroidBug5497Workaround.assistActivity(this);
+                // 使用 Chromium 调试 WebView
+                if (Utils.isDebugPackageAndMode(this)) {
+                    WebView.setWebContentsDebuggingEnabled(true);
+                }
+
+                // 注册工具栏显示/隐藏跟随软键盘状态
+                // Fix https://github.com/siyuan-note/siyuan/issues/9765
+                Utils.registerSoftKeyboardToolbar(this, webView);
+
+                // Fix https://github.com/siyuan-note/siyuan/issues/9726
+                // KeyboardUtils.fixAndroidBug5497(this);
+                AndroidBug5497Workaround.assistActivity(this);
+
+                // 获取WebView的原始高度
+                webView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+                    if (webViewOriginalHeight == 0) {
+                        webViewOriginalHeight = webView.getHeight();
+                    }
+                });
+
+                // 监听布局变化
+                webView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+                    // 检查键盘是否可见
+                    Rect r = new Rect();
+                    getWindow().getDecorView().getWindowVisibleDisplayFrame(r);
+                    int screenHeight = getWindow().getDecorView().getRootView().getHeight();
+                    int keypadHeight = screenHeight - r.bottom;
+
+                    if (keypadHeight > screenHeight * 0.15) { // 0.15是一个阈值，可以根据实际情况调整
+                        // 键盘显示，调整WebView高度
+                        webView.getLayoutParams().height = webViewOriginalHeight - keypadHeight;
+                    } else {
+                        // 键盘隐藏，恢复WebView原始高度
+                        webView.getLayoutParams().height = webViewOriginalHeight;
+                    }
+                    webView.requestLayout();
+                });
+            }
         } else {
             // 服务尚未绑定或实例为空，处理错误或等待绑定
             PopNotification.show("服务尚未绑定或实例为空").noAutoDismiss();
