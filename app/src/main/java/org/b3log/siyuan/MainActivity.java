@@ -280,7 +280,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             instanceId = UUID.randomUUID().toString();
             Intent intent = new Intent(getApplicationContext(), BootService.class);
             intent.putExtra("INSTANCE_ID", instanceId); // 绑定服务时传递instanceId
-            intent.putExtra(S.INTENT.EXTRA_WEB_VIEW_KEY, "Sillot-Gibbet");
+            intent.putExtra(S.getINTENT().EXTRA_WEB_VIEW_KEY, "Sillot-Gibbet");
             bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE); // TODO: 双开共存时内核固定端口冲突
         } else {
             performActionWithService();
@@ -299,7 +299,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             AppUtils.registerAppStatusChangedListener(this);
 
             // 沉浸式状态栏设置
-            UltimateBarX.statusBarOnly(this).transparent().light(false).color(Color.parseColor(S.ColorStringHex.INSTANCE.getBgColor_light())).apply();
+            UltimateBarX.statusBarOnly(this).transparent().light(false).color(Color.parseColor(S.getColorStringHex().getBgColor_light())).apply();
             if (webView != null) {
                 ((ViewGroup) webView.getParent()).setPadding(0, UltimateBarX.getStatusBarHeight(), 0, 0);
 
@@ -808,7 +808,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             }
         } else if (event.getRequestCode() == S.getREQUEST_CODE().REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT) {
             // 不管结果是什么都重启
-            if (event.getCallback().equals(S.EVENTS.INSTANCE.getCALL_MainActivity_siyuan_1())) {
+            if (event.getCallback().equals(S.getEVENTS().INSTANCE.getCALL_MainActivity_siyuan_1())) {
                 coldRestart();
             }
         }

@@ -2,12 +2,12 @@
 package sc.windom.sofill
 
 import android.net.Uri
-import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
-import androidx.compose.ui.unit.sp
+import sc.windom.sofill.Ss.S_API
+import sc.windom.sofill.Ss.S_ColorInt
+import sc.windom.sofill.Ss.S_ColorStringHex
 import sc.windom.sofill.Ss.S_Compose
+import sc.windom.sofill.Ss.S_Events
+import sc.windom.sofill.Ss.S_Intent
 import sc.windom.sofill.Ss.S_REQUEST_CODE
 
 object S {
@@ -50,29 +50,20 @@ object S {
     @JvmStatic
     val REQUEST_CODE = S_REQUEST_CODE
 
+    @JvmStatic
+    val API = S_API
 
-    object API {
-        val ld246_notification_type = listOf("回帖", "评论", "回复", "提及", "关注", "积分")
-        val ld246_notification_type_EN = listOf("commented", "comment2ed", "reply", "at", "following", "point")
-    }
+    @JvmStatic
+    val ColorStringHex = S_ColorStringHex
 
-    object ColorStringHex {
-        val bgColor_light = "#1e1e1e"
-    }
+    @JvmStatic
+    val EVENTS = S_Events
 
-    object EVENTS {
-        val CALL_MainActivity_siyuan_1 = "MainActivity-Siyuan-coldRestart"
-    }
+    @JvmStatic
+    val INTENT = S_Intent
 
-    object INTENT {
-        const val EXTRA_WEB_VIEW_KEY = "webView_key"
-    }
-
-    object COLORINT {
-        val DarkFull = android.graphics.Color.argb(255, 0, 0, 0)
-        val DarkDeep = android.graphics.Color.argb(250, 25, 25, 25)
-        val LightWhite = android.graphics.Color.argb(255, 250, 250, 250)
-    }
+    @JvmStatic
+    val COLORINT = S_ColorInt
 
     // compose 组件常量
     @JvmStatic
