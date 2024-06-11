@@ -4,6 +4,7 @@ import android.content.Context
 import android.webkit.WebView
 import android.webkit.WebViewClient
 
+@Deprecated("请使用 WebPools 替代")
 class WebViewPool private constructor() {
     companion object {
         private var instance: WebViewPool? = null

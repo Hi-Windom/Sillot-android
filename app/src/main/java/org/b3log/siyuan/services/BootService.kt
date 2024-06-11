@@ -116,7 +116,7 @@ class BootService : Service() {
     }
 
     private fun init_webView() {
-        webView = WebViewPool.getInstance().getWebView(this)
+        webView = WebViewPool.getInstance().getWebView(this) // 由于不使用 activity 的上下文导致 https://github.com/Hi-Windom/Sillot/issues/814 暂时没有解决方法
         webView?.setBackgroundColor(Color.parseColor(S.ColorStringHex.bgColor_light))
         val ws = webView?.getSettings()
         userAgent = ws?.userAgentString

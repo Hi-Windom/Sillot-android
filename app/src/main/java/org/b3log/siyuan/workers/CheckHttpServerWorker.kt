@@ -10,7 +10,7 @@ class CheckHttpServerWorker(context: Context, params: WorkerParameters) : Worker
     override fun doWork(): Result {
         if (!Mobile.isHttpServing()) {
             // 如果没有运行，重启
-            stopService("BootService")
+            stopService("org.b3log.siyuan.services.BootService")
         }
         // 返回Result.success()表示任务成功完成
         return Result.success()
