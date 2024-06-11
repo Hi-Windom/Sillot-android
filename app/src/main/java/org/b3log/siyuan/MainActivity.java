@@ -319,7 +319,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             }
         } else {
             // 服务尚未绑定或实例为空，处理错误或等待绑定
-            U.PopNoteShow(this, "服务尚未绑定或实例为空").noAutoDismiss();
+            U.getDialogX().PopNoteShow(this, "服务尚未绑定或实例为空").noAutoDismiss();
         }
     }
 

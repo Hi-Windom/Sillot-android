@@ -225,7 +225,7 @@ class HomeActivity : ComponentActivity() {
                         try {
                             Thread.sleep(200)
                         } catch (e: Exception) {
-                            U.PopNoteShow(thisActivity, e.cause.toString(), e.toString())
+                            U.DialogX.PopNoteShow(thisActivity, e.cause.toString(), e.toString())
                         }
                         Log.w(TAG, "再见")
                         finish()
@@ -284,14 +284,14 @@ class HomeActivity : ComponentActivity() {
             200 ->
                 PopTip.show("<(￣︶￣)↗[${response.code()}]")
 
-            401 -> U.PopNoteShow(
+            401 -> U.DialogX.PopNoteShow(
                 thisActivity,
                 message,
                 "TOKEN为空或者错误，请在右上角设置 TOKEN 后下拉刷新"
             ).noAutoDismiss()
 
-            403 -> U.PopNoteShow(thisActivity, message, "权限不足").noAutoDismiss()
-            else -> U.PopNoteShow(thisActivity, " ￣へ￣ [${response.code()}]", response.toString())
+            403 -> U.DialogX.PopNoteShow(thisActivity, message, "权限不足").noAutoDismiss()
+            else -> U.DialogX.PopNoteShow(thisActivity, " ￣へ￣ [${response.code()}]", response.toString())
                 .noAutoDismiss()
         }
     }
@@ -518,7 +518,7 @@ class HomeActivity : ComponentActivity() {
                         mmkv.encode(S.KEY_AES_TOKEN_ld246, encodedKey)
                         mmkv.encode(S.KEY_TOKEN_ld246, encryptedToken)
                         pullToRefreshState.startRefresh()
-                        U.PopNoteShow(
+                        U.DialogX.PopNoteShow(
                             thisActivity,
                             "TOKEN已更新（${
                                 U.displayTokenLimiter(
@@ -960,7 +960,7 @@ class HomeActivity : ComponentActivity() {
                                         calls[5] -> map["积分"] = data?.pointNotifications
                                     }
                                 } catch (e: Exception) {
-                                    U.PopNoteShow(thisActivity, e.cause.toString(), e.toString())
+                                    U.DialogX.PopNoteShow(thisActivity, e.cause.toString(), e.toString())
                                         .noAutoDismiss()
                                 }
                             } else {
@@ -975,7 +975,7 @@ class HomeActivity : ComponentActivity() {
 
                         override fun onFailure(call: Call<ld246_Response>, t: Throwable) {
                             // 处理异常
-                            U.PopNoteShow(thisActivity, call.toString(), t.toString())
+                            U.DialogX.PopNoteShow(thisActivity, call.toString(), t.toString())
                                 .noAutoDismiss()
                             viewModelScope.launch {
                                 pullToRefreshState?.endRefresh()
@@ -1034,7 +1034,7 @@ class HomeActivity : ComponentActivity() {
                                         }
                                         map[currentTab.value] = notifications
                                     } catch (e: Exception) {
-                                        U.PopNoteShow(thisActivity, e.cause.toString(), e.toString())
+                                        U.DialogX.PopNoteShow(thisActivity, e.cause.toString(), e.toString())
                                             .noAutoDismiss()
                                     }
                                 }
@@ -1047,7 +1047,7 @@ class HomeActivity : ComponentActivity() {
 
                             override fun onFailure(call: Call<ld246_Response>, t: Throwable) {
                                 // 处理异常
-                                U.PopNoteShow(thisActivity, call.toString(), t.toString()).noAutoDismiss()
+                                U.DialogX.PopNoteShow(thisActivity, call.toString(), t.toString()).noAutoDismiss()
                                 viewModelScope.launch {
                                     pullToRefreshState.endRefresh()
                                 }
@@ -1061,7 +1061,7 @@ class HomeActivity : ComponentActivity() {
                     }
                 } catch (e: Exception) {
                     // 处理错误
-                    U.PopNoteShow(thisActivity, "任务失败", e.toString()).noAutoDismiss()
+                    U.DialogX.PopNoteShow(thisActivity, "任务失败", e.toString()).noAutoDismiss()
                 } finally {
                     // 此处执行则不会等待
                 }
@@ -1087,7 +1087,7 @@ class HomeActivity : ComponentActivity() {
                 ActivityCompat.startActivityForResult(view.context as Activity, intent, 1, null)
                 true
             } catch (e: Exception) {
-                U.PopNoteShow(thisActivity, TAG, e.toString()).noAutoDismiss()
+                U.DialogX.PopNoteShow(thisActivity, TAG, e.toString()).noAutoDismiss()
                 false
             }
         } else {

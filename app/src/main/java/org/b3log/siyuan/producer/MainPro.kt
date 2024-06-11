@@ -503,7 +503,7 @@ class MainPro : ComponentActivity() {
                         // 将加密后的Token存储到MMKV中
                         mmkv.encode(S.KEY_AES_TOKEN_Sillot_Gibbet, encodedKey)
                         mmkv.encode(S.KEY_TOKEN_Sillot_Gibbet, encryptedToken)
-                        U.PopNoteShow(
+                        U.DialogX.PopNoteShow(
                             thisActivity,
                             "TOKEN已更新（${
                                 U.displayTokenLimiter(
@@ -609,7 +609,7 @@ class MainPro : ComponentActivity() {
                 if (notebooks.isNullOrEmpty()) {
                     // 处理笔记本列表为空的情况
                     thisActivity.runOnUiThread {
-                        U.PopNoteShow(
+                        U.DialogX.PopNoteShow(
                             thisActivity,
                             TAG,
                             "No notebooks received. reason:\n$info\n$helpInfo"
@@ -651,7 +651,7 @@ class MainPro : ComponentActivity() {
                                     } else {
                                         // 处理创建笔记失败的情况
                                         thisActivity.runOnUiThread {
-                                            U.PopNoteShow(
+                                            U.DialogX.PopNoteShow(
                                                 thisActivity,
                                                 TAG,
                                                 "Note creation failed. reason:\n$info\n$helpInfo"
@@ -682,11 +682,11 @@ class MainPro : ComponentActivity() {
                 contentColor = S.C.btn_Color1.current
             ), enabled = true, onClick = {
                 if (token.isNullOrEmpty()) {
-                    U.PopNoteShow(thisActivity,"TOKEN为空，请在右上角设置 TOKEN 后重试").noAutoDismiss()
+                    U.DialogX.PopNoteShow(thisActivity,"TOKEN为空，请在右上角设置 TOKEN 后重试").noAutoDismiss()
                     return@Button
                 }
                 if (bootService == null) {
-                    U.PopNoteShow(
+                    U.DialogX.PopNoteShow(
                         thisActivity,
                         R.drawable.icon,
                         "汐洛绞架内核尚未就绪",
@@ -700,7 +700,7 @@ class MainPro : ComponentActivity() {
                     if (filteredDirectories.isNotEmpty()) {
                         runSendMD2siyuan(markdown)
                     } else {
-                        U.PopNoteShow(
+                        U.DialogX.PopNoteShow(
                             thisActivity,
                             R.drawable.icon,
                             "未发现任何工作空间",
@@ -863,7 +863,7 @@ class MainPro : ComponentActivity() {
                     } catch (e: IOException) {
                         Log.e(TAG, e.toString())
                         withContext(Dispatchers.Main) {
-                            U.PopNoteShow(thisActivity, "任务失败", e.toString()).noAutoDismiss()
+                            U.DialogX.PopNoteShow(thisActivity, "任务失败", e.toString()).noAutoDismiss()
                         }
                     }
                     // 执行任务完成后，关闭遮罩
@@ -879,7 +879,7 @@ class MainPro : ComponentActivity() {
                     try {
                         if (!U.isStorageSpaceAvailable(thisActivity.contentResolver, uri_from_file)) {
                             // 存储空间不足，处理逻辑
-                            U.PopNoteShow(thisActivity, R.drawable.icon, "存储空间不足，请先清理")
+                            U.DialogX.PopNoteShow(thisActivity, R.drawable.icon, "存储空间不足，请先清理")
                             return@withContext
                         }
                         val sourceFilePath = U.getPathFromUri(thisActivity, uri_from_file)
@@ -890,14 +890,14 @@ class MainPro : ComponentActivity() {
                                     U.copyFileToMyAppFolder(
                                         workspaceAssetsDir, it, it1
                                     )
-                                    U.PopNoteShow(
+                                    U.DialogX.PopNoteShow(
                                         thisActivity,
                                         R.drawable.icon,
                                         "已存入 ${workspaceAssetsDir}"
                                     ).autoDismiss(5000)
                                 } catch (e: IOException) {
                                     Log.e(TAG, e.toString())
-                                    U.PopNoteShow(thisActivity, R.drawable.icon, "任务失败", e.toString())
+                                    U.DialogX.PopNoteShow(thisActivity, R.drawable.icon, "任务失败", e.toString())
                                         .noAutoDismiss()
                                 }
 
@@ -906,7 +906,7 @@ class MainPro : ComponentActivity() {
                     } catch (e: IOException) {
                         Log.e(TAG, e.toString())
                         withContext(Dispatchers.Main) {
-                            U.PopNoteShow(thisActivity, R.drawable.icon, "任务失败", e.toString())
+                            U.DialogX.PopNoteShow(thisActivity, R.drawable.icon, "任务失败", e.toString())
                                 .noAutoDismiss()
                         }
                     } finally {
@@ -1095,7 +1095,7 @@ class MainPro : ComponentActivity() {
                                         false
                                     })
                         } else {
-                            U.PopNoteShow(
+                            U.DialogX.PopNoteShow(
                                 thisActivity,
                                 R.drawable.icon,
                                 "未发现任何工作空间",
@@ -1122,7 +1122,7 @@ class MainPro : ComponentActivity() {
                     it
                 )
             } ?: run {
-                U.PopNoteShow(thisActivity, "安装失败", "无法获取安装包 uri")
+                U.DialogX.PopNoteShow(thisActivity, "安装失败", "无法获取安装包 uri")
             }
         }
 
@@ -1133,7 +1133,7 @@ class MainPro : ComponentActivity() {
                     it
                 )
             } ?: run {
-                U.PopNoteShow(thisActivity, "安装失败", "无法获取安装包 uri")
+                U.DialogX.PopNoteShow(thisActivity, "安装失败", "无法获取安装包 uri")
             }
         }
 
