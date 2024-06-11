@@ -180,6 +180,13 @@ class MainPro : ComponentActivity() {
         window.decorView.setOnApplyWindowInsetsListener { _, insets ->
             insets
         }
+
+        setContent {
+            CascadeMaterialTheme {
+                MyUI(TAG)
+            }
+        }
+
         if (bootService == null) {
             webView = Objects.requireNonNull<WebPoolsPro?>(instance).createWebView(
                 this, "Sillot-MainPro"
@@ -224,11 +231,6 @@ class MainPro : ComponentActivity() {
 
     fun performActionWithService() {
         Log.w(TAG, "performActionWithService() invoked")
-        setContent {
-            CascadeMaterialTheme {
-                MyUI(TAG)
-            }
-        }
     }
 
     private fun isMarkdown(text: String): Boolean {
@@ -662,10 +664,6 @@ class MainPro : ComponentActivity() {
                             })
                 }
             }
-        } ?: {
-            thisActivity.runOnUiThread {
-                PopTip("TOKEN为空，请在右上角设置 TOKEN 后重试")
-            }
         }
     }
 
@@ -673,7 +671,6 @@ class MainPro : ComponentActivity() {
     fun SendBtnPart(markdown: String?) {
         val isLandscape =
             LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
-        // 保存到指定文件夹
         Button(modifier = Modifier
             .width(S.C.Button_Width.current.dp)
             .padding(top = if (isLandscape) S.C.btn_PaddingTopH.current else S.C.btn_PaddingTopV.current),
@@ -681,6 +678,18 @@ class MainPro : ComponentActivity() {
                 containerColor = S.C.btn_bgColor3.current,
                 contentColor = S.C.btn_Color1.current
             ), enabled = true, onClick = {
+                if (token.isNullOrEmpty()) {
+                    PopNotification.show("TOKEN为空，请在右上角设置 TOKEN 后重试").noAutoDismiss()
+                    return@Button
+                }
+                if (bootService == null) {
+                    PopNotification.show(
+                        R.drawable.icon,
+                        "汐洛绞架内核尚未就绪",
+                        "请稍后再试"
+                    ).noAutoDismiss()
+                    return@Button
+                }
                 if (markdown != null) {
                     val directories = U.getDirectoriesInPath(thisActivity.workspaceParentDir())
                     val filteredDirectories = directories.filter { it != "home" }
