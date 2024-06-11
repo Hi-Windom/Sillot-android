@@ -75,6 +75,12 @@ object S {
         const val EXTRA_WEB_VIEW_KEY = "webView_key"
     }
 
+    object COLORINT {
+        val DarkFull = android.graphics.Color.argb(255, 0, 0, 0)
+        val DarkDeep = android.graphics.Color.argb(250, 25, 25, 25)
+        val LightWhite = android.graphics.Color.argb(255, 250, 250, 250)
+    }
+
     // compose 组件常量
     object C {
         // sp（缩放无关像素）：用于字体大小，会根据用户的字体大小偏好进行缩放。

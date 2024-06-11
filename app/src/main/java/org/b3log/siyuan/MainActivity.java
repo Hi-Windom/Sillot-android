@@ -319,7 +319,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             }
         } else {
             // 服务尚未绑定或实例为空，处理错误或等待绑定
-            PopNotification.show("服务尚未绑定或实例为空").noAutoDismiss();
+            U.PopNoteShow(this, "服务尚未绑定或实例为空").noAutoDismiss();
         }
     }
 
@@ -619,27 +619,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         WebView.setWebContentsDebuggingEnabled(true);
         webView.loadUrl("http://127.0.0.1:58131/appearance/boot/index.html?v=" + Utils.version);
     }
-
-//     public void applySystemThemeToWebView() {
-//         int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
-//         String OSTheme = currentNightMode == Configuration.UI_MODE_NIGHT_YES ? "dark" : "light";
-//         Integer isAndroidDarkMode = currentNightMode == Configuration.UI_MODE_NIGHT_YES ? 1 : 0;
-//         webView.evaluateJavascript("javascript:document.documentElement.setAttribute('data-theme-mode', '" + OSTheme + "')", null);
-//         webView.evaluateJavascript("javascript:window.Sillot.android.isAndroidDarkMode = " + isAndroidDarkMode, null);
-//         if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
-//             // 系统处于暗色模式
-//             PopNotification.show("系统深色模式");
-//             if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-//                 WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), true);
-//             }
-//         } else {
-//             // 系统处于亮色模式
-//             PopNotification.show("系统明亮模式");
-//             if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-//                 WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), false);
-//             }
-//         }
-//     }
 
      /**
      * 等待内核 HTTP 服务伺服。
