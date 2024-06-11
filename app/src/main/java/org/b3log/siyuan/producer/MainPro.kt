@@ -68,8 +68,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.kongzue.dialogx.dialogs.BottomMenu
 import com.kongzue.dialogx.dialogs.InputDialog
-import com.kongzue.dialogx.dialogs.PopNotification
-import com.kongzue.dialogx.dialogs.PopTip
 import com.kongzue.dialogx.interfaces.OnBottomMenuButtonClickListener
 import com.tencent.mmkv.MMKV
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -94,7 +92,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import sc.windom.sofill.S
 import sc.windom.sofill.U
-import sc.windom.sofill.U.workspaceParentDir
+import sc.windom.sofill.Us.U_FileUtils.workspaceParentDir
 import sc.windom.sofill.android.webview.WebPoolsPro
 import sc.windom.sofill.android.webview.WebPoolsPro.Companion.instance
 import sc.windom.sofill.api.siyuan.SiyuanNoteAPI
@@ -919,7 +917,7 @@ class MainPro : ComponentActivity() {
 
         var manageAllFilesPermissionLauncher =
             rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (U.canManageAllFiles(thisActivity)) {
+                if (U.PS.canManageAllFiles(thisActivity)) {
                     if (isButton3OnClickRunning) {
                         onCopyFileToFolderByDocumentTree()
                     } else if (isButton4OnClickRunning) {
