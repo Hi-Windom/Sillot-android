@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import sc.windom.sofill.Ss.S_REQUEST_CODE
 
 object S {
 
@@ -45,17 +46,8 @@ object S {
     const val URIMainActivity = "$siyuanPackage.MainActivity"
 
     // REQUEST CODE
-    const val REQUEST_SELECT_FILE = 100
-    const val REQUEST_CAMERA = 101
-    const val REQUEST_LOCATION = 1002
-    const val VIDEO_PICK_REQUEST_CODE = 10001
-    const val REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT = 10002 // 申请电源优化无限制权限后重启，部分系统没有该权限
-    const val REQUEST_IGNORE_BATTERY_OPTIMIZATIONS = 10002 // 申请电源优化无限制权限，部分系统没有该权限
-    const val REQUEST_CODE_MANAGE_STORAGE = 10003
-    const val REQUEST_OVERLAY = 10004 // 悬浮窗
-    const val REQUEST_POST_NOTIFICATIONS = 10005 // 读取通知
-    const val REQUEST_CODE_INSTALL_PERMISSION = 10006 // 安装应用
-    const val REQUEST_ACCESS_FINE_LOCATION = 10007 // 精确位置
+    @JvmStatic
+    val REQUEST_CODE = S_REQUEST_CODE
 
 
     object API {

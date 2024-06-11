@@ -32,7 +32,7 @@ class Battery : AppCompatActivity() {
                 // 发送事件，将权限请求的结果发送出去
                 EventBus.getDefault().post(
                     OnSiYuanMainRequestEvent(
-                        S.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT,
+                        S.REQUEST_CODE.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT,
                         RESULT_OK,
                         S.EVENTS.CALL_MainActivity_siyuan_1
                     )
@@ -42,7 +42,7 @@ class Battery : AppCompatActivity() {
                 Toast.Show(appContext, "未加入电池优化的白名单")
                 EventBus.getDefault().post(
                     OnSiYuanMainRequestEvent(
-                        S.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT,
+                        S.REQUEST_CODE.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT,
                         RESULT_CANCELED,
                         S.EVENTS.CALL_MainActivity_siyuan_1
                     )

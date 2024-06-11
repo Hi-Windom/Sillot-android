@@ -128,8 +128,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     private ProgressBar bootProgressBar;
     private TextView bootDetailsText;
     private ValueCallback<Uri[]> uploadMessage;
-    private static final int REQUEST_SELECT_FILE = S.REQUEST_SELECT_FILE;
-    private static final int REQUEST_CAMERA = S.REQUEST_CAMERA;
+    private static final int REQUEST_SELECT_FILE = S.getREQUEST_CODE().REQUEST_SELECT_FILE;
+    private static final int REQUEST_CAMERA = S.getREQUEST_CODE().REQUEST_CAMERA;
     private long exitTime;
     public MMKV mmkv;
     private int works = 0;
@@ -793,7 +793,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(OnSiYuanMainRequestEvent event) {
         // 检查权限请求的结果
-        if (event.getRequestCode() == S.REQUEST_OVERLAY) {
+        if (event.getRequestCode() == S.getREQUEST_CODE().REQUEST_OVERLAY) {
             if (event.getResultCode() == RESULT_OK) {
                 // 权限已授予
                 // 在此处执行相应的操作
@@ -806,7 +806,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 // 权限未授予
                 // 在此处执行相应的操作
             }
-        } else if (event.getRequestCode() == S.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT) {
+        } else if (event.getRequestCode() == S.getREQUEST_CODE().REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT) {
             // 不管结果是什么都重启
             if (event.getCallback().equals(S.EVENTS.INSTANCE.getCALL_MainActivity_siyuan_1())) {
                 coldRestart();

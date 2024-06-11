@@ -31,7 +31,7 @@ class Overlay : AppCompatActivity() {
                 // 发送事件，将权限请求的结果发送出去
                 EventBus.getDefault().post(
                     OnSiYuanMainRequestEvent(
-                        S.REQUEST_OVERLAY,
+                        S.REQUEST_CODE.REQUEST_OVERLAY,
                         RESULT_OK,
                         "showwifi"
                     )
@@ -40,7 +40,7 @@ class Overlay : AppCompatActivity() {
                 Toast.Show(appContext, "未获取显示悬浮窗权限")
                 EventBus.getDefault().post(
                     OnSiYuanMainRequestEvent(
-                        S.REQUEST_OVERLAY,
+                        S.REQUEST_CODE.REQUEST_OVERLAY,
                         RESULT_CANCELED,
                         ""
                     )

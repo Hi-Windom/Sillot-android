@@ -138,7 +138,7 @@ public final class Utils {
     public static void requestExternalStoragePermission(Activity activity) {
         if (!canManageAllFiles(activity)) {
             Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-            startActivityForResult(activity, intent, S.REQUEST_CODE_MANAGE_STORAGE, null);
+            startActivityForResult(activity, intent, S.getREQUEST_CODE().REQUEST_CODE_MANAGE_STORAGE, null);
         }
     }
 

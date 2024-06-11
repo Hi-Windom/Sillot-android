@@ -602,7 +602,7 @@ object U {
             ActivityCompat.startActivityForResult(
                 activity,
                 intent,
-                S.REQUEST_CODE_MANAGE_STORAGE,
+                S.REQUEST_CODE.REQUEST_CODE_MANAGE_STORAGE,
                 null
             )
         }
@@ -1212,7 +1212,7 @@ object U {
                     Toast.Show(activity, "请先授予汐洛安装未知应用权限")
                     // 启动授权 activity
                     val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
-                    activity.startActivityForResult(intent, S.REQUEST_CODE_INSTALL_PERMISSION)
+                    activity.startActivityForResult(intent, S.REQUEST_CODE.REQUEST_CODE_INSTALL_PERMISSION)
                     return
                 }
             }

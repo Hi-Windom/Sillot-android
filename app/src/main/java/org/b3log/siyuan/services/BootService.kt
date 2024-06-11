@@ -369,7 +369,7 @@ class BootService : Service() {
                     ActivityCompat.requestPermissions(
                         activity,
                         arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                        S.REQUEST_LOCATION
+                        S.REQUEST_CODE.REQUEST_LOCATION
                     )
                 }
             }
@@ -384,7 +384,7 @@ class BootService : Service() {
                     ActivityCompat.startActivityForResult(
                         activity,
                         intent,
-                        S.REQUEST_OVERLAY,
+                        S.REQUEST_CODE.REQUEST_OVERLAY,
                         null
                     )
                 }

@@ -126,7 +126,7 @@ public final class JSAndroid {
                         activity.runOnUiThread(() -> {
                             Intent battery = new Intent("sc.windom.sillot.intent.permission.Battery");
                             battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivityForResult(activity, battery, S.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT, null);
+                            startActivityForResult(activity, battery, S.getREQUEST_CODE().REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT, null);
                         });
                         return false;
                     }).setCancelButton((baseDialog, v) -> false).setOtherButton((baseDialog, v) -> {
@@ -137,7 +137,7 @@ public final class JSAndroid {
             } else {
                 Intent battery = new Intent("sc.windom.sillot.intent.permission.Battery");
                 battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivityForResult(activity, battery, S.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, null);
+                startActivityForResult(activity, battery, S.getREQUEST_CODE().REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, null);
             }
         }
         Log.w(TAG, "requestPermissionActivity()  return true");
