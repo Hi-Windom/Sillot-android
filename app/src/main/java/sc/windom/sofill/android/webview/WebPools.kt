@@ -1,9 +1,11 @@
 package sc.windom.sofill.android.webview
 
 import android.app.Activity
+import android.content.Context
 import android.content.MutableContextWrapper
 import android.webkit.WebView
 import java.util.Queue
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicReference
 
@@ -29,21 +31,21 @@ class WebPools private constructor() {
      * 页面加入浏览器
      * （1）缓存没有，则新建webView
      */
-    fun acquireWebView(activity: Activity): WebView {
-        return acquireWebViewInternal(activity)
+    fun acquireWebView(context: Context): WebView {
+        return acquireWebViewInternal(context)
     }
 
 
-    private fun acquireWebViewInternal(activity: Activity): WebView {
+    private fun acquireWebViewInternal(context: Context): WebView {
         val mWebView = mWebViews.poll()
 
         if (mWebView == null) {
             synchronized(lock) {
-                return WebView(MutableContextWrapper(activity))
+                return WebView(MutableContextWrapper(context))
             }
         } else {
             val mMutableContextWrapper = mWebView.context as MutableContextWrapper
-            mMutableContextWrapper.baseContext = activity
+            mMutableContextWrapper.baseContext = context
             return mWebView
         }
     }
@@ -82,6 +84,62 @@ class WebPools private constructor() {
                         )
                     ) return mAtomicReference.get().also {
                         mWebPools = it
+                    }
+                }
+            }
+    }
+}
+
+class WebPoolsPro private constructor() {
+    private val mWebViews: ConcurrentHashMap<String, WebView> = ConcurrentHashMap()
+
+    /**
+     * 页面销毁
+     * （1）去除WebView的上下文，避免内存泄漏
+     * （2）加入缓存
+     */
+    fun recycle(webView: WebView, key: String) {
+        val context = webView.context
+        if (context is MutableContextWrapper) {
+            context.baseContext = context.applicationContext
+            mWebViews[key] = webView
+        } else {
+            throw IllegalArgumentException("Context is not MutableContextWrapper")
+        }
+    }
+
+    /**
+     * 页面加入浏览器
+     * （1）缓存没有，则新建webView
+     */
+    fun acquireWebView(key: String): WebView? {
+        return mWebViews[key]
+    }
+
+    /**
+     * 创建新的WebView并与其key关联
+     */
+    fun createWebView(context: Context, key: String): WebView {
+        return WebView(MutableContextWrapper(context)).apply {
+            mWebViews[key] = this
+        }
+    }
+
+    companion object {
+        private var mWebPools: WebPoolsPro? = null
+
+        /**
+         * 引用类型的原子类
+         */
+        private val mAtomicReference = AtomicReference<WebPoolsPro?>()
+
+        @JvmStatic
+        val instance: WebPoolsPro?
+            get() {
+                while (true) {
+                    mWebPools?.let { return it }
+                    if (mAtomicReference.compareAndSet(null, WebPoolsPro())) {
+                        return mAtomicReference.get().apply { mWebPools = this }
                     }
                 }
             }

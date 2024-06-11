@@ -12,10 +12,10 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
-import android.provider.Settings
 import android.util.Base64
 import android.util.Log
 import android.util.Size
+import android.webkit.WebView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -66,7 +66,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.documentfile.provider.DocumentFile
 import com.kongzue.dialogx.dialogs.BottomMenu
 import com.kongzue.dialogx.dialogs.InputDialog
 import com.kongzue.dialogx.dialogs.PopNotification
@@ -96,6 +95,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 import sc.windom.sofill.U.workspaceParentDir
+import sc.windom.sofill.android.webview.WebPoolsPro
+import sc.windom.sofill.android.webview.WebPoolsPro.Companion.instance
 import sc.windom.sofill.api.siyuan.SiyuanNoteAPI
 import sc.windom.sofill.compose.ApkButtons
 import sc.windom.sofill.compose.AudioButtons
@@ -114,6 +115,7 @@ import sc.windom.sofill.dataClass.IPayload
 import sc.windom.sofill.dataClass.IResponse
 import java.io.IOException
 import java.util.Date
+import java.util.Objects
 
 
 // TODO: 多选文件打开的处理
@@ -130,6 +132,7 @@ class MainPro : ComponentActivity() {
     private var in2_data: Uri? = null
     private var in2_action: String? = null
     private var in2_type: String? = null
+    private var webView: WebView? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         thisActivity = this
@@ -178,8 +181,12 @@ class MainPro : ComponentActivity() {
             insets
         }
         if (bootService == null) {
+            webView = Objects.requireNonNull<WebPoolsPro?>(instance).createWebView(
+                this, "Sillot-MainPro"
+            )
             // 绑定服务
             val intent = Intent(applicationContext, BootService::class.java)
+            intent.putExtra(S.INTENT.EXTRA_WEB_VIEW_KEY, "Sillot-MainPro")
             bindService(intent, serviceConnection, BIND_AUTO_CREATE)
         } else {
             performActionWithService()

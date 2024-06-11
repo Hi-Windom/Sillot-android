@@ -42,7 +42,7 @@ package org.b3log.siyuan;
  import android.view.KeyEvent;
  import android.view.View;
  import android.view.ViewGroup;
- import android.view.ViewTreeObserver;
+ import sc.windom.sofill.android.webview.WebPoolsPro;
  import android.view.WindowManager;
  import android.webkit.CookieManager;
  import android.webkit.JsResult;
@@ -104,6 +104,7 @@ package org.b3log.siyuan;
  import java.util.Date;
  import java.util.HashSet;
  import java.util.Locale;
+ import java.util.Objects;
  import java.util.UUID;
  import java.util.concurrent.atomic.AtomicReference;
 
@@ -276,11 +277,11 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     void bindBootService() {
         if (bootService == null){
-            // 生成一个唯一的instanceId
+            webView = Objects.requireNonNull(WebPoolsPro.getInstance()).createWebView(this, "Sillot-Gibbet");
             instanceId = UUID.randomUUID().toString();
-            // 绑定服务时传递instanceId
             Intent intent = new Intent(getApplicationContext(), BootService.class);
-            intent.putExtra("INSTANCE_ID", instanceId);
+            intent.putExtra("INSTANCE_ID", instanceId); // 绑定服务时传递instanceId
+            intent.putExtra(S.INTENT.EXTRA_WEB_VIEW_KEY, "Sillot-Gibbet");
             bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE); // TODO: 双开共存时内核固定端口冲突
         } else {
             performActionWithService();
@@ -442,7 +443,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         bootLogo = findViewById(R.id.bootLogo);
         bootProgressBar = findViewById(R.id.progressBar);
         bootDetailsText = findViewById(R.id.bootDetails);
-        webView = bootService.getWebView();
+//        webView = bootService.getWebView();
         if (webView != null) {
             // 设置WebView的布局参数
             webView.setLayoutParams(new FrameLayout.LayoutParams(

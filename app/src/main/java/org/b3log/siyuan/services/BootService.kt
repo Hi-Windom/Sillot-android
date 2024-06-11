@@ -6,7 +6,6 @@ import android.app.Service
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.net.Uri
 import android.os.Binder
 import android.os.Build
 import android.os.Bundle
@@ -17,7 +16,6 @@ import android.os.Looper
 import android.os.Message
 import android.provider.Settings
 import android.util.Log
-import android.webkit.ValueCallback
 import android.webkit.WebView
 import androidx.core.app.ActivityCompat
 import androidx.work.Constraints
@@ -49,7 +47,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import sc.windom.sofill.S
 import sc.windom.sofill.U
-import sc.windom.sofill.android.webview.WebViewPool
+import sc.windom.sofill.android.webview.WebPoolsPro
 import java.io.File
 import java.net.InetAddress
 import java.net.ServerSocket
@@ -69,7 +67,7 @@ class BootService : Service() {
     var kernelStarted = false
     private lateinit var mHandlerThread: HandlerThread
     private lateinit var mHandler: Handler
-    private val uploadMessage: ValueCallback<Array<Uri>>? = null
+    private var webViewKey: String? = null
     override fun onCreate() {
         super.onCreate()
         mHandlerThread = HandlerThread("MyHandlerThread")
@@ -86,12 +84,14 @@ class BootService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        webView?.let { webViewKey?.let { it1 -> WebPoolsPro.instance?.recycle(it, it1) } }
         server?.stop()
     }
 
     private val binder = LocalBinder()
 
     override fun onBind(intent: Intent): IBinder {
+        webViewKey = intent.getStringExtra(S.INTENT.EXTRA_WEB_VIEW_KEY)
         return binder
     }
 
@@ -116,7 +116,9 @@ class BootService : Service() {
     }
 
     private fun init_webView() {
-        webView = WebViewPool.getInstance().getWebView(this) // 由于不使用 activity 的上下文导致 https://github.com/Hi-Windom/Sillot/issues/814 暂时没有解决方法
+        // 不使用 activity 的上下文会导致 https://github.com/Hi-Windom/Sillot/issues/814 这里改为获取在 MainActivity 初始化好的 webView
+        webView =
+            webViewKey?.let { WebPoolsPro.instance?.acquireWebView(it) }
         webView?.setBackgroundColor(Color.parseColor(S.ColorStringHex.bgColor_light))
         val ws = webView?.getSettings()
         userAgent = ws?.userAgentString
