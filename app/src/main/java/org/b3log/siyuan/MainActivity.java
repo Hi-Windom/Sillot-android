@@ -814,29 +814,10 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         }
     }
 
+    // https://github.com/Hi-Windom/Sillot-android/issues/84 不能在此重写，否则 registActivityConfigurationChangWithSoftKeyboardToolbarInWebview() 里无效
 //    @Override
 //    public void onConfigurationChanged(@NonNull Configuration newConfig) {
 //        super.onConfigurationChanged(newConfig);
-//        Log.w(TAG,"onConfigurationChanged -> invoked");
-//        // 当系统配置发生变化时，更新WebView的样式
-//        applySystemThemeToWebView();
-//        // 检测屏幕方向是否发生改变
-//        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-//            // 当前为横屏，在这里处理横屏时的布局变化
-//            Log.w(TAG,"当前为横屏");
-//        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
-//            // 当前为竖屏，在这里处理竖屏时的布局变化
-//            Log.w(TAG,"当前为横屏");
-//        }
-//
-//        // 检测软键盘的显示状态
-//        if (newConfig.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_NO) {
-//            // 软键盘隐藏了，在这里处理布局变化
-//            Log.w(TAG,"软键盘隐藏了");
-//        } else if (newConfig.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_YES) {
-//            // 软键盘显示了，在这里处理布局变化
-//            Log.w(TAG,"软键盘隐藏了");
-//        }
 //    }
 
     private WebViewPool.WebViewWrapper webViewWrapper;
