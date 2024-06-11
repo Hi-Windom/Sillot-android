@@ -22,6 +22,7 @@ import static android.content.Context.POWER_SERVICE;
 import static androidx.core.app.ActivityCompat.startActivityForResult;
 
 import android.app.Activity;
+import android.content.ComponentCallbacks;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -29,6 +30,8 @@ import android.app.KeyguardManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
+import android.content.res.Configuration;
+import android.graphics.Rect;
 import android.os.Build;
 import android.os.Environment;
 import android.os.PowerManager;
@@ -37,9 +40,10 @@ import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.Manifest;
+import android.view.View;
+import android.view.WindowInsets;
 import android.webkit.WebView;
 
-import com.blankj.utilcode.util.KeyboardUtils;
 import com.blankj.utilcode.util.StringUtils;
 import com.blankj.utilcode.util.TimeUtils;
 import com.github.lany92.keyboard.KeyboardWatcher;
@@ -60,6 +64,8 @@ import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -154,7 +160,7 @@ public final class Utils {
     }
 
     public static boolean isIgnoringBatteryOptimizations(Context context) { // 忽略电池优化
-        PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        PowerManager powerManager = (PowerManager) context.getSystemService(POWER_SERVICE);
         if (powerManager != null) {
             return powerManager.isIgnoringBatteryOptimizations(context.getPackageName());
         }
@@ -210,21 +216,6 @@ public final class Utils {
             }
         return false;
     }
-
-
-
-    public static void registerSoftKeyboardToolbar(final Activity activity, final WebView webView) {
-        // 比 com.blankj.utilcode.util.KeyboardUtils.registerSoftInputChangedListener 更高效
-        new KeyboardWatcher(activity, (showKeyboard, height) -> {
-            if (!activity.isInMultiWindowMode()) {
-                String javascriptCommand = showKeyboard ? "showKeyboardToolbar()" : "hideKeyboardToolbar()";
-                if (webView != null){
-                    webView.evaluateJavascript("javascript:" + javascriptCommand, null);
-                }
-            }
-        });
-    }
-
 
     public static void unzipAsset(final AssetManager assetManager, final String zipName, final String targetDirectory) {
         ZipInputStream zis = null;

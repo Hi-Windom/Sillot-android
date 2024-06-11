@@ -30,7 +30,6 @@ package org.b3log.siyuan;
  import android.content.res.Configuration;
  import android.graphics.Bitmap;
  import android.graphics.Color;
- import android.graphics.Rect;
  import android.net.Uri;
  import android.os.Build;
  import android.os.Bundle;
@@ -109,6 +108,7 @@ package org.b3log.siyuan;
  import java.util.concurrent.atomic.AtomicReference;
 
  import mobile.Mobile;
+ import sc.windom.sofill.U;
  import sc.windom.sofill.S;
  import sc.windom.sofill.android.permission.Ps;
  import sc.windom.sofill.android.webview.WebViewPool;
@@ -123,7 +123,6 @@ package org.b3log.siyuan;
 public class MainActivity extends AppCompatActivity implements com.blankj.utilcode.util.Utils.OnAppStatusChangedListener {
     private final String TAG = "MainActivity-SiYuan";
     public WebView webView;
-    private int webViewOriginalHeight;
     private FrameLayout webViewContainer;
     private ImageView bootLogo;
     private ProgressBar bootProgressBar;
@@ -311,36 +310,12 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
                 // 注册工具栏显示/隐藏跟随软键盘状态
                 // Fix https://github.com/siyuan-note/siyuan/issues/9765
-                Utils.registerSoftKeyboardToolbar(this, webView);
+                // https://github.com/Hi-Windom/Sillot-android/issues/84
+                U.registActivityConfigurationChangWithSoftKeyboardToolbarInWebview(this, webView);
 
                 // Fix https://github.com/siyuan-note/siyuan/issues/9726
-                // KeyboardUtils.fixAndroidBug5497(this);
-                AndroidBug5497Workaround.assistActivity(this);
-
-                // 获取WebView的原始高度
-                webView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-                    if (webViewOriginalHeight == 0) {
-                        webViewOriginalHeight = webView.getHeight();
-                    }
-                });
-
-                // 监听布局变化
-                webView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-                    // 检查键盘是否可见
-                    Rect r = new Rect();
-                    getWindow().getDecorView().getWindowVisibleDisplayFrame(r);
-                    int screenHeight = getWindow().getDecorView().getRootView().getHeight();
-                    int keypadHeight = screenHeight - r.bottom;
-
-                    if (keypadHeight > screenHeight * 0.15) { // 0.15是一个阈值，可以根据实际情况调整
-                        // 键盘显示，调整WebView高度
-                        webView.getLayoutParams().height = webViewOriginalHeight - keypadHeight;
-                    } else {
-                        // 键盘隐藏，恢复WebView原始高度
-                        webView.getLayoutParams().height = webViewOriginalHeight;
-                    }
-                    webView.requestLayout();
-                });
+                // https://github.com/Hi-Windom/Sillot-android/issues/84
+                AndroidBug5497Workaround.assistActivity(this, webView);
             }
         } else {
             // 服务尚未绑定或实例为空，处理错误或等待绑定
@@ -645,26 +620,26 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         webView.loadUrl("http://127.0.0.1:58131/appearance/boot/index.html?v=" + Utils.version);
     }
 
-     public void applySystemThemeToWebView() {
-         int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
-         String OSTheme = currentNightMode == Configuration.UI_MODE_NIGHT_YES ? "dark" : "light";
-         Integer isAndroidDarkMode = currentNightMode == Configuration.UI_MODE_NIGHT_YES ? 1 : 0;
-         webView.evaluateJavascript("javascript:document.documentElement.setAttribute('data-theme-mode', '" + OSTheme + "')", null);
-         webView.evaluateJavascript("javascript:window.Sillot.android.isAndroidDarkMode = " + isAndroidDarkMode, null);
-         if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
-             // 系统处于暗色模式
-             PopNotification.show("系统深色模式");
-             if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-                 WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), true);
-             }
-         } else {
-             // 系统处于亮色模式
-             PopNotification.show("系统明亮模式");
-             if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-                 WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), false);
-             }
-         }
-     }
+//     public void applySystemThemeToWebView() {
+//         int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+//         String OSTheme = currentNightMode == Configuration.UI_MODE_NIGHT_YES ? "dark" : "light";
+//         Integer isAndroidDarkMode = currentNightMode == Configuration.UI_MODE_NIGHT_YES ? 1 : 0;
+//         webView.evaluateJavascript("javascript:document.documentElement.setAttribute('data-theme-mode', '" + OSTheme + "')", null);
+//         webView.evaluateJavascript("javascript:window.Sillot.android.isAndroidDarkMode = " + isAndroidDarkMode, null);
+//         if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
+//             // 系统处于暗色模式
+//             PopNotification.show("系统深色模式");
+//             if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+//                 WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), true);
+//             }
+//         } else {
+//             // 系统处于亮色模式
+//             PopNotification.show("系统明亮模式");
+//             if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+//                 WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), false);
+//             }
+//         }
+//     }
 
      /**
      * 等待内核 HTTP 服务伺服。
@@ -860,30 +835,30 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         }
     }
 
-    @Override
-    public void onConfigurationChanged(@NonNull Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        Log.w(TAG,"onConfigurationChanged -> invoked");
-        // 当系统配置发生变化时，更新WebView的样式
-        applySystemThemeToWebView();
-        // 检测屏幕方向是否发生改变
-        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            // 当前为横屏，在这里处理横屏时的布局变化
-            Log.w(TAG,"当前为横屏");
-        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
-            // 当前为竖屏，在这里处理竖屏时的布局变化
-            Log.w(TAG,"当前为横屏");
-        }
-
-        // 检测软键盘的显示状态
-        if (newConfig.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_NO) {
-            // 软键盘隐藏了，在这里处理布局变化
-            Log.w(TAG,"软键盘隐藏了");
-        } else if (newConfig.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_YES) {
-            // 软键盘显示了，在这里处理布局变化
-            Log.w(TAG,"软键盘隐藏了");
-        }
-    }
+//    @Override
+//    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+//        super.onConfigurationChanged(newConfig);
+//        Log.w(TAG,"onConfigurationChanged -> invoked");
+//        // 当系统配置发生变化时，更新WebView的样式
+//        applySystemThemeToWebView();
+//        // 检测屏幕方向是否发生改变
+//        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+//            // 当前为横屏，在这里处理横屏时的布局变化
+//            Log.w(TAG,"当前为横屏");
+//        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+//            // 当前为竖屏，在这里处理竖屏时的布局变化
+//            Log.w(TAG,"当前为横屏");
+//        }
+//
+//        // 检测软键盘的显示状态
+//        if (newConfig.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_NO) {
+//            // 软键盘隐藏了，在这里处理布局变化
+//            Log.w(TAG,"软键盘隐藏了");
+//        } else if (newConfig.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_YES) {
+//            // 软键盘显示了，在这里处理布局变化
+//            Log.w(TAG,"软键盘隐藏了");
+//        }
+//    }
 
     private WebViewPool.WebViewWrapper webViewWrapper;
 

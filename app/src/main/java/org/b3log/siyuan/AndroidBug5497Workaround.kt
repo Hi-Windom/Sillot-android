@@ -3,14 +3,19 @@ package org.b3log.siyuan
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Rect
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.WindowManager
+import android.webkit.WebView
 import android.widget.FrameLayout
 import com.blankj.utilcode.util.BarUtils
+import sc.windom.sofill.U
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Android small window mode soft keyboard black occlusion [siyuan-note/siyuan-android#7](https://github.com/siyuan-note/siyuan-android/pull/7)
@@ -20,7 +25,7 @@ import com.blankj.utilcode.util.BarUtils
  * @version 1.0.0.0, Nov 24, 2023
  * @since 2.11.0
  */
-class AndroidBug5497Workaround private constructor(private val activity: Activity) {
+class AndroidBug5497Workaround private constructor(private val activity: Activity, private val webView: WebView) {
     private val TAG = "AndroidBug5497Workaround"
     private var windowMode = 0 // 当前窗口模式，0表示全屏，100表示多窗口
     private var resize = false // 标记是否需要调整大小
@@ -39,11 +44,29 @@ class AndroidBug5497Workaround private constructor(private val activity: Activit
 
     /**
      * 检查并调整Activity内容视图的大小
+     * TODO: 适配横屏情况
      */
     private fun possiblyResizeChildOfContent() {
         val usableHeight = this.computeUsableHeight() // 计算可用高度
         val rootViewHeight = this.getRootViewHeight() // 获取根视图高度
 //        logInfo() // 打印日志信息
+        // 检测屏幕方向是否发生改变
+        val newConfig = activity.resources.configuration
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            // 当前为横屏，在这里处理横屏时的布局变化
+            Log.w(TAG, "当前为横屏")
+        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            // 当前为竖屏，在这里处理竖屏时的布局变化
+            Log.w(TAG, "当前为竖屏")
+        }
+        // 检测软键盘的显示状态
+        if (newConfig.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_NO) {
+            // 软键盘隐藏了，在这里处理布局变化
+            Log.w(TAG, "软键盘隐藏了")
+        } else if (newConfig.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_YES) {
+            // 软键盘显示了，在这里处理布局变化
+            Log.w(TAG, "软键盘显示了")
+        }
 
         // 如果可用高度或根视图高度发生变化，则需要调整大小
         if (usableHeight != this.usableHeight || rootViewHeight != this.rootViewHeight) {
@@ -63,6 +86,9 @@ class AndroidBug5497Workaround private constructor(private val activity: Activit
             view.requestLayout() // 请求重新布局
             this.usableHeight = usableHeight // 更新可用高度
             this.rootViewHeight = rootViewHeight // 更新根视图高度
+            adjustWebViewHeight(
+                webView,
+            )
         } else if (this.resize) {
             // 如果已经标记为需要调整大小
             if (this.windowMode == 100) {
@@ -75,6 +101,15 @@ class AndroidBug5497Workaround private constructor(private val activity: Activit
                 }
             }
         }
+    }
+
+
+    private fun adjustWebViewHeight(
+        webView: WebView,
+    ) {
+        // 设置WebView的新高度
+        webView.layoutParams.height = frameLayoutParams.height
+        webView.requestLayout()
     }
 
     /**
@@ -179,8 +214,8 @@ class AndroidBug5497Workaround private constructor(private val activity: Activit
 
     companion object {
         @JvmStatic
-        fun assistActivity(activity: Activity) {
-            AndroidBug5497Workaround(activity)
+        fun assistActivity(activity: Activity, webView: WebView) {
+            AndroidBug5497Workaround(activity, webView)
         }
     }
 }

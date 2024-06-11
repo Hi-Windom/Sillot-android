@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.KeyguardManager
 import android.content.ActivityNotFoundException
+import android.content.ComponentCallbacks
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Context
@@ -14,6 +15,7 @@ import android.content.res.Configuration
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Rect
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
@@ -24,7 +26,10 @@ import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.provider.Settings
 import android.util.Base64
+import android.util.DisplayMetrics
 import android.util.Log
+import android.view.ViewConfiguration
+import android.view.Window
 import android.view.WindowManager
 import android.webkit.WebSettings
 import android.webkit.WebView
@@ -49,7 +54,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import androidx.documentfile.provider.DocumentFile
+import androidx.webkit.WebSettingsCompat
+import androidx.webkit.WebViewFeature
 import com.blankj.utilcode.util.ActivityUtils.startActivity
+import com.github.lany92.keyboard.KeyboardWatcher
 import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.dialogs.PopTip
 import com.tencent.mmkv.MMKV
@@ -66,6 +74,8 @@ import java.net.URLEncoder
 import java.security.MessageDigest
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -75,7 +85,208 @@ import kotlin.math.sqrt
 
 
 object U {
+    private val TAG = "sc.windom.sofill.U"
     val dateFormat_full1 = SimpleDateFormat("yyyyMMdd-HHmmss")
+
+    @JvmStatic
+    fun registActivityConfigurationChangWithSoftKeyboardToolbarInWebview(activity: Activity, webView: WebView?) {
+        if (webView == null) {
+            return
+        }
+        val isMultiWindowMode = AtomicBoolean()
+        val isInFreeformMode = AtomicBoolean()
+        val isInPictureInPictureMode = AtomicBoolean()
+        val isKeyboardShow = AtomicBoolean()
+        val keyboardHeight = AtomicInteger()
+
+        // 初始化运行一次
+        adjustWebViewHeight(
+            webView,
+            isKeyboardShow,
+            keyboardHeight
+        )
+
+        // 高效监听键盘高度变化
+        KeyboardWatcher(activity) { showKeyboard: Boolean, height: Int ->
+            isKeyboardShow.set(showKeyboard)
+            keyboardHeight.set(height)
+            adjustWebViewHeight(
+                webView,
+                isKeyboardShow,
+                keyboardHeight
+            )
+        }
+
+        // 监听配置变化
+        activity.registerComponentCallbacks(object : ComponentCallbacks {
+            override fun onConfigurationChanged(newConfig: Configuration) {
+                Log.d(TAG, " activity.isInMultiWindowMode: ${activity.isInMultiWindowMode} ; activity.isInFreeformMode(): ${activity.isInFreeformMode()} ; activity.isInPictureInPictureMode: ${activity.isInPictureInPictureMode}")
+                applySystemThemeToWebView(activity, webView)
+                // 检测屏幕方向是否发生改变
+                if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    // 当前为横屏，在这里处理横屏时的布局变化
+                    Log.w(TAG, "当前为横屏")
+                } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                    // 当前为竖屏，在这里处理竖屏时的布局变化
+                    Log.w(TAG, "当前为竖屏")
+                }
+
+
+                // 检测软键盘的显示状态
+                if (newConfig.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_NO) {
+                    // 软键盘隐藏了，在这里处理布局变化
+                    Log.w(TAG, "软键盘隐藏了")
+                } else if (newConfig.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_YES) {
+                    // 软键盘显示了，在这里处理布局变化
+                    Log.w(TAG, "软键盘显示了")
+                }
+
+                // 当配置改变时，更新窗口模式标志
+                isMultiWindowMode.set(activity.isInMultiWindowMode)
+                isInFreeformMode.set(activity.isInFreeformMode())
+                isInPictureInPictureMode.set(activity.isInPictureInPictureMode)
+
+                // 改变布局后运行一次
+                adjustWebViewHeight(
+                    webView,
+                    isKeyboardShow,
+                    keyboardHeight
+                )
+
+                // 改变布局后失效了，需要重新监听
+                KeyboardWatcher(activity) { showKeyboard: Boolean, height: Int ->
+                    isKeyboardShow.set(showKeyboard)
+                    keyboardHeight.set(height)
+                    adjustWebViewHeight(
+                        webView,
+                        isKeyboardShow,
+                        keyboardHeight
+                    )
+                }
+            }
+
+            override fun onLowMemory() {
+                // 这里可以处理内存低的情况，如果有必要的话
+            }
+        })
+    }
+    private fun adjustWebViewHeight(
+        webView: WebView,
+        isKeyboardShow: AtomicBoolean,
+        keyboardHeight: AtomicInteger
+    ) {
+        // 重置WebView的高度为可用高度
+        webView.layoutParams.height = -1 // MATCH_PARENT
+        webView.requestLayout()
+        var newHeight = webView.height
+        Log.d(TAG, "newHeight: ${newHeight} isKeyboardShow: ${isKeyboardShow} keyboardHeight: ${keyboardHeight}")
+        if (isKeyboardShow.get()) {
+            // 如果键盘显示，减去键盘高度
+            newHeight -= keyboardHeight.get()
+        }
+        // 设置WebView的新高度
+        webView.layoutParams.height = newHeight
+        webView.requestLayout()
+        val javascriptCommand =
+            if (isKeyboardShow.get()) "showKeyboardToolbar()" else "hideKeyboardToolbar()"
+        webView.evaluateJavascript("javascript:$javascriptCommand", null)
+    }
+
+    @SuppressLint("ObsoleteSdkInt")
+    fun Activity.isInFreeformMode(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // 从Android M开始，可以通过判断窗口属性来检测是否为Freeform模式
+            window.attributes.layoutInDisplayCutoutMode == WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        } else {
+            false
+        }
+    }
+
+    fun applySystemThemeToWebView(context: Context,webView: WebView) {
+        val currentNightMode: Int =
+            context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+        val OSTheme = if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) "dark" else "light"
+        val isAndroidDarkMode = if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) 1 else 0
+        webView.evaluateJavascript(
+            "javascript:document.documentElement.setAttribute('data-theme-mode', '$OSTheme')",
+            null
+        )
+        webView.evaluateJavascript(
+            "javascript:window.Sillot.android.isAndroidDarkMode = $isAndroidDarkMode",
+            null
+        )
+        if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
+            // 系统处于暗色模式
+            PopNotification.show("系统深色模式")
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+                WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), true)
+            }
+        } else {
+            // 系统处于亮色模式
+            PopNotification.show("系统明亮模式")
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+                WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), false)
+            }
+        }
+    }
+
+    /**
+     * 计算可用高度
+     */
+    private fun computeUsableHeight(window: Window): Int {
+        val rect = getVisibleRect(window)
+        return rect.height()
+    }
+
+    /**
+     * 获取视图的可见区域
+     */
+    private fun getVisibleRect(window: Window): Rect {
+        val rect = Rect()
+        window.decorView.getWindowVisibleDisplayFrame(rect)
+        return rect
+    }
+
+    /**
+     * 获取根视图的高度
+     */
+    private fun getRootViewHeight(window: Window): Int {
+        return window.decorView.rootView.height
+    }
+
+    /**
+     * 获取根视图的宽度
+     */
+    private fun getRootViewWidth(window: Window): Int {
+        return window.decorView.rootView.width
+    }
+
+    /**
+     * 获取显示度量
+     */
+    private fun getDisplayMetrics(activity: Activity): DisplayMetrics {
+        val displayMetrics = DisplayMetrics()
+        val windowManager = activity.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        val windowMetrics = windowManager.currentWindowMetrics
+        val bounds = windowMetrics.bounds
+        displayMetrics.widthPixels = bounds.width()
+        displayMetrics.heightPixels = bounds.height()
+        return displayMetrics
+    }
+
+    /**
+     * 获取导航栏高度
+     */
+    private fun getNavigationBarHeight(activity: Activity): Int {
+        val hasMenuKey = ViewConfiguration.get(activity).hasPermanentMenuKey()
+        return if (!hasMenuKey) {
+            val resourceId = activity.resources.getIdentifier("navigation_bar_height", "dimen", "android")
+            if (resourceId > 0) activity.resources.getDimensionPixelSize(resourceId) else 0
+        } else {
+            0
+        }
+    }
+
     /**
      * 截取webView快照(webView加载的整个内容的大小)，本方法不适用于动态加载的网页
      * @param webView
@@ -114,7 +325,8 @@ object U {
     }
 
     fun WebView.isAndroidDarkMode(): Boolean {
-        val currentNightMode = this.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+        val currentNightMode =
+            this.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
         return currentNightMode == Configuration.UI_MODE_NIGHT_YES
     }
 
@@ -135,6 +347,7 @@ object U {
         val filesDir = externalFilesDir ?: this.filesDir
         return filesDir.absolutePath
     }
+
     /**
      * @param blockURL: 格式为 siyuan://blocks/xxx
      */
@@ -143,6 +356,7 @@ object U {
         intent.putExtra("blockURL", blockURL)
         startActivity(intent)
     }
+
     fun getSignalStrengthLevel(signalStrength: Int): String {
         val signalStrengthLevel: String
         signalStrengthLevel = if (signalStrength >= -50) {
@@ -160,6 +374,7 @@ object U {
         }
         return signalStrengthLevel
     }
+
     fun checkWebViewVer(ws: WebSettings): String {
         val ua = ws.userAgentString
         var webViewVer = ""
@@ -185,6 +400,7 @@ object U {
         }
         return webViewVer
     }
+
     fun replaceScheme_deepDecode(url: String, old: String, new: String): String {
         // 解码URL
         var decodedUrl = URLDecoder.decode(url, "UTF-8")
@@ -199,9 +415,11 @@ object U {
 
         return decodedUrl
     }
+
     fun replaceEncodeScheme(url: String, old: String, new: String): String {
         return url.replace(URLEncoder.encode(old), URLEncoder.encode(new))
     }
+
     fun parseAndDecodeUrl(url: String, regex: Regex): String {
         val decodedUrls = regex.findAll(url).map { matchResult ->
             val encodedUrl = matchResult.groupValues[1]
@@ -211,6 +429,7 @@ object U {
         // 使用解码后的 URL 替换原始 URL 中的匹配部分
         return regex.replace(url, decodedUrls)
     }
+
     fun displayTokenEndLimiter(inputStr: String, endLength: Int): String {
         val length = inputStr.length
         return if (length >= endLength) {
@@ -219,6 +438,7 @@ object U {
             inputStr
         }
     }
+
     fun displayTokenLimiter(inputStr: String, startLength: Int, endLength: Int): String {
         val length = inputStr.length
         return if (length <= startLength) {
@@ -226,9 +446,14 @@ object U {
         } else {
             val starsCount = length - startLength - endLength
             if (starsCount > 0) {
-                inputStr.substring(0, startLength) + "*".repeat(starsCount) + inputStr.substring(length - endLength)
+                inputStr.substring(0, startLength) + "*".repeat(starsCount) + inputStr.substring(
+                    length - endLength
+                )
             } else {
-                inputStr.substring(0, startLength + starsCount) + inputStr.substring(length - endLength)
+                inputStr.substring(
+                    0,
+                    startLength + starsCount
+                ) + inputStr.substring(length - endLength)
             }
         }
     }
@@ -286,7 +511,7 @@ object U {
         return decryptAes(encryptedToken, aesKey)
     }
 
-    fun isMIUI(applicationContext : Context): Boolean {
+    fun isMIUI(applicationContext: Context): Boolean {
         val packageManager = applicationContext.packageManager
         val miuiPackageName = "com.miui.gallery"
         return try {
@@ -309,12 +534,14 @@ object U {
         return screenSize == Configuration.SCREENLAYOUT_SIZE_XLARGE ||
                 screenSize == Configuration.SCREENLAYOUT_SIZE_LARGE
     }
+
     fun isPad(context: Context): Boolean { // Converted from Utils.java
         val metrics = context.resources.displayMetrics
         val widthInches = metrics.widthPixels / metrics.xdpi
         val heightInches = metrics.heightPixels / metrics.ydpi
-        val diagonalInches = sqrt(widthInches.toDouble().pow(2.0) + heightInches.toDouble()
-            .pow(2.0)
+        val diagonalInches = sqrt(
+            widthInches.toDouble().pow(2.0) + heightInches.toDouble()
+                .pow(2.0)
         )
         return diagonalInches >= 7
     }
@@ -442,8 +669,10 @@ object U {
         val fileSizeInMB = fileSize / (1024 * 1024) // 将文件大小转换为 MB
         return fileSizeInMB > limitMB
     }
+
     fun isFileSizeOverLimit(contentResolver: ContentResolver, uri: Uri, limitMB: Int): Boolean {
-        val fileSize = getFileSizeFromUri(contentResolver, uri) ?: return false // 获取文件大小，如果获取失败则返回 false
+        val fileSize =
+            getFileSizeFromUri(contentResolver, uri) ?: return false // 获取文件大小，如果获取失败则返回 false
         val fileSizeInMB = fileSize / (1024 * 1024) // 将文件大小转换为 MB
         return fileSizeInMB > limitMB
     }
@@ -501,6 +730,7 @@ object U {
                     }
                 }
             }
+
             "file" == uri.scheme -> {
                 filePath = uri.path
             }
@@ -582,7 +812,14 @@ object U {
      * @param mimeType 源文件类型。
      * @param move 是否删除源文件
      */
-    fun copyFileToFolderByDocumentTree(context: Context, treeUri: Uri, targetFileName: String = "Untitled.sc", sourceFilePath: String, mimeType: String, move: Boolean = false) {
+    fun copyFileToFolderByDocumentTree(
+        context: Context,
+        treeUri: Uri,
+        targetFileName: String = "Untitled.sc",
+        sourceFilePath: String,
+        mimeType: String,
+        move: Boolean = false
+    ) {
 
         // 创建源文件的 File 对象
         val sourceFile = File(sourceFilePath)
@@ -604,7 +841,9 @@ object U {
 
         // 关闭输入流
         inputStream.close()
-        if (move) { sourceFile.delete() }
+        if (move) {
+            sourceFile.delete()
+        }
     }
 
 
@@ -615,7 +854,11 @@ object U {
      * @param targetFileName 目标文件的名称。
      * @param sourceFilePath 源文件的路径。
      */
-    fun copyFileToMyAppFolder(targetFolderPath: String, targetFileName: String, sourceFilePath: String) {
+    fun copyFileToMyAppFolder(
+        targetFolderPath: String,
+        targetFileName: String,
+        sourceFilePath: String
+    ) {
         // 创建源文件的 File 对象
         val sourceFile = File(sourceFilePath)
 
@@ -765,9 +1008,11 @@ object U {
     }
 
 
-    fun getFileMIMEType(mimeType: String, fileName: String=""): String {
+    fun getFileMIMEType(mimeType: String, fileName: String = ""): String {
         when {
-            fileName.endsWith(".apk.1") -> { return "程序" }
+            fileName.endsWith(".apk.1") -> {
+                return "程序"
+            }
         }
         return when {
             mimeType.startsWith("video/") -> {
@@ -782,6 +1027,7 @@ object U {
                     else -> "其他视频"
                 }
             }
+
             mimeType.startsWith("audio/") -> {
                 when (mimeType) {
                     "audio/mpeg" -> "MP3 音频"
@@ -798,6 +1044,7 @@ object U {
                     else -> "其他音频"
                 }
             }
+
             mimeType.startsWith("text/") -> {
                 when (mimeType) {
                     "text/plain" -> "文本"
@@ -807,6 +1054,7 @@ object U {
                     else -> "其他文本"
                 }
             }
+
             mimeType.startsWith("image/") -> {
                 when (mimeType) {
                     "image/jpeg" -> "JPEG 图像"
@@ -819,6 +1067,7 @@ object U {
                     else -> "其他图像"
                 }
             }
+
             mimeType.startsWith("application/") -> {
                 when (mimeType) {
                     "application/vnd.android.package-archive" -> "程序"
@@ -839,7 +1088,7 @@ object U {
         }
     }
 
-    fun openUrl(url: String, noBrowser: Boolean=false) {
+    fun openUrl(url: String, noBrowser: Boolean = false) {
         val i = Intent(Intent.ACTION_VIEW, Uri.parse(url))
         if (noBrowser == true) {
             i.addFlags(Intent.FLAG_ACTIVITY_REQUIRE_NON_BROWSER)
@@ -920,8 +1169,8 @@ object U {
     }
 
     /**
-    * 安装 apk 文件，需要申请权限。不申请权限安装请使用 installApk2
-    */
+     * 安装 apk 文件，需要申请权限。不申请权限安装请使用 installApk2
+     */
     fun installApk(activity: Activity, apkUri: Uri) {
         try {
             val installIntent: Intent
@@ -976,7 +1225,10 @@ object U {
             activity.startActivity(chooserIntent)
         } catch (e: ActivityNotFoundException) {
             // 如果没有找到可以处理的应用，提示用户
-            PopNotification.show("任务失败", "没有找到可以安装APK的应用，请尝试使用文件管理器或其他第三方应用打开APK文件。")
+            PopNotification.show(
+                "任务失败",
+                "没有找到可以安装APK的应用，请尝试使用文件管理器或其他第三方应用打开APK文件。"
+            )
         } catch (e: Exception) {
             Log.e("Us.installApk", e.toString())
             PopNotification.show("任务失败", e.toString()).noAutoDismiss()
@@ -1048,8 +1300,12 @@ object U {
     }
 
 
-
-    fun sendEmail(packageManager: PackageManager, recipient: String, subject: String?, body: String?) {
+    fun sendEmail(
+        packageManager: PackageManager,
+        recipient: String,
+        subject: String?,
+        body: String?
+    ) {
         val emailIntent = Intent(Intent.ACTION_SENDTO)
         emailIntent.setData(Uri.parse("mailto:")) // only email apps should handle this
 
@@ -1103,6 +1359,7 @@ object U {
             context.sendBroadcast(mediaScanIntent)
         }
     }
+
     fun notifyGallery(context: Context, imageFile: File) {
 //        向系统相册发送媒体文件扫描广播来通知系统相册更新媒体库
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
