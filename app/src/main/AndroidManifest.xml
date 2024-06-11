@@ -292,18 +292,6 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".permission.InitActivity"
-            android:exported="true"
-            android:autoRemoveFromRecents="true"
-            android:configChanges="orientation|screenSize"
-            android:launchMode="singleInstance">
-            <intent-filter>
-                <action android:name="${applicationId}.intent.permission.InitActivity" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-
         <activity android:name=".videoPlayer.SimplePlayer"
             android:exported="true"
             android:hardwareAccelerated="true"

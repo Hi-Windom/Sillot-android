@@ -17,11 +17,11 @@
  */
 package org.b3log.siyuan;
 
+import static androidx.activity.result.ActivityResultCallerKt.registerForActivityResult;
 import static androidx.core.app.ActivityCompat.startActivityForResult;
 import static com.blankj.utilcode.util.ActivityUtils.startActivity;
 import static com.blankj.utilcode.util.ViewUtils.runOnUiThread;
 
-import android.Manifest;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -39,17 +39,18 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
-import android.provider.Settings;
 import android.webkit.JavascriptInterface;
 import android.widget.LinearLayout;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.biometric.BiometricManager;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.ShareCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
 import com.blankj.utilcode.util.BarUtils;
-import com.blankj.utilcode.util.ServiceUtils;
 import com.blankj.utilcode.util.StringUtils;
 import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.dialogs.PopTip;
@@ -64,13 +65,12 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Map;
 
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.core.Observable;
-
-import io.reactivex.rxjava3.disposables.Disposable;
 import mobile.Mobile;
 import sc.windom.sofill.S;
+import sc.windom.sofill.android.permission.Ps;
 
 /**
  * JavaScript 接口.
@@ -157,6 +157,69 @@ public final class JSAndroid {
         Log.d(TAG, "requestPermission()  return true");
         return true; // 返回真表示已经发起申请，不代表结果
     }
+    @JavascriptInterface
+    public void requestPermissionAll() {
+        Log.d(TAG, "requestPermissionAll() invoked");
+        final HashSet<String> permissionList = new HashSet<>();
+        HashSet<String> permissionsToCheck = new HashSet<>(Ps.PG_Core); // 核心权限组，每次启动都要检查
+        if (Build.VERSION.SDK_INT >= 33) {
+            permissionsToCheck.addAll(Ps.useAPI33);
+        }
+        for (String permission : permissionsToCheck) {
+            if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
+                permissionList.add(permission);
+                Log.w(TAG, "onCreate() -> "+permission+" task add [Ps.PG_Core]");
+            } else {
+                Log.d(TAG, "onCreate() -> "+permission+" granted [Ps.PG_Core]");
+            }
+        }
+
+
+//        if (Utils.isFirstLaunch(activity)) {
+            permissionsToCheck.addAll(Ps.PG_unCore); // 非核心权限组，仅安装后首次启动集中申请
+            for (String permission : permissionsToCheck) {
+                if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
+                    permissionList.add(permission);
+                    Log.w(TAG, "onCreate() -> "+permission+" task add [Ps.PG_unCore]");
+                } else {
+                    Log.d(TAG, "onCreate() -> "+permission+" granted [Ps.PG_unCore]");
+                }
+            }
+//        }
+
+        activity.requestPermissionAll_works += permissionList.size();
+        doPermissionApply(permissionsToCheck);
+    }
+
+    private void doPermissionApply(HashSet<String> permissionList) {
+        if (!permissionList.isEmpty()) {
+
+
+            String[] permissionsToRequest = permissionList.toArray(new String[0]);
+            boolean shouldShowRationale = false;
+            for (String permission : permissionsToRequest) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)) {
+                    shouldShowRationale = true;
+                    break;
+                }
+            }
+
+            if (shouldShowRationale) {
+                // 显示权限说明
+                PopTip.show("必要权限缺失，请处理！");
+                // 打开应用详情界面
+                Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.setData(Uri.parse("package:" + activity.getPackageName()));
+                startActivity(intent);
+            } else {
+                activity.requestPermissionLauncher.launch(permissionsToRequest);
+            }
+        } else {
+            // 处理无权限的情况，例如提醒用户或者直接返回
+        }
+    }
+
     @JavascriptInterface
     public void openURLuseDefaultApp(final String url) {
         Uri uri = Uri.parse(url);

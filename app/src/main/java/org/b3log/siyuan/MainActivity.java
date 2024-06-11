@@ -20,14 +20,12 @@ package org.b3log.siyuan;
  import android.annotation.SuppressLint;
  import android.app.Activity;
  import android.content.ClipData;
- import android.content.ClipboardManager;
  import android.content.ComponentName;
  import android.content.ContentValues;
  import android.content.Context;
  import android.content.Intent;
  import android.content.ServiceConnection;
  import android.content.pm.PackageManager;
- import android.content.res.Configuration;
  import android.graphics.Bitmap;
  import android.graphics.Color;
  import android.net.Uri;
@@ -57,20 +55,16 @@ package org.b3log.siyuan;
  import android.widget.ImageView;
  import android.widget.ProgressBar;
  import android.widget.TextView;
- import android.widget.Toast;
 
  import androidx.activity.OnBackPressedCallback;
  import androidx.activity.OnBackPressedDispatcher;
  import androidx.activity.result.ActivityResultLauncher;
  import androidx.activity.result.contract.ActivityResultContracts;
- import androidx.annotation.NonNull;
  import androidx.appcompat.app.AlertDialog;
  import androidx.appcompat.app.AppCompatActivity;
  import androidx.appcompat.app.AppCompatDelegate;
  import androidx.core.app.ActivityCompat;
  import androidx.core.content.ContextCompat;
- import androidx.webkit.WebSettingsCompat;
- import androidx.webkit.WebViewFeature;
  import androidx.work.Constraints;
  import androidx.work.NetworkType;
  import androidx.work.OneTimeWorkRequest;
@@ -81,9 +75,7 @@ package org.b3log.siyuan;
  import com.blankj.utilcode.util.ServiceUtils;
  import com.blankj.utilcode.util.StringUtils;
  import com.kongzue.dialogx.dialogs.BottomMenu;
- import com.kongzue.dialogx.dialogs.PopNotification;
  import com.kongzue.dialogx.dialogs.PopTip;
- import com.kongzue.dialogx.interfaces.OnMenuItemClickListener;
  import com.tencent.bugly.crashreport.CrashReport;
  import com.tencent.mmkv.MMKV;
  import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
@@ -101,8 +93,8 @@ package org.b3log.siyuan;
  import java.net.URLEncoder;
  import java.text.SimpleDateFormat;
  import java.util.Date;
- import java.util.HashSet;
  import java.util.Locale;
+ import java.util.Map;
  import java.util.Objects;
  import java.util.UUID;
  import java.util.concurrent.atomic.AtomicReference;
@@ -110,7 +102,6 @@ package org.b3log.siyuan;
  import mobile.Mobile;
  import sc.windom.sofill.U;
  import sc.windom.sofill.S;
- import sc.windom.sofill.android.permission.Ps;
  import sc.windom.sofill.android.webview.WebViewPool;
 
  /**
@@ -132,8 +123,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     private static final int REQUEST_CAMERA = S.getREQUEST_CODE().REQUEST_CAMERA;
     private long exitTime;
     public MMKV mmkv;
-    private int works = 0;
-    private final HashSet<String> permissionList = new HashSet<>();
+     public ActivityResultLauncher<String[]> requestPermissionLauncher;
+     public int requestPermissionAll_works = 0;
 
 //    dispatchKeyEvent 是一个更高级的方法，它可以处理所有类型的按键事件，包括按键按下、抬起和长按。
 //    dispatchKeyEvent 方法在事件传递给 onKeyDown、onKeyUp 或其他控件之前被调用。
@@ -330,40 +321,25 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             }
         });
 
-        HashSet<String> permissionsToCheck = new HashSet<>(Ps.PG_Core); // 核心权限组，每次启动都要检查
-        if (Build.VERSION.SDK_INT >= 33) {
-            permissionsToCheck.addAll(Ps.useAPI33);
-        }
-        for (String permission : permissionsToCheck) {
-            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-                permissionList.add(permission);
-                Log.w(TAG, "onCreate() -> "+permission+" task add [Ps.PG_Core]");
-            } else {
-                Log.d(TAG, "onCreate() -> "+permission+" granted [Ps.PG_Core]");
-            }
-        }
+        // 只能写在 activity onCreate() 这里
+        requestPermissionLauncher = this.registerForActivityResult(
+                new ActivityResultContracts.RequestMultiplePermissions(),
+                (Map<String, Boolean> permissions) -> {
+                    boolean allPermissionsGranted = true;
+                    for (String permission : permissions.keySet()) {
+                        if (permissions.get(permission) != null && permissions.get(permission)) {
+                            requestPermissionAll_works--;
+                        } else {
+                            allPermissionsGranted = false;
+                        }
+                    }
+                    if (requestPermissionAll_works == 0 && allPermissionsGranted) {
+                        // 所有权限都得到了允许，执行相应操作
+                    } else {
+                        // 处理未被允许的权限
+                    }
+                });
 
-
-        if (Utils.isFirstLaunch(this)) {
-            permissionsToCheck.addAll(Ps.PG_unCore); // 非核心权限组，仅安装后首次启动集中申请
-            for (String permission : permissionsToCheck) {
-                if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-                    permissionList.add(permission);
-                    Log.w(TAG, "onCreate() -> "+permission+" task add [Ps.PG_unCore]");
-                } else {
-                    Log.d(TAG, "onCreate() -> "+permission+" granted [Ps.PG_unCore]");
-                }
-            }
-        }
-
-        works += permissionList.size();
-        doPermissionApply();
-
-        // 单独的授权界面，暂时淘汰
-//        Intent InitActivity = new Intent(this, org.b3log.siyuan.permission.InitActivity.class);
-//        InitActivity.putExtra("contentViewId", R.layout.init_activity);
-//        InitActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-//        startActivity(InitActivity);
     }
 
 
@@ -624,43 +600,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     }
 
 
-
-    private void doPermissionApply() {
-        if (!permissionList.isEmpty()) {
-            ActivityResultLauncher<String[]> requestPermissionLauncher = registerForActivityResult(
-                    new ActivityResultContracts.RequestMultiplePermissions(),
-                    permissions -> {
-                        boolean allPermissionsGranted = true;
-                        for (String permission : permissions.keySet()) {
-                            if (permissions.get(permission) != null && Boolean.TRUE.equals(permissions.get(permission))) {
-                                works--;
-                            } else {
-                                allPermissionsGranted = false;
-                            }
-                        }
-                        if (works == 0 && allPermissionsGranted) {
-                            // 所有权限都得到了允许，执行相应操作
-                        } else {
-                            // 处理未被允许的权限
-                        }
-                    });
-
-            String[] permissionsToRequest = permissionList.toArray(new String[0]);
-            if (shouldShowRequestPermissionRationale(permissionsToRequest)) {
-                // 显示权限说明
-                PopTip.show("必要权限缺失，请处理！");
-                // 打开应用详情界面
-                Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intent.setData(Uri.parse("package:" + getPackageName()));
-                startActivity(intent);
-            } else {
-                requestPermissionLauncher.launch(permissionsToRequest);
-            }
-        } else {
-            // 处理无权限的情况，例如提醒用户或者直接返回
-        }
-    }
 
     private boolean shouldShowRequestPermissionRationale(String[] permissions) {
         for (String permission : permissions) {
