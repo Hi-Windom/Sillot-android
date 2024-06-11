@@ -920,24 +920,25 @@ class MainPro : ComponentActivity() {
 
 //                Us.requestExternalStoragePermission(thisActivity)
                         // 使用DocumentFile处理URI
-                        val rootDocument = DocumentFile.fromTreeUri(thisActivity, _uri)
+//                        val rootDocument = DocumentFile.fromTreeUri(thisActivity, _uri)
                         // 例如，列出根目录下的文件和文件夹
-                        rootDocument?.listFiles()?.forEach { file ->
-                            // 处理文件或文件夹
-                            Log.d(
-                                TAG,
-                                "File name: ${file.name}, Is directory: ${file.isDirectory}, mimeType: ${file.type}, canRead: ${file.canRead()}, canWrite: ${file.canWrite()}, lastModified: ${file.lastModified()} "
-                            )
-                        }
+//                        rootDocument?.listFiles()?.forEach { file ->
+//                            // 处理文件或文件夹
+//                            Log.d(
+//                                TAG,
+//                                "File name: ${file.name}, Is directory: ${file.isDirectory}, mimeType: ${file.type}, canRead: ${file.canRead()}, canWrite: ${file.canWrite()}, lastModified: ${file.lastModified()} "
+//                            )
+//                        }
 
                         uri_from_file = uri
                         uri_to_dir = _uri
-                        if (U.canManageAllFiles(thisActivity)) {
-                            onCopyFileToFolderByDocumentTree()
-                        } else {
-                            val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-                            manageAllFilesPermissionLauncher.launch(intent)
-                        }
+                        onCopyFileToFolderByDocumentTree()
+//                        if (U.canManageAllFiles(thisActivity)) {
+//                            onCopyFileToFolderByDocumentTree()
+//                        } else {
+//                            val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+//                            manageAllFilesPermissionLauncher.launch(intent)
+//                        }
 
                     }
                 }
@@ -947,12 +948,13 @@ class MainPro : ComponentActivity() {
             if (isButton4OnClickRunning) {
                 uri_from_file = uri
                 uri_to_dir = Uri.parse(workspaceAssetsDir)
-                if (U.canManageAllFiles(thisActivity)) {
-                    onCopyFileToMyAppFolder()
-                } else {
-                    val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-                    manageAllFilesPermissionLauncher.launch(intent)
-                }
+                onCopyFileToMyAppFolder()
+//                if (U.canManageAllFiles(thisActivity)) {
+//                    onCopyFileToMyAppFolder()
+//                } else {
+//                    val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+//                    manageAllFilesPermissionLauncher.launch(intent)
+//                }
 
             }
         }
