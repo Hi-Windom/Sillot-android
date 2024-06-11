@@ -177,9 +177,9 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 .setMessage("请选择反馈渠道")
                 .setOnMenuItemClickListener((dialog, text, index) -> {
                     if (text.equals("电子邮件")) {
-                        U.getFuckOtherApp().sendEmail(getApplicationContext().getPackageManager(), "694357845@qq.com", "汐洛安卓反馈", Utils.getDeviceInfoString());
+                        U.getFuckOtherApp().sendEmail(this.getPackageManager(), "694357845@qq.com", "汐洛安卓反馈", Utils.getDeviceInfoString());
                     } else if (text.equals("QQ")) {
-                        U.getFuckOtherApp().launchQQAndCopyToClipboard(getApplicationContext(), "694357845", "开发者 QQ 号已复制");
+                        U.getFuckOtherApp().launchQQAndCopyToClipboard(this, "694357845", "开发者 QQ 号已复制");
                     } else if (text.equals("抖音")) {
                         U.getFuckOtherApp().launchTikTopAndCopyToClipboard(this, "AsyncTTk", "开发者抖音号已复制");
                     }

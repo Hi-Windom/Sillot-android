@@ -314,12 +314,12 @@ class MainPro : ComponentActivity() {
         val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
         val coroutineScope = rememberCoroutineScope()
         var head_title = "汐洛中转站"
-        val fileName = in2_data?.let { U.getFileName(thisActivity, it) }
-        val fileSize = in2_data?.let { U.getFileSize(thisActivity, it) }
-        val mimeType = intent?.data?.let { U.getMimeType(thisActivity, it) } ?: ""
+        val fileName = in2_data?.let { U.FileUtils.getFileName(thisActivity, it) }
+        val fileSize = in2_data?.let { U.FileUtils.getFileSize(thisActivity, it) }
+        val mimeType = intent?.data?.let { U.FileUtils.getMimeType(thisActivity, it) } ?: ""
         val fileType =
-            fileName?.let { U.getFileMIMEType(mimeType, it) }
-                ?: run { U.getFileMIMEType(mimeType) }
+            fileName?.let { U.FileUtils.getFileMIMEType(mimeType, it) }
+                ?: run { U.FileUtils.getFileMIMEType(mimeType) }
         val isLandscape =
             LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
 
@@ -695,7 +695,7 @@ class MainPro : ComponentActivity() {
                     return@Button
                 }
                 if (markdown != null) {
-                    val directories = U.getDirectoriesInPath(thisActivity.workspaceParentDir())
+                    val directories = U.FileUtils.getDirectoriesInPath(thisActivity.workspaceParentDir())
                     val filteredDirectories = directories.filter { it != "home" }
                     if (filteredDirectories.isNotEmpty()) {
                         runSendMD2siyuan(markdown)
@@ -757,7 +757,7 @@ class MainPro : ComponentActivity() {
                             )
                         }
                     } else {
-                        val icon = U.getIconForFileType(fileType)
+                        val icon = U.FileUtils.getIconForFileType(fileType)
                         Icon(
                             imageVector = icon,
                             contentDescription = "File Type Icon",
@@ -847,11 +847,11 @@ class MainPro : ComponentActivity() {
                             Toast.Show(thisActivity, "存储空间不足，请先清理")
                             return@withContext
                         }
-                        val sourceFilePath = U.getPathFromUri(thisActivity, uri_from_file)
+                        val sourceFilePath = U.FileUtils.getPathFromUri(thisActivity, uri_from_file)
                         // 复制文件到所选文件夹
                         fileName?.let {
                             sourceFilePath?.let { it1 ->
-                                U.copyFileToFolderByDocumentTree(
+                                U.FileUtils.copyFileToFolderByDocumentTree(
                                     thisActivity, uri_to_dir, it,
                                     it1, mimeType
                                 )
@@ -882,12 +882,12 @@ class MainPro : ComponentActivity() {
                             U.DialogX.PopNoteShow(thisActivity, R.drawable.icon, "存储空间不足，请先清理")
                             return@withContext
                         }
-                        val sourceFilePath = U.getPathFromUri(thisActivity, uri_from_file)
+                        val sourceFilePath = U.FileUtils.getPathFromUri(thisActivity, uri_from_file)
                         // 复制文件到所选文件夹
                         fileName?.let {
                             sourceFilePath?.let { it1 ->
                                 try {
-                                    U.copyFileToMyAppFolder(
+                                    U.FileUtils.copyFileToMyAppFolder(
                                         workspaceAssetsDir, it, it1
                                     )
                                     U.DialogX.PopNoteShow(
@@ -1066,7 +1066,7 @@ class MainPro : ComponentActivity() {
                 ), enabled = true, onClick = {
                     if (uri != null) {
                         Log.e(TAG, thisActivity.workspaceParentDir())
-                        val directories = U.getDirectoriesInPath(thisActivity.workspaceParentDir())
+                        val directories = U.FileUtils.getDirectoriesInPath(thisActivity.workspaceParentDir())
                         val filteredDirectories = directories.filter { it != "home" }
                         if (filteredDirectories.isNotEmpty()) {
                             var selectMenuIndex = 0

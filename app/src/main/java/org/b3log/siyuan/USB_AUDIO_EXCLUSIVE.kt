@@ -292,7 +292,7 @@ fun MyUI_USB_AUDIO_EXCLUSIVE(activity: USB_AUDIO_EXCLUSIVE) {
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            fileName = U.getFileName(activity, uri) ?: ""
+            fileName = U.FileUtils.getFileName(activity, uri) ?: ""
             isPlaying.value = true
             isStopped.value = false
             // 启动 MusicService 并传递音乐文件的 URI
