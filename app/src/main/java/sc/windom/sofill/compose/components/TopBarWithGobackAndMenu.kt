@@ -279,7 +279,7 @@ fun TopRightMenu(
                     text = { Text("报告此页") },
                     leadingIcon = { Icon(Icons.TwoTone.Email, contentDescription = null) },
                     onClick = {
-                        onDismiss();U.sendEmail(
+                        onDismiss();U.FuckOtherApp.sendEmail(
                         Lcc.packageManager,
                         S.emailAdress,
                         "汐洛安卓反馈 - 报告此页",

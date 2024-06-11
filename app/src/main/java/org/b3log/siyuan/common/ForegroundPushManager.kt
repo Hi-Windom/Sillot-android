@@ -63,7 +63,7 @@ object ForegroundPushManager {
         val activityIntent = Intent(Intent.ACTION_MAIN)
         activityIntent.addCategory(Intent.CATEGORY_LAUNCHER)
 
-        activityIntent.component = ComponentName(context, S.URIMainActivity)
+        activityIntent.component = ComponentName(context, S.ACTIVITY.URIMainActivity)
         activityIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
         val pendingIntent: PendingIntent
         pendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

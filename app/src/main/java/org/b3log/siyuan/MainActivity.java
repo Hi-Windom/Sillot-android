@@ -166,53 +166,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             }
         }
     }
-    public void sendEmail(String recipient, String subject, String body) {
-        Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
-        emailIntent.setData(Uri.parse("mailto:")); // only email apps should handle this
-
-        // 设置收件人
-        emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{recipient});
-        // 设置邮件主题
-        emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
-        // 设置邮件正文
-        emailIntent.putExtra(Intent.EXTRA_TEXT, body);
-
-        if (emailIntent.resolveActivity(getPackageManager()) != null) {
-            startActivity(emailIntent);
-        } else {
-            PopTip.show("No email client found");
-        }
-    }
-    public void launchQQAndCopyToClipboard(String qqNumber) {
-        // 将QQ号复制到剪贴板
-        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-        ClipData clip = ClipData.newPlainText("label", qqNumber);
-        clipboard.setPrimaryClip(clip);
-
-        Toast.makeText(this, "QQ 号已复制", Toast.LENGTH_SHORT).show();
-
-        Intent intent = getPackageManager().getLaunchIntentForPackage("com.tencent.mobileqq");
-
-        if (intent != null) {
-            startActivity(intent);
-        } else {
-            PopTip.show("QQ 未安装");
-        }
-    }
-    public void launchTikTopAndCopyToClipboard(String TTA) {
-        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-        ClipData clip = ClipData.newPlainText("label", TTA);
-        clipboard.setPrimaryClip(clip);
-        Toast.makeText(this, "抖音号已复制", Toast.LENGTH_SHORT).show();
-
-        Intent intent = getPackageManager().getLaunchIntentForPackage("com.ss.android.ugc.aweme");
-
-        if (intent != null) {
-            startActivity(intent);
-        } else {
-            PopTip.show("抖音未安装");
-        }
-    }
 
     private void androidFeedback() {
         String[] menuOptions = {
@@ -222,13 +175,13 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         };
         BottomMenu.show(menuOptions)
                 .setMessage("请选择反馈渠道")
-                .setOnMenuItemClickListener((OnMenuItemClickListener<BottomMenu>) (dialog, text, index) -> {
+                .setOnMenuItemClickListener((dialog, text, index) -> {
                     if (text.equals("电子邮件")) {
-                        sendEmail("694357845@qq.com", "汐洛安卓反馈", Utils.getDeviceInfoString());
+                        U.getFuckOtherApp().sendEmail(getApplicationContext().getPackageManager(), "694357845@qq.com", "汐洛安卓反馈", Utils.getDeviceInfoString());
                     } else if (text.equals("QQ")) {
-                        launchQQAndCopyToClipboard("694357845");
+                        U.getFuckOtherApp().launchQQAndCopyToClipboard(getApplicationContext(), "694357845", "开发者 QQ 号已复制");
                     } else if (text.equals("抖音")) {
-                        launchTikTopAndCopyToClipboard("AsyncTTk");
+                        U.getFuckOtherApp().launchTikTopAndCopyToClipboard(this, "AsyncTTk", "开发者抖音号已复制");
                     }
                     return false;
                 });

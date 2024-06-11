@@ -3,17 +3,16 @@ package sc.windom.sofill
 
 import android.net.Uri
 import sc.windom.sofill.Ss.S_API
+import sc.windom.sofill.Ss.S_Activity
 import sc.windom.sofill.Ss.S_ColorInt
 import sc.windom.sofill.Ss.S_ColorStringHex
 import sc.windom.sofill.Ss.S_Compose
 import sc.windom.sofill.Ss.S_Events
 import sc.windom.sofill.Ss.S_Intent
 import sc.windom.sofill.Ss.S_REQUEST_CODE
+import sc.windom.sofill.Ss.S_packageName
 
 object S {
-
-    const val packageName = "sc.windom.sillot"
-    const val siyuanPackage = "org.b3log.siyuan"
     const val gitRepoUrl = "https://github.com/Hi-Windom/Sillot-android"
     const val emailAdress = "694357845@qq.com"
     const val QQ = "694357845"
@@ -44,7 +43,8 @@ object S {
     const val SY_NOTIFICATION_CHANNEL_ID = "sillot_notification_channel_id_6806"  // 📚 思源内核服务
     const val FloatingWindowService_NOTIFICATION_CHANNEL_ID = "sillot_notification_channel_id_100001"
 
-    const val URIMainActivity = "$siyuanPackage.MainActivity"
+    @JvmStatic
+    val ACTIVITY = S_Activity
 
     // REQUEST CODE
     @JvmStatic
@@ -68,6 +68,9 @@ object S {
     // compose 组件常量
     @JvmStatic
     val C = S_Compose
+
+    @JvmStatic
+    val AppQueryIDs = S_packageName
 
     data class UriMatchPattern(val scheme: String, val host: String)
 

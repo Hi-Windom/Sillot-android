@@ -87,6 +87,7 @@ import javax.crypto.spec.SecretKeySpec
 import kotlin.math.pow
 import kotlin.math.sqrt
 import sc.windom.sofill.Us.U_DialogX
+import sc.windom.sofill.Us.U_FuckOtherApp
 
 
 object U {
@@ -95,6 +96,9 @@ object U {
 
     @JvmStatic
     val DialogX = U_DialogX
+
+    @JvmStatic
+    val FuckOtherApp = U_FuckOtherApp
 
     @JvmStatic
     fun registActivityConfigurationChangWithSoftKeyboardToolbarInWebview(activity: Activity, webView: WebView?) {
@@ -1326,29 +1330,6 @@ object U {
         } catch (e: Exception) {
             // 其他异常处理
             DialogX.PopNoteShow(activity,"任务失败", "打开音频时出错: ${e.message}")
-        }
-    }
-
-
-    fun sendEmail(
-        packageManager: PackageManager,
-        recipient: String,
-        subject: String?,
-        body: String?
-    ) {
-        val emailIntent = Intent(Intent.ACTION_SENDTO)
-        emailIntent.setData(Uri.parse("mailto:")) // only email apps should handle this
-
-        // 设置收件人
-        emailIntent.putExtra(Intent.EXTRA_EMAIL, arrayOf(recipient))
-        // 设置邮件主题
-        emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject)
-        // 设置邮件正文
-        emailIntent.putExtra(Intent.EXTRA_TEXT, body)
-        if (emailIntent.resolveActivity(packageManager) != null) {
-            startActivity(emailIntent)
-        } else {
-            PopTip.show("No email client found")
         }
     }
 
