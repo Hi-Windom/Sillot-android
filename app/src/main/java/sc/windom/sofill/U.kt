@@ -983,6 +983,70 @@ object U {
         }
     }
 
+    /**
+     * 使用第三方应用打开视频文件。
+     *
+     * @param activity 上下文Activity
+     * @param videoUri 视频文件的Uri
+     */
+    fun openVideoWithThirdPartyApp(activity: Activity, videoUri: Uri) {
+        try {
+            val videoIntent = Intent(Intent.ACTION_VIEW)
+            videoIntent.setDataAndType(videoUri, "video/*")
+            videoIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+
+            // 确保第三方应用有读取该URI的权限
+            videoIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            val chooserIntent = Intent.createChooser(videoIntent, "选择处理此视频的应用")
+
+            // 如果有可以处理该意图的应用，则启动选择器对话框
+            if (videoIntent.resolveActivity(activity.packageManager) != null) {
+                activity.startActivity(chooserIntent)
+            } else {
+                // 如果没有找到可以处理的应用，提示用户
+                PopNotification.show("任务失败", "没有找到可以播放此视频的应用")
+            }
+        } catch (e: ActivityNotFoundException) {
+            // 如果没有找到可以处理的应用，提示用户
+            PopNotification.show("任务失败", "没有找到可以播放此视频的应用")
+        } catch (e: Exception) {
+            // 其他异常处理
+            PopNotification.show("任务失败", "打开视频时出错: ${e.message}")
+        }
+    }
+
+    /**
+     * 使用第三方应用打开视频文件。
+     *
+     * @param activity 上下文Activity
+     * @param audioUri 音频文件的Uri
+     */
+    fun openAudioWithThirdPartyApp(activity: Activity, audioUri: Uri) {
+        try {
+            val videoIntent = Intent(Intent.ACTION_VIEW)
+            videoIntent.setDataAndType(audioUri, "audio/*")
+            videoIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+
+            // 确保第三方应用有读取该URI的权限
+            videoIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            val chooserIntent = Intent.createChooser(videoIntent, "选择处理此音频的应用")
+
+            // 如果有可以处理该意图的应用，则启动选择器对话框
+            if (videoIntent.resolveActivity(activity.packageManager) != null) {
+                activity.startActivity(chooserIntent)
+            } else {
+                // 如果没有找到可以处理的应用，提示用户
+                PopNotification.show("任务失败", "没有找到可以播放此视频的应用")
+            }
+        } catch (e: ActivityNotFoundException) {
+            // 如果没有找到可以处理的应用，提示用户
+            PopNotification.show("任务失败", "没有找到可以播放此视频的应用")
+        } catch (e: Exception) {
+            // 其他异常处理
+            PopNotification.show("任务失败", "打开音频时出错: ${e.message}")
+        }
+    }
+
 
 
     fun sendEmail(packageManager: PackageManager, recipient: String, subject: String?, body: String?) {

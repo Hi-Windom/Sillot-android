@@ -1118,14 +1118,14 @@ class MainPro : ComponentActivity() {
             }
         }
         if (inspectionMode || showAudioButton) {
-            AudioButtons()
+            uri?.let { AudioButtons(it) }
         } else if (showVideoButton) {
             uri?.let { VideoButtons(it) }
         } else if (showApkButton) {
             ApkButtons(S.C.btnText5Apk1.current, ::ApkBTNonClick1)
             ApkButtons(S.C.btnText5Apk2.current, ::ApkBTNonClick2)
         } else if (showMagnetButton) {
-            MagnetButtons(S.C.btnTextMagnet1.current, ::MagnetBTNonClick1)
+            MagnetButtons(S.C.btnTextOpenByThirdParty.current, ::MagnetBTNonClick1)
         }
 
     }
