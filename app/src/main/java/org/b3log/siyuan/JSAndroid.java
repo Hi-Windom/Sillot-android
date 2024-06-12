@@ -94,10 +94,15 @@ public final class JSAndroid {
             BuglyLog.e(TAG, "捕获到异常：" + e.getMessage());
             App.getInstance().reportException(e);
         }
+        PopTip.show("知道了，玩去吧~");
     }
     @JavascriptInterface
     public void buglyPost2() {
-        CrashReport.testJavaCrash();
+        try {
+            CrashReport.testJavaCrash();
+        } catch (Exception e) {
+            PopTip.show("知道了，玩去吧~");
+        }
     }
     @JavascriptInterface
     public boolean requestExternalStoragePermission() {

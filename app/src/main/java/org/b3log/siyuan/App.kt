@@ -288,7 +288,6 @@ class App : Application() {
         val processName = U.DEBUG.getProcessName(Process.myPid())
         // 设置是否为上报进程
         strategy.setUploadProcess(processName == null || processName == packageName)
-        strategy.setDeviceID(U.DEBUG.getAndroidId(this));
         strategy.setCrashHandleCallback(object : CrashHandleCallback() {
             override fun onCrashHandleStart(
                 crashType: Int, errorType: String,
