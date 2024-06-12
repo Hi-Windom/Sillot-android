@@ -17,10 +17,11 @@
  */
 package org.b3log.siyuan;
 
-import static androidx.activity.result.ActivityResultCallerKt.registerForActivityResult;
 import static androidx.core.app.ActivityCompat.startActivityForResult;
 import static com.blankj.utilcode.util.ActivityUtils.startActivity;
 import static com.blankj.utilcode.util.ViewUtils.runOnUiThread;
+
+import static sc.windom.sofill.Us.U_Phone.toggleFullScreen;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -86,6 +87,10 @@ public final class JSAndroid {
     }
 
     //// Sillot extend start
+    @JavascriptInterface
+    public void toggleFullScreenState() {
+        toggleFullScreen(activity);
+    }
     @JavascriptInterface
     public void buglyPost1() {
         try {

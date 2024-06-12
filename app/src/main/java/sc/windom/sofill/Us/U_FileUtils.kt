@@ -388,9 +388,10 @@ object U_FileUtils {
         get() = if (isDirectory) getDirectorySize(this) else length()
 
     /**
-     * 简单版，如需支持 content:// 协议查询，请使用增强版 getFileSize(context: Context, uri: Uri)
+     * 简单版，不支持 content:// 协议查询
      *
      * @param uri 目标文件的 uri
+     * @see .getFileSize(context: Context, uri: Uri) 增强版函数，支持 content:// 协议查询
      *
      */
     fun getFileSize(uri: Uri): String? {
