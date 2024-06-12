@@ -45,6 +45,7 @@ import sc.windom.sofill.Us.U_DialogX
 import sc.windom.sofill.Us.U_FileUtils
 import sc.windom.sofill.Us.U_FuckOtherApp
 import sc.windom.sofill.Us.U_Permission
+import sc.windom.sofill.Us.U_Phone
 import sc.windom.sofill.Us.U_Safe
 import java.io.File
 import java.net.URLDecoder
@@ -81,6 +82,9 @@ object U {
 
     @JvmStatic
     val DEBUG = U_DEBUG
+
+    @JvmStatic
+    val PHONE = U_Phone
 
     @JvmStatic
     fun registActivityConfigurationChangWithSoftKeyboardToolbarInWebview(activity: Activity, webView: WebView?) {
