@@ -41,6 +41,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -120,8 +121,8 @@ fun TopRightMenu(
 ) {
     val state = rememberCascadeState()
     val Lcc = LocalContext.current
-    var isFullScreen by remember { mutableStateOf(false) }
-    var canCaptureScreenshot by remember { mutableStateOf(true) }
+    var isFullScreen by rememberSaveable { mutableStateOf(false) }
+    var canCaptureScreenshot by rememberSaveable { mutableStateOf(true) }
     LaunchedEffect(isFullScreen) {
         val activity = Lcc as Activity
         activity.toggleFullScreen(isFullScreen)
