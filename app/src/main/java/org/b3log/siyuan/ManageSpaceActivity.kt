@@ -132,7 +132,8 @@ class ManageSpaceActivity : AppCompatActivity() {
     private fun WaitUI() {
         Box(
             modifier = Modifier
-                .fillMaxSize(),
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(modifier = Modifier.fillMaxSize(.8f))
@@ -186,6 +187,11 @@ class ManageSpaceActivity : AppCompatActivity() {
                 Button(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = {
+                        setContent {
+                            CascadeMaterialTheme {
+                                WaitUI()
+                            }
+                        }
                         U.SAFE.checkBiometric(thisActivity, ::navigateToMainScreen, ::showRetryDialog, ::showBiometricErrorDialog)
                     },
                 ) {
