@@ -12,7 +12,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -52,7 +51,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import sc.windom.sofill.S
 import sc.windom.sofill.U
-import sc.windom.sofill.Us.U_FileUtils.sizeInBytes
+import sc.windom.sofill.Us.U_FileUtils.getSizeRecursively
 import sc.windom.sofill.compose.components.CommonTopAppBar
 import sc.windom.sofill.compose.theme.CascadeMaterialTheme
 import java.io.File
@@ -262,8 +261,10 @@ private fun UI(intent: Intent?, TAG: String) {
             )
 
             val _filesList = cacheDirs.flatMap { dir ->
-                dir?.listFiles()?.filterNotNull() ?: emptyList()
-            }.sortedByDescending { it.sizeInBytes } // 按大小降序排序
+                dir?.listFiles()?.filterNotNull()?.filter {
+                    it.exists() && it.getSizeRecursively() > 0
+                } ?: emptyList()
+            }.sortedByDescending { it.getSizeRecursively() } // 按大小降序排序
             filesList.value = _filesList
             isLoading.value = false
             refreshFilesList = false

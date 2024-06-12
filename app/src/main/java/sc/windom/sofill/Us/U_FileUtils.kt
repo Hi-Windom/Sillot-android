@@ -388,6 +388,14 @@ object U_FileUtils {
         get() = if (isDirectory) getDirectorySize(this) else length()
 
     /**
+     * 递归计算文件和目录
+     */
+    fun File.getSizeRecursively(): Long {
+        if (!this.exists()) return 0
+        return if (this.isFile) this.length() else this.listFiles()?.sumOf { it.getSizeRecursively() } ?: 0
+    }
+
+    /**
      * 简单版，不支持 content:// 协议查询
      *
      * @param uri 目标文件的 uri
