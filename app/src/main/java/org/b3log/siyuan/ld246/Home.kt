@@ -10,7 +10,6 @@ import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.text.style.URLSpan
 import android.util.Base64
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.webkit.CookieManager
@@ -51,10 +50,8 @@ import androidx.compose.material.icons.twotone.SafetyCheck
 import androidx.compose.material.icons.twotone.Swipe
 import androidx.compose.material.icons.twotone.TextFields
 import androidx.compose.material.icons.twotone.Token
-import androidx.compose.material.icons.twotone.WifiOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -92,7 +89,6 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -108,11 +104,11 @@ import coil.size.Scale
 import coil.size.Size
 import com.kongzue.dialogx.dialogs.FullScreenDialog
 import com.kongzue.dialogx.dialogs.InputDialog
-import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.dialogs.PopTip
 import com.kongzue.dialogx.interfaces.DialogLifecycleCallback
 import com.kongzue.dialogx.interfaces.OnBindView
 import com.kongzue.dialogx.util.views.ActivityScreenShotImageView
+import com.tencent.bugly.crashreport.BuglyLog
 import com.tencent.mmkv.MMKV
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Job
@@ -121,25 +117,24 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.launch
-import sc.windom.sofill.compose.theme.CascadeMaterialTheme
 import org.b3log.siyuan.R
-import sc.windom.sofill.S
-import sc.windom.sofill.U
 import org.b3log.siyuan.appUtils.HWs
-import sc.windom.sofill.compose.MyTagHandler
-import sc.windom.sofill.compose.NetworkViewModel
-import sc.windom.sofill.compose.components.CommonTopAppBar
-import sc.windom.sofill.dataClass.ld246_Response
-import sc.windom.sofill.dataClass.ld246_Response_Data_Notification
-import sc.windom.sofill.dataClass.ld246_User
-import sc.windom.sofill.api.ld246.ApiServiceNotification
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import sc.windom.sofill.S
+import sc.windom.sofill.U
+import sc.windom.sofill.api.ld246.ApiServiceNotification
+import sc.windom.sofill.compose.MyTagHandler
+import sc.windom.sofill.compose.components.CommonTopAppBar
 import sc.windom.sofill.compose.partialCom.DdMenuI
 import sc.windom.sofill.compose.partialCom.NetworkAware
+import sc.windom.sofill.compose.theme.CascadeMaterialTheme
+import sc.windom.sofill.dataClass.ld246_Response
+import sc.windom.sofill.dataClass.ld246_Response_Data_Notification
+import sc.windom.sofill.dataClass.ld246_User
 
 
 class HomeActivity : ComponentActivity() {
@@ -172,10 +167,10 @@ class HomeActivity : ComponentActivity() {
         thisActivity = this
         val intent = intent
         val uri = intent.data
-        Log.i(TAG, "onCreate() invoked")
+        BuglyLog.i(TAG, "onCreate() invoked")
         val scheme = uri?.scheme
         val host = uri?.host
-        Log.d(TAG, "scheme: $scheme, host:$host")
+        BuglyLog.d(TAG, "scheme: $scheme, host:$host")
         // 设置沉浸式通知栏
         window.setDecorFitsSystemWindows(false)
         window.decorView.setOnApplyWindowInsetsListener { _, insets ->
@@ -227,7 +222,7 @@ class HomeActivity : ComponentActivity() {
                         } catch (e: Exception) {
                             U.DialogX.PopNoteShow(thisActivity, e.cause.toString(), e.toString())
                         }
-                        Log.w(TAG, "再见")
+                        BuglyLog.w(TAG, "再见")
                         finish()
 //                        exitProcess(0)
                     }
@@ -1122,7 +1117,7 @@ class HomeActivity : ComponentActivity() {
     private fun handleUrlLoading(view: WebView, url: String): Boolean {
         val _url = U.replaceScheme_deepDecode(url, "googlechrome://", "slld246://")
         val real_url = U.replaceEncodeScheme(url, "googlechrome://", "slld246://")
-        Log.d(TAG, _url)
+        BuglyLog.d(TAG, _url)
 
         return if (_url.startsWith("mqq://") || _url.startsWith("wtloginmqq://") || _url.startsWith(
                 "sinaweibo://"
@@ -1168,7 +1163,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun showFullScreenDialog(url: String) {
-        Log.w("showFullScreenDialog", url)
+        BuglyLog.w("showFullScreenDialog", url)
         if (fullScreenDialog == null) {
             fullScreenDialog = FullScreenDialog.build().apply {
                 setDialogLifecycleCallback(object : DialogLifecycleCallback<FullScreenDialog?>() {
@@ -1213,7 +1208,7 @@ class HomeActivity : ComponentActivity() {
         } else {
             fullScreenDialog?.let { dialog ->
                 val webView = dialog.getCustomView()?.findViewById<WebView>(R.id.webView)
-                Log.w(fullScreenDialog.toString(), webView.toString())
+                BuglyLog.w(fullScreenDialog.toString(), webView.toString())
                 webView?.loadUrl(url)
             }
         }
@@ -1254,7 +1249,7 @@ class HomeActivity : ComponentActivity() {
                     html,
                     """['"]https://ld246.com/forward\?goto=([^'"]*)['"]""".toRegex()
                 )
-//            Log.i("HTML", _Html)
+//            BuglyLog.i("HTML", _Html)
                 textView.text = HtmlCompat.fromHtml(
                     _Html,
                     HtmlCompat.FROM_HTML_MODE_COMPACT,

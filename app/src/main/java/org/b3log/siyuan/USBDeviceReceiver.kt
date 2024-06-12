@@ -7,7 +7,7 @@ import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
 import android.media.AudioManager
 import android.os.Build
-import android.util.Log
+import com.tencent.bugly.crashreport.BuglyLog
 
 // 由于USBDeviceReceiver是在AndroidManifest.xml中静态注册的，您不需要在onResume和onPause方法中注册和注销接收器。系统会自动处理这些事件。
 class USBDeviceReceiver : BroadcastReceiver() {
@@ -29,7 +29,7 @@ class USBDeviceReceiver : BroadcastReceiver() {
                 }
                 device?.let {
                     if (isUsbAudioDevice(device)) {
-                        Log.d(TAG, "USB Audio device attached: ${device.productName} v${device.version}\n${device.deviceName} (${device.deviceId}) ${device.manufacturerName}${device.productId}")
+                        BuglyLog.d(TAG, "USB Audio device attached: ${device.productName} v${device.version}\n${device.deviceName} (${device.deviceId}) ${device.manufacturerName}${device.productId}")
                         requestAudioFocus(context, audioManager)
                     }
                 }
@@ -43,7 +43,7 @@ class USBDeviceReceiver : BroadcastReceiver() {
                 }
                 device?.let {
                     if (isUsbAudioDevice(device)) {
-                        Log.d(TAG, "USB Audio device detached: ${device.productName} v${device.version}\n${device.deviceName} (${device.deviceId}) ${device.manufacturerName}${device.productId}")
+                        BuglyLog.d(TAG, "USB Audio device detached: ${device.productName} v${device.version}\n${device.deviceName} (${device.deviceId}) ${device.manufacturerName}${device.productId}")
                         abandonAudioFocus(audioManager)
                     }
                 }
@@ -63,16 +63,16 @@ class USBDeviceReceiver : BroadcastReceiver() {
         val audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
             when (focusChange) {
                 AudioManager.AUDIOFOCUS_GAIN -> {
-                    Log.d(TAG, "恢复播放或继续播放")
+                    BuglyLog.d(TAG, "恢复播放或继续播放")
                 }
                 AudioManager.AUDIOFOCUS_LOSS -> {
-                    Log.d(TAG, "暂停播放并释放媒体资源")
+                    BuglyLog.d(TAG, "暂停播放并释放媒体资源")
                 }
                 AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                    Log.d(TAG, "暂停播放，但不清除媒体资源，因为可能会很快再次获得焦点")
+                    BuglyLog.d(TAG, "暂停播放，但不清除媒体资源，因为可能会很快再次获得焦点")
                 }
                 AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
-                    Log.d(TAG, "降低音量，这通常用于过渡性的干扰，如通知")
+                    BuglyLog.d(TAG, "降低音量，这通常用于过渡性的干扰，如通知")
                 }
             }
         }

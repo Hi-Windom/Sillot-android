@@ -22,7 +22,6 @@ import static android.content.Context.POWER_SERVICE;
 import static androidx.core.app.ActivityCompat.startActivityForResult;
 
 import android.app.Activity;
-import android.content.ComponentCallbacks;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -30,24 +29,18 @@ import android.app.KeyguardManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
-import android.content.res.Configuration;
-import android.graphics.Rect;
 import android.os.Build;
 import android.os.Environment;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.Manifest;
-import android.view.View;
-import android.view.WindowInsets;
-import android.webkit.WebView;
 
 import com.blankj.utilcode.util.StringUtils;
 import com.blankj.utilcode.util.TimeUtils;
-import com.github.lany92.keyboard.KeyboardWatcher;
 import com.kongzue.dialogx.dialogs.PopTip;
+import com.tencent.bugly.crashreport.BuglyLog;
 
 import org.apache.commons.io.FileUtils;
 
@@ -64,8 +57,6 @@ import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -293,9 +284,9 @@ public final class Utils {
     public static void LogError(final String tag, final String msg, final Throwable e) {
         synchronized (Utils.class) {
             if (null != e) {
-                Log.e(tag, msg, e);
+                BuglyLog.e(tag, msg, e);
             } else {
-                Log.e(tag, msg);
+                BuglyLog.e(tag, msg);
             }
             try {
                 final String workspacePath = Mobile.getCurrentWorkspacePath();
@@ -313,19 +304,19 @@ public final class Utils {
                 final String time = TimeUtils.millis2String(System.currentTimeMillis(), "yyyy-MM-dd HH:mm:ss");
                 writer.write("E " + time + " " + tag + " " + msg + "\n");
                 if (null != e) {
-                    writer.write(Log.getStackTraceString(e) + "\n");
+                    writer.write(e + "\n");
                 }
                 writer.flush();
                 writer.close();
             } catch (final Exception ex) {
-                Log.e("logging", "Write mobile log failed", ex);
+                BuglyLog.e("logging", "Write mobile log failed", ex);
             }
         }
     }
 
     public static void LogInfo(final String tag, final String msg) {
         synchronized (Utils.class) {
-            Log.i(tag, msg);
+            BuglyLog.i(tag, msg);
             try {
                 final String workspacePath = Mobile.getCurrentWorkspacePath();
                 if (StringUtils.isEmpty(workspacePath)) {
@@ -344,7 +335,7 @@ public final class Utils {
                 writer.flush();
                 writer.close();
             } catch (final Exception ex) {
-                Log.e("logging", "Write mobile log failed", ex);
+                BuglyLog.e("logging", "Write mobile log failed", ex);
             }
         }
     }

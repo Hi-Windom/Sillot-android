@@ -15,7 +15,6 @@ import android.os.IBinder
 import android.os.Looper
 import android.os.Message
 import android.provider.Settings
-import android.util.Log
 import android.webkit.WebView
 import androidx.core.app.ActivityCompat
 import androidx.work.Constraints
@@ -33,6 +32,7 @@ import com.koushikdutta.async.http.server.AsyncHttpServer
 import com.koushikdutta.async.http.server.AsyncHttpServerRequest
 import com.koushikdutta.async.http.server.AsyncHttpServerResponse
 import com.koushikdutta.async.util.Charsets
+import com.tencent.bugly.crashreport.BuglyLog
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.ObservableEmitter
@@ -77,7 +77,7 @@ class BootService : Service() {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        Log.i(TAG, "onStartCommand() -> intent: $intent")
+        BuglyLog.i(TAG, "onStartCommand() -> intent: $intent")
         works()
         return START_REDELIVER_INTENT // 如果 Service 被杀死，系统会尝试重新创建 Service，并且会重新传递最后一个 Intent 给 Service 的 onStartCommand() 方法。
     }
@@ -101,11 +101,11 @@ class BootService : Service() {
 
     private fun works() {
         // 初始化 UI 元素
-        Log.w(TAG, "onStart() -> initUIElements() invoked")
+        BuglyLog.w(TAG, "onStart() -> initUIElements() invoked")
         init_webView()
 
         // 拉起内核
-        Log.w(TAG, "onStart() -> startKernel() invoked")
+        BuglyLog.w(TAG, "onStart() -> startKernel() invoked")
         startKernel()
 
         // 周期同步数据
@@ -131,7 +131,7 @@ class BootService : Service() {
             if ("startKernel" == cmd) {
                 bootKernel(true)
             } else {
-                Log.w(TAG, cmd.toString())
+                BuglyLog.w(TAG, cmd.toString())
             }
         }
     }
@@ -143,7 +143,7 @@ class BootService : Service() {
     fun startHttpServer(isServable: Boolean) {
         if (isHttpServerRunning()) {
             server?.stop()
-            Log.w(TAG, "startHttpServer() stop exist server")
+            BuglyLog.w(TAG, "startHttpServer() stop exist server")
         }
         try {
             // 解决乱码问题 https://github.com/koush/AndroidAsync/issues/656#issuecomment-523325452
@@ -202,19 +202,19 @@ class BootService : Service() {
         if (isServable) {
             // 绑定所有网卡以便通过局域网IP访问
             s.listen(null, serverPort, server!!.listenCallback)
-            Log.w(
+            BuglyLog.w(
                 TAG,
                 "startHttpServer() -> HTTP server is listening on all interfaces, port [$serverPort]"
             )
         } else {
             // 绑定 ipv6 回环地址 [::1] 以防止被远程访问
             s.listen(InetAddress.getLoopbackAddress(), serverPort, server!!.listenCallback)
-            Log.w(
+            BuglyLog.w(
                 TAG,
                 "startHttpServer() -> HTTP server is listening on loopback address, port [$serverPort]"
             )
         }
-        Log.w(TAG, "startHttpServer() -> HTTP server is listening on port [$serverPort]")
+        BuglyLog.w(TAG, "startHttpServer() -> HTTP server is listening on port [$serverPort]")
         Utils.LogInfo("http", "HTTP server is listening on port [$serverPort]")
     }
 
@@ -231,7 +231,7 @@ class BootService : Service() {
     }
 
     private fun startKernel() {
-        Log.w(TAG, "startKernel() invoked")
+        BuglyLog.w(TAG, "startKernel() invoked")
         if (kernelStarted) {
             return
         }
@@ -266,7 +266,7 @@ class BootService : Service() {
             try {
                 val localIPs = Utils.getIPAddressList()
                 val lang = determineLanguage(locale)
-                Log.d(TAG, "Mobile.startKernel() -> workspaceBaseDir -> $workspaceBaseDir")
+                BuglyLog.d(TAG, "Mobile.startKernel() -> workspaceBaseDir -> $workspaceBaseDir")
                 Mobile.startKernel(
                     "android", appDir, workspaceBaseDir, timezone, localIPs, lang,
                     Build.VERSION.RELEASE +
@@ -276,10 +276,10 @@ class BootService : Service() {
                             "/Brand " + Build.BRAND +
                             "/UA " + userAgent
                 )
-                Log.d(TAG, "Mobile.startKernel() ok")
+                BuglyLog.d(TAG, "Mobile.startKernel() ok")
             } catch (e: Exception) {
                 // 处理异常
-                Log.e(TAG, "Error in background thread", e)
+                BuglyLog.e(TAG, "Error in background thread", e)
             }
         }
         val b = Bundle()
@@ -300,14 +300,14 @@ class BootService : Service() {
     }
 
     private fun needUnzipAssets(): Boolean {
-        Log.i(TAG, "needUnzipAssets() invoked")
+        BuglyLog.i(TAG, "needUnzipAssets() invoked")
         val dataDir = filesDir.absolutePath
         val appDir = "$dataDir/app"
         val appDirFile = File(appDir)
         appDirFile.mkdirs()
         var ret = true
         if (Utils.isDebugPackageAndMode(this)) {
-            Log.i("boot", "always unzip assets in debug mode")
+            BuglyLog.i("boot", "always unzip assets in debug mode")
             return ret
         }
         val appVerFile = File(appDir, "VERSION")
@@ -327,7 +327,7 @@ class BootService : Service() {
             val dataDir = filesDir.absolutePath
             val appDir = "$dataDir/app"
             val appVerFile = File(appDir, "VERSION")
-            Log.i(TAG, "Clearing appearance... 20%")
+            BuglyLog.i(TAG, "Clearing appearance... 20%")
             try {
                 FileUtils.deleteDirectory(File(appDir))
             } catch (e: java.lang.Exception) {
@@ -338,14 +338,14 @@ class BootService : Service() {
                 stopSelf()
                 return
             }
-            Log.i(TAG, "Initializing appearance... 60%")
+            BuglyLog.i(TAG, "Initializing appearance... 60%")
             Utils.unzipAsset(assets, "app.zip", "$appDir/app")
             try {
                 FileUtils.writeStringToFile(appVerFile, Utils.version, StandardCharsets.UTF_8)
             } catch (e: java.lang.Exception) {
                 Utils.LogError("boot", "write version failed", e)
             }
-            Log.i(TAG, "Booting kernel... 80%")
+            BuglyLog.i(TAG, "Booting kernel... 80%")
         }
     }
 
@@ -356,7 +356,7 @@ class BootService : Service() {
         if (!kernelStarted) {
             return
         }
-        Log.d(TAG, "showWifi() invoked")
+        BuglyLog.d(TAG, "showWifi() invoked")
         val locationPermissionObservable =
             Observable.create { emitter: ObservableEmitter<Boolean> ->
                 if (ActivityCompat.checkSelfPermission(
@@ -409,13 +409,13 @@ class BootService : Service() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 { granted: Boolean? ->
-                    Log.d(
+                    BuglyLog.d(
                         TAG,
                         "showWifi() -> Permissions granted and service started."
                     )
                 },
                 { throwable: Throwable ->
-                    Log.e(
+                    BuglyLog.e(
                         TAG,
                         "showWifi() -> Error occurred: " + throwable.message
                     )

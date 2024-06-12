@@ -27,9 +27,9 @@ import android.os.Looper
 import android.os.Message
 import android.text.Html
 import android.text.method.ScrollingMovementMethod
-import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.tencent.bugly.crashreport.BuglyLog
 import org.apache.commons.io.FileUtils
 import sc.windom.sofill.U
 import java.io.File
@@ -44,7 +44,7 @@ import java.io.File
  */
 class BootActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.i("boot", "create boot activity")
+        BuglyLog.i("boot", "create boot activity")
         super.onCreate(savedInstanceState)
 
         // Privacy policy solicitation will no longer pop up when Android starts for the first time
@@ -82,7 +82,7 @@ class BootActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        Log.i("boot", "destroy boot activity")
+        BuglyLog.i("boot", "destroy boot activity")
         super.onDestroy()
     }
 
@@ -93,11 +93,11 @@ class BootActivity : AppCompatActivity() {
                 val intent = intent
                 val blockURLUri = intent.data
                 if (null != blockURLUri) {
-                    Log.i("boot", "block URL [$blockURLUri]")
+                    BuglyLog.i("boot", "block URL [$blockURLUri]")
                     ret = blockURLUri.toString()
                 }
             } catch (e: Exception) {
-                Log.e("boot", "gets block URL failed", e)
+                BuglyLog.e("boot", "gets block URL failed", e)
             }
             return ret
         }
@@ -123,13 +123,13 @@ class BootActivity : AppCompatActivity() {
                 try {
                     FileUtils.deleteQuietly(appDirFile)
                 } catch (e: Exception) {
-                    Log.e("agreement", "delete [" + appDirFile.absolutePath + "] failed", e)
+                    BuglyLog.e("agreement", "delete [" + appDirFile.absolutePath + "] failed", e)
                 }
                 finishAffinity()
                 finishAndRemoveTask()
-                Log.i("agreement", "user did not accept the agreement, exit")
+                BuglyLog.i("agreement", "user did not accept the agreement, exit")
             } else {
-                Log.w("agreement", "unknown agreement command [$cmd]")
+                BuglyLog.w("agreement", "unknown agreement command [$cmd]")
             }
         }
     }

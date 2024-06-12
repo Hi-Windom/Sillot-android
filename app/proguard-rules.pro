@@ -25,6 +25,13 @@
 #    public <methods>;
 #}
 
+
+#--------------------------1.实体类---------------------------------
+# 与服务端交互时，使用GSON、fastjson等框架解析服务端数据时，所写的JSON对象类不混淆，否则无法将JSON解析成对应的对象；
+-keep class sc.windom.sofill.dataClass.** { *; }
+
+#--------------------------2.第三方包-------------------------------
+
 # UltimateBarX 混淆规则
 -keep class com.zackratos.ultimatebarx.ultimatebarx.** { *; }
 -keep public class * extends androidx.fragment.app.Fragment { *; }
@@ -33,12 +40,9 @@
 -dontwarn org.conscrypt.**
 -dontwarn org.openjsse.**
 
-#--------------------------1.实体类---------------------------------
-# 与服务端交互时，使用GSON、fastjson等框架解析服务端数据时，所写的JSON对象类不混淆，否则无法将JSON解析成对应的对象；
--keep class sc.windom.sofill.dataClass.** { *; }
-
-#--------------------------2.第三方包-------------------------------
-
+# https://bugly.qq.com/docs
+-dontwarn com.tencent.bugly.**
+-keep public class com.tencent.bugly.**{*;}
 
 #-------------------------3.与js互相调用的类------------------------
 

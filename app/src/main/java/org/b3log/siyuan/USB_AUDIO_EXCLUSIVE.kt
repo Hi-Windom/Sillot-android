@@ -14,7 +14,6 @@ import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
@@ -69,6 +68,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
+import com.tencent.bugly.crashreport.BuglyLog
 import kotlinx.coroutines.launch
 import sc.windom.sofill.S
 import sc.windom.sofill.U
@@ -152,7 +152,7 @@ class USB_AUDIO_EXCLUSIVE : AppCompatActivity() {
                     device?.let {
                         if (isUsbAudioDevice(device)) {
                             // 禁止获取：device.serialNumber
-                            Log.d(TAG, "USB Audio device attached: ${device.productName} v${device.version}\n${device.deviceName} (${device.deviceId}) ${device.manufacturerName} ${device.productId}")
+                            BuglyLog.d(TAG, "USB Audio device attached: ${device.productName} v${device.version}\n${device.deviceName} (${device.deviceId}) ${device.manufacturerName} ${device.productId}")
                             requestAudioFocus()
                         }
                     }
@@ -166,7 +166,7 @@ class USB_AUDIO_EXCLUSIVE : AppCompatActivity() {
                     }
                     device?.let {
                         if (isUsbAudioDevice(device)) {
-                            Log.d(TAG, "USB Audio device detached: ${device.productName} v${device.version}\n${device.deviceName} (${device.deviceId}) ${device.manufacturerName} ${device.productId}")
+                            BuglyLog.d(TAG, "USB Audio device detached: ${device.productName} v${device.version}\n${device.deviceName} (${device.deviceId}) ${device.manufacturerName} ${device.productId}")
                             abandonAudioFocus()
                         }
                     }
@@ -179,7 +179,7 @@ class USB_AUDIO_EXCLUSIVE : AppCompatActivity() {
         val deviceList: HashMap<String, UsbDevice>? = usbManager.deviceList
         deviceList?.values?.forEach { device ->
             if (isUsbAudioDevice(device)) {
-                Log.d(TAG, "Found existing USB audio device: ${device.productName} v${device.version}\n${device.deviceName} (${device.deviceId}) ${device.manufacturerName} ${device.productId}")
+                BuglyLog.d(TAG, "Found existing USB audio device: ${device.productName} v${device.version}\n${device.deviceName} (${device.deviceId}) ${device.manufacturerName} ${device.productId}")
                 requestPermission(device)
             }
         }
@@ -197,25 +197,25 @@ class USB_AUDIO_EXCLUSIVE : AppCompatActivity() {
         val audioFocusRequest = audioFocusRequestBuilder.setOnAudioFocusChangeListener { focusChange ->
             when (focusChange) {
                 AudioManager.AUDIOFOCUS_GAIN -> {
-                    Log.d(TAG, "获得音频焦点，可以开始或恢复正常的音频播放")
+                    BuglyLog.d(TAG, "获得音频焦点，可以开始或恢复正常的音频播放")
                 }
                 AudioManager.AUDIOFOCUS_GAIN_TRANSIENT -> {
-                    Log.d(TAG, "获得短暂音频焦点，可以开始或恢复短暂的音频播放")
+                    BuglyLog.d(TAG, "获得短暂音频焦点，可以开始或恢复短暂的音频播放")
                 }
                 AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK -> {
-                    Log.d(TAG, "获得短暂音频焦点，可以开始或恢复短暂的音频播放，其他音频可能会降低音量")
+                    BuglyLog.d(TAG, "获得短暂音频焦点，可以开始或恢复短暂的音频播放，其他音频可能会降低音量")
                 }
                 AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE -> {
-                    Log.d(TAG, "获得独占的短暂音频焦点，其他音频应该完全停止")
+                    BuglyLog.d(TAG, "获得独占的短暂音频焦点，其他音频应该完全停止")
                 }
                 AudioManager.AUDIOFOCUS_LOSS -> {
-                    Log.d(TAG, "永久失去音频焦点，应该暂停播放并释放媒体资源")
+                    BuglyLog.d(TAG, "永久失去音频焦点，应该暂停播放并释放媒体资源")
                 }
                 AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                    Log.d(TAG, "暂时失去音频焦点，应该暂停播放但保留媒体资源，因为可能会很快再次获得焦点")
+                    BuglyLog.d(TAG, "暂时失去音频焦点，应该暂停播放但保留媒体资源，因为可能会很快再次获得焦点")
                 }
                 AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
-                    Log.d(TAG, "暂时失去音频焦点，应该降低音量，这通常用于处理临时干扰，如通知")
+                    BuglyLog.d(TAG, "暂时失去音频焦点，应该降低音量，这通常用于处理临时干扰，如通知")
                 }
             }
         }.build()

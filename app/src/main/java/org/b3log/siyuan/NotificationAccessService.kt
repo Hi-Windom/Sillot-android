@@ -1,10 +1,9 @@
 package org.b3log.siyuan
 
 import android.app.Notification
-import android.content.Context
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
-import android.util.Log
+import com.tencent.bugly.crashreport.BuglyLog
 
 class NotificationAccessService : NotificationListenerService() {
 
@@ -26,11 +25,11 @@ class NotificationAccessService : NotificationListenerService() {
         }
     }
     override fun onListenerConnected() {
-        Log.d(TAG, "onListenerConnected: Connected to client")
+        BuglyLog.d(TAG, "onListenerConnected: Connected to client")
     }
 
     override fun onListenerDisconnected() {
-        Log.d(TAG, "onListenerDisconnected: Disconnected from client")
+        BuglyLog.d(TAG, "onListenerDisconnected: Disconnected from client")
     }
 
     private fun logNotification(sbn: StatusBarNotification, action: String) {
@@ -40,7 +39,7 @@ class NotificationAccessService : NotificationListenerService() {
         val title = sbn.notification.extras.getString(Notification.EXTRA_TITLE)
         val text = sbn.notification.extras.getString(Notification.EXTRA_TEXT)
 
-        Log.d(TAG, "$action notification: Package=$packageName, ID=$id, Tag=$tag, Title=$title, Text=$text")
+        BuglyLog.d(TAG, "$action notification: Package=$packageName, ID=$id, Tag=$tag, Title=$title, Text=$text")
     }
 }
 

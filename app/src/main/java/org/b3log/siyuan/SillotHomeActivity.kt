@@ -1,7 +1,6 @@
 package org.b3log.siyuan
 
 import android.os.Bundle
-import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.webkit.MimeTypeMap
@@ -11,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import coil.load
 import coil.size.Scale
 import com.kongzue.dialogx.dialogs.PopTip
+import com.tencent.bugly.crashreport.BuglyLog
 import org.b3log.siyuan.appUtils.HWs
 import org.b3log.siyuan.json.testmoshi
 import org.b3log.siyuan.realm.TestRealm
@@ -24,7 +24,7 @@ class SillotHomeActivity : AppCompatActivity() {
             try {
                 throw Exception(event.keyCode.toString())
             } catch (e: Exception) {
-                Log.e(TAG,"捕获到异常：${e.message}")
+                BuglyLog.e(TAG,"捕获到异常：${e.message}")
                 App.getInstance().reportException(e)
                 return false
             }
@@ -53,7 +53,7 @@ class SillotHomeActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.i("boot", "create SillotHomeActivity activity")
+        BuglyLog.i("boot", "create SillotHomeActivity activity")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sillot_home)
         // 获取OnBackPressedDispatcher
@@ -75,9 +75,9 @@ class SillotHomeActivity : AppCompatActivity() {
                         try {
                             Thread.sleep(200)
                         } catch (e: InterruptedException) {
-                            Log.w(TAG, e.toString())
+                            BuglyLog.w(TAG, e.toString())
                         }
-                        Log.w(TAG, "再见")
+                        BuglyLog.w(TAG, "再见")
                         finish()
 //                        exitProcess(0)
                     }
@@ -110,7 +110,7 @@ class SillotHomeActivity : AppCompatActivity() {
                 scale(Scale.FILL)
             }
         }
-        Log.e(TAG, HWs.getNetworkType(this))
+        BuglyLog.e(TAG, HWs.getNetworkType(this))
         PopTip.show("测试完毕")
 //        val intent = Intent(this, POST_NOTIFICATIONS::class.java)
 //        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

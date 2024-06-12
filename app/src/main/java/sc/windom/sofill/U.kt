@@ -40,6 +40,7 @@ import org.b3log.siyuan.R
 import org.b3log.siyuan.Utils
 import org.b3log.siyuan.andapi.Toast
 import org.b3log.siyuan.videoPlayer.SimplePlayer
+import sc.windom.sofill.Us.U_DEBUG
 import sc.windom.sofill.Us.U_DialogX
 import sc.windom.sofill.Us.U_FileUtils
 import sc.windom.sofill.Us.U_FuckOtherApp
@@ -77,6 +78,9 @@ object U {
 
     @JvmStatic
     val SAFE = U_Safe
+
+    @JvmStatic
+    val DEBUG = U_DEBUG
 
     @JvmStatic
     fun registActivityConfigurationChangWithSoftKeyboardToolbarInWebview(activity: Activity, webView: WebView?) {

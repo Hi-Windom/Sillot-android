@@ -13,7 +13,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Base64
-import android.util.Log
 import android.util.Size
 import android.webkit.WebView
 import androidx.activity.ComponentActivity
@@ -70,6 +69,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.kongzue.dialogx.dialogs.BottomMenu
 import com.kongzue.dialogx.dialogs.InputDialog
 import com.kongzue.dialogx.interfaces.OnBottomMenuButtonClickListener
+import com.tencent.bugly.crashreport.BuglyLog
 import com.tencent.mmkv.MMKV
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -133,7 +133,7 @@ class MainPro : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         thisActivity = this
-        Log.i(TAG, "onCreate() invoked. @ $intent")
+        BuglyLog.i(TAG, "onCreate() invoked. @ $intent")
         if (intent == null) {
             return
         }
@@ -142,7 +142,7 @@ class MainPro : ComponentActivity() {
         in2_data = intent.data
         val scheme = in2_data?.scheme
         val host = in2_data?.host
-        Log.d(TAG, "scheme: $scheme, host: $host, action: $in2_action, type: $in2_type")
+        BuglyLog.d(TAG, "scheme: $scheme, host: $host, action: $in2_action, type: $in2_type")
 
         if (S.isUriMatched(in2_data, S.case_ld246_1) || S.isUriMatched(
                 in2_data,
@@ -198,7 +198,7 @@ class MainPro : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        Log.w(TAG, "onDestroy() invoked")
+        BuglyLog.w(TAG, "onDestroy() invoked")
         super.onDestroy()
         // 解绑服务
         if (serviceBound) {
@@ -227,7 +227,7 @@ class MainPro : ComponentActivity() {
     }
 
     fun performActionWithService() {
-        Log.w(TAG, "performActionWithService() invoked")
+        BuglyLog.w(TAG, "performActionWithService() invoked")
     }
 
     private fun isMarkdown(text: String): Boolean {
@@ -264,19 +264,19 @@ class MainPro : ComponentActivity() {
         // 对HTML进行校验和清理
         val safeHtml = sanitizeHtml(html)
         // 处理安全的HTML文本
-        Log.e(TAG, "HTML: $safeHtml")
+        BuglyLog.e(TAG, "HTML: $safeHtml")
         return safeHtml
     }
 
     private fun processMarkdown(markdown: String): String {
         val validMarkdown = validateMarkdown2HTML(markdown)
-        Log.e(TAG, "Markdown: $validMarkdown")
+        BuglyLog.e(TAG, "Markdown: $validMarkdown")
         return validMarkdown
     }
 
     private fun processPlainText(text: String): String {
         // 处理普通文本
-        Log.e(TAG, text)
+        BuglyLog.e(TAG, text)
         return text
     }
 
@@ -627,7 +627,7 @@ class MainPro : ComponentActivity() {
                     }
                 } else {
                     // 处理获取到的笔记本列表
-                    Log.i(TAG, "Received ${notebooks.size} notebooks.")
+                    BuglyLog.i(TAG, "Received ${notebooks.size} notebooks.")
                     val notebookIDs: Array<String> = notebooks.map { it.id }.toTypedArray()
                     val notebookInfos: Array<String> = notebooks.map {
                         "（${if (it.closed) "不可用" else "可使用"}）${it.name}"
@@ -645,7 +645,7 @@ class MainPro : ComponentActivity() {
                         .setOkButton("确定",
                             OnBottomMenuButtonClickListener { menu, view ->
                                 val notebookId = notebookIDs[selectMenuIndex]
-                                Log.e(TAG, notebookId)
+                                BuglyLog.e(TAG, notebookId)
                                 val payload = IPayload(
                                     markdownContent, notebookId, "/来自汐洛受赏 ${
                                         U.dateFormat_full1.format(
@@ -657,7 +657,7 @@ class MainPro : ComponentActivity() {
                                 createNote(api, payload, token) { success, info ->
                                     if (success) {
                                         // 处理创建笔记成功的情况
-                                        Log.i(TAG, "Note creation succeeded. $info")
+                                        BuglyLog.i(TAG, "Note creation succeeded. $info")
                                     } else {
                                         // 处理创建笔记失败的情况
                                         thisActivity.runOnUiThread {
@@ -877,7 +877,7 @@ class MainPro : ComponentActivity() {
                             Toast.Show(thisActivity, "已复制到指定文件夹")
                         }
                     } catch (e: IOException) {
-                        Log.e(TAG, e.toString())
+                        BuglyLog.e(TAG, e.toString())
                         withContext(Dispatchers.Main) {
                             U.DialogX.PopNoteShow(thisActivity, "任务失败", e.toString())
                                 .noAutoDismiss()
@@ -921,7 +921,7 @@ class MainPro : ComponentActivity() {
                                         "已存入 ${workspaceAssetsDir}"
                                     ).autoDismiss(5000)
                                 } catch (e: IOException) {
-                                    Log.e(TAG, e.toString())
+                                    BuglyLog.e(TAG, e.toString())
                                     U.DialogX.PopNoteShow(
                                         thisActivity,
                                         R.drawable.icon,
@@ -934,7 +934,7 @@ class MainPro : ComponentActivity() {
                             }
                         }
                     } catch (e: IOException) {
-                        Log.e(TAG, e.toString())
+                        BuglyLog.e(TAG, e.toString())
                         withContext(Dispatchers.Main) {
                             U.DialogX.PopNoteShow(
                                 thisActivity,
@@ -981,7 +981,7 @@ class MainPro : ComponentActivity() {
                         // 例如，列出根目录下的文件和文件夹
 //                        rootDocument?.listFiles()?.forEach { file ->
 //                            // 处理文件或文件夹
-//                            Log.d(
+//                            BuglyLog.d(
 //                                TAG,
 //                                "File name: ${file.name}, Is directory: ${file.isDirectory}, mimeType: ${file.type}, canRead: ${file.canRead()}, canWrite: ${file.canWrite()}, lastModified: ${file.lastModified()} "
 //                            )
@@ -1100,7 +1100,7 @@ class MainPro : ComponentActivity() {
                     contentColor = S.C.btn_Color1.current
                 ), enabled = true, onClick = {
                     if (uri != null) {
-                        Log.e(TAG, thisActivity.workspaceParentDir())
+                        BuglyLog.e(TAG, thisActivity.workspaceParentDir())
                         val directories =
                             U.FileUtils.getDirectoriesInPath(thisActivity.workspaceParentDir())
                         val filteredDirectories = directories.filter { it != "home" }
@@ -1119,7 +1119,7 @@ class MainPro : ComponentActivity() {
                                 }
                                 .setOkButton("确定",
                                     OnBottomMenuButtonClickListener { menu, view ->
-                                        Log.e(TAG, "${selectMenuText}")
+                                        BuglyLog.e(TAG, "${selectMenuText}")
 
                                         workspaceAssetsDir =
                                             "${thisActivity.workspaceParentDir()}/${selectMenuText}/data/assets"

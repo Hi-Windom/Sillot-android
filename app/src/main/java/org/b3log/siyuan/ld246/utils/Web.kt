@@ -1,13 +1,12 @@
 package org.b3log.siyuan.ld246.utils
 
-import android.util.Log
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import com.tencent.bugly.crashreport.BuglyLog
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.Response
 import java.io.IOException
 
 class AuthorizedWebViewClient(private val accessToken: String) : WebViewClient() {
@@ -25,7 +24,7 @@ class AuthorizedWebViewClient(private val accessToken: String) : WebViewClient()
                 val contentEncoding = response.header("Content-Encoding")
                 return WebResourceResponse(contentType, contentEncoding, response.body?.byteStream())
             } catch (e: IOException) {
-                Log.e(TAG, e.toString())
+                BuglyLog.e(TAG, e.toString())
             }
         }
         return super.shouldInterceptRequest(view, request)

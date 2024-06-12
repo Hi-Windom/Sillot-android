@@ -4,9 +4,10 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.os.Looper
-import android.util.Log
+import android.os.Process
 import cn.jpush.android.api.JPushInterface
 import com.blankj.utilcode.util.Utils
 import com.kongzue.dialogx.DialogX
@@ -14,7 +15,10 @@ import com.kongzue.dialogx.style.MIUIStyle
 import com.microsoft.clarity.Clarity
 import com.microsoft.clarity.ClarityConfig
 import com.microsoft.clarity.models.LogLevel
+import com.tencent.bugly.crashreport.BuglyLog
 import com.tencent.bugly.crashreport.CrashReport
+import com.tencent.bugly.crashreport.CrashReport.CrashHandleCallback
+import com.tencent.bugly.crashreport.CrashReport.UserStrategy
 import com.tencent.mmkv.MMKV
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
@@ -75,7 +79,7 @@ class App : Application() {
     }
 
     override fun onCreate() {
-        Log.e(TAG, "new one")
+        BuglyLog.w(TAG, "new one")
         super.onCreate()
         var refCount = 0
         Utils.init(this)
@@ -84,14 +88,14 @@ class App : Application() {
         MMKV.initialize(this)
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityPaused(activity: Activity) {
-                Log.w(
+                BuglyLog.w(
                     TAG,
                     "onActivityPaused() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
             }
 
             override fun onActivityStarted(activity: Activity) {
-                Log.w(
+                BuglyLog.w(
                     TAG,
                     "onActivityStarted() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -99,21 +103,21 @@ class App : Application() {
             }
 
             override fun onActivityDestroyed(activity: Activity) {
-                Log.w(
+                BuglyLog.w(
                     TAG,
                     "onActivityDestroyed() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
             }
 
             override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
-                Log.w(
+                BuglyLog.w(
                     TAG,
                     "onActivitySaveInstanceState() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
             }
 
             override fun onActivityStopped(activity: Activity) {
-                Log.w(
+                BuglyLog.w(
                     TAG,
                     "onActivityStopped() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -124,14 +128,14 @@ class App : Application() {
             }
 
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-                Log.w(
+                BuglyLog.w(
                     TAG,
                     "onActivityCreated() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
             }
 
             override fun onActivityResumed(activity: Activity) {
-                Log.w(
+                BuglyLog.w(
                     TAG,
                     "onActivityResumed() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -139,7 +143,7 @@ class App : Application() {
             }
 
             override fun onActivityPreDestroyed(activity: Activity) {
-                Log.w(
+                BuglyLog.w(
                     TAG,
                     "onActivityPreDestroyed() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -147,7 +151,7 @@ class App : Application() {
             }
 
             override fun onActivityPreCreated(activity: Activity, savedInstanceState: Bundle?) {
-                Log.w(
+                BuglyLog.w(
                     TAG,
                     "onActivityPreCreated() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -155,7 +159,7 @@ class App : Application() {
             }
 
             override fun onActivityPreStarted(activity: Activity) {
-                Log.w(
+                BuglyLog.w(
                     TAG,
                     "onActivityPreStarted() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -163,7 +167,7 @@ class App : Application() {
             }
 
             override fun onActivityPreStopped(activity: Activity) {
-                Log.w(
+                BuglyLog.w(
                     TAG,
                     "onActivityPreStopped() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -171,7 +175,7 @@ class App : Application() {
             }
 
             override fun onActivityPrePaused(activity: Activity) {
-                Log.w(
+                BuglyLog.w(
                     TAG,
                     "onActivityPrePaused() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -179,7 +183,7 @@ class App : Application() {
             }
 
             override fun onActivityPreResumed(activity: Activity) {
-                Log.w(
+                BuglyLog.w(
                     TAG,
                     "onActivityPreResumed() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -187,7 +191,7 @@ class App : Application() {
             }
 
             override fun onActivityPostCreated(activity: Activity, savedInstanceState: Bundle?) {
-                Log.w(
+                BuglyLog.w(
                     TAG,
                     "onActivityPostCreated() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -195,7 +199,7 @@ class App : Application() {
             }
 
             override fun onActivityPostDestroyed(activity: Activity) {
-                Log.w(
+                BuglyLog.w(
                     TAG,
                     "onActivityPostDestroyed() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -203,7 +207,7 @@ class App : Application() {
             }
 
             override fun onActivityPostPaused(activity: Activity) {
-                Log.w(
+                BuglyLog.w(
                     TAG,
                     "onActivityPostPaused() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -211,7 +215,7 @@ class App : Application() {
             }
 
             override fun onActivityPostSaveInstanceState(activity: Activity, outState: Bundle) {
-                Log.w(
+                BuglyLog.w(
                     TAG,
                     "onActivityPostSaveInstanceState() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -219,7 +223,7 @@ class App : Application() {
             }
 
             override fun onActivityPostResumed(activity: Activity) {
-                Log.w(
+                BuglyLog.w(
                     TAG,
                     "onActivityPostResumed() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -227,7 +231,7 @@ class App : Application() {
             }
 
             override fun onActivityPostStarted(activity: Activity) {
-                Log.w(
+                BuglyLog.w(
                     TAG,
                     "onActivityPostStarted() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -235,7 +239,7 @@ class App : Application() {
             }
 
             override fun onActivityPostStopped(activity: Activity) {
-                Log.w(
+                BuglyLog.w(
                     TAG,
                     "onActivityPostStopped() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -243,7 +247,7 @@ class App : Application() {
             }
 
             override fun onActivityPreSaveInstanceState(activity: Activity, outState: Bundle) {
-                Log.w(
+                BuglyLog.w(
                     TAG,
                     "onActivityPreSaveInstanceState() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -261,7 +265,7 @@ class App : Application() {
 
     override fun onLowMemory() {
         super.onLowMemory()
-        Log.w(
+        BuglyLog.w(
             TAG,
             "onLowMemory() invoked"
         )
@@ -270,8 +274,45 @@ class App : Application() {
     override fun attachBaseContext(base: Context?) { // 在onCreate方法之前。这个方法的目的是将应用程序的上下文与它的基类上下文关联起来。
         super.attachBaseContext(base)
         application = this
-        CrashReport.initCrashReport(this, S.initCrashReportID, true) // 初始化 bugly
-        val configClarity = ClarityConfig(projectId = "gqgzluae5t", logLevel = LogLevel.Warning)
+        val strategy = UserStrategy(this)
+        val sb = StringBuilder()
+        sb.append(Build.BRAND).append("-").append(Build.MODEL).append(" (")
+            .append(Build.MANUFACTURER).append(")")
+        strategy.setDeviceModel(sb.toString())
+        // 设置anr时是否获取系统trace文件，默认为false 。抓取堆栈的系统接口 Thread.getStackTrace 可能造成crash，建议只对少量用户开启
+        strategy.isEnableCatchAnrTrace = true
+
+        // 获取当前包名
+        val packageName: String = this.packageName
+        // 获取当前进程名
+        val processName = U.DEBUG.getProcessName(Process.myPid())
+        // 设置是否为上报进程
+        strategy.setUploadProcess(processName == null || processName == packageName)
+        strategy.setDeviceID(U.DEBUG.getAndroidId(this));
+        strategy.setCrashHandleCallback(object : CrashHandleCallback() {
+            override fun onCrashHandleStart(
+                crashType: Int, errorType: String,
+                errorMessage: String, errorStack: String
+            ): Map<String, String> {
+                val map = LinkedHashMap<String, String>()
+                map["Key"] = "Value"
+                return map
+            }
+
+            override fun onCrashHandleStart2GetExtraDatas(
+                crashType: Int, errorType: String,
+                errorMessage: String, errorStack: String
+            ): ByteArray {
+                return try {
+                    "Extra data.".toByteArray(charset("UTF-8"))
+                } catch (e: Exception) {
+                    e.toString().toByteArray(charset("UTF-8"))
+                }
+            }
+        })
+        CrashReport.initCrashReport(this, S.initCrashReportID, true, strategy) // 初始化 bugly
+        BuglyLog.setCache(3 * 1024) // 大于阈值会持久化至文件
+        val configClarity = ClarityConfig(projectId = S.DEBUG.Clarity_projectId, logLevel = LogLevel.Warning)
         Clarity.initialize(this, configClarity) // 初始化 Clarity
     }
 

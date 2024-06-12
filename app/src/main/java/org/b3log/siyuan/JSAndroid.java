@@ -33,7 +33,6 @@ import android.graphics.Color;
 import android.icu.text.SimpleDateFormat;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
-import android.util.Log;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -42,8 +41,6 @@ import android.provider.MediaStore;
 import android.webkit.JavascriptInterface;
 import android.widget.LinearLayout;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.biometric.BiometricManager;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.ShareCompat;
@@ -57,6 +54,8 @@ import com.kongzue.dialogx.dialogs.PopTip;
 import com.kongzue.dialogx.dialogs.TipDialog;
 import com.kongzue.dialogx.dialogs.WaitDialog;
 import com.kongzue.dialogx.util.TextInfo;
+import com.tencent.bugly.crashreport.BuglyLog;
+import com.tencent.bugly.crashreport.CrashReport;
 import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
 
 import java.io.File;
@@ -66,7 +65,6 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Map;
 
 import mobile.Mobile;
 import sc.windom.sofill.S;
@@ -89,13 +87,26 @@ public final class JSAndroid {
 
     //// Sillot extend start
     @JavascriptInterface
+    public void buglyPost1() {
+        try {
+            throw new Exception("JavascriptInterface buglyPost1");
+        } catch (Exception e) {
+            BuglyLog.e(TAG, "捕获到异常：" + e.getMessage());
+            App.getInstance().reportException(e);
+        }
+    }
+    @JavascriptInterface
+    public void buglyPost2() {
+        CrashReport.testJavaCrash();
+    }
+    @JavascriptInterface
     public boolean requestExternalStoragePermission() {
         Utils.requestExternalStoragePermission(activity);
         return true;
     }
     @JavascriptInterface
     public boolean requestPermissionActivity(final String id, final String Msg, final String callback) {
-        Log.w(TAG, "requestPermissionActivity() invoked");
+        BuglyLog.w(TAG, "requestPermissionActivity() invoked");
         if (Msg != null && !Msg.isEmpty()) {
             PopTip.show(Msg);
         }
@@ -140,26 +151,26 @@ public final class JSAndroid {
                 startActivityForResult(activity, battery, S.getREQUEST_CODE().REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, null);
             }
         }
-        Log.w(TAG, "requestPermissionActivity()  return true");
+        BuglyLog.w(TAG, "requestPermissionActivity()  return true");
         return true; // 返回真表示已经发起申请，不代表结果
     }
     @JavascriptInterface
     public boolean requestPermission(final String id, final String Msg) {
-        Log.d(TAG, "requestPermission() invoked");
+        BuglyLog.d(TAG, "requestPermission() invoked");
         if (Utils.isValidPermission(id)) {
-            Log.d(TAG, "requestPermission("+id+")  return false");
+            BuglyLog.d(TAG, "requestPermission("+id+")  return false");
             return false;
         }
         if (Msg != null && !Msg.isEmpty()) {
             PopTip.show(Msg);
         }
         ActivityCompat.requestPermissions(activity, new String[]{ id }, 1001);
-        Log.d(TAG, "requestPermission()  return true");
+        BuglyLog.d(TAG, "requestPermission()  return true");
         return true; // 返回真表示已经发起申请，不代表结果
     }
     @JavascriptInterface
     public void requestPermissionAll() {
-        Log.d(TAG, "requestPermissionAll() invoked");
+        BuglyLog.d(TAG, "requestPermissionAll() invoked");
         final HashSet<String> permissionList = new HashSet<>();
         HashSet<String> permissionsToCheck = new HashSet<>(Ps.PG_Core); // 核心权限组，每次启动都要检查
         if (Build.VERSION.SDK_INT >= 33) {
@@ -168,9 +179,9 @@ public final class JSAndroid {
         for (String permission : permissionsToCheck) {
             if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
                 permissionList.add(permission);
-                Log.w(TAG, "onCreate() -> "+permission+" task add [Ps.PG_Core]");
+                BuglyLog.w(TAG, "onCreate() -> "+permission+" task add [Ps.PG_Core]");
             } else {
-                Log.d(TAG, "onCreate() -> "+permission+" granted [Ps.PG_Core]");
+                BuglyLog.d(TAG, "onCreate() -> "+permission+" granted [Ps.PG_Core]");
             }
         }
 
@@ -180,9 +191,9 @@ public final class JSAndroid {
             for (String permission : permissionsToCheck) {
                 if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
                     permissionList.add(permission);
-                    Log.w(TAG, "onCreate() -> "+permission+" task add [Ps.PG_unCore]");
+                    BuglyLog.w(TAG, "onCreate() -> "+permission+" task add [Ps.PG_unCore]");
                 } else {
-                    Log.d(TAG, "onCreate() -> "+permission+" granted [Ps.PG_unCore]");
+                    BuglyLog.d(TAG, "onCreate() -> "+permission+" granted [Ps.PG_unCore]");
                 }
             }
 //        }
@@ -232,20 +243,20 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void setMMKV(final String key, final String value) {
-        Log.d(TAG, "setMMKV() invoked");
+        BuglyLog.d(TAG, "setMMKV() invoked");
         activity.mmkv.encode(key, value);
     }
 
     @JavascriptInterface
     public String getMMKV(final String key) {
-        Log.d(TAG, "getMMKV() invoked");
+        BuglyLog.d(TAG, "getMMKV() invoked");
         // 出于安全考虑禁止实现
         return "";
     }
 
     @JavascriptInterface
     public void showBiometricPrompt(final String captcha) {
-        Log.d(TAG, "showBiometricPrompt() invoked");
+        BuglyLog.d(TAG, "showBiometricPrompt() invoked");
         Handler mainHandler = new Handler(Looper.getMainLooper());
         // 在主线程中执行
         mainHandler.post(() -> {
@@ -297,7 +308,7 @@ public final class JSAndroid {
                                                         document.querySelector('#message').firstElementChild.textContent = ''
                                                     }, 6000)
                                                 })""";
-                    Log.d("evaluateJavascript", jsCode);
+                    BuglyLog.d("evaluateJavascript", jsCode);
                     activity.webView.evaluateJavascript(jsCode, null);
                     activity.mmkv.putString("AppCheckInState","unlockScreen");
                 }
@@ -315,18 +326,18 @@ public final class JSAndroid {
                     BiometricManager biometricManager = BiometricManager.from(activity);
                     switch (biometricManager.canAuthenticate()) {
                         case BiometricManager.BIOMETRIC_SUCCESS:
-                            Log.d("BiometricManager","应用可以进行生物识别技术进行身份验证。");
+                            BuglyLog.d("BiometricManager","应用可以进行生物识别技术进行身份验证。");
                             return;
                         case BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE:
-                            Log.e("BiometricManager","该设备上没有搭载可用的生物特征功能。");
+                            BuglyLog.e("BiometricManager","该设备上没有搭载可用的生物特征功能。");
                             PopTip.show("该设备上没有搭载可用的生物特征功能");
                             return;
                         case BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE:
-                            Log.e("BiometricManager","生物识别功能当前不可用。");
+                            BuglyLog.e("BiometricManager","生物识别功能当前不可用。");
                             PopTip.show("生物识别功能当前不可用");
                             return;
                         case BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED:
-                            Log.e("BiometricManager","用户没有录入生物识别数据。");
+                            BuglyLog.e("BiometricManager","用户没有录入生物识别数据。");
                             PopTip.show("用户没有录入生物识别数据");
                             return;
                     }
@@ -347,14 +358,14 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void savePictureByURL(final String imageUrl) throws IOException {
-        Log.d(TAG, "savePictureByURL() invoked");
+        BuglyLog.d(TAG, "savePictureByURL() invoked");
         // 下载图片
         Bitmap IMG = BitmapFactory.decodeStream(new URL("http://127.0.0.1:58131"+imageUrl).openConnection().getInputStream());
         // 获取内部存储的 DCIM/Sillot 目录
         File directory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Sillot");
         if (!directory.exists()) {
             if (!directory.mkdirs()) {
-                Log.e("Sillot_savePictureByURL", "Failed to create directory: " + directory.getAbsolutePath());
+                BuglyLog.e("Sillot_savePictureByURL", "Failed to create directory: " + directory.getAbsolutePath());
                 return;
             }
         }
@@ -368,12 +379,12 @@ public final class JSAndroid {
             IMG.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
             outputStream.flush();
             outputStream.close();
-            Log.i("saveLongScreenshot", "Sillot_savePictureByURL saved to " + file.getAbsolutePath());
+            BuglyLog.i("saveLongScreenshot", "Sillot_savePictureByURL saved to " + file.getAbsolutePath());
             notifyGallery(file);
             PopTip.show("图片已保存到 /DCIM/Sillot");
         } catch (IOException e) {
             e.printStackTrace();
-            Log.e("saveLongScreenshot", "Failed to save Sillot_savePictureByURL");
+            BuglyLog.e("saveLongScreenshot", "Failed to save Sillot_savePictureByURL");
         }
     }
 
@@ -384,8 +395,8 @@ public final class JSAndroid {
             MediaScannerConnection.scanFile(activity,
                     new String[]{imageFile.toString()}, null,
                     (path, uri) -> {
-                        Log.i("ExternalStorage", "Scanned " + path + ":");
-                        Log.i("ExternalStorage", "-> uri=" + uri);
+                        BuglyLog.i("ExternalStorage", "Scanned " + path + ":");
+                        BuglyLog.i("ExternalStorage", "-> uri=" + uri);
                     });
         } else {
                 Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
@@ -411,14 +422,14 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void exitSillotAndroid() {
-        Log.d(TAG, "exitSillotAndroid() invoked");
+        BuglyLog.d(TAG, "exitSillotAndroid() invoked");
         activity.runOnUiThread(() -> {
             activity.exit();
         });
     }
     @JavascriptInterface
     public void androidReboot() {
-        Log.d(TAG, "androidReboot() invoked");
+        BuglyLog.d(TAG, "androidReboot() invoked");
         runOnUiThread(() -> {
             activity.coldRestart();
         });
@@ -429,14 +440,14 @@ public final class JSAndroid {
     @JavascriptInterface
     public String getBlockURL() {
         var url = activity.getIntent().getStringExtra("blockURL");
-        Log.d(TAG, "getBlockURL() invoked. original url="+url);
+        BuglyLog.d(TAG, "getBlockURL() invoked. original url="+url);
         if (url == null) { url = ""; }
         return url;
     }
 
     @JavascriptInterface
     public String readClipboard() {
-        Log.d(TAG, "readClipboard() invoked");
+        BuglyLog.d(TAG, "readClipboard() invoked");
         final ClipboardManager clipboard = (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
         final ClipData clipData = clipboard.getPrimaryClip();
         if (null == clipData) {
@@ -466,7 +477,7 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void writeImageClipboard(final String uri) {
-        Log.d(TAG, "writeImageClipboard() invoked");
+        BuglyLog.d(TAG, "writeImageClipboard() invoked");
         final ClipboardManager clipboard = (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
         final ClipData clip = ClipData.newUri(activity.getContentResolver(), "Copied img from SiYuan", Uri.parse("http://127.0.0.1:58131/" + uri));
         clipboard.setPrimaryClip(clip);
@@ -474,7 +485,7 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void writeClipboard(final String content) {
-        Log.d(TAG, "writeClipboard() invoked");
+        BuglyLog.d(TAG, "writeClipboard() invoked");
         final ClipboardManager clipboard = (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
         final ClipData clip = ClipData.newPlainText("Copied text from SiYuan", content);
         clipboard.setPrimaryClip(clip);
@@ -482,7 +493,7 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void returnDesktop() {
-        Log.d(TAG, "returnDesktop() invoked");
+        BuglyLog.d(TAG, "returnDesktop() invoked");
         final Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_HOME);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -491,11 +502,11 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void openExternal(String url) {
-        Log.d(TAG, "openExternal() invoked");
+        BuglyLog.d(TAG, "openExternal() invoked");
         if (StringUtils.isEmpty(url)) {
             return;
         }
-        Log.d("JSAndroid.openExternal", url);
+        BuglyLog.d("JSAndroid.openExternal", url);
 
         if (url.startsWith("#")) {
             return;
@@ -516,10 +527,10 @@ public final class JSAndroid {
                 }
                 // 添加判断文件是否存在
                 if (!asset.exists()) {
-                    Log.e("File Not Found", "File does not exist: " + asset.getAbsolutePath());
+                    BuglyLog.e("File Not Found", "File does not exist: " + asset.getAbsolutePath());
                     url = "http://127.0.0.1:58131/" + url;
                 } else {
-                    Log.d("if (url.startsWith(\"assets/\"))", asset.getAbsolutePath());
+                    BuglyLog.d("if (url.startsWith(\"assets/\"))", asset.getAbsolutePath());
                     final Uri uri = FileProvider.getUriForFile(activity.getApplicationContext(), BuildConfig.APPLICATION_ID, asset);
                     final String type = Mobile.getMimeTypeByExt(asset.getAbsolutePath());
                     Intent intent = new ShareCompat.IntentBuilder(activity.getApplicationContext())
@@ -533,7 +544,7 @@ public final class JSAndroid {
                     return;
                 }
             } catch (Exception e) {
-                Log.e(TAG, String.valueOf(e));
+                BuglyLog.e(TAG, String.valueOf(e));
                 Utils.LogError(TAG, "openExternal failed", e);
             }
         }
@@ -546,9 +557,9 @@ public final class JSAndroid {
                 final File asset = new File(workspacePath, "temp" + decodedUrl);
                 // 添加判断文件是否存在
                 if (!asset.exists()) {
-                    Log.e("File Not Found", "File does not exist: " + asset.getAbsolutePath());
+                    BuglyLog.e("File Not Found", "File does not exist: " + asset.getAbsolutePath());
                 } else {
-                    Log.d("if (url.endsWith(\".zip\") && url.startsWith(\"/export/\"))", asset.getAbsolutePath());
+                    BuglyLog.d("if (url.endsWith(\".zip\") && url.startsWith(\"/export/\"))", asset.getAbsolutePath());
                     Uri uri = FileProvider.getUriForFile(activity.getApplicationContext(), BuildConfig.APPLICATION_ID, asset);
                     final String type = Mobile.getMimeTypeByExt(asset.getAbsolutePath());
                     Intent intent = new ShareCompat.IntentBuilder(activity.getApplicationContext())
@@ -562,14 +573,14 @@ public final class JSAndroid {
                     return;
                 }
             } catch (Exception e) {
-                Log.e(TAG, String.valueOf(e));
+                BuglyLog.e(TAG, String.valueOf(e));
             }
         }
 
         if (url.startsWith("/")) {
             url = "http://127.0.0.1:58131" + url;
         }
-        Log.d("openExternal final url ", url);
+        BuglyLog.d("openExternal final url ", url);
 
         final Uri uri = Uri.parse(url);
         final Intent browserIntent = new Intent(Intent.ACTION_VIEW, uri);
@@ -579,7 +590,7 @@ public final class JSAndroid {
 
     @JavascriptInterface
     public void changeStatusBarColor(final String color, final int appearanceMode) {
-        Log.d(TAG, "changeStatusBarColor() invoked");
+        BuglyLog.d(TAG, "changeStatusBarColor() invoked");
         activity.runOnUiThread(() -> {
             UltimateBarX.statusBarOnly(activity).transparent().light(appearanceMode == 0).color(parseColor(color)).apply();
 

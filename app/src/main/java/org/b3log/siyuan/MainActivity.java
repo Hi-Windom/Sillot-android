@@ -33,7 +33,6 @@ package org.b3log.siyuan;
  import android.os.Bundle;
  import android.os.IBinder;
  import android.provider.MediaStore;
- import android.util.Log;
  import android.view.Display;
  import android.view.DragEvent;
  import android.view.KeyEvent;
@@ -76,6 +75,7 @@ package org.b3log.siyuan;
  import com.blankj.utilcode.util.StringUtils;
  import com.kongzue.dialogx.dialogs.BottomMenu;
  import com.kongzue.dialogx.dialogs.PopTip;
+ import com.tencent.bugly.crashreport.BuglyLog;
  import com.tencent.bugly.crashreport.CrashReport;
  import com.tencent.mmkv.MMKV;
  import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
@@ -132,15 +132,9 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         if (event.getAction() == KeyEvent.ACTION_DOWN) {
-//            try {
-//                throw new Exception(String.valueOf(event.getKeyCode()));
-//            } catch (Exception e) {
-//                Log.e(TAG, "捕获到异常：" + e.getMessage());
-//                App.getInstance().reportException(e);
-//            }
             if (event.getKeyCode() == KeyEvent.KEYCODE_ESCAPE) { // getKeyCode 的数字只能拿来和 KeyEvent 里面的对比，不然没有意义
                 // 处理ESC键按下事件，并不能阻止输入法对ESC的响应
-                Log.e("ESC键被按下",String.valueOf(event.getKeyCode()));
+                BuglyLog.e("ESC键被按下",String.valueOf(event.getKeyCode()));
             }
         }
         return super.dispatchKeyEvent(event);
@@ -148,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     public void onNewIntent(final Intent intent) {
-        Log.w(TAG, "onNewIntent() invoked");
+        BuglyLog.w(TAG, "onNewIntent() invoked");
         super.onNewIntent(intent);
         if (null != webView) {
             final String blockURL = intent.getStringExtra("blockURL");
@@ -185,7 +179,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     final ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName className, IBinder service) {
-            Log.i(TAG, "onServiceConnected invoked");
+            BuglyLog.i(TAG, "onServiceConnected invoked");
             BootService.LocalBinder binder = (BootService.LocalBinder) service;
             bootService = binder.getService();
             serviceBound = true;
@@ -196,7 +190,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
-            Log.i(TAG, "onServiceDisconnected invoked");
+            BuglyLog.i(TAG, "onServiceDisconnected invoked");
             serviceBound = false;
             bootService.setKernelStarted(false);
             bootService.stopSelf();
@@ -207,7 +201,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     };
 
     void releaseBootService() {
-        Log.i(TAG, "releaseBootService invoked");
+        BuglyLog.i(TAG, "releaseBootService invoked");
         // 销毁WebView并从池中移除
         if (webViewWrapper != null) {
             ViewGroup parent = (ViewGroup) webView.getParent();
@@ -233,11 +227,11 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     // 在这里执行依赖于bootService的代码
     private void performActionWithService() {
-        Log.w(TAG, "performActionWithService invoked");
+        BuglyLog.w(TAG, "performActionWithService invoked");
         if (serviceBound && bootService != null) {
             bootService.showWifi(this);
             // 初始化 UI 元素
-            Log.w(TAG, "performActionWithService() -> initUIElements() invoked");
+            BuglyLog.w(TAG, "performActionWithService() -> initUIElements() invoked");
             initUIElements();
 
             AppUtils.registerAppStatusChangedListener(this);
@@ -269,7 +263,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) { // 只执行一次。在这里设置布局和初始化数据。在大多数情况下，不需要在 onRestart 中做太多事情，因为 onStart 已经处理了活动可见时的初始化。
-        Log.w(TAG, "onCreate() invoked");
+        BuglyLog.w(TAG, "onCreate() invoked");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         // 设置应用的主题模式跟随系统
@@ -285,12 +279,12 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             Display.Mode[] modes = display.getSupportedModes();
             Display.Mode preferredMode = modes[0];
             for (Display.Mode mode : modes) {
-                Log.d("MainActivity Display", "supported mode: " + mode.toString());
+                BuglyLog.d("MainActivity Display", "supported mode: " + mode.toString());
                 if (mode.getRefreshRate() > preferredMode.getRefreshRate() && mode.getPhysicalWidth() >= preferredMode.getPhysicalWidth()) {
                     preferredMode = mode;
                 }
             }
-            Log.d("MainActivity Display", "preferredMode mode: " + preferredMode.toString());
+            BuglyLog.d("MainActivity Display", "preferredMode mode: " + preferredMode.toString());
             WindowManager.LayoutParams params = getWindow().getAttributes();
             params.preferredDisplayModeId = preferredMode.getModeId();
             getWindow().setAttributes(params);
@@ -356,15 +350,15 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             webViewContainer = findViewById(R.id.webViewContainer);
             ViewGroup parent = (ViewGroup) webView.getParent();
             if (parent == null) {
-                Log.d(TAG, "将WebView添加到容器中");
+                BuglyLog.d(TAG, "将WebView添加到容器中");
                 webViewContainer.addView(webView); // 将WebView添加到容器中
             } else {
                 if (parent != webViewContainer) {
-                    Log.d(TAG, "WebView已在其他容器中，先移除再添加");
+                    BuglyLog.d(TAG, "WebView已在其他容器中，先移除再添加");
                     parent.removeView(webView); // 从原来的容器中移除WebView
                     webViewContainer.addView(webView); // 将WebView添加到当前容器中
                 } else {
-                    Log.d(TAG, "WebView已在当前容器中，无需再次添加");
+                    BuglyLog.d(TAG, "WebView已在当前容器中，无需再次添加");
                 }
             }
 
@@ -448,7 +442,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @SuppressLint("SetJavaScriptEnabled")
     void showBootIndex() {
-        Log.w(TAG, "showBootIndex() invoked");
+        BuglyLog.w(TAG, "showBootIndex() invoked");
         webViewContainer.setVisibility(View.VISIBLE);
         webView.setWebViewClient(new WebViewClient() {
             // setWebViewClient 和 setWebChromeClient 并不同，别看走眼了
@@ -457,14 +451,14 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request) {
                 final Uri uri = request.getUrl();
                 final String url = uri.toString();
-                Log.w(TAG, "showBootIndex() -> [WebViewClient] shouldOverrideUrlLoading <- "+url);
+                BuglyLog.w(TAG, "showBootIndex() -> [WebViewClient] shouldOverrideUrlLoading <- "+url);
                 if (url.contains("127.0.0.1")) {
                     var AppCheckInState = mmkv.getString("AppCheckInState", "");
                     if (AppCheckInState.equals("lockScreen")) {
                         try {
                             String encodedUrl = URLEncoder.encode(url, "UTF-8");
                             String gotourl = "http://127.0.0.1:58131/check-auth?to=" + encodedUrl;
-                            Log.w(TAG,"showBootIndex() -> [WebViewClient] shouldOverrideUrlLoading -> " + gotourl);
+                            BuglyLog.w(TAG,"showBootIndex() -> [WebViewClient] shouldOverrideUrlLoading -> " + gotourl);
                             view.loadUrl(gotourl);
                         } catch (UnsupportedEncodingException e) {
                             // 编码失败的处理
@@ -504,7 +498,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             @Override
             public void onPageFinished(WebView view, String url) {
                 // 页面加载完成时调用
-                Log.d("WebViewClient", "onPageFinished: " + url);
+                BuglyLog.d("WebViewClient", "onPageFinished: " + url);
                 view.evaluateJavascript("javascript:document.body.classList.add(\"body--mobile\")", null);
                 bootLogo.postDelayed(() -> {
                     bootLogo.setVisibility(View.GONE);
@@ -518,13 +512,13 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                 // 在加载页面出现错误时进行处理
                 if (error != null) {
-                    Log.e("WebViewClient", "onReceivedError: " + error.getDescription());
+                    BuglyLog.e("WebViewClient", "onReceivedError: " + error.getDescription());
                 }
             }
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 // 页面开始加载时调用
-                Log.d("WebViewClient", "onPageStarted: " + url);
+                BuglyLog.d("WebViewClient", "onPageStarted: " + url);
             }
 
         });
@@ -584,7 +578,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) { // 其他 Activity 的结果不要傻傻的在这里处理好吧
         if (grantResults.length > 0) {
-            Log.w(TAG, "onRequestPermissionsResult() -> requestCode "+requestCode+"  grantResults[0] "+grantResults[0]);
+            BuglyLog.w(TAG, "onRequestPermissionsResult() -> requestCode "+requestCode+"  grantResults[0] "+grantResults[0]);
         }
         if (requestCode == REQUEST_CAMERA) {
             // 请求码应该在整个应用中是全局唯一的，但是处理权限请求结果应该是在申请权限的活动中进行。
@@ -627,7 +621,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) { // 应该在 onRequestPermissionsResult 处理的别跑来这里啊混蛋！
-        Log.w(TAG, "onActivityResult() -> requestCode "+requestCode+"  resultCode "+resultCode);
+        BuglyLog.w(TAG, "onActivityResult() -> requestCode "+requestCode+"  resultCode "+resultCode);
         if (null == uploadMessage) {
             super.onActivityResult(requestCode, resultCode, intent);
             return;
@@ -716,7 +710,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     protected void onDestroy() {
-        Log.w(TAG, "onDestroy() invoked"); // 大概率不会输出
+        BuglyLog.w(TAG, "onDestroy() invoked"); // 大概率不会输出
         // 注销 EventBus
         EventBus.getDefault().unregister(this);
         KeyboardUtils.unregisterSoftInputChangedListener(getWindow());
@@ -727,7 +721,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     public void onForeground(Activity activity) {
-        Log.w(TAG, "onForeground() invoked");
+        BuglyLog.w(TAG, "onForeground() invoked");
         startSyncData();
         if (null != webView) {
             webView.evaluateJavascript("javascript:window.reconnectWebSocket()", null);
@@ -736,49 +730,49 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
     @Override
     public void onBackground(Activity activity) {
-        Log.w(TAG, "onBackground() invoked");
+        BuglyLog.w(TAG, "onBackground() invoked");
         startSyncData();
     }
 
     @Override
     public void onMultiWindowModeChanged(boolean isInMultiWindowMode) {
         super.onMultiWindowModeChanged(isInMultiWindowMode);
-        Log.w(TAG, "onMultiWindowModeChanged() invoked");
+        BuglyLog.w(TAG, "onMultiWindowModeChanged() invoked");
     }
 
     @Override
     protected void onStart() { // 当活动变得对用户可见时，系统会调用这个方法。这是在活动即将进入前台并且用户可以看到它时进行最后准备的地方。在这里进行用户可见时的初始化，比如开始动画、注册广播接收器等。
         super.onStart();
-        Log.w(TAG, "onStart() -> canPopInBackground "+Utils.canPopInBackground(this));
-        Log.w(TAG, "onStart() -> canShowOnTop "+Utils.canShowOnTop(this));
-        Log.w(TAG, "onStart() -> isShowingOnLockScreen "+Utils.isShowingOnLockScreen(this));
-        Log.w(TAG, "onStart() -> canManageAllFiles "+Utils.canManageAllFiles(this));
-        Log.w(TAG, "onStart() -> canAccessDeviceState "+Utils.canAccessDeviceState(this));
-        Log.w(TAG, "onStart() -> canRequestPackageInstalls "+Utils.canRequestPackageInstalls(this));
+        BuglyLog.w(TAG, "onStart() -> canPopInBackground "+Utils.canPopInBackground(this));
+        BuglyLog.w(TAG, "onStart() -> canShowOnTop "+Utils.canShowOnTop(this));
+        BuglyLog.w(TAG, "onStart() -> isShowingOnLockScreen "+Utils.isShowingOnLockScreen(this));
+        BuglyLog.w(TAG, "onStart() -> canManageAllFiles "+Utils.canManageAllFiles(this));
+        BuglyLog.w(TAG, "onStart() -> canAccessDeviceState "+Utils.canAccessDeviceState(this));
+        BuglyLog.w(TAG, "onStart() -> canRequestPackageInstalls "+Utils.canRequestPackageInstalls(this));
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        Log.w(TAG, "onStop() invoked");
+        BuglyLog.w(TAG, "onStop() invoked");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.w(TAG, "onResume() invoked");
+        BuglyLog.w(TAG, "onResume() invoked");
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        Log.w(TAG, "onPause() invoked");
+        BuglyLog.w(TAG, "onPause() invoked");
     }
 
     @Override
     protected void onRestart() { // 当活动重新启动时调用（一般是onStop后）。在这里恢复活动之前的状态，比如重新获取数据、恢复界面状态等。
         super.onRestart();
-        Log.w(TAG, "onRestart() invoked");
+        BuglyLog.w(TAG, "onRestart() invoked");
     }
 
     public void exit() {
@@ -798,18 +792,18 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             if (webViewUrl != null && webViewUrl.contains("/check-auth?")) {
                 mmkv.putString("AppCheckInState","lockScreen");
                 result.set(true);
-                Log.d(TAG, "exit() AppCheckInState->lockScreen");
+                BuglyLog.d(TAG, "exit() AppCheckInState->lockScreen");
             } else {
                 mmkv.putString("AppCheckInState","unlockScreen");
                 result.set(false);
-                Log.d(TAG, "exit() AppCheckInState->unlockScreen");
+                BuglyLog.d(TAG, "exit() AppCheckInState->unlockScreen");
             }
         });
         return result.get();
     }
 
     public void coldRestart() {
-        Log.w(TAG, "coldRestart() invoked");
+        BuglyLog.w(TAG, "coldRestart() invoked");
         setSillotGibbetCheckInState();
         // 从任务列表中移除，禁止放在 onDestroy
         finishAndRemoveTask(); //  这个方法用于结束当前活动，并从任务栈中移除整个任务。这意味着，当前活动所在的任务中所有的活动都会被结束，并且任务本身也会被移除。如果这个任务是最顶层的任务，那么用户将返回到主屏幕。

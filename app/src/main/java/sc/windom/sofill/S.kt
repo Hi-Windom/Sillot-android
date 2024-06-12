@@ -7,6 +7,7 @@ import sc.windom.sofill.Ss.S_Activity
 import sc.windom.sofill.Ss.S_ColorInt
 import sc.windom.sofill.Ss.S_ColorStringHex
 import sc.windom.sofill.Ss.S_Compose
+import sc.windom.sofill.Ss.S_DEBUG
 import sc.windom.sofill.Ss.S_Events
 import sc.windom.sofill.Ss.S_Intent
 import sc.windom.sofill.Ss.S_REQUEST_CODE
@@ -68,6 +69,9 @@ object S {
     // compose 组件常量
     @JvmStatic
     val C = S_Compose
+
+    @JvmStatic
+    val DEBUG = S_DEBUG
 
     @JvmStatic
     val AppQueryIDs = S_packageName

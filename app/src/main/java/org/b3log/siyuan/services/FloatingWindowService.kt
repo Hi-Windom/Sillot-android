@@ -6,12 +6,10 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.graphics.PixelFormat
 import android.net.ConnectivityManager
 import android.net.Network
@@ -21,7 +19,6 @@ import android.net.wifi.WifiManager
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
-import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -33,16 +30,15 @@ import android.widget.TextView
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import com.kongzue.dialogx.dialogs.PopNotification
+import com.tencent.bugly.crashreport.BuglyLog
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.ObservableEmitter
-import io.reactivex.rxjava3.core.ObservableOnSubscribe
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
-import org.b3log.siyuan.App
 import org.b3log.siyuan.R
-import sc.windom.sofill.S
 import org.b3log.siyuan.WifiStateReceiver
+import sc.windom.sofill.S
 import sc.windom.sofill.U
 import java.net.Inet4Address
 import java.net.NetworkInterface
@@ -81,18 +77,18 @@ class FloatingWindowService : Service() {
     )
 
     override fun onBind(intent: Intent): IBinder? {
-        Log.i(TAG, "onBind called")
+        BuglyLog.i(TAG, "onBind called")
         return null
     }
 
     override fun onCreate() {
         super.onCreate()
-        Log.i(TAG, "onCreate called")
+        BuglyLog.i(TAG, "onCreate called")
         works()
     }
 
     private fun createNotificationChannel() {
-        Log.i(TAG, "createNotificationChannel called")
+        BuglyLog.i(TAG, "createNotificationChannel called")
         val serviceChannel = NotificationChannel(
             S.FloatingWindowService_NOTIFICATION_CHANNEL_ID,
             "显示悬浮窗",
@@ -106,7 +102,7 @@ class FloatingWindowService : Service() {
 
     // 启动服务
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        Log.i(TAG, "onStartCommand() -> intent: $intent")
+        BuglyLog.i(TAG, "onStartCommand() -> intent: $intent")
         if (intent.action.isNullOrEmpty()) {
             works()
         }
@@ -118,7 +114,7 @@ class FloatingWindowService : Service() {
     }
 
     override fun onDestroy() {
-        Log.i(TAG, "onDestroy called")
+        BuglyLog.i(TAG, "onDestroy called")
         super.onDestroy()
         unregisterNetworkCallback()
 //        val connectivityManager =
@@ -129,7 +125,7 @@ class FloatingWindowService : Service() {
 
     @SuppressLint("LaunchActivityFromNotification")
     private fun works() {
-        Log.i(TAG, "works called")
+        BuglyLog.i(TAG, "works called")
         instance = this
         createNotificationChannel()
         // 初始化NotificationManager
@@ -159,7 +155,7 @@ class FloatingWindowService : Service() {
     }
 
     private fun stopService() {
-        Log.i(TAG, "stopService called")
+        BuglyLog.i(TAG, "stopService called")
         instance = null
         unregisterWifiReceiverIfNeeded()
         // ... 清理逻辑 ...
@@ -174,7 +170,7 @@ class FloatingWindowService : Service() {
     // 初始化窗口
     @SuppressLint("InflateParams")
     private fun initializeWindow() {
-        Log.i(TAG, "initializeWindow called")
+        BuglyLog.i(TAG, "initializeWindow called")
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         val inflater = getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
         // 创建悬浮球视图
@@ -191,7 +187,7 @@ class FloatingWindowService : Service() {
 
     @SuppressLint("ClickableViewAccessibility")
     private fun initializeUI() {
-        Log.i(TAG, "initializeUI called")
+        BuglyLog.i(TAG, "initializeUI called")
         wifiStatusTextView = floatingView?.findViewById(R.id.wifi_status_textview)
         closeButton = floatingView?.findViewById(R.id.close_button)
         closeButton?.setOnClickListener { floatingView?.let { it.visibility = View.GONE } }
@@ -257,7 +253,7 @@ class FloatingWindowService : Service() {
 
     @SuppressLint("SetTextI18n")
     private fun updateIpAddress(notificationText: String? = "Wifi : 没有诶") {
-        Log.i(TAG, "updateIpAddress called -> notificationText: $notificationText")
+        BuglyLog.i(TAG, "updateIpAddress called -> notificationText: $notificationText")
         val executorService: ExecutorService = Executors.newSingleThreadExecutor()
         executorService.execute {
             try {
@@ -293,7 +289,7 @@ class FloatingWindowService : Service() {
 
     // 切换悬浮窗和悬浮球的函数
     private fun toggleFloatingWindowAndBall() {
-        Log.i(TAG, "toggleFloatingWindowAndBall called")
+        BuglyLog.i(TAG, "toggleFloatingWindowAndBall called")
         layoutParams.gravity = Gravity.TOP or Gravity.START
         layoutParams.x = 0
         layoutParams.y = 0
@@ -311,7 +307,7 @@ class FloatingWindowService : Service() {
 
     // 注册WiFi接收器
     private fun registerWifiReceiver() {
-        Log.i(TAG, "registerWifiReceiver called")
+        BuglyLog.i(TAG, "registerWifiReceiver called")
         val intentFilter = IntentFilter()
         intentFilter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION)
         registerReceiver(wifiStateReceiver, intentFilter)
@@ -319,7 +315,7 @@ class FloatingWindowService : Service() {
 
     // 注册WiFi接收器（如果需要）
     private fun registerWifiReceiverIfNeeded() {
-        Log.i(TAG, "registerWifiReceiverIfNeeded called")
+        BuglyLog.i(TAG, "registerWifiReceiverIfNeeded called")
         val isWifiReceiverRegistered = isReceiverRegistered(WifiStateReceiver::class.java)
         if (!isWifiReceiverRegistered) {
             val intentFilter = IntentFilter()
@@ -331,7 +327,7 @@ class FloatingWindowService : Service() {
 
     // 检查接收器是否已经注册
     private fun isReceiverRegistered(receiverClass: Class<*>): Boolean {
-        Log.i(TAG, "isReceiverRegistered called")
+        BuglyLog.i(TAG, "isReceiverRegistered called")
         val intent = Intent(this, receiverClass) // 确保使用与注册时相同的Context
         val pendingIntent = PendingIntent.getBroadcast(
             this,
@@ -344,7 +340,7 @@ class FloatingWindowService : Service() {
 
     // 取消注册WiFi接收器（如果需要）
     private fun unregisterWifiReceiverIfNeeded() {
-        Log.i(TAG, "unregisterWifiReceiverIfNeeded called")
+        BuglyLog.i(TAG, "unregisterWifiReceiverIfNeeded called")
         if (::wifiStateReceiver.isInitialized && isReceiverRegistered(WifiStateReceiver::class.java)) {
             unregisterReceiver(wifiStateReceiver)
         }
@@ -352,7 +348,7 @@ class FloatingWindowService : Service() {
 
     // 更新WiFi信息 rxJava 版
     private fun updateWifiInfo_old() {
-        Log.i(TAG, "updateWifiInfo called")
+        BuglyLog.i(TAG, "updateWifiInfo called")
         wifiDisposable =
             Observable.create { emitter: ObservableEmitter<String> ->
                 if (ActivityCompat.checkSelfPermission(
@@ -389,7 +385,7 @@ class FloatingWindowService : Service() {
     }
 
     private fun updateWifiInfo() {
-        Log.i(TAG, "updateWifiInfo called")
+        BuglyLog.i(TAG, "updateWifiInfo called")
 
         // 创建 Observable，检查定位权限
         val permissionCheckObservable = Observable.create { emitter ->
@@ -410,18 +406,18 @@ class FloatingWindowService : Service() {
             .doOnTerminate {
                 // 在 Observable 完成时执行清理操作
                 // 例如，取消注册的接收器或取消网络请求
-                Log.d(TAG, "Permission check Observable terminated")
+                BuglyLog.d(TAG, "Permission check Observable terminated")
             }
             .subscribe { permission ->
                 when (permission) {
                     "PermissionGranted" -> {
-                        Log.d(TAG, "Location permission granted, registering receiver and performing wifi scan")
+                        BuglyLog.d(TAG, "Location permission granted, registering receiver and performing wifi scan")
                         registerWifiReceiverIfNeeded()
                         performWifiScan()
                     }
                     "PermissionDenied" -> {
                         // 处理权限被拒绝的情况，例如显示一个对话框或 toast
-                        Log.i(TAG, "Location permission denied")
+                        BuglyLog.i(TAG, "Location permission denied")
                     }
                 }
             }
@@ -433,7 +429,7 @@ class FloatingWindowService : Service() {
     // 执行WiFi扫描操作
     @SuppressLint("SetTextI18n")
     private fun performWifiScan() {
-        Log.i(TAG, "performWifiScan called")
+        BuglyLog.i(TAG, "performWifiScan called")
         val wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
         if (wifiManager.isWifiEnabled) {
             // 获取当前连接的WiFi信息
