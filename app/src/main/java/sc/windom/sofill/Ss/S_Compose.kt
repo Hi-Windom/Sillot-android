@@ -43,4 +43,22 @@ object S_Compose {
     val Card_bgColor_green1 = compositionLocalOf { Color(0x58237A58) }
     val Card_bgColor_gold1 = compositionLocalOf { Color(0x58997758) }
     val Card_bgColor_red1 = compositionLocalOf { Color(0xC8791020) }
+    val text_fontSize_sss = compositionLocalOf { 8.sp }
+    val text_lineHeight_sss = compositionLocalOf { 10.sp }
+    val text_fontSize_ss = compositionLocalOf { 10.sp }
+    val text_lineHeight_ss = compositionLocalOf { 12.sp }
+    val text_fontSize_s = compositionLocalOf { 12.sp }
+    val text_lineHeight_s = compositionLocalOf { 14.sp }
+    val text_fontSize_m = compositionLocalOf { 14.sp }
+    val text_lineHeight_m = compositionLocalOf { 16.sp }
+    val text_fontSize_x = compositionLocalOf { 16.sp }
+    val text_lineHeight_x = compositionLocalOf { 18.sp }
+    val text_fontSize_xx = compositionLocalOf { 18.sp }
+    val text_lineHeight_xx = compositionLocalOf { 20.sp }
+    val text_fontSize_xxx = compositionLocalOf { 20.sp }
+    val text_lineHeight_xxx = compositionLocalOf { 22.sp }
+    val text_fontSize_xxxx = compositionLocalOf { 22.sp }
+    val text_lineHeight_xxxx = compositionLocalOf { 24.sp }
+    val text_fontSize_xxxxx = compositionLocalOf { 24.sp }
+    val text_lineHeight_xxxxx = compositionLocalOf { 26.sp }
 }

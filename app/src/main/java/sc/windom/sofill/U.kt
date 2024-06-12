@@ -44,6 +44,7 @@ import sc.windom.sofill.Us.U_DialogX
 import sc.windom.sofill.Us.U_FileUtils
 import sc.windom.sofill.Us.U_FuckOtherApp
 import sc.windom.sofill.Us.U_Permission
+import sc.windom.sofill.Us.U_Safe
 import java.io.File
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -73,6 +74,9 @@ object U {
 
     @JvmStatic
     val PS = U_Permission
+
+    @JvmStatic
+    val SAFE = U_Safe
 
     @JvmStatic
     fun registActivityConfigurationChangWithSoftKeyboardToolbarInWebview(activity: Activity, webView: WebView?) {

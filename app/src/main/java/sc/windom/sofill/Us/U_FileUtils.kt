@@ -331,6 +331,63 @@ object U_FileUtils {
     }
 
     /**
+     * 获取文件或文件夹的大小
+     *
+     * @param uri 目标文件或文件夹的 uri
+     */
+    fun getFileOrFolderSize(file: File?): String {
+        if (file != null) {
+            return if (file.exists()) {
+                val fileSizeInBytes: Double = if (file.isDirectory) {
+                    getDirectorySize(file).toDouble()
+                } else {
+                    file.length().toDouble()
+                }
+                val units = arrayOf("B", "KB", "MB", "GB", "TB")
+                var fileSize: Double = fileSizeInBytes
+                var unitIndex = 0
+
+                // 转换文件大小到合适的单位
+                while (fileSize >= 1024 && unitIndex < units.size - 1) {
+                    fileSize /= 1024
+                    unitIndex++
+                }
+
+                // 格式化文件大小，保留两位小数
+                val df = DecimalFormat("#.##")
+                "${df.format(fileSize)}${units[unitIndex]}"
+            } else {
+                "File does not exist"
+            }
+        }
+        return "unknown"
+    }
+
+    /**
+     * 递归计算文件夹的大小
+     *
+     * @param directory 目标文件夹
+     * @return 文件夹大小（以字节为单位）
+     */
+    private fun getDirectorySize(directory: File): Long {
+        var length: Long = 0
+        directory.listFiles()?.forEach {
+            if (it.isFile) {
+                length += it.length()
+            } else if (it.isDirectory) {
+                length += getDirectorySize(it)
+            }
+        }
+        return length
+    }
+
+    /**
+     * 扩展 File 类，添加一个获取文件大小的属性
+     */
+    val File.sizeInBytes: Long
+        get() = if (isDirectory) getDirectorySize(this) else length()
+
+    /**
      * 简单版，如需支持 content:// 协议查询，请使用增强版 getFileSize(context: Context, uri: Uri)
      *
      * @param uri 目标文件的 uri
