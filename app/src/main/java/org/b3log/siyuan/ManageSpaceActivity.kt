@@ -252,10 +252,13 @@ private fun UI(intent: Intent?, TAG: String) {
             isLoading.value = true
             // 获取所有缓存目录的文件列表
             val cacheDirs = listOf(
-                Lcc.filesDir, // /data/user/$userId/$packageName/files
-                Lcc.cacheDir, // /data/data/$packageName/cache
-                Lcc.getExternalFilesDir(null), // /storage/emulated/$userId/Android/data/$packageName/files
-                File(Lcc.filesDir.parent, "app_webview"), // /data/data/$packageName/app_webview
+                // 应用的外部文件存储目录，用于存储持久性文件，如音乐、图片等。这些文件对用户是可见的，并且会随着应用的卸载而被删除。
+                // /storage/emulated/$userId/Android/data/$packageName/files
+                Lcc.getExternalFilesDir(null),
+                Lcc.filesDir, // 应用的内部文件存储目录，用于存储持久性文件，如应用下载的文件或应用生成的文件。 /data/user/$userId/$packageName/files
+                Lcc.cacheDir, // 应用的内部缓存目录，用于存储临时缓存文件。系统可能会在设备存储空间不足时自动清理这个目录的内容。/data/data/$packageName/cache
+                File(Lcc.filesDir.parent, "app_webview"), // 存储与WebView相关的缓存和数据 /data/data/$packageName/app_webview
+                Lcc.noBackupFilesDir, // 不可备份文件目录 /data/data/$packageName/no_backup
             )
 
             val _filesList = cacheDirs.flatMap { dir ->
