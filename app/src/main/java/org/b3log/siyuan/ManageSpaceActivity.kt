@@ -5,38 +5,27 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
-import android.util.Log
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.Transition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.runtime.*
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.unit.dp
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -51,30 +40,22 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kongzue.dialogx.dialogs.PopTip
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_FileUtils.sizeInBytes
-import sc.windom.sofill.Us.U_FileUtils.usertDir
-import sc.windom.sofill.Us.U_Safe
 import sc.windom.sofill.compose.components.CommonTopAppBar
 import sc.windom.sofill.compose.theme.CascadeMaterialTheme
 import java.io.File
-import kotlin.math.ln
-import kotlin.math.pow
 
 // TODO: 添加更多可清理内容
 class ManageSpaceActivity : AppCompatActivity() {
@@ -94,10 +75,16 @@ class ManageSpaceActivity : AppCompatActivity() {
                 WaitUI()
             }
         }
-        U.SAFE.checkBiometric(thisActivity, ::navigateToMainScreen, ::showRetryDialog, ::showBiometricErrorDialog)
+        U.SAFE.checkBiometric(
+            thisActivity,
+            ::navigateToMainScreen,
+            ::showRetryDialog,
+            ::showBiometricErrorDialog
+        )
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) //设置竖屏锁定
     }
+
     private fun navigateToMainScreen() {
         // 认证成功，导航到主屏幕
         setContent {
@@ -114,7 +101,12 @@ class ManageSpaceActivity : AppCompatActivity() {
                 WaitUI()
             }
         }
-        U.SAFE.checkBiometric(thisActivity, ::navigateToMainScreen, ::showRetryDialog, ::showBiometricErrorDialog)
+        U.SAFE.checkBiometric(
+            thisActivity,
+            ::navigateToMainScreen,
+            ::showRetryDialog,
+            ::showBiometricErrorDialog
+        )
     }
 
     private fun showBiometricErrorDialog(errString: CharSequence, state: Int) {
@@ -192,7 +184,12 @@ class ManageSpaceActivity : AppCompatActivity() {
                                 WaitUI()
                             }
                         }
-                        U.SAFE.checkBiometric(thisActivity, ::navigateToMainScreen, ::showRetryDialog, ::showBiometricErrorDialog)
+                        U.SAFE.checkBiometric(
+                            thisActivity,
+                            ::navigateToMainScreen,
+                            ::showRetryDialog,
+                            ::showBiometricErrorDialog
+                        )
                     },
                 ) {
                     Text("重试认证")
@@ -224,7 +221,7 @@ class ManageSpaceActivity : AppCompatActivity() {
     }
 
     @Composable
-    private fun ErrorText(text: String, ) {
+    private fun ErrorText(text: String) {
         Text(
             text = text,
             color = MaterialTheme.colorScheme.error,
@@ -235,42 +232,39 @@ class ManageSpaceActivity : AppCompatActivity() {
 }
 
 
-
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "UnrememberedMutableState")
 @Composable
 private fun UI(intent: Intent?, TAG: String) {
     val uri = intent?.data
     val Lcc = LocalContext.current
     val isMenuVisible = rememberSaveable { mutableStateOf(false) }
-    val filesList = mutableStateOf<List<File>>(emptyList())
+    val filesList = rememberSaveable { mutableStateOf<List<File>>(emptyList()) }
     val selectedFiles = rememberSaveable { mutableSetOf<String>() }
     val selectedFilesCount = rememberSaveable { mutableIntStateOf(0) } // 跟踪选中的文件数量
     var isCleaning by remember { mutableStateOf(false) }
     val isLoading = remember { mutableStateOf(true) }
     var refreshFilesList by remember { mutableStateOf(false) }
-    var isEmpty by remember { mutableStateOf(false) } // 跟踪是否真的没有文件
     val coroutineScope = rememberCoroutineScope()
+    val mutex = Mutex()
 
     LaunchedEffect(key1 = isCleaning, key2 = refreshFilesList) {
-        isLoading.value = true
-        isEmpty = false // 重置isEmpty状态
-        // 获取所有缓存目录的文件列表
-        val cacheDirs = listOf(
-            Lcc.filesDir, // /data/user/$userId/$packageName/files
-            Lcc.cacheDir, // /data/data/$packageName/cache
-            Lcc.getExternalFilesDir(null), // /storage/emulated/$userId/Android/data/$packageName/files
-            File(Lcc.filesDir.parent, "app_webview"), // /data/data/$packageName/app_webview
-        )
+        mutex.withLock {
+            isLoading.value = true
+            // 获取所有缓存目录的文件列表
+            val cacheDirs = listOf(
+                Lcc.filesDir, // /data/user/$userId/$packageName/files
+                Lcc.cacheDir, // /data/data/$packageName/cache
+                Lcc.getExternalFilesDir(null), // /storage/emulated/$userId/Android/data/$packageName/files
+                File(Lcc.filesDir.parent, "app_webview"), // /data/data/$packageName/app_webview
+            )
 
-        val _filesList = cacheDirs.flatMap { dir ->
-            dir?.listFiles()?.toList() ?: emptyList()
-        }.sortedByDescending { it.sizeInBytes } // 按大小降序排序
-        if (_filesList.isEmpty()) {
-            delay(1000) // 等待1秒，确保文件列表确实为空
-            isEmpty = true // 如果列表为空，则更新isEmpty状态
+            val _filesList = cacheDirs.flatMap { dir ->
+                dir?.listFiles()?.filterNotNull() ?: emptyList()
+            }.sortedByDescending { it.sizeInBytes } // 按大小降序排序
+            filesList.value = _filesList
+            isLoading.value = false
+            refreshFilesList = false
         }
-        filesList.value = _filesList
-        isLoading.value = false
     }
 
     Scaffold(
@@ -284,7 +278,9 @@ private fun UI(intent: Intent?, TAG: String) {
         },
         bottomBar = {
             Button(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
                 onClick = {
                     isCleaning = true
                     coroutineScope.launch {
@@ -295,7 +291,7 @@ private fun UI(intent: Intent?, TAG: String) {
                         }
                     }
                 },
-                enabled = selectedFilesCount.intValue > 0 && !isCleaning // selectedFiles.isNotEmpty() 判断根本行不通，见鬼
+                enabled = selectedFilesCount.intValue > 0 && !isCleaning && !refreshFilesList // selectedFiles.isNotEmpty() 判断根本行不通，见鬼
             ) {
                 Text("清理选中项目")
             }
@@ -304,22 +300,13 @@ private fun UI(intent: Intent?, TAG: String) {
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                refreshFilesList = !refreshFilesList
-            }) {
+                    refreshFilesList = !refreshFilesList
+                }) {
                 Icon(Icons.Filled.Refresh, contentDescription = "刷新")
             }
         }
     ) {
-        if (isLoading.value || isCleaning) {
-            Box(
-                modifier = Modifier
-                    .padding(it)
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(modifier = Modifier.fillMaxSize(.8f))
-            }
-        } else if (isEmpty) {
+        if (filesList.value.isEmpty() && !isLoading.value && !refreshFilesList && !isCleaning) {
             Box(
                 modifier = Modifier
                     .padding(it)
@@ -331,7 +318,8 @@ private fun UI(intent: Intent?, TAG: String) {
         } else {
             LazyColumn(modifier = Modifier.padding(it)) {
                 items(filesList.value) { file ->
-                    val isExternalFilesDir = file.path.startsWith(Lcc.getExternalFilesDir(null)?.path ?: "")
+                    val isExternalFilesDir =
+                        file.path.startsWith(Lcc.getExternalFilesDir(null)?.path ?: "")
                     val isChecked = rememberSaveable(file.absolutePath) {
                         mutableStateOf(selectedFiles.contains(file.absolutePath))
                     }
