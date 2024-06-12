@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.sp
 import com.kongzue.dialogx.dialogs.PopTip
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import sc.windom.sofill.S
@@ -241,10 +242,12 @@ private fun UI(intent: Intent?, TAG: String) {
     var isCleaning by remember { mutableStateOf(false) }
     val isLoading = remember { mutableStateOf(true) }
     var refreshFilesList by remember { mutableStateOf(false) }
+    var isEmpty by remember { mutableStateOf(false) } // 跟踪是否真的没有文件
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(key1 = isCleaning, key2 = refreshFilesList) {
         isLoading.value = true
+        isEmpty = false // 重置isEmpty状态
         // 获取所有缓存目录的文件列表
         val cacheDirs = listOf(
             Lcc.filesDir, // /data/user/$userId/$packageName/files
@@ -256,6 +259,10 @@ private fun UI(intent: Intent?, TAG: String) {
         val _filesList = cacheDirs.flatMap { dir ->
             dir?.listFiles()?.toList() ?: emptyList()
         }.sortedByDescending { it.sizeInBytes } // 按大小降序排序
+        if (_filesList.isEmpty()) {
+            delay(1000) // 等待1秒，确保文件列表确实为空
+            isEmpty = true // 如果列表为空，则更新isEmpty状态
+        }
         filesList.value = _filesList
         isLoading.value = false
     }
@@ -306,7 +313,7 @@ private fun UI(intent: Intent?, TAG: String) {
             ) {
                 CircularProgressIndicator(modifier = Modifier.fillMaxSize(.8f))
             }
-        } else if (filesList.value.isEmpty()) {
+        } else if (isEmpty) {
             Box(
                 modifier = Modifier
                     .padding(it)
