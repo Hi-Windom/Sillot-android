@@ -74,6 +74,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -145,7 +146,6 @@ class HomeActivity : ComponentActivity() {
     val TAG = "ld246/Home.kt"
     private lateinit var thisActivity: Activity
     private var mmkv: MMKV = MMKV.defaultMMKV()
-    var token = U.getDecryptedToken(mmkv, S.KEY_TOKEN_ld246, S.KEY_AES_TOKEN_ld246)
     val ua = "Sillot-anroid/0.35"
     private var exitTime: Long = 0
     private var fullScreenDialog: FullScreenDialog? = null
@@ -254,6 +254,7 @@ class HomeActivity : ComponentActivity() {
 
     @OptIn(ExperimentalMaterial3Api::class)
     private fun updateUserPage(
+        token: String,
         userPageData: MutableState<ld246_User>,
         pullToRefreshState: PullToRefreshState?
     ) {
@@ -291,7 +292,11 @@ class HomeActivity : ComponentActivity() {
             ).noAutoDismiss()
 
             403 -> U.DialogX.PopNoteShow(thisActivity, message, "权限不足").noAutoDismiss()
-            else -> U.DialogX.PopNoteShow(thisActivity, " ￣へ￣ [${response.code()}]", response.toString())
+            else -> U.DialogX.PopNoteShow(
+                thisActivity,
+                " ￣へ￣ [${response.code()}]",
+                response.toString()
+            )
                 .noAutoDismiss()
         }
     }
@@ -302,6 +307,15 @@ class HomeActivity : ComponentActivity() {
     private fun UI(intent: Intent?, TAG: String) {
         val uri = intent?.data
         val Lcc = LocalContext.current
+        val token = rememberSaveable {
+            mutableStateOf(
+                U.getDecryptedToken(
+                    mmkv,
+                    S.KEY_TOKEN_ld246,
+                    S.KEY_AES_TOKEN_ld246
+                )
+            )
+        }
         val currentTab = rememberSaveable { mutableStateOf("用户") }
         val pullToRefreshState = rememberPullToRefreshState()
         val isMenuVisible = rememberSaveable { mutableStateOf(false) }
@@ -319,9 +333,15 @@ class HomeActivity : ComponentActivity() {
             LaunchedEffect(true) {
                 apiService?.let {
                     if (currentTab.value == "用户") {
-                        updateUserPage(userPageData, pullToRefreshState)
+                        token.value?.let { it1 ->
+                            updateUserPage(
+                                it1,
+                                userPageData,
+                                pullToRefreshState
+                            )
+                        } ?: { U.DialogX.PopNoteShow(Lcc, "token 异常") }
                     } else {
-                        viewmodel?.fetchNotificationV2(pullToRefreshState, it, currentTab)
+                        viewmodel?.fetchNotificationV2(pullToRefreshState, it, currentTab, token)
                     }
                 }
             }
@@ -334,9 +354,20 @@ class HomeActivity : ComponentActivity() {
                     // pullToRefreshState.startRefresh() 之所以要在这里重复代码是因为：用户体验更好
                     apiService?.let {
                         if (currentTab.value == "用户") {
-                            updateUserPage(userPageData, pullToRefreshState)
+                            token.value?.let { it1 ->
+                                updateUserPage(
+                                    it1,
+                                    userPageData,
+                                    pullToRefreshState
+                                )
+                            } ?: { U.DialogX.PopNoteShow(Lcc, "token 异常") }
                         } else {
-                            viewmodel?.fetchNotificationV2(pullToRefreshState, it, currentTab)
+                            viewmodel?.fetchNotificationV2(
+                                pullToRefreshState,
+                                it,
+                                currentTab,
+                                token
+                            )
                         }
                     }
                 }
@@ -344,12 +375,14 @@ class HomeActivity : ComponentActivity() {
         }
 
         LaunchedEffect(true) {
+            U.getDecryptedToken(mmkv, S.KEY_TOKEN_ld246, S.KEY_AES_TOKEN_ld246)
             if (map.values.all { it.isNullOrEmpty() }) {
                 apiService?.let {
                     viewmodel?.fetchAllNotifications(
                         it,
                         currentTab,
-                        pullToRefreshState
+                        pullToRefreshState,
+                        token
                     )
                 }
             }
@@ -365,7 +398,7 @@ class HomeActivity : ComponentActivity() {
                     additionalMenuItem = {
                         AddDropdownMenu(onDismiss = {
                             isMenuVisible.value = false
-                        }, isShowBottomText, currentTab, userPageData, pullToRefreshState)
+                        }, isShowBottomText, token, pullToRefreshState)
                     }) {
                     // 将Context对象安全地转换为Activity
                     if (Lcc is Activity) {
@@ -434,8 +467,7 @@ class HomeActivity : ComponentActivity() {
     private fun AddDropdownMenu(
         onDismiss: () -> Unit,
         isShowBottomText: MutableState<Boolean>,
-        currentTab: MutableState<String>,
-        userPageData: MutableState<ld246_User>,
+        token: MutableState<String?>,
         pullToRefreshState: PullToRefreshState
     ) {
         DdMenuI(
@@ -507,7 +539,7 @@ class HomeActivity : ComponentActivity() {
                 )
                     .setCancelable(false)
                     .setOkButton { baseDialog, v, inputStr ->
-                        token = inputStr
+                        token.value = inputStr
                         // 生成AES密钥
                         val aesKey = U.generateAesKey()
                         // 注意：这里需要将SecretKey转换为可以存储的格式，例如转换为字节数组然后进行Base64编码
@@ -542,7 +574,7 @@ class HomeActivity : ComponentActivity() {
         isShowBottomText: MutableState<Boolean>,
     ) {
         // REF https://www.composables.com/material3/tabrow
-        var state by remember { mutableStateOf(S.API.ld246_notification_type.size) }
+        var state by rememberSaveable { mutableIntStateOf(S.API.ld246_notification_type.size) }
         val selectedContentColor = S.C.btn_bgColor_pink.current    // 选中时文字颜色
         val unselectedContentColor = Color.Gray // 未选中时文字颜色
 
@@ -630,7 +662,6 @@ class HomeActivity : ComponentActivity() {
             }
         }
     }
-
 
 
     @Composable
@@ -925,16 +956,17 @@ class HomeActivity : ComponentActivity() {
         fun fetchAllNotifications(
             apiService: ApiServiceNotification,
             currentTab: MutableState<String>,
-            pullToRefreshState: PullToRefreshState?
+            pullToRefreshState: PullToRefreshState?,
+            token: MutableState<String?>
         ) {
             viewModelScope.launch {
                 val calls = mutableListOf<Call<ld246_Response>>()
-                calls.add(apiService.apiV2NotificationsCommentedGet(1, token, ua))
-                calls.add(apiService.apiV2NotificationsComment2edGet(1, token, ua))
-                calls.add(apiService.apiV2NotificationsReplyGet(1, token, ua))
-                calls.add(apiService.apiV2NotificationsAtGet(1, token, ua))
-                calls.add(apiService.apiV2NotificationsFollowingGet(1, token, ua))
-                calls.add(apiService.apiV2NotificationsPointGet(1, token, ua))
+                calls.add(apiService.apiV2NotificationsCommentedGet(1, token.value, ua))
+                calls.add(apiService.apiV2NotificationsComment2edGet(1, token.value, ua))
+                calls.add(apiService.apiV2NotificationsReplyGet(1, token.value, ua))
+                calls.add(apiService.apiV2NotificationsAtGet(1, token.value, ua))
+                calls.add(apiService.apiV2NotificationsFollowingGet(1, token.value, ua))
+                calls.add(apiService.apiV2NotificationsPointGet(1, token.value, ua))
                 calls.forEach { caller ->
 //                    delay(100) // 避免接口请求频繁
                     caller.enqueue(object : Callback<ld246_Response> {
@@ -960,7 +992,11 @@ class HomeActivity : ComponentActivity() {
                                         calls[5] -> map["积分"] = data?.pointNotifications
                                     }
                                 } catch (e: Exception) {
-                                    U.DialogX.PopNoteShow(thisActivity, e.cause.toString(), e.toString())
+                                    U.DialogX.PopNoteShow(
+                                        thisActivity,
+                                        e.cause.toString(),
+                                        e.toString()
+                                    )
                                         .noAutoDismiss()
                                 }
                             } else {
@@ -990,7 +1026,8 @@ class HomeActivity : ComponentActivity() {
         fun fetchNotificationV2(
             pullToRefreshState: PullToRefreshState?,
             apiService: ApiServiceNotification,
-            currentTab: MutableState<String>
+            currentTab: MutableState<String>,
+            token: MutableState<String?>
         ) {
             job = viewModelScope.launch {
                 try {
@@ -999,18 +1036,19 @@ class HomeActivity : ComponentActivity() {
                             viewmodel?.fetchAllNotifications(
                                 it,
                                 currentTab,
-                                pullToRefreshState
+                                pullToRefreshState,
+                                token
                             )
                         }
                     } else if (pullToRefreshState != null && pullToRefreshState.isRefreshing) {
                         // 执行当前tab的请求
                         val caller: Call<ld246_Response> = when (currentTab.value) {
-                            "回帖" -> apiService.apiV2NotificationsCommentedGet(1, token, ua)
-                            "评论" -> apiService.apiV2NotificationsComment2edGet(1, token, ua)
-                            "回复" -> apiService.apiV2NotificationsReplyGet(1, token, ua)
-                            "提及" -> apiService.apiV2NotificationsAtGet(1, token, ua)
-                            "关注" -> apiService.apiV2NotificationsFollowingGet(1, token, ua)
-                            "积分" -> apiService.apiV2NotificationsPointGet(1, token, ua)
+                            "回帖" -> apiService.apiV2NotificationsCommentedGet(1, token.value, ua)
+                            "评论" -> apiService.apiV2NotificationsComment2edGet(1, token.value, ua)
+                            "回复" -> apiService.apiV2NotificationsReplyGet(1, token.value, ua)
+                            "提及" -> apiService.apiV2NotificationsAtGet(1, token.value, ua)
+                            "关注" -> apiService.apiV2NotificationsFollowingGet(1, token.value, ua)
+                            "积分" -> apiService.apiV2NotificationsPointGet(1, token.value, ua)
                             else -> null
                         } ?: return@launch
                         caller.enqueue(object : Callback<ld246_Response> {
@@ -1034,7 +1072,11 @@ class HomeActivity : ComponentActivity() {
                                         }
                                         map[currentTab.value] = notifications
                                     } catch (e: Exception) {
-                                        U.DialogX.PopNoteShow(thisActivity, e.cause.toString(), e.toString())
+                                        U.DialogX.PopNoteShow(
+                                            thisActivity,
+                                            e.cause.toString(),
+                                            e.toString()
+                                        )
                                             .noAutoDismiss()
                                     }
                                 }
@@ -1047,7 +1089,8 @@ class HomeActivity : ComponentActivity() {
 
                             override fun onFailure(call: Call<ld246_Response>, t: Throwable) {
                                 // 处理异常
-                                U.DialogX.PopNoteShow(thisActivity, call.toString(), t.toString()).noAutoDismiss()
+                                U.DialogX.PopNoteShow(thisActivity, call.toString(), t.toString())
+                                    .noAutoDismiss()
                                 viewModelScope.launch {
                                     pullToRefreshState.endRefresh()
                                 }
@@ -1081,7 +1124,10 @@ class HomeActivity : ComponentActivity() {
         val real_url = U.replaceEncodeScheme(url, "googlechrome://", "slld246://")
         Log.d(TAG, _url)
 
-        return if (_url.startsWith("mqq://") || _url.startsWith("wtloginmqq://") || _url.startsWith("sinaweibo://")) {
+        return if (_url.startsWith("mqq://") || _url.startsWith("wtloginmqq://") || _url.startsWith(
+                "sinaweibo://"
+            )
+        ) {
             try {
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(real_url))
                 ActivityCompat.startActivityForResult(view.context as Activity, intent, 1, null)

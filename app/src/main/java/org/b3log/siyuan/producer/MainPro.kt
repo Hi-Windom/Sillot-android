@@ -48,6 +48,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -124,8 +125,6 @@ import java.util.Objects
 class MainPro : ComponentActivity() {
     val TAG = "producer/MainPro.kt"
     private var mmkv: MMKV = MMKV.defaultMMKV()
-    private var token =
-        U.getDecryptedToken(mmkv, S.KEY_TOKEN_Sillot_Gibbet, S.KEY_AES_TOKEN_Sillot_Gibbet)
     private lateinit var thisActivity: Activity
     private var in2_data: Uri? = null
     private var in2_action: String? = null
@@ -312,6 +311,15 @@ class MainPro : ComponentActivity() {
         val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
         val coroutineScope = rememberCoroutineScope()
         var head_title = "汐洛中转站"
+        val token = rememberSaveable {
+            mutableStateOf(
+                U.getDecryptedToken(
+                    mmkv,
+                    S.KEY_TOKEN_Sillot_Gibbet,
+                    S.KEY_AES_TOKEN_Sillot_Gibbet
+                )
+            )
+        }
         val fileName = in2_data?.let { U.FileUtils.getFileName(thisActivity, it) }
         val fileSize = in2_data?.let { U.FileUtils.getFileSize(thisActivity, it) }
         val mimeType = intent?.data?.let { U.FileUtils.getMimeType(thisActivity, it) } ?: ""
@@ -325,7 +333,7 @@ class MainPro : ComponentActivity() {
 
         head_title = if (in2_action == Intent.ACTION_SEND) {
             "汐洛受赏中转站"
-        } else if (!in2_data?.scheme.isNullOrEmpty() && in2_type.isNullOrEmpty()){
+        } else if (!in2_data?.scheme.isNullOrEmpty() && in2_type.isNullOrEmpty()) {
             "汐洛链接中转站"
         } else if (in2_data != null) {
             "汐洛文件中转站"
@@ -336,9 +344,11 @@ class MainPro : ComponentActivity() {
             topBar = {
                 CommonTopAppBar(head_title, TAG, in2_data, isMenuVisible,
                     additionalMenuItem = {
-                        AddDropdownMenu(onDismiss = {
-                            isMenuVisible.value = false
-                        })
+                        AddDropdownMenu(
+                            token,
+                            onDismiss = {
+                                isMenuVisible.value = false
+                            })
                     }) {
                     // 将Context对象安全地转换为Activity
                     thisActivity.finish() // 结束活动
@@ -392,7 +402,7 @@ class MainPro : ComponentActivity() {
                                             .height(200.dp)
                                             .padding(10.dp)
                                     )
-                                    SendBtnPart(sharedText)
+                                    SendBtnPart(sharedText, token)
                                 }
                             }
                         }
@@ -470,6 +480,7 @@ class MainPro : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun AddDropdownMenu(
+        token: MutableState<String?>,
         onDismiss: () -> Unit,
     ) {
         DdMenuI(
@@ -491,7 +502,7 @@ class MainPro : ComponentActivity() {
                 )
                     .setCancelable(false)
                     .setOkButton { baseDialog, v, inputStr ->
-                        token = inputStr
+                        token.value = inputStr
                         // 生成AES密钥
                         val aesKey = U.generateAesKey()
                         // 注意：这里需要将SecretKey转换为可以存储的格式，例如转换为字节数组然后进行Base64编码
@@ -559,10 +570,10 @@ class MainPro : ComponentActivity() {
     fun createNote(
         api: SiyuanNoteAPI,
         payload: IPayload,
-        token: String,
+        token: MutableState<String?>,
         callback: (success: Boolean, info: String) -> Unit
     ) {
-        val createNoteCall = api.createNote(payload, token)
+        val createNoteCall = api.createNote(payload, token.value)
         createNoteCall.enqueue(object : Callback<IResponse<String>> {
             override fun onResponse(
                 call: Call<IResponse<String>>,
@@ -591,18 +602,19 @@ class MainPro : ComponentActivity() {
     }
 
     // 在协程中调用sendMD2siyuan
-    fun runSendMD2siyuan(markdownContent: String) = runBlocking<Unit> { // 启动主协程
-        launch { // 启动一个新协程并运行挂起函数
-            sendMD2siyuan(markdownContent)
+    fun runSendMD2siyuan(markdownContent: String, token: MutableState<String?>) =
+        runBlocking<Unit> { // 启动主协程
+            launch { // 启动一个新协程并运行挂起函数
+                sendMD2siyuan(markdownContent, token)
+            }
         }
-    }
 
-    fun sendMD2siyuan(markdownContent: String) {
+    fun sendMD2siyuan(markdownContent: String, token: MutableState<String?>) {
         val retrofit = createRetrofit("http://0.0.0.0:58131/")
         val api = retrofit.create(SiyuanNoteAPI::class.java)
         val helpInfo =
             "请注意：（1）TOKEN是否正确；（2）当前工作空间是否存在有效笔记本；（3）笔记本是否被关闭了"
-        token?.let { _token ->
+        token.value?.let { _token ->
             getNotebooks(api, _token) { notebooks, info ->
                 if (notebooks.isNullOrEmpty()) {
                     // 处理笔记本列表为空的情况
@@ -642,7 +654,7 @@ class MainPro : ComponentActivity() {
                                     }"
                                 )
 
-                                createNote(api, payload, token!!) { success, info ->
+                                createNote(api, payload, token) { success, info ->
                                     if (success) {
                                         // 处理创建笔记成功的情况
                                         Log.i(TAG, "Note creation succeeded. $info")
@@ -669,7 +681,7 @@ class MainPro : ComponentActivity() {
     }
 
     @Composable
-    fun SendBtnPart(markdown: String?) {
+    fun SendBtnPart(markdown: String?, token: MutableState<String?>) {
         val isLandscape =
             LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
         Button(modifier = Modifier
@@ -679,8 +691,9 @@ class MainPro : ComponentActivity() {
                 containerColor = S.C.btn_bgColor3.current,
                 contentColor = S.C.btn_Color1.current
             ), enabled = true, onClick = {
-                if (token.isNullOrEmpty()) {
-                    U.DialogX.PopNoteShow(thisActivity,"TOKEN为空，请在右上角设置 TOKEN 后重试").noAutoDismiss()
+                if (token.value.isNullOrEmpty()) {
+                    U.DialogX.PopNoteShow(thisActivity, "TOKEN为空，请在右上角设置 TOKEN 后重试")
+                        .noAutoDismiss()
                     return@Button
                 }
                 if (bootService == null) {
@@ -693,10 +706,11 @@ class MainPro : ComponentActivity() {
                     return@Button
                 }
                 if (markdown != null) {
-                    val directories = U.FileUtils.getDirectoriesInPath(thisActivity.workspaceParentDir())
+                    val directories =
+                        U.FileUtils.getDirectoriesInPath(thisActivity.workspaceParentDir())
                     val filteredDirectories = directories.filter { it != "home" }
                     if (filteredDirectories.isNotEmpty()) {
-                        runSendMD2siyuan(markdown)
+                        runSendMD2siyuan(markdown, token)
                     } else {
                         U.DialogX.PopNoteShow(
                             thisActivity,
@@ -840,7 +854,11 @@ class MainPro : ComponentActivity() {
                 withContext(Dispatchers.IO) {
 
                     try {
-                        if (!U.isStorageSpaceAvailable(thisActivity.contentResolver, uri_from_file)) {
+                        if (!U.isStorageSpaceAvailable(
+                                thisActivity.contentResolver,
+                                uri_from_file
+                            )
+                        ) {
                             // 存储空间不足，处理逻辑
                             Toast.Show(thisActivity, "存储空间不足，请先清理")
                             return@withContext
@@ -861,7 +879,8 @@ class MainPro : ComponentActivity() {
                     } catch (e: IOException) {
                         Log.e(TAG, e.toString())
                         withContext(Dispatchers.Main) {
-                            U.DialogX.PopNoteShow(thisActivity, "任务失败", e.toString()).noAutoDismiss()
+                            U.DialogX.PopNoteShow(thisActivity, "任务失败", e.toString())
+                                .noAutoDismiss()
                         }
                     }
                     // 执行任务完成后，关闭遮罩
@@ -875,9 +894,17 @@ class MainPro : ComponentActivity() {
             coroutineScope.launch {
                 withContext(Dispatchers.IO) {
                     try {
-                        if (!U.isStorageSpaceAvailable(thisActivity.contentResolver, uri_from_file)) {
+                        if (!U.isStorageSpaceAvailable(
+                                thisActivity.contentResolver,
+                                uri_from_file
+                            )
+                        ) {
                             // 存储空间不足，处理逻辑
-                            U.DialogX.PopNoteShow(thisActivity, R.drawable.icon, "存储空间不足，请先清理")
+                            U.DialogX.PopNoteShow(
+                                thisActivity,
+                                R.drawable.icon,
+                                "存储空间不足，请先清理"
+                            )
                             return@withContext
                         }
                         val sourceFilePath = U.FileUtils.getPathFromUri(thisActivity, uri_from_file)
@@ -895,7 +922,12 @@ class MainPro : ComponentActivity() {
                                     ).autoDismiss(5000)
                                 } catch (e: IOException) {
                                     Log.e(TAG, e.toString())
-                                    U.DialogX.PopNoteShow(thisActivity, R.drawable.icon, "任务失败", e.toString())
+                                    U.DialogX.PopNoteShow(
+                                        thisActivity,
+                                        R.drawable.icon,
+                                        "任务失败",
+                                        e.toString()
+                                    )
                                         .noAutoDismiss()
                                 }
 
@@ -904,7 +936,12 @@ class MainPro : ComponentActivity() {
                     } catch (e: IOException) {
                         Log.e(TAG, e.toString())
                         withContext(Dispatchers.Main) {
-                            U.DialogX.PopNoteShow(thisActivity, R.drawable.icon, "任务失败", e.toString())
+                            U.DialogX.PopNoteShow(
+                                thisActivity,
+                                R.drawable.icon,
+                                "任务失败",
+                                e.toString()
+                            )
                                 .noAutoDismiss()
                         }
                     } finally {
@@ -1064,7 +1101,8 @@ class MainPro : ComponentActivity() {
                 ), enabled = true, onClick = {
                     if (uri != null) {
                         Log.e(TAG, thisActivity.workspaceParentDir())
-                        val directories = U.FileUtils.getDirectoriesInPath(thisActivity.workspaceParentDir())
+                        val directories =
+                            U.FileUtils.getDirectoriesInPath(thisActivity.workspaceParentDir())
                         val filteredDirectories = directories.filter { it != "home" }
                         if (filteredDirectories.isNotEmpty()) {
                             var selectMenuIndex = 0
