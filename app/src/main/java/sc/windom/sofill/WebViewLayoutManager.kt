@@ -70,6 +70,7 @@ class WebViewLayoutManager private constructor(
         // 监听配置变化
         activity.registerComponentCallbacks(object : ComponentCallbacks {
             override fun onConfigurationChanged(newConfig: Configuration) {
+                autoWebViewDarkMode = mmkv.getBoolean("autoWebViewDarkMode", false)
                 applySystemThemeToWebView(activity, webView, autoWebViewDarkMode)
                 Log.w(
                     TAG,
