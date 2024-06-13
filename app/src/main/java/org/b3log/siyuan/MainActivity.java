@@ -85,6 +85,7 @@ package org.b3log.siyuan;
  import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
 
  import org.b3log.siyuan.appUtils.HWs;
+ import org.b3log.siyuan.producer.MainPro;
  import org.b3log.siyuan.services.BootService;
  import org.b3log.siyuan.workers.SyncDataWorker;
  import org.greenrobot.eventbus.EventBus;
@@ -92,6 +93,10 @@ package org.b3log.siyuan;
  import org.greenrobot.eventbus.ThreadMode;
 
  import java.io.ByteArrayOutputStream;
+ import java.io.File;
+ import java.io.FileOutputStream;
+ import java.io.InputStream;
+ import java.io.OutputStream;
  import java.io.UnsupportedEncodingException;
  import java.net.URLEncoder;
  import java.text.SimpleDateFormat;
@@ -252,6 +257,40 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 // Fix https://github.com/siyuan-note/siyuan/issues/9726
                 // https://github.com/Hi-Windom/Sillot-android/issues/84
                 WebViewLayoutManager.assistActivity(this, webView);
+
+                webView.setOnDragListener((v, event) -> {
+                    if (event.getAction() == DragEvent.ACTION_DROP) {
+                        ClipData clipData = event.getClipData();
+                        if (clipData != null && clipData.getItemCount() > 0) {
+                            ClipData.Item item = clipData.getItemAt(0);
+                            if (item.getUri() != null) {
+                                Uri uri = item.getUri();
+                                String mimeType = getContentResolver().getType(uri);
+                                if (mimeType != null && (mimeType.startsWith("image/") || mimeType.startsWith("video/"))) {
+                                    // 保存文件到缓存目录
+                                    String cacheFilePath = saveFileToCache(uri, mimeType);
+                                    if (cacheFilePath != null) {
+                                        Intent intent = new Intent(this, MainPro.class);
+                                        intent.setAction(String.valueOf(event.getAction()));
+                                        intent.setType(mimeType);
+                                        intent.setData(uri);
+//                                        intent.putExtra("uri", uri);
+                                        startActivity(intent);
+                                        // 将缓存文件的URL或路径插入到WebView中
+//                                        if (mimeType.startsWith("image/")) {
+//                                            webView.evaluateJavascript("javascript:insertImage('" + cacheFilePath + "')", null);
+//                                        } else if (mimeType.startsWith("video/")) {
+//                                            webView.evaluateJavascript("javascript:insertVideo('" + cacheFilePath + "')", null);
+//                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return true;
+                });
+
+
             }
         } else {
             // 服务尚未绑定或实例为空，处理错误或等待绑定
@@ -259,6 +298,34 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             U_DialogX.PopNoteShow(this, "服务尚未绑定或实例为空").noAutoDismiss();
         }
     }
+
+
+     private String saveFileToCache(Uri uri, String mimeType) {
+         try {
+             InputStream inputStream = getContentResolver().openInputStream(uri);
+             File cacheDir = getCacheDir(); // 应用私有缓存目录
+             File file = File.createTempFile("temp", mimeType.substring(mimeType.indexOf('/') + 1), cacheDir);
+             OutputStream outputStream = new FileOutputStream(file);
+
+             byte[] buffer = new byte[1024];
+             int length;
+             if (inputStream != null) {
+                 while ((length = inputStream.read(buffer)) > 0) {
+                     outputStream.write(buffer, 0, length);
+                 }
+             }
+
+             outputStream.close();
+             if (inputStream != null) {
+                 inputStream.close();
+             }
+
+             return file.getAbsolutePath();
+         } catch (Exception e) {
+             U_DialogX.PopNoteShow(this, TAG, e.toString());
+             return null;
+         }
+     }
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) { // 只执行一次。在这里设置布局和初始化数据。在大多数情况下，不需要在 onRestart 中做太多事情，因为 onStart 已经处理了活动可见时的初始化。

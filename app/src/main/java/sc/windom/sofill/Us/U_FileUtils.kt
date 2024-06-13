@@ -39,6 +39,7 @@ import java.text.DecimalFormat
 
 object U_FileUtils {
 
+
     /**
      * 获取应用文件目录，它会自动处理多用户的情况。注意，应用文件目录包括了其外部存储的文件目录
      * @return 例如 /data/user/$userId/$packageName/files
