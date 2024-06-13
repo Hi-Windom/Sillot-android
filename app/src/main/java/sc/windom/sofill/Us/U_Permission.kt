@@ -11,6 +11,7 @@ import android.os.Environment
 import android.os.PowerManager
 import android.provider.Settings
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import sc.windom.sofill.S
 
 object U_Permission {
@@ -74,6 +75,12 @@ object U_Permission {
         return keyguardManager?.isDeviceLocked ?: false
     }
 
+    fun hasPermission_FOREGROUND_SERVICE_LOCATION(context: Context): Boolean {
+        return ContextCompat.checkSelfPermission(
+            context,
+            "android.permission.FOREGROUND_SERVICE_LOCATION"
+        ) == PackageManager.PERMISSION_GRANTED
+    }
 
     fun canShowOnTop(context: Context?): Boolean { // 悬浮窗
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

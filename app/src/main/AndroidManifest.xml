@@ -529,15 +529,6 @@
                 <action android:name="com.example.jpushdemo.OpenClickActivity" />
             </intent-filter>
         </activity>
-
-        <!-- 以 Android 14 为目标平台，则必须指定适当的前台服务类型  -->
-        <service
-            android:name=".KeepLiveService"
-            android:foregroundServiceType="dataSync" >
-            <property
-                android:name="android.app.PROPERTY_DATA_SYNC_FGS_SUBTYPE"
-                android:value="hosting" />
-        </service>
         <service
             android:name=".common.UserService"
             android:process=":pushcore"
@@ -562,7 +553,7 @@
                 <action android:name="cn.jiguang.user.service.action" />
             </intent-filter>
         </service>
-
+        <!-- 以 Android 14 为目标平台，则必须指定适当的前台服务类型  -->
         <service android:name=".services.FloatingWindowService" android:foregroundServiceType="dataSync|location">
             <property
                 android:name="android.app.PROPERTY_DATA_SYNC_FGS_SUBTYPE"

@@ -40,6 +40,7 @@ import org.b3log.siyuan.R
 import org.b3log.siyuan.WifiStateReceiver
 import sc.windom.sofill.S
 import sc.windom.sofill.U
+import sc.windom.sofill.Us.U_Permission.hasPermission_FOREGROUND_SERVICE_LOCATION
 import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.util.Collections
@@ -50,6 +51,9 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
+/**
+ * 必须 hasPermission_FOREGROUND_SERVICE_LOCATION
+ */
 class FloatingWindowService : Service() {
     val TAG = "services/FloatingWindowService.kt"
     private val ACTION_TOGGLE_WINDOW = "ACTION_TOGGLE_WINDOW"
@@ -148,7 +152,10 @@ class FloatingWindowService : Service() {
             .setContentIntent(pendingIntent)
         // 启动前台服务
         startService(notificationIntent)
-        startForeground(1, notificationBuilder.build()) // 必须首先始终调用 startService(Intent) 来告诉系统应该让服务持续运行，然后使用此方法告诉它要更努力地保持运行。
+        if (hasPermission_FOREGROUND_SERVICE_LOCATION(applicationContext)) {
+            // 必须首先始终调用 startService(Intent) 来告诉系统应该让服务持续运行，然后使用此方法告诉它要更努力地保持运行。
+            startForeground(1, notificationBuilder.build())
+        }
         initializeWindow()
         initializeUI()
         registerNetworkCallback()

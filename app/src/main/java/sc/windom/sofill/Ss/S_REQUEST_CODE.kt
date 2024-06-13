@@ -12,4 +12,5 @@ object S_REQUEST_CODE {
     const val REQUEST_POST_NOTIFICATIONS = 10005 // 读取通知
     const val REQUEST_CODE_INSTALL_PERMISSION = 10006 // 安装应用
     const val REQUEST_ACCESS_FINE_LOCATION = 10007 // 精确位置
+    const val REQUEST_FOREGROUND_SERVICE_LOCATION = 10008 // 前台位置服务
 }

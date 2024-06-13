@@ -203,12 +203,10 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     void releaseBootService() {
         BuglyLog.i(TAG, "releaseBootService invoked");
         // 销毁WebView并从池中移除
-        if (webViewWrapper != null) {
+        if (webView != null) {
             ViewGroup parent = (ViewGroup) webView.getParent();
             parent.removeView(webView); // 从原来的容器中移除WebView
-            WebViewPool webViewPool = WebViewPool.getInstance();
-            webViewPool.releaseWebView(webView);
-            webViewWrapper.destroy();
+            Objects.requireNonNull(WebPoolsPro.getInstance()).recycle(webView, "Sillot-Gibbet");
         }
     }
 
@@ -684,9 +682,10 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 // 权限已授予
                 // 在此处执行相应的操作
                 if (event.getCallback().equals("showwifi")) { // 已有权限的情况下不走这里
-                    Intent intent = new Intent(this, FloatingWindowService.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-                    ServiceUtils.startService(intent);
+                    // 单一权限不够了
+//                    Intent intent = new Intent(this, FloatingWindowService.class);
+//                    intent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+//                    ServiceUtils.startService(intent);
                 }
             } else {
                 // 权限未授予
@@ -706,7 +705,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 //        super.onConfigurationChanged(newConfig);
 //    }
 
-    private WebViewPool.WebViewWrapper webViewWrapper;
 
     @Override
     protected void onDestroy() {

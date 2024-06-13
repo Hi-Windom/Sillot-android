@@ -357,6 +357,24 @@ class BootService : Service() {
             return
         }
         BuglyLog.d(TAG, "showWifi() invoked")
+        val locationPermissionObservable_POST_NOTIFICATIONS =
+            Observable.create { emitter: ObservableEmitter<Boolean> ->
+                if (ActivityCompat.checkSelfPermission(
+                        activity,
+                        Manifest.permission.POST_NOTIFICATIONS
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    emitter.onNext(true)
+                } else {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        ActivityCompat.requestPermissions(
+                            activity,
+                            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                            S.REQUEST_CODE.REQUEST_POST_NOTIFICATIONS
+                        )
+                    }
+                }
+            }
         val locationPermissionObservable =
             Observable.create { emitter: ObservableEmitter<Boolean> ->
                 if (ActivityCompat.checkSelfPermission(
@@ -371,6 +389,24 @@ class BootService : Service() {
                         arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                         S.REQUEST_CODE.REQUEST_LOCATION
                     )
+                }
+            }
+        val locationPermissionObservable_FOREGROUND_SERVICE_LOCATION =
+            Observable.create { emitter: ObservableEmitter<Boolean> ->
+                if (ActivityCompat.checkSelfPermission(
+                        activity,
+                        Manifest.permission.FOREGROUND_SERVICE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    emitter.onNext(true)
+                } else {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                        ActivityCompat.requestPermissions(
+                            activity,
+                            arrayOf(Manifest.permission.FOREGROUND_SERVICE_LOCATION),
+                            S.REQUEST_CODE.REQUEST_FOREGROUND_SERVICE_LOCATION
+                        )
+                    }
                 }
             }
         val overlayPermissionObservable = Observable.create { emitter: ObservableEmitter<Boolean> ->
@@ -391,12 +427,13 @@ class BootService : Service() {
             }
         }
         val disposable = Observable.combineLatest(
+            locationPermissionObservable_POST_NOTIFICATIONS,
             locationPermissionObservable,
+            locationPermissionObservable_FOREGROUND_SERVICE_LOCATION,
             overlayPermissionObservable
-        ) { locationGranted: Boolean, overlayGranted: Boolean ->
-            locationGranted && overlayGranted
+        ) { POST_NOTIFICATIONS_Granted: Boolean, locationGranted: Boolean,FOREGROUND_SERVICE_LOCATION_Granted: Boolean, overlayGranted: Boolean ->
+            POST_NOTIFICATIONS_Granted && locationGranted && FOREGROUND_SERVICE_LOCATION_Granted && overlayGranted
         }
-
             .filter { granted: Boolean? -> granted!! } // 过滤掉未授予权限的情况
             .flatMap { granted: Boolean? ->
                 // 启动悬浮窗服务
