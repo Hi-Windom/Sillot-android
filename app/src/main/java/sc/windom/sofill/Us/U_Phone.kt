@@ -1,6 +1,8 @@
 package sc.windom.sofill.Us
 
 import android.app.Activity
+import android.content.Context
+import android.content.res.Configuration
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
@@ -9,6 +11,19 @@ import sc.windom.sofill.U
 
 object U_Phone {
 
+    /**
+     * 是否为竖屏
+     */
+    fun Context.isPortrait(): Boolean {
+        return resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
+    }
+
+    /**
+     * 是否为横屏
+     */
+    fun Context.isLandscape(): Boolean {
+        return resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    }
 
     /**
      * 支持在非 UI 线程中调用。使用自有全屏判断函数，比 com.blankj.utilcode.util.ScreenUtils.isFullScreen 准确

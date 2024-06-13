@@ -3,7 +3,6 @@ package sc.windom.sofill
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ActivityNotFoundException
-import android.content.ComponentCallbacks
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
@@ -24,14 +23,16 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.view.ViewConfiguration
 import android.view.Window
+import android.view.WindowInsetsController
 import android.view.WindowManager
 import android.webkit.WebSettings
 import android.webkit.WebView
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
 import com.blankj.utilcode.util.ActivityUtils.startActivity
-import com.github.lany92.keyboard.KeyboardWatcher
 import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.dialogs.PopTip
 import com.tencent.mmkv.MMKV
@@ -51,8 +52,6 @@ import java.io.File
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -86,109 +85,6 @@ object U {
     @JvmStatic
     val PHONE = U_Phone
 
-    @JvmStatic
-    fun registActivityConfigurationChangWithSoftKeyboardToolbarInWebview(activity: Activity, webView: WebView?) {
-        if (webView == null) {
-            return
-        }
-        val isMultiWindowMode = AtomicBoolean()
-        val isInFreeformMode = AtomicBoolean()
-        val isInPictureInPictureMode = AtomicBoolean()
-        val isKeyboardShow = AtomicBoolean()
-        val keyboardHeight = AtomicInteger()
-
-        // 初始化运行一次
-        adjustWebViewHeight(
-            webView,
-            isKeyboardShow,
-            keyboardHeight
-        )
-
-        // 高效监听键盘高度变化
-        KeyboardWatcher(activity) { showKeyboard: Boolean, height: Int ->
-            isKeyboardShow.set(showKeyboard)
-            keyboardHeight.set(height)
-            adjustWebViewHeight(
-                webView,
-                isKeyboardShow,
-                keyboardHeight
-            )
-        }
-
-        // 监听配置变化
-        activity.registerComponentCallbacks(object : ComponentCallbacks {
-            override fun onConfigurationChanged(newConfig: Configuration) {
-                Log.d(TAG, " activity.isInMultiWindowMode: ${activity.isInMultiWindowMode} ; activity.isInFreeformMode(): ${activity.isInFreeformMode()} ; activity.isInPictureInPictureMode: ${activity.isInPictureInPictureMode}")
-                applySystemThemeToWebView(activity, webView)
-                // 检测屏幕方向是否发生改变
-                if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                    // 当前为横屏，在这里处理横屏时的布局变化
-                    Log.w(TAG, "当前为横屏")
-                } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
-                    // 当前为竖屏，在这里处理竖屏时的布局变化
-                    Log.w(TAG, "当前为竖屏")
-                }
-
-
-                // 检测软键盘的显示状态
-                if (newConfig.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_NO) {
-                    // 软键盘隐藏了，在这里处理布局变化
-                    Log.w(TAG, "软键盘隐藏了")
-                } else if (newConfig.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_YES) {
-                    // 软键盘显示了，在这里处理布局变化
-                    Log.w(TAG, "软键盘显示了")
-                }
-
-                // 当配置改变时，更新窗口模式标志
-                isMultiWindowMode.set(activity.isInMultiWindowMode)
-                isInFreeformMode.set(activity.isInFreeformMode())
-                isInPictureInPictureMode.set(activity.isInPictureInPictureMode)
-
-                // 改变布局后运行一次
-                adjustWebViewHeight(
-                    webView,
-                    isKeyboardShow,
-                    keyboardHeight
-                )
-
-                // 改变布局后失效了，需要重新监听
-                KeyboardWatcher(activity) { showKeyboard: Boolean, height: Int ->
-                    isKeyboardShow.set(showKeyboard)
-                    keyboardHeight.set(height)
-                    adjustWebViewHeight(
-                        webView,
-                        isKeyboardShow,
-                        keyboardHeight
-                    )
-                }
-            }
-
-            override fun onLowMemory() {
-                // 这里可以处理内存低的情况，如果有必要的话
-            }
-        })
-    }
-    private fun adjustWebViewHeight(
-        webView: WebView,
-        isKeyboardShow: AtomicBoolean,
-        keyboardHeight: AtomicInteger
-    ) {
-        // 重置WebView的高度为可用高度
-        webView.layoutParams.height = -1 // MATCH_PARENT
-        webView.requestLayout()
-        var newHeight = webView.height
-        Log.d(TAG, "newHeight: ${newHeight} isKeyboardShow: ${isKeyboardShow} keyboardHeight: ${keyboardHeight}")
-        if (isKeyboardShow.get()) {
-            // 如果键盘显示，减去键盘高度
-            newHeight -= keyboardHeight.get()
-        }
-        // 设置WebView的新高度
-        webView.layoutParams.height = newHeight
-        webView.requestLayout()
-        val javascriptCommand =
-            if (isKeyboardShow.get()) "showKeyboardToolbar()" else "hideKeyboardToolbar()"
-        webView.evaluateJavascript("javascript:$javascriptCommand", null)
-    }
 
     @SuppressLint("ObsoleteSdkInt")
     fun Activity.isInFreeformMode(): Boolean {
@@ -200,9 +96,13 @@ object U {
         }
     }
 
-    fun applySystemThemeToWebView(context: Context,webView: WebView) {
+    fun Activity.isInSpecialMode(): Boolean {
+        return this.isInMultiWindowMode || this.isInFreeformMode() || this.isInPictureInPictureMode
+    }
+
+    fun applySystemThemeToWebView(activity: Activity, webView: WebView, forceWebViewFollowSystemDarkMode: Boolean) {
         val currentNightMode: Int =
-            context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+            activity.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
         val OSTheme = if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) "dark" else "light"
         val isAndroidDarkMode = if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) 1 else 0
         webView.evaluateJavascript(
@@ -213,17 +113,43 @@ object U {
             "javascript:window.Sillot.android.isAndroidDarkMode = $isAndroidDarkMode",
             null
         )
-        if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
-            // 系统处于暗色模式
-            DialogX.PopNoteShow(context, R.drawable.icon,"系统深色模式")
-            if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-                WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), true)
+        if (forceWebViewFollowSystemDarkMode) {
+            if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
+                // 系统处于暗色模式
+                DialogX.PopNoteShow(activity, R.drawable.icon, "系统深色模式", "已开启 WebView 自动明暗（实验性功能）")
+                if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+                    WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), true)
+                }
+                // 系统处于暗色模式，设置状态栏为深色
+                activity.window.statusBarColor = ContextCompat.getColor(activity, R.color.darkFull)
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES) // 向下兼容代码，可以删除
+            } else {
+                // 系统处于亮色模式
+                DialogX.PopNoteShow(activity, R.drawable.icon, "系统明亮模式", "已开启 WebView 自动明暗（实验性功能）")
+                if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+                    WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), false)
+                }
+                // 系统处于亮色模式，设置状态栏为浅色
+                activity.window.statusBarColor = ContextCompat.getColor(activity, R.color.white)
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO) // 向下兼容代码，可以删除
             }
-        } else {
-            // 系统处于亮色模式
-            DialogX.PopNoteShow(context, R.drawable.icon,"系统明亮模式")
-            if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-                WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), false)
+            // 使用WindowInsetsController来控制状态栏的图标颜色
+            activity.window.insetsController?.apply {
+                // 对于亮色背景和暗色图标
+                if (currentNightMode != Configuration.UI_MODE_NIGHT_YES) {
+                    setSystemBarsAppearance(
+                        WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                        WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                    )
+                } else {
+                    // 对于暗色背景和亮色图标，清除亮色图标标志
+                    setSystemBarsAppearance(0, WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS)
+                }
+            }
+            // 设置沉浸式通知栏
+            activity.window.setDecorFitsSystemWindows(false)
+            activity.window.decorView.setOnApplyWindowInsetsListener { _, insets ->
+                insets
             }
         }
     }

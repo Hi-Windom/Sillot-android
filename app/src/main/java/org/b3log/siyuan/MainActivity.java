@@ -38,6 +38,12 @@ package org.b3log.siyuan;
  import android.view.KeyEvent;
  import android.view.View;
  import android.view.ViewGroup;
+
+ import sc.windom.sofill.WebViewLayoutManager;
+ import sc.windom.sofill.Ss.S_Events;
+ import sc.windom.sofill.Ss.S_Intent;
+ import sc.windom.sofill.Ss.S_REQUEST_CODE;
+ import sc.windom.sofill.Us.U_DialogX;
  import sc.windom.sofill.android.webview.WebPoolsPro;
  import android.view.WindowManager;
  import android.webkit.CookieManager;
@@ -59,9 +65,9 @@ package org.b3log.siyuan;
  import androidx.activity.OnBackPressedDispatcher;
  import androidx.activity.result.ActivityResultLauncher;
  import androidx.activity.result.contract.ActivityResultContracts;
+ import androidx.annotation.NonNull;
  import androidx.appcompat.app.AlertDialog;
  import androidx.appcompat.app.AppCompatActivity;
- import androidx.appcompat.app.AppCompatDelegate;
  import androidx.core.app.ActivityCompat;
  import androidx.core.content.ContextCompat;
  import androidx.work.Constraints;
@@ -70,8 +76,6 @@ package org.b3log.siyuan;
  import androidx.work.WorkManager;
 
  import com.blankj.utilcode.util.AppUtils;
- import com.blankj.utilcode.util.KeyboardUtils;
- import com.blankj.utilcode.util.ServiceUtils;
  import com.blankj.utilcode.util.StringUtils;
  import com.kongzue.dialogx.dialogs.BottomMenu;
  import com.kongzue.dialogx.dialogs.PopTip;
@@ -82,7 +86,6 @@ package org.b3log.siyuan;
 
  import org.b3log.siyuan.appUtils.HWs;
  import org.b3log.siyuan.services.BootService;
- import org.b3log.siyuan.services.FloatingWindowService;
  import org.b3log.siyuan.workers.SyncDataWorker;
  import org.greenrobot.eventbus.EventBus;
  import org.greenrobot.eventbus.Subscribe;
@@ -102,7 +105,6 @@ package org.b3log.siyuan;
  import mobile.Mobile;
  import sc.windom.sofill.U;
  import sc.windom.sofill.S;
- import sc.windom.sofill.android.webview.WebViewPool;
 
  /**
  * 主程序.
@@ -216,7 +218,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             instanceId = UUID.randomUUID().toString();
             Intent intent = new Intent(getApplicationContext(), BootService.class);
             intent.putExtra("INSTANCE_ID", instanceId); // 绑定服务时传递instanceId
-            intent.putExtra(S.getINTENT().EXTRA_WEB_VIEW_KEY, "Sillot-Gibbet");
+            S.getINTENT();
+            intent.putExtra(S_Intent.EXTRA_WEB_VIEW_KEY, "Sillot-Gibbet");
             bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE); // TODO: 双开共存时内核固定端口冲突
         } else {
             performActionWithService();
@@ -246,16 +249,14 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
                 // 注册工具栏显示/隐藏跟随软键盘状态
                 // Fix https://github.com/siyuan-note/siyuan/issues/9765
-                // https://github.com/Hi-Windom/Sillot-android/issues/84
-                U.registActivityConfigurationChangWithSoftKeyboardToolbarInWebview(this, webView);
-
                 // Fix https://github.com/siyuan-note/siyuan/issues/9726
                 // https://github.com/Hi-Windom/Sillot-android/issues/84
-                AndroidBug5497Workaround.assistActivity(this, webView);
+                WebViewLayoutManager.assistActivity(this, webView);
             }
         } else {
             // 服务尚未绑定或实例为空，处理错误或等待绑定
-            U.getDialogX().PopNoteShow(this, "服务尚未绑定或实例为空").noAutoDismiss();
+            U.getDialogX();
+            U_DialogX.PopNoteShow(this, "服务尚未绑定或实例为空").noAutoDismiss();
         }
     }
 
@@ -264,8 +265,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         BuglyLog.w(TAG, "onCreate() invoked");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        // 设置应用的主题模式跟随系统
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         bindBootService();
         mmkv = MMKV.defaultMMKV();
         // 注册 EventBus
@@ -319,7 +318,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 (Map<String, Boolean> permissions) -> {
                     boolean allPermissionsGranted = true;
                     for (String permission : permissions.keySet()) {
-                        if (permissions.get(permission) != null && permissions.get(permission)) {
+                        if (permissions.get(permission) != null && Boolean.TRUE.equals(permissions.get(permission))) {
                             requestPermissionAll_works--;
                         } else {
                             allPermissionsGranted = false;
@@ -460,7 +459,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                             view.loadUrl(gotourl);
                         } catch (UnsupportedEncodingException e) {
                             // 编码失败的处理
-                            e.printStackTrace();
+                            BuglyLog.w(TAG, e.toString());
                         }
                     } else {
                         view.loadUrl(url);
@@ -574,7 +573,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) { // 其他 Activity 的结果不要傻傻的在这里处理好吧
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, int[] grantResults) { // 其他 Activity 的结果不要傻傻的在这里处理好吧
         if (grantResults.length > 0) {
             BuglyLog.w(TAG, "onRequestPermissionsResult() -> requestCode "+requestCode+"  grantResults[0] "+grantResults[0]);
         }
@@ -655,9 +654,11 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 }
             } else {
                 try {
-                    Bitmap cam_photo = (Bitmap) intent.getExtras().get("data");
+                    Bitmap cam_photo = (Bitmap) Objects.requireNonNull(intent.getExtras()).get("data");
                     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-                    cam_photo.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+                    if (cam_photo != null) {
+                        cam_photo.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+                    }
                     stringData = MediaStore.Images.Media.insertImage(this.getContentResolver(), cam_photo, null, null);
                 } catch (Exception ignored) {
                 }
@@ -677,7 +678,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(OnSiYuanMainRequestEvent event) {
         // 检查权限请求的结果
-        if (event.getRequestCode() == S.getREQUEST_CODE().REQUEST_OVERLAY) {
+        S.getREQUEST_CODE();
+        if (event.getRequestCode() == S_REQUEST_CODE.REQUEST_OVERLAY) {
             if (event.getResultCode() == RESULT_OK) {
                 // 权限已授予
                 // 在此处执行相应的操作
@@ -691,10 +693,14 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 // 权限未授予
                 // 在此处执行相应的操作
             }
-        } else if (event.getRequestCode() == S.getREQUEST_CODE().REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT) {
-            // 不管结果是什么都重启
-            if (event.getCallback().equals(S.getEVENTS().INSTANCE.getCALL_MainActivity_siyuan_1())) {
-                coldRestart();
+        } else {
+            S.getREQUEST_CODE();
+            if (event.getRequestCode() == S_REQUEST_CODE.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT) {
+                // 不管结果是什么都重启
+                S.getEVENTS();
+                if (event.getCallback().equals(S_Events.INSTANCE.getCALL_MainActivity_siyuan_1())) {
+                    coldRestart();
+                }
             }
         }
     }
@@ -711,7 +717,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         BuglyLog.w(TAG, "onDestroy() invoked"); // 大概率不会输出
         // 注销 EventBus
         EventBus.getDefault().unregister(this);
-        KeyboardUtils.unregisterSoftInputChangedListener(getWindow());
         AppUtils.unregisterAppStatusChangedListener(this);
         releaseBootService();
         super.onDestroy();

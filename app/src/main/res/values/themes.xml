@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Theme.SiYuan" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="Theme.SiYuan" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/SCC_Pink_Firole</item>
         <item name="colorPrimaryVariant">@color/purple_700</item>
@@ -13,7 +13,8 @@
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
         <item name="android:windowAnimationStyle">@null</item>
-        <item name="android:windowBackground">@color/dark</item>
+        <!-- When there is a problem with the layout, you can highlight the windowBackground here for debugging. -->
+        <item name="android:windowBackground">@color/white</item>
     </style>
 
     <style name="Theme.SiYuan.Boot" parent="Theme.SiYuan">

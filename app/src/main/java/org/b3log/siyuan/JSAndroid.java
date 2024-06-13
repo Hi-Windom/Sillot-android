@@ -88,6 +88,12 @@ public final class JSAndroid {
 
     //// Sillot extend start
     @JavascriptInterface
+    public void toggleDarkModeAuto() {
+        boolean autoWebViewDarkMode = activity.mmkv.getBoolean("autoWebViewDarkMode", false);
+        activity.mmkv.putBoolean("autoWebViewDarkMode", !autoWebViewDarkMode);
+        PopTip.show("知道了，玩去吧~");
+    }
+    @JavascriptInterface
     public void toggleFullScreenState() {
         toggleFullScreen(activity);
     }
