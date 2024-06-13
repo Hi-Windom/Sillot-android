@@ -21,9 +21,9 @@ fun CascadeMaterialTheme(
         primary = Color(0xF050A283), // 主要颜色，用于最重要的界面元素，如按钮、选中状态和主要文本
         onPrimary = Color(0xFF405573), // 主要颜色上的文字颜色
         background = Color(0xFFB5D8C3), // 背景色，用于整个屏幕或面板的背景
-        onBackground = Color(0xFFFFFFFF), // 背景色上的文字颜色
+        onBackground = Color(0xFF495842), // 背景色上的文字颜色
         surface = Color(0xFFE5F0EB), // 表面颜色，用于卡片、菜单和对话框等表面元素的背景
-        onSurface = Color(0xFF356859), // 表面颜色上的文字颜色
+        onSurface = Color(0xFFb8d2bf), // 表面颜色上的文字颜色
         surfaceVariant = Color(0xFF356859), // 表面变体颜色，用于表面元素的不同状态或层次
         onSurfaceVariant = Color(0xFF356859), // 表面变体颜色上的文字颜色
         primaryContainer = Color(0xFFBBAAD8), // 主要颜色容器背景
@@ -52,7 +52,7 @@ fun CascadeMaterialTheme(
         background = Color(0xFF000000), // 背景色，用于整个屏幕或面板的背景
         onBackground = Color(0xFFB5D2C3), // 背景色上的文字颜色
         surface = Color(0xFF12121B), // 表面颜色，用于卡片、菜单和对话框等表面元素的背景
-        onSurface = Color(0xFF7F9D69), // 表面颜色上的文字颜色
+        onSurface = Color(0xFF639241), // 表面颜色上的文字颜色
         surfaceVariant = Color(0xFF356859), // 表面变体颜色，用于表面元素的不同状态或层次
         onSurfaceVariant = Color(0xFF8F9D69), // 表面变体颜色上的文字颜色
         primaryContainer = Color(0xCF554263), // 主要颜色容器背景
