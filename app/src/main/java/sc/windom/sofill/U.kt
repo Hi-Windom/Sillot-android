@@ -443,41 +443,6 @@ object U {
         return decryptAes(encryptedToken, aesKey)
     }
 
-    fun isMIUI(applicationContext: Context): Boolean {
-        val packageManager = applicationContext.packageManager
-        val miuiPackageName = "com.miui.gallery"
-        return try {
-            packageManager.getPackageInfo(miuiPackageName, PackageManager.GET_META_DATA)
-            true
-        } catch (e: PackageManager.NameNotFoundException) {
-            false
-        }
-    }
-
-    fun isLargeScreenMachine(context: Context): Boolean {
-        // 获取屏幕的方向
-        val screenLayout = context.resources.configuration.screenLayout
-        // 获取屏幕尺寸的掩码
-        val sizeMask = Configuration.SCREENLAYOUT_SIZE_MASK
-        // 获取屏幕尺寸的值
-        val screenSize = screenLayout and sizeMask
-
-        // 如果屏幕尺寸是超大屏或者巨屏，则可能是平板电脑
-        return screenSize == Configuration.SCREENLAYOUT_SIZE_XLARGE ||
-                screenSize == Configuration.SCREENLAYOUT_SIZE_LARGE
-    }
-
-    fun isPad(context: Context): Boolean { // Converted from Utils.java
-        val metrics = context.resources.displayMetrics
-        val widthInches = metrics.widthPixels / metrics.xdpi
-        val heightInches = metrics.heightPixels / metrics.ydpi
-        val diagonalInches = sqrt(
-            widthInches.toDouble().pow(2.0) + heightInches.toDouble()
-                .pow(2.0)
-        )
-        return diagonalInches >= 7
-    }
-
     fun openUrl(url: String, noBrowser: Boolean = false) {
         val i = Intent(Intent.ACTION_VIEW, Uri.parse(url))
         if (noBrowser == true) {

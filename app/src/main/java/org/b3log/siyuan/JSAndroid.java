@@ -69,6 +69,8 @@ import java.util.HashSet;
 
 import mobile.Mobile;
 import sc.windom.sofill.S;
+import sc.windom.sofill.U;
+import sc.windom.sofill.Us.U_Phone;
 import sc.windom.sofill.android.permission.Ps;
 
 /**
@@ -87,6 +89,16 @@ public final class JSAndroid {
     }
 
     //// Sillot extend start
+    @JavascriptInterface
+    public boolean isMIUI() {
+        U.getPHONE();
+        return U_Phone.isMIUI(activity.getApplicationContext());
+    }
+    @JavascriptInterface
+    public boolean isOriginOS() {
+        U.getPHONE();
+        return U_Phone.isOriginOS(activity.getApplicationContext());
+    }
     @JavascriptInterface
     public void toggleDarkModeAuto() {
         boolean autoWebViewDarkMode = activity.mmkv.getBoolean("autoWebViewDarkMode", false);

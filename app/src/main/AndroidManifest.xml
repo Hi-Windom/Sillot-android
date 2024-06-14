@@ -15,6 +15,12 @@
     <queries>
         <!-- 查询 MIUI 的特定包 -->
         <package android:name="com.miui.gallery" />
+        <!-- 查询 OriginOS 的特定包 -->
+        <package android:name="com.vivo.gallery" />
+        <package android:name="com.vivo.moodcube" />
+        <package android:name="com.vivo.xspace" />
+        <package android:name="com.vivo.ai.copilot" />
+        <package android:name="com.vivo.pcsuite" />
     </queries>
     <!-- for Android Keystore -->
     <uses-permission android:name="android.permission.USE_CREDENTIALS" />

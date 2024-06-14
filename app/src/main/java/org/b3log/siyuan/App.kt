@@ -256,7 +256,7 @@ class App : Application() {
 
         })
 
-        if (U.isMIUI(applicationContext) || U.isLargeScreenMachine(this)) {
+        if (U.PHONE.isMIUI(applicationContext) || U.PHONE.isLargeScreenMachine(this)) {
             DialogX.globalStyle = MIUIStyle()
         } else {
             // 其他主题感觉都不好看，暂时默认，以后可能自己弄个
