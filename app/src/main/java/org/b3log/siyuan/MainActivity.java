@@ -17,6 +17,8 @@
  */
 package org.b3log.siyuan;
 
+ import static sc.windom.sofill.Us.U_DialogX.PopTipShow;
+
  import android.annotation.SuppressLint;
  import android.app.Activity;
  import android.content.ClipData;
@@ -343,7 +345,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 // 在这里处理后退逻辑
                 if (Utils.isPad(getApplicationContext())) {
                     if ((System.currentTimeMillis() - exitTime) > 2000) {
-                        PopTip.show("再按一次退出汐洛绞架");
+                        PopTipShow(getApplicationContext() , "再按一次退出汐洛绞架");
                         exitTime = System.currentTimeMillis();
                     } else {
                         HWs.getInstance().vibratorWaveform(getApplicationContext(), new long[]{0, 30, 25, 40, 25, 10}, new int[]{2, 4, 3, 2, 2, 2}, -1);
@@ -419,7 +421,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 if (fileChooserParams.isCaptureEnabled()) {
                     if (Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q) {
                         // 不支持 Android 10 以下
-                        PopTip.show("Capture is not supported on your device (Android 10+ required)");
+                        PopTipShow(getApplicationContext() , "Capture is not supported on your device (Android 10+ required)");
                         uploadMessage = null;
                         return false;
                     }
@@ -440,7 +442,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                     startActivityForResult(intent, REQUEST_SELECT_FILE);
                 } catch (final Exception e) {
                     uploadMessage = null;
-                    PopTip.show("Cannot open file chooser");
+                    PopTipShow(getApplicationContext() , "Cannot open file chooser");
                     return false;
                 }
                 return true;
@@ -630,7 +632,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 return;
             }
 
-            PopTip.show("Permission denied");
+            PopTipShow(this , "Permission denied");
         }
 
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);

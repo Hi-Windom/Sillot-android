@@ -14,6 +14,7 @@ import com.tencent.bugly.crashreport.BuglyLog
 import org.b3log.siyuan.appUtils.HWs
 import org.b3log.siyuan.json.testmoshi
 import org.b3log.siyuan.realm.TestRealm
+import sc.windom.sofill.Us.U_DialogX.PopTipShow
 
 
 class SillotHomeActivity : AppCompatActivity() {
@@ -63,7 +64,7 @@ class SillotHomeActivity : AppCompatActivity() {
             override fun handleOnBackPressed() {
                 // 在这里处理后退逻辑
                     if (System.currentTimeMillis() - exitTime > 2000) {
-                        PopTip.show("再按一次结束当前活动")
+                        PopTipShow(applicationContext , "再按一次结束当前活动")
                         exitTime = System.currentTimeMillis()
                     } else {
                         HWs.getInstance().vibratorWaveform(
@@ -111,7 +112,7 @@ class SillotHomeActivity : AppCompatActivity() {
             }
         }
         BuglyLog.e(TAG, HWs.getNetworkType(this))
-        PopTip.show("测试完毕")
+        PopTipShow(this , "测试完毕")
 //        val intent = Intent(this, POST_NOTIFICATIONS::class.java)
 //        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 //        startActivity(intent)

@@ -21,6 +21,7 @@ import static androidx.core.app.ActivityCompat.startActivityForResult;
 import static com.blankj.utilcode.util.ActivityUtils.startActivity;
 import static com.blankj.utilcode.util.ViewUtils.runOnUiThread;
 
+import static sc.windom.sofill.Us.U_DialogX.PopTipShow;
 import static sc.windom.sofill.Us.U_Phone.toggleFullScreen;
 
 import android.content.ClipData;
@@ -103,11 +104,18 @@ public final class JSAndroid {
     public void toggleDarkModeAuto() {
         boolean autoWebViewDarkMode = activity.mmkv.getBoolean("autoWebViewDarkMode", false);
         activity.mmkv.putBoolean("autoWebViewDarkMode", !autoWebViewDarkMode);
-        PopTip.show("知道了，玩去吧~");
+        PopTipShow(activity, "知道了，玩去吧~");
     }
     @JavascriptInterface
     public void toggleFullScreenState() {
+        var cb =  new Runnable() {
+            @Override
+            public void run() {
+                toggleFullScreen(activity);
+            }
+        };
         toggleFullScreen(activity);
+        PopTipShow(activity, "知道了，玩去吧~", "撤销", cb, R.drawable.icon);
     }
     @JavascriptInterface
     public void buglyPost1() {
@@ -117,14 +125,14 @@ public final class JSAndroid {
             BuglyLog.e(TAG, "捕获到异常：" + e.getMessage());
             App.getInstance().reportException(e);
         }
-        PopTip.show("知道了，玩去吧~");
+        PopTipShow(activity, "知道了，玩去吧~");
     }
     @JavascriptInterface
     public void buglyPost2() {
         try {
             CrashReport.testJavaCrash();
         } catch (Exception e) {
-            PopTip.show("知道了，玩去吧~");
+            PopTipShow(activity, "知道了，玩去吧~");
         }
     }
     @JavascriptInterface
@@ -136,7 +144,7 @@ public final class JSAndroid {
     public boolean requestPermissionActivity(final String id, final String Msg, final String callback) {
         BuglyLog.w(TAG, "requestPermissionActivity() invoked");
         if (Msg != null && !Msg.isEmpty()) {
-            PopTip.show(Msg);
+            PopTipShow(activity, Msg);
         }
         if (id.equals("Battery")) {
             if (callback.equals("androidReboot")) {
@@ -190,7 +198,7 @@ public final class JSAndroid {
             return false;
         }
         if (Msg != null && !Msg.isEmpty()) {
-            PopTip.show(Msg);
+            PopTipShow(activity, Msg);
         }
         ActivityCompat.requestPermissions(activity, new String[]{ id }, 1001);
         BuglyLog.d(TAG, "requestPermission()  return true");
@@ -245,7 +253,7 @@ public final class JSAndroid {
 
             if (shouldShowRationale) {
                 // 显示权限说明
-                PopTip.show("必要权限缺失，请处理！");
+                PopTipShow(activity, "必要权限缺失，请处理！");
                 // 打开应用详情界面
                 Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -358,19 +366,19 @@ public final class JSAndroid {
                             return;
                         case BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE:
                             BuglyLog.e("BiometricManager","该设备上没有搭载可用的生物特征功能。");
-                            PopTip.show("该设备上没有搭载可用的生物特征功能");
+                            PopTipShow(activity, "该设备上没有搭载可用的生物特征功能");
                             return;
                         case BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE:
                             BuglyLog.e("BiometricManager","生物识别功能当前不可用。");
-                            PopTip.show("生物识别功能当前不可用");
+                            PopTipShow(activity, "生物识别功能当前不可用");
                             return;
                         case BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED:
                             BuglyLog.e("BiometricManager","用户没有录入生物识别数据。");
-                            PopTip.show("用户没有录入生物识别数据");
+                            PopTipShow(activity, "用户没有录入生物识别数据");
                             return;
                     }
 
-                    PopTip.show("用户取消了指纹解锁");
+                    PopTipShow(activity, "用户取消了指纹解锁");
                 }
 
             });
@@ -409,7 +417,7 @@ public final class JSAndroid {
             outputStream.close();
             BuglyLog.i("saveLongScreenshot", "Sillot_savePictureByURL saved to " + file.getAbsolutePath());
             notifyGallery(file);
-            PopTip.show("图片已保存到 /DCIM/Sillot");
+            PopTipShow(activity, "图片已保存到 /DCIM/Sillot");
         } catch (IOException e) {
             e.printStackTrace();
             BuglyLog.e("saveLongScreenshot", "Failed to save Sillot_savePictureByURL");

@@ -126,6 +126,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import sc.windom.sofill.S
 import sc.windom.sofill.U
+import sc.windom.sofill.Us.U_DialogX.PopTipShow
 import sc.windom.sofill.api.MyRetrofit.createRetrofit
 import sc.windom.sofill.api.ld246.ApiServiceNotification
 import sc.windom.sofill.compose.MyTagHandler
@@ -206,7 +207,7 @@ class HomeActivity : ComponentActivity() {
                     }
                 } else {
                     if (System.currentTimeMillis() - exitTime > 2000) {
-                        PopTip.show("再按一次结束当前活动")
+                        PopTipShow(thisActivity , "再按一次结束当前活动")
                         exitTime = System.currentTimeMillis()
                     } else {
                         HWs.getInstance().vibratorWaveform(
@@ -276,7 +277,7 @@ class HomeActivity : ComponentActivity() {
         val message = "Error Response: ${response.message()}"
         when (response.code()) {
             200 ->
-                PopTip.show("<(￣︶￣)↗[${response.code()}]")
+                PopTipShow(thisActivity , "<(￣︶￣)↗[${response.code()}]")
 
             401 -> U.DialogX.PopNoteShow(
                 thisActivity,
@@ -1151,10 +1152,10 @@ class HomeActivity : ComponentActivity() {
                 if (success) {
                     webView?.clearCache(true)
                     fullScreenDialog?.dismiss()
-                    PopTip.show("<(￣︶￣)↗[success]")
+                    PopTipShow(thisActivity , "<(￣︶￣)↗[success]")
                 } else {
                     fullScreenDialog?.dismiss()
-                    PopTip.show(" ￣へ￣ [failed]")
+                    PopTipShow(thisActivity , " ￣へ￣ [failed]")
                 }
             }
         }
