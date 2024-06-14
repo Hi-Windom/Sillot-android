@@ -336,6 +336,8 @@ class MainPro : ComponentActivity() {
                     } ?: run { U.FileUtils.getFileMIMEType(mimeType.value) }
                 }
             }
+
+            BuglyLog.w(TAG, "mimeType: ${mimeType.value}, fileType: ${fileType.value}")
         }
         Scaffold(
             topBar = {
@@ -648,7 +650,7 @@ class MainPro : ComponentActivity() {
         fileName: MutableState<String>,
         fileSize: MutableState<String>
     ) {
-        val TAG = "MainPro-InfoPart"
+        val TAG = "${this.TAG}/InfoPart"
         val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
         val Thumbnail_Height = S.C.Thumbnail_Height.current
         val Thumbnail_Height_IMG = S.C.Thumbnail_Height_IMG.current
@@ -736,7 +738,7 @@ class MainPro : ComponentActivity() {
     @SuppressLint("Range")
     @Composable
     fun BtnPart(mimeType: MutableState<String>, fileName: MutableState<String>) {
-        val TAG = "MainPro-BtnPart"
+        val TAG = "${this.TAG}/BtnPart"
         val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
         val coroutineScope = rememberCoroutineScope()
 
@@ -763,7 +765,7 @@ class MainPro : ComponentActivity() {
             showAudioButton = mimeType.value.startsWith("audio/")
             showVideoButton = mimeType.value.startsWith("video/")
             showApkButton =
-                mimeType.value == "application/vnd.android.package-archive" || (mimeType.value == "application/octet-stream" && fileName.value.endsWith(
+                mimeType.value == "application/vnd.android.package-archive" || mimeType.value == "application/apk_1" || (mimeType.value == "application/octet-stream" && fileName.value.endsWith(
                     ".apk.1"
                 ))
             if (in2_intent?.data != null) {
