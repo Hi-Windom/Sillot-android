@@ -268,7 +268,14 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 // Fix https://github.com/siyuan-note/siyuan/issues/9765
                 // Fix https://github.com/siyuan-note/siyuan/issues/9726
                 // https://github.com/Hi-Windom/Sillot-android/issues/84
-                WebViewLayoutManager.assistActivity(this, webView);
+                WebViewLayoutManager webViewLayoutManager = WebViewLayoutManager.assistActivity(this, webView);
+                webViewLayoutManager.setDelayResetLayoutWhenImeShow(200);
+                // showKeyboardToolbar 不知道在哪已经实现了随键盘呼出（有延时，大概率是在前端），这里依旧调用是因为响应更快
+                webViewLayoutManager.setJSonImeShow("showKeyboardToolbar();");
+                webViewLayoutManager.setJSonImeHide("hideKeyboardToolbar();");
+                // 锁定方便悬浮键盘不自动收起
+                webViewLayoutManager.setJSonImeShow0Height("window.Sillot.android.LockKeyboardToolbar=true;hideKeyboardToolbar();showKeyboardToolbar();");
+                webViewLayoutManager.setJSonImeHide0Height("window.Sillot.android.LockKeyboardToolbar=false;hideKeyboardToolbar();");
 
                 // 支持 OriginOS4 超级拖拽 #90
                 U_FuckOtherApp.setOnDragListenerForWebView(webView, MainPro.class);

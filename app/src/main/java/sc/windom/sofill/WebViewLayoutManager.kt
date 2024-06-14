@@ -6,42 +6,63 @@ import android.content.ComponentCallbacks
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Rect
+import android.os.Handler
+import android.os.Looper
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.View
 import android.view.ViewConfiguration
+import android.view.WindowInsets
 import android.view.WindowManager
 import android.webkit.WebView
 import android.widget.FrameLayout
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.blankj.utilcode.util.BarUtils
-import com.blankj.utilcode.util.KeyboardUtils
+import com.tencent.bugly.crashreport.BuglyLog
 import com.tencent.mmkv.MMKV
 import sc.windom.sofill.U.applySystemThemeToWebView
 import sc.windom.sofill.U.isInSpecialMode
-import sc.windom.sofill.Us.U_Phone.isLandscape
-
 
 /**
  * Android small window mode soft keyboard black occlusion [siyuan-note/siyuan-android#7](https://github.com/siyuan-note/siyuan-android/pull/7)
  *
  * 优化注册工具栏显示/隐藏跟随软键盘状态 [Hi-Windom/Sillot-android#84](https://github.com/Hi-Windom/Sillot-android/issues/84)
  *
- * 基于 AndroidBug5497Workaround 改进，将原软键盘监听集成，统一调整布局。MIUI小窗底部有小白条，已进行抬高处理
+ * 基于 [Yingyi](https://ld246.com/member/shuoying) 的 AndroidBug5497Workaround 改进，将原软键盘监听集成，统一调整布局。MIUI小窗底部有小白条，已进行抬高处理。
+ * 本方案不使用 com.blankj.utilcode.util 的 KeyboardUtils.fixAndroidBug5497 和 KeyboardUtils.registerSoftInputChangedListener，
+ * 因为该库不兼容小窗模式、不识别悬浮键盘。本方案使用 WindowInsets 的 isVisible(Type.ime()) 方法来检查输入法是否可见（Android 11+）。
+ * 如果在清单文件的 activity 节点声明了 android:windowSoftInputMode="adjustResize"，则普通键盘弹起时无需重新布局，
+ * 但有个小缺陷：系统自动重新布局是与输入法弹起同时进行的，会导致用户能短暂看到布局底色。因此，推荐声明为 android:windowSoftInputMode="adjustPan"
+ * 本方案会自动调整布局，这样不受系统自动重新布局影响，可以通过指定 delayResetLayoutWhenImeShow （默认值 0 ） 来避免用户短暂看到布局底色。
+ * 此外，推荐进一步声明为 android:windowSoftInputMode="stateHidden|adjustPan"，stateHidden 与 isImeVisible = false 初始化保持一致性。
+ * @constructor - 在 Java 中（this指代当前activity）：
+ * ```java
+ * WebViewLayoutManager.assistActivity(this, webView).setDelayResetLayoutWhenImeShow(200);
+ * ```
+ * @sample WebViewLayoutManager.assistActivity
  * TODO: 平板端测试有一定延迟，后续优化
- * TODO: 测试发现保持键盘呼出态从竖屏切换为横屏再切换回来布局异常，需要解决
- * TODO: 屏幕方向变化时处理；包括使用悬浮键盘的情况
- * @author Yingyi, Soltus
+ * @author https://ld246.com/member/soltus, GLM-4
  */
+@SuppressLint("WrongConstant")
 class WebViewLayoutManager private constructor(
     private val activity: Activity,
     private val webView: WebView
 ) {
-    private val TAG = "AndroidBug5497Workaround"
+    private val TAG = "WebViewLayoutManager"
     private var mmkv: MMKV = MMKV.defaultMMKV()
     var autoWebViewDarkMode: Boolean = false
+    var delayResetLayoutWhenImeShow: Long =
+        0 // 默认与 android:windowSoftInputMode="adjustResize" 行为保持一致，推荐赋值为 200
+    var JSonImeShow = ""
+    var JSonImeHide = ""
+    var JSonImeShow0Height = ""
+    var JSonImeHide0Height = ""
     private var currentOrientation: Int = -1
-    private var isKeyboardShow = false // 键盘是否显示
-    private var HeightKeyboard = 0 // 键盘高度
+    private var isImeVisible = false // 支持悬浮键盘
+    private var imeHeight = 0 // 悬浮键盘的值为 0
+    private var lastLayoutWidth = 0
+    private var lastLayoutHeight = 0
     private val view: View // Activity的内容视图
 
     init {
@@ -49,23 +70,26 @@ class WebViewLayoutManager private constructor(
         applySystemThemeToWebView(activity, webView, autoWebViewDarkMode)
         val frameLayout = activity.findViewById<FrameLayout>(android.R.id.content)
         this.view = frameLayout.getChildAt(0)
-//  不兼容小窗模式      KeyboardUtils.fixAndroidBug5497(activity)
-        KeyboardUtils.fixSoftInputLeaks(activity)
-        KeyboardUtils.registerSoftInputChangedListener(
-            activity
-        ) { height: Int ->
-            this.isKeyboardShow = height > 0
-            this.HeightKeyboard = height
-            logInfo()
-            restLayout("KeyboardUtils")
-            // showKeyboardToolbar 不知道在哪已经实现了随键盘呼出（有延时，大概率是在前端），这里依旧调用是因为响应更快
-            val javascriptCommand =
-                if (height > 0) "showKeyboardToolbar()" else "hideKeyboardToolbar()"
-            webView.evaluateJavascript("javascript:$javascriptCommand", null)
+        ViewCompat.setOnApplyWindowInsetsListener(this.view) { v: View?, insets: WindowInsetsCompat ->
+            this.isImeVisible = insets.isVisible(WindowInsets.Type.ime())
+            this.imeHeight = insets.getInsets(WindowInsets.Type.ime()).bottom
+            BuglyLog.w(TAG, "isImeVisible: ${this.isImeVisible}, imeHeight: ${this.imeHeight}")
+            restLayout("WindowInsets")
+            insets
         }
-        // 监听布局变化
+
+        // 本方案使用 isVisible(Type.ime()) 替代 KeyboardUtils.registerSoftInputChangedListener
+        // 后已经可以做到准确识别键盘是否显示和键盘高度，但仍需要通过监听布局变化以识别小窗模式和多窗口模式
         frameLayout.viewTreeObserver.addOnGlobalLayoutListener {
-            restLayout("监听布局变化")
+            val currentWidth = frameLayout.width
+            val currentHeight = frameLayout.height
+
+            // 为了避免循环调用，因此需要检查布局的宽度和高度是否发生了变化
+            if (currentWidth != this.lastLayoutWidth || currentHeight != this.lastLayoutHeight) {
+                this.lastLayoutWidth = currentWidth
+                this.lastLayoutHeight = currentHeight
+                restLayout("监听布局变化")
+            }
         }
         // 监听配置变化
         activity.registerComponentCallbacks(object : ComponentCallbacks {
@@ -75,14 +99,13 @@ class WebViewLayoutManager private constructor(
                 Log.w(
                     TAG,
                     "新配置是否横屏: ${newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE}, " +
-                            "旧配置是否横屏: ${currentOrientation  == Configuration.ORIENTATION_LANDSCAPE}"
+                            "旧配置是否横屏: ${currentOrientation == Configuration.ORIENTATION_LANDSCAPE}"
                 )
                 logInfo()
                 if (newConfig.orientation != currentOrientation) {
                     currentOrientation = newConfig.orientation
                     restLayout("监听配置编号-屏幕方向已改变")
-                }
-                else {
+                } else {
                     restLayout("监听配置变化")
                 }
             }
@@ -98,33 +121,40 @@ class WebViewLayoutManager private constructor(
      * @param traker 跟踪调用者
      */
     private fun restLayout(traker: String) {
-        // 添加判断避免重置布局后又触发布局变化监听里的调用
-        // activity.isInSpecialMode() 特殊模式无法判断 isKeyboardShow
-        // 悬浮键盘无法判断
         val newHight =
             this.getRootViewHeight() - BarUtils.getNavBarHeight() / 2 + this.navigationBarHeight / 2
-        if (view.height != newHight && view.height + this.HeightKeyboard != newHight) {
-            logInfo()
+        if (true || view.height != newHight && view.height + this.imeHeight != newHight) {
+//            logInfo()
             Log.w(
                 TAG,
-                "restLayout@$traker, view.height: ${view.height}, newHight: $newHight, isKeyboardShow: ${this.isKeyboardShow}, HeightKeyboard: ${this.HeightKeyboard} , isInSpecialMode(): ${activity.isInSpecialMode()}"
+                "restLayout@$traker, view.height: ${view.height}, newHight: $newHight, isImeVisible: ${this.isImeVisible}, imeHeight: ${this.imeHeight}, isInSpecialMode(): ${activity.isInSpecialMode()}"
             )
-            if (this.isKeyboardShow) {
-                view.layoutParams.height = newHight - if (activity.isInSpecialMode()) 0 else this.HeightKeyboard
-                webView.layoutParams.height = -1 // 这里不能改，必须MATCH_PARENT
-                view.requestLayout()
-                webView.requestLayout()
+            if (this.isImeVisible) {
+                // 键盘弹起到最后高度需要一个过程，因此收窄布局应当延时执行（不包括小窗和多窗口模式），延时多久没有标准
+                // （如果声明了 android:windowSoftInputMode="adjustResize" 则无效，因为系统已经自动调整了布局）
+                Handler(Looper.getMainLooper()).postDelayed({
+                    if (this.imeHeight == 0 || activity.isInSpecialMode()) {
+                        webView.evaluateJavascript(this.JSonImeShow0Height, null)
+                    } else {
+                        webView.evaluateJavascript(this.JSonImeShow, null)
+                    }
+                    view.layoutParams.height =
+                        newHight - if (activity.isInSpecialMode()) 0 else this.imeHeight
+                    webView.layoutParams.height = -1 // 这里不能改，必须MATCH_PARENT
+                    view.requestLayout()
+                    webView.requestLayout()
+                }, if (activity.isInSpecialMode()) 0 else this.delayResetLayoutWhenImeShow)
             } else {
+                // 填充布局应当立即执行
+                if (this.imeHeight == 0 || activity.isInSpecialMode()) {
+                    webView.evaluateJavascript(this.JSonImeHide0Height, null)
+                } else {
+                    webView.evaluateJavascript(this.JSonImeHide, null)
+                }
                 view.layoutParams.height = newHight
                 webView.layoutParams.height = -1 // 这里不能改，必须MATCH_PARENT
                 view.requestLayout()
                 webView.requestLayout()
-            }
-            if (this.HeightKeyboard == 0 && activity.isLandscape()) {
-                // 横屏可能使用悬浮键盘
-                webView.evaluateJavascript("javascript:hideKeyboardToolbar();showKeyboardToolbar();window.Sillot.android.LockKeyboardToolbar=true;", null)
-            } else {
-                webView.evaluateJavascript("javascript:window.Sillot.android.LockKeyboardToolbar=false;", null)
             }
         }
     }
@@ -259,8 +289,8 @@ class WebViewLayoutManager private constructor(
 
     companion object {
         @JvmStatic
-        fun assistActivity(activity: Activity, webView: WebView) {
-            WebViewLayoutManager(activity, webView)
+        fun assistActivity(activity: Activity, webView: WebView): WebViewLayoutManager {
+            return WebViewLayoutManager(activity, webView)
         }
     }
 }
