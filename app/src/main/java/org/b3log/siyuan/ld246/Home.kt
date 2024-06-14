@@ -126,6 +126,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import sc.windom.sofill.S
 import sc.windom.sofill.U
+import sc.windom.sofill.api.MyRetrofit.createRetrofit
 import sc.windom.sofill.api.ld246.ApiServiceNotification
 import sc.windom.sofill.compose.MyTagHandler
 import sc.windom.sofill.compose.components.CommonTopAppBar
@@ -183,10 +184,7 @@ class HomeActivity : ComponentActivity() {
         }
         viewmodel = NotificationsViewModel()
         // 创建Retrofit实例
-        retrofit = Retrofit.Builder()
-            .baseUrl("https://${S.HOST_ld246}/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
+        retrofit = createRetrofit("https://${S.HOST_ld246}/")
         // 创建API服务实例
         apiService = retrofit?.create(ApiServiceNotification::class.java)
         ActivityScreenShotImageView.hideContentView =

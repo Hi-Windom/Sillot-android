@@ -42,6 +42,7 @@ import org.b3log.siyuan.Utils
 import org.b3log.siyuan.andapi.Toast
 import org.b3log.siyuan.videoPlayer.SimplePlayer
 import sc.windom.sofill.Us.U_DEBUG
+import sc.windom.sofill.Us.U_DOSC
 import sc.windom.sofill.Us.U_DialogX
 import sc.windom.sofill.Us.U_FileUtils
 import sc.windom.sofill.Us.U_FuckOtherApp
@@ -84,6 +85,9 @@ object U {
 
     @JvmStatic
     val PHONE = U_Phone
+
+    @JvmStatic
+    val DOSC = U_DOSC
 
 
     @SuppressLint("ObsoleteSdkInt")

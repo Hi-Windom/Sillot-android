@@ -1,17 +1,49 @@
 package sc.windom.sofill.Us
 
+import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.view.DragEvent
+import android.webkit.WebView
 import android.widget.Toast
 import com.blankj.utilcode.util.ActivityUtils.startActivity
 import com.kongzue.dialogx.dialogs.PopTip
 import sc.windom.sofill.S
 
 object U_FuckOtherApp {
+
+    @JvmStatic
+    fun setOnDragListenerForWebView(webView: WebView, targetActivityClass: Class<out Activity>) {
+        webView.setOnDragListener { view, event ->
+            when (event.action) {
+                DragEvent.ACTION_DROP -> {
+                    val clipData = event.clipData
+                    if (clipData != null && clipData.itemCount > 0) {
+                        val item = clipData.getItemAt(0)
+                        val intent = Intent(view.context, targetActivityClass)
+                        when {
+                            item.uri != null -> {
+                                intent.data = item.uri
+                                intent.action = event.action.toString()
+                            }
+                            item.text != null -> {
+                                val text = item.text.toString()
+                                intent.putExtra("text_data", text)
+                                intent.action = Intent.ACTION_SEND
+                                intent.type = "text/plain"
+                            }
+                        }
+                        view.context.startActivity(intent)
+                    }
+                }
+            }
+            true
+        }
+    }
 
     /**
      * @param packageManager

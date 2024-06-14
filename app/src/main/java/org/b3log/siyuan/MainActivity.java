@@ -39,6 +39,7 @@ package org.b3log.siyuan;
  import android.view.View;
  import android.view.ViewGroup;
 
+ import sc.windom.sofill.Us.U_FuckOtherApp;
  import sc.windom.sofill.WebViewLayoutManager;
  import sc.windom.sofill.Ss.S_Events;
  import sc.windom.sofill.Ss.S_Intent;
@@ -133,9 +134,15 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
      public ActivityResultLauncher<String[]> requestPermissionLauncher;
      public int requestPermissionAll_works = 0;
 
-//    dispatchKeyEvent 是一个更高级的方法，它可以处理所有类型的按键事件，包括按键按下、抬起和长按。
-//    dispatchKeyEvent 方法在事件传递给 onKeyDown、onKeyUp 或其他控件之前被调用。
-        // REF https://ld246.com/article/1711543259805
+
+     /**
+      * dispatchKeyEvent 是一个更高级的方法，它可以处理所有类型的按键事件，包括按键按下、抬起和长按。
+      * dispatchKeyEvent 方法在事件传递给 onKeyDown、onKeyUp 或其他控件之前被调用。
+      * REF https://ld246.com/article/1711543259805
+      * @param event The key event.
+      *
+      * @return
+      */
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         if (event.getAction() == KeyEvent.ACTION_DOWN) {
@@ -211,6 +218,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         BuglyLog.i(TAG, "releaseBootService invoked");
         // 销毁WebView并从池中移除
         if (webView != null) {
+            webView.setOnDragListener(null);
             ViewGroup parent = (ViewGroup) webView.getParent();
             parent.removeView(webView); // 从原来的容器中移除WebView
             Objects.requireNonNull(WebPoolsPro.getInstance()).recycle(webView, "Sillot-Gibbet");
@@ -231,7 +239,9 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         }
     }
 
-    // 在这里执行依赖于bootService的代码
+     /**
+      * 在这里执行依赖于bootService的代码
+      */
     private void performActionWithService() {
         BuglyLog.w(TAG, "performActionWithService invoked");
         if (serviceBound && bootService != null) {
@@ -258,39 +268,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 // https://github.com/Hi-Windom/Sillot-android/issues/84
                 WebViewLayoutManager.assistActivity(this, webView);
 
-                webView.setOnDragListener((v, event) -> {
-                    if (event.getAction() == DragEvent.ACTION_DROP) {
-                        ClipData clipData = event.getClipData();
-                        if (clipData != null && clipData.getItemCount() > 0) {
-                            ClipData.Item item = clipData.getItemAt(0);
-                            if (item.getUri() != null) {
-                                Uri uri = item.getUri();
-                                String mimeType = getContentResolver().getType(uri);
-                                if (mimeType != null && (mimeType.startsWith("image/") || mimeType.startsWith("video/"))) {
-                                    // 保存文件到缓存目录
-                                    String cacheFilePath = saveFileToCache(uri, mimeType);
-                                    if (cacheFilePath != null) {
-                                        Intent intent = new Intent(this, MainPro.class);
-                                        intent.setAction(String.valueOf(event.getAction()));
-                                        intent.setType(mimeType);
-                                        intent.setData(uri);
-//                                        intent.putExtra("uri", uri);
-                                        startActivity(intent);
-                                        // 将缓存文件的URL或路径插入到WebView中
-//                                        if (mimeType.startsWith("image/")) {
-//                                            webView.evaluateJavascript("javascript:insertImage('" + cacheFilePath + "')", null);
-//                                        } else if (mimeType.startsWith("video/")) {
-//                                            webView.evaluateJavascript("javascript:insertVideo('" + cacheFilePath + "')", null);
-//                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    return true;
-                });
-
-
+                // 支持 OriginOS4 超级拖拽 #90
+                U_FuckOtherApp.setOnDragListenerForWebView(webView, MainPro.class);
             }
         } else {
             // 服务尚未绑定或实例为空，处理错误或等待绑定

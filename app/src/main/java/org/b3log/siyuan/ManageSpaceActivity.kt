@@ -53,6 +53,7 @@ import sc.windom.sofill.S
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_FileUtils.getSizeRecursively
 import sc.windom.sofill.compose.components.CommonTopAppBar
+import sc.windom.sofill.compose.components.WaitUI
 import sc.windom.sofill.compose.theme.CascadeMaterialTheme
 import java.io.File
 
@@ -116,19 +117,6 @@ class ManageSpaceActivity : AppCompatActivity() {
             }
         }
 
-    }
-
-
-    @Composable
-    private fun WaitUI() {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(modifier = Modifier.fillMaxSize(.8f))
-        }
     }
 
 

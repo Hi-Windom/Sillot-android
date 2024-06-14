@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Context
+import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
 import android.os.Build
@@ -29,6 +30,7 @@ import androidx.compose.material.icons.filled.Tab
 import androidx.compose.material.icons.filled.TableChart
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import org.b3log.siyuan.sillot.util.FileUtil
 import java.io.File
@@ -39,6 +41,17 @@ import java.text.DecimalFormat
 
 object U_FileUtils {
 
+    // 将URI数据保存到缓存目录，并返回缓存文件
+    fun saveUriToCache(context: Context, uri: Uri, cacheDir: File): File? {
+        context.contentResolver.openInputStream(uri)?.use { inputStream ->
+            val tempFile = File.createTempFile("cached-", ".tmp", cacheDir)
+            tempFile.outputStream().use { outputStream ->
+                inputStream.copyTo(outputStream)
+            }
+            return tempFile
+        }
+        return null
+    }
 
     /**
      * 获取应用文件目录，它会自动处理多用户的情况。注意，应用文件目录包括了其外部存储的文件目录
@@ -59,7 +72,7 @@ object U_FileUtils {
         return filesDir.absolutePath
     }
 
-    @SuppressLint("Range")
+    @SuppressLint("Range", "ObsoleteSdkInt")
     fun getFileName(context: Context, uri: Uri): String? {
         var result: String? = null
         context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
@@ -67,7 +80,58 @@ object U_FileUtils {
                 result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME))
             }
         }
-        return result
+        // 如果是临时权限，尝试获取读取权限
+        if (result == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+            context.contentResolver.takePersistableUriPermission(uri, takeFlags)
+            result = getFileNameFromUri(context, uri)
+        }
+        return result ?: uri.lastPathSegment // Fallback to the last segment of the URI if the query didn't return a name
+    }
+    private fun getFileNameFromUri(context: Context, uri: Uri): String? {
+        val resolver = context.contentResolver
+        val openFileDescriptor = resolver.openFileDescriptor(uri, "r", null)
+        val fileDescriptor = openFileDescriptor?.fileDescriptor
+        if (fileDescriptor != null) {
+            val inputStream = FileInputStream(fileDescriptor).buffered()
+            val path = File(context.cacheDir, "temp_file").apply {
+                outputStream().use { outputStream ->
+                    inputStream.copyTo(outputStream)
+                }
+            }.absolutePath
+            return getFileName(context, path.toUri())
+        }
+        openFileDescriptor?.close()
+        return null
+    }
+    fun getFileFromUri(context: Context, uri: Uri): File? {
+        // 使用ContentResolver打开Uri对应的输入流
+        val inputStream = context.contentResolver.openInputStream(uri) ?: return null
+        val tempFile = createTempFile(context, uri)
+
+        // 将输入流写入临时文件
+        tempFile.outputStream().use { outputStream ->
+            inputStream.copyTo(outputStream)
+        }
+
+        // 关闭输入流
+        inputStream.close()
+
+        return tempFile
+    }
+
+    private fun createTempFile(context: Context, uri: Uri): File {
+        // 创建临时文件的目录
+        val tempDirectory = File(context.cacheDir, "temp_files")
+        tempDirectory.mkdirs()
+
+        // 生成临时文件名
+        val fileName = getFileName(context, uri) ?: "${System.currentTimeMillis()}.tmp"
+
+        // 创建临时文件
+        return File(tempDirectory, fileName).apply {
+            createNewFile()
+        }
     }
 
     fun getDirectoriesInPath(path: String): List<String> {
@@ -123,13 +187,17 @@ object U_FileUtils {
      *
      * @param contentResolver ContentResolver
      * @param uri 目标文件夹的 uri
+     * @see getFileSize
      */
     fun getFileSizeFromUri(contentResolver: ContentResolver, uri: Uri): Long? {
-        return contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+        var fileSize: Long? = null
+        contentResolver.query(uri, null, null, null, null)?.use { cursor ->
             val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
-            cursor.moveToFirst()
-            cursor.getLong(sizeIndex)
+            if (sizeIndex >= 0 && cursor.moveToFirst()) {
+                fileSize = cursor.getLong(sizeIndex)
+            }
         }
+        return fileSize
     }
 
     /**
@@ -433,6 +501,7 @@ object U_FileUtils {
      *
      * @param context 若要读取content://协议的文件大小，需要使用ContentResolver和Cursor。这是因为content:// URI通常指向设备上的内容提供器，这些内容提供器可能存储在数据库中，也可能存储在文件系统中，或者有其他的存储机制。
      * @param uri 目标文件的 uri
+     * @see getFileSizeFromUri
      */
     fun getFileSize(context: Context, uri: Uri): String {
         val contentResolver: ContentResolver = context.contentResolver

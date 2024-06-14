@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
@@ -66,6 +67,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.net.toUri
 import com.kongzue.dialogx.dialogs.BottomMenu
 import com.kongzue.dialogx.dialogs.InputDialog
 import com.kongzue.dialogx.interfaces.OnBottomMenuButtonClickListener
@@ -81,22 +83,14 @@ import org.b3log.siyuan.R
 import org.b3log.siyuan.andapi.Toast
 import org.b3log.siyuan.ld246.HomeActivity
 import org.b3log.siyuan.services.BootService
-import org.commonmark.node.Node
-import org.commonmark.parser.Parser
-import org.commonmark.renderer.html.HtmlRenderer
-import org.jsoup.Jsoup
-import org.jsoup.safety.Safelist
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_FileUtils.workspaceParentDir
 import sc.windom.sofill.android.webview.WebPoolsPro
 import sc.windom.sofill.android.webview.WebPoolsPro.Companion.instance
+import sc.windom.sofill.api.MyRetrofit.createRetrofit
 import sc.windom.sofill.api.siyuan.SiyuanNoteAPI
+import sc.windom.sofill.api.siyuan.siyuan
 import sc.windom.sofill.compose.ApkButtons
 import sc.windom.sofill.compose.AudioButtons
 import sc.windom.sofill.compose.LockScreenOrientation
@@ -105,13 +99,11 @@ import sc.windom.sofill.compose.SelectableHtmlText
 import sc.windom.sofill.compose.SelectableText
 import sc.windom.sofill.compose.VideoButtons
 import sc.windom.sofill.compose.components.CommonTopAppBar
+import sc.windom.sofill.compose.components.WaitUI
 import sc.windom.sofill.compose.partialCom.DdMenuI
 import sc.windom.sofill.compose.partialCom.NetworkAware
 import sc.windom.sofill.compose.theme.CascadeMaterialTheme
-import sc.windom.sofill.dataClass.INbList
-import sc.windom.sofill.dataClass.INotebook
 import sc.windom.sofill.dataClass.IPayload
-import sc.windom.sofill.dataClass.IResponse
 import java.io.IOException
 import java.util.Date
 import java.util.Objects
@@ -126,74 +118,26 @@ class MainPro : ComponentActivity() {
     val TAG = "producer/MainPro.kt"
     private var mmkv: MMKV = MMKV.defaultMMKV()
     private lateinit var thisActivity: Activity
-    private var in2_data: Uri? = null
-    private var in2_action: String? = null
-    private var in2_type: String? = null
+    private var in2_intent: Intent? = null
     private var webView: WebView? = null
+    private var created = mutableStateOf(false)
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        BuglyLog.i(TAG, "onNewIntent() invoked. @ $intent")
+        init(intent)
+//        setIntent(intent) // 更新当前 Intent
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        thisActivity = this
         BuglyLog.i(TAG, "onCreate() invoked. @ $intent")
-        if (intent == null) {
-            return
-        }
-        in2_action = intent.action
-        in2_type = intent.type
-        in2_data = intent.data
-        val scheme = in2_data?.scheme
-        val host = in2_data?.host
-        BuglyLog.d(TAG, "scheme: $scheme, host: $host, action: $in2_action, type: $in2_type")
-
-        if (S.isUriMatched(in2_data, S.case_ld246_1) || S.isUriMatched(
-                in2_data,
-                S.case_ld246_2
-            ) || S.isUriMatched(in2_data, S.case_github_1)
-        ) {
-            // 转发处理
-            val homeIntent = Intent(this, HomeActivity::class.java)
-            homeIntent.data = in2_data // 将URI数据传递给HomeActivity
-            startActivity(homeIntent)
-            finish() // 不需要返回MainPro，在这里结束它
-        } else if (in2_data != null && in2_data?.scheme.isNullOrEmpty() || listOf(
-                "http",
-                "https",
-                "siyuan"
-            ).contains(
-                in2_data?.scheme
-            )
-        ) {
-            // 转发处理
-            // 这里需要转发的思路是：此处判断作为兜底十有八九用户已经将汐洛设置为默认浏览器，转发给系统会导致死循环，系统认为没有应用能够处理，汐洛会闪退
-            val homeIntent = Intent(this, HomeActivity::class.java)
-            homeIntent.data = in2_data // 将URI数据传递给HomeActivity
-            startActivity(homeIntent)
-            finish() // 不需要返回MainPro，在这里结束它
-        } else {
-            // ...
-        }
-
-        // 设置沉浸式通知栏
-        window.setDecorFitsSystemWindows(false)
-        window.decorView.setOnApplyWindowInsetsListener { _, insets ->
-            insets
-        }
-
         setContent {
             CascadeMaterialTheme {
-                MyUI(TAG)
+                WaitUI()
             }
         }
-
-        if (bootService == null) {
-            webView = Objects.requireNonNull<WebPoolsPro?>(instance).createWebView(
-                this, "Sillot-MainPro"
-            )
-            // 绑定服务
-            val intent = Intent(applicationContext, BootService::class.java)
-            intent.putExtra(S.INTENT.EXTRA_WEB_VIEW_KEY, "Sillot-MainPro")
-            bindService(intent, serviceConnection, BIND_AUTO_CREATE)
-        } else {
-            performActionWithService()
+        if (!created.value) {
+            init(intent)
         }
     }
 
@@ -226,82 +170,75 @@ class MainPro : ComponentActivity() {
         }
     }
 
-    fun performActionWithService() {
-        BuglyLog.w(TAG, "performActionWithService() invoked")
-    }
+    private fun init(intent: Intent?) {
+        thisActivity = this
+        in2_intent = intent
+        if (intent == null) {
+            return
+        }
+        val scheme = in2_intent?.data?.scheme
+        val host = in2_intent?.data?.host
+        BuglyLog.d(
+            TAG,
+            "scheme: $scheme, host: $host, action: ${in2_intent?.action}, type: ${in2_intent?.type}"
+        )
 
-    private fun isMarkdown(text: String): Boolean {
-        // 检查文本中是否包含Markdown特有的语法特征
-        val containsMarkdownSyntax =
-            text.contains(Regex("^(#{1,6})\\s|\\*\\s|_\\s|[\\[]\\([^\\)]+\\)[\\]]"))
-        // 检查文本的开始和末尾是否是HTML标签
-        val startsWithHtmlTag = Regex("^<[a-zA-Z]").find(text) != null
-        val endsWithHtmlTag = Regex("[a-zA-Z]>$").find(text) != null
-
-        // 如果文本包含Markdown语法，并且开始和末尾不是HTML标签，则判定为Markdown
-        return containsMarkdownSyntax && !startsWithHtmlTag && !endsWithHtmlTag
-    }
-
-    private fun checkContentFormat(text: String): String {
-        // 首先检查文本是否包含Markdown特有的语法
-        if (isMarkdown(text)) {
-            return "Markdown"
+        if (S.isUriMatched(in2_intent?.data, S.case_ld246_1) || S.isUriMatched(
+                in2_intent?.data,
+                S.case_ld246_2
+            ) || S.isUriMatched(in2_intent?.data, S.case_github_1)
+        ) {
+            // 转发处理
+            val homeIntent = Intent(this, HomeActivity::class.java)
+            homeIntent.data = in2_intent?.data // 将URI数据传递给HomeActivity
+            startActivity(homeIntent)
+            finish() // 不需要返回MainPro，在这里结束它
+        } else if (in2_intent?.data != null && in2_intent?.data?.scheme.isNullOrEmpty() || listOf(
+                "http",
+                "https",
+                "siyuan"
+            ).contains(
+                in2_intent?.data?.scheme
+            )
+        ) {
+            // 转发处理
+            // 这里需要转发的思路是：此处判断作为兜底十有八九用户已经将汐洛设置为默认浏览器，转发给系统会导致死循环，系统认为没有应用能够处理，汐洛会闪退
+            val homeIntent = Intent(this, HomeActivity::class.java)
+            homeIntent.data = in2_intent?.data // 将URI数据传递给HomeActivity
+            startActivity(homeIntent)
+            finish() // 不需要返回MainPro，在这里结束它
         } else {
-            // 创建一个只允许特定HTML标签的Safelist
-            val safelist = Safelist.relaxed()
-            // 使用Jsoup尝试解析文本，并保留允许的HTML标签
-            val cleanText = Jsoup.clean(text, safelist)
-            if (cleanText != text) {
-                // 文本包含HTML标签，因此是HTML内容
-                return "HTML"
+            // ...
+        }
+
+        // 设置沉浸式通知栏
+        window.setDecorFitsSystemWindows(false)
+        window.decorView.setOnApplyWindowInsetsListener { _, insets ->
+            insets
+        }
+
+        created.value = true
+        setContent {
+            CascadeMaterialTheme {
+                MyUI(TAG)
             }
         }
-        // 如果没有HTML标签，也不是Markdown，则返回其他
-        return "Other"
-    }
 
-    private fun processHtml(html: String): String {
-        // 对HTML进行校验和清理
-        val safeHtml = sanitizeHtml(html)
-        // 处理安全的HTML文本
-        BuglyLog.e(TAG, "HTML: $safeHtml")
-        return safeHtml
-    }
-
-    private fun processMarkdown(markdown: String): String {
-        val validMarkdown = validateMarkdown2HTML(markdown)
-        BuglyLog.e(TAG, "Markdown: $validMarkdown")
-        return validMarkdown
-    }
-
-    private fun processPlainText(text: String): String {
-        // 处理普通文本
-        BuglyLog.e(TAG, text)
-        return text
-    }
-
-    private fun sanitizeHtml(html: String): String {
-        // 使用Jsoup的Safelist清理HTML，只允许安全的标签和属性
-        val whitelist = Safelist.relaxed()
-        return Jsoup.clean(html, whitelist)
-    }
-
-    private fun validateMarkdown2HTML(markdown: String): String {
-        // 使用CommonMark解析器解析Markdown
-        val parser = Parser.builder().build()
-        val renderer = HtmlRenderer.builder().build()
-
-        try {
-            // 解析Markdown文本
-            val document: Node = parser.parse(markdown)
-            // 渲染Markdown为HTML
-            val html: String = renderer.render(document)
-            // 如果没有异常，返回渲染后的HTML
-            return html
-        } catch (e: Exception) {
-            // 如果解析过程中发生异常，返回错误信息
-            return "Error: ${e.message}"
+        if (bootService == null) {
+            webView = Objects.requireNonNull<WebPoolsPro?>(instance).createWebView(
+                this, "Sillot-MainPro"
+            )
+            // 绑定服务
+            val intent = Intent(applicationContext, BootService::class.java)
+            intent.putExtra(S.INTENT.EXTRA_WEB_VIEW_KEY, "Sillot-MainPro")
+            bindService(intent, serviceConnection, BIND_AUTO_CREATE)
+        } else {
+            performActionWithService()
         }
+    }
+
+    fun performActionWithService() {
+        BuglyLog.w(TAG, "performActionWithService() invoked")
     }
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -310,39 +247,99 @@ class MainPro : ComponentActivity() {
     fun MyUI(TAG: String) {
         val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
         val coroutineScope = rememberCoroutineScope()
-        var head_title = "汐洛中转站"
-        val token = rememberSaveable {
+        val targetIntent = rememberSaveable { mutableStateOf(in2_intent) }
+        var head_title by rememberSaveable { mutableStateOf("汐洛中转站") }
+        val token: MutableState<String?> = rememberSaveable {
             mutableStateOf(
-                U.getDecryptedToken(
-                    mmkv,
-                    S.KEY_TOKEN_Sillot_Gibbet,
-                    S.KEY_AES_TOKEN_Sillot_Gibbet
-                )
+                null
             )
         }
-        val fileName = in2_data?.let { U.FileUtils.getFileName(thisActivity, it) }
-        val fileSize = in2_data?.let { U.FileUtils.getFileSize(thisActivity, it) }
-        val mimeType = intent?.data?.let { U.FileUtils.getMimeType(thisActivity, it) } ?: ""
-        val fileType =
-            fileName?.let { U.FileUtils.getFileMIMEType(mimeType, it) }
-                ?: run { U.FileUtils.getFileMIMEType(mimeType) }
+        val fileName: MutableState<String> = rememberSaveable {
+            mutableStateOf("")
+        }
+        val fileSize: MutableState<String> = rememberSaveable {
+            mutableStateOf("")
+        }
+        val mimeType: MutableState<String> = rememberSaveable {
+            mutableStateOf("")
+        }
+        val fileType: MutableState<String> = rememberSaveable {
+            mutableStateOf("")
+        }
         val isLandscape =
             LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
 
-        var isMenuVisible = rememberSaveable { mutableStateOf(false) }
+        val isMenuVisible = rememberSaveable { mutableStateOf(false) }
 
-        head_title = if (in2_action == Intent.ACTION_SEND) {
-            "汐洛受赏中转站"
-        } else if (!in2_data?.scheme.isNullOrEmpty() && in2_type.isNullOrEmpty()) {
-            "汐洛链接中转站"
-        } else if (in2_data != null) {
-            "汐洛文件中转站"
-        } else {
-            "汐洛中转站"
+        LaunchedEffect(in2_intent) {
+            targetIntent.value = in2_intent
+        }
+
+        LaunchedEffect(key1 = in2_intent) {
+            head_title = if (in2_intent?.action == Intent.ACTION_SEND) {
+                "汐洛受赏中转站"
+            } else if (in2_intent?.data != null && fileSize.value.isNotEmpty() && mimeType.value.isNotEmpty()) {
+                "汐洛文件中转站"
+            } else if (!in2_intent?.data?.scheme.isNullOrEmpty() && in2_intent?.type.isNullOrEmpty()) {
+                "汐洛链接中转站"
+            } else {
+                "汐洛中转站"
+            }
+            BuglyLog.i(TAG, "$head_title @ $in2_intent")
+            token.value = U.getDecryptedToken(
+                mmkv,
+                S.KEY_TOKEN_Sillot_Gibbet,
+                S.KEY_AES_TOKEN_Sillot_Gibbet
+            )
+            when (in2_intent?.action) {
+                Intent.ACTION_SEND -> {
+                    // 直接拖拽到 MainPro 就是 ACTION_SEND
+                    in2_intent?.getStringExtra(Intent.EXTRA_TEXT)?.let { sharedText ->
+                        // 处理文本内容，这个下面已经有处理了
+                    }
+
+                    // 处理分享的文件
+                    in2_intent?.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)?.let { sharedFileUri ->
+                        // 处理文件，获取文件名、大小和MIME类型
+                        fileName.value =
+                            U.FileUtils.getFileName(thisActivity, sharedFileUri).toString()
+                        fileSize.value = U.FileUtils.getFileSize(thisActivity, sharedFileUri)
+                        mimeType.value =
+                            U.FileUtils.getMimeType(thisActivity, sharedFileUri).toString()
+                        fileType.value = U.FileUtils.getFileMIMEType(mimeType.value, fileName.value)
+                            ?: U.FileUtils.getFileMIMEType(mimeType.value)
+                    }
+                }
+
+                else -> {
+                    // 处理其他类型的 intent
+                    fileName.value = in2_intent?.data?.let {
+                        U.FileUtils.getFileName(
+                            thisActivity,
+                            it
+                        )
+                    }.toString()
+                    fileSize.value = in2_intent?.data?.let {
+                        U.FileUtils.getFileSize(
+                            thisActivity,
+                            it
+                        )
+                    }.toString()
+                    mimeType.value = in2_intent?.data?.let {
+                        U.FileUtils.getMimeType(
+                            thisActivity,
+                            it
+                        )
+                    } ?: ""
+                    fileType.value = fileName.value.let { it1 ->
+                        U.FileUtils.getFileMIMEType(mimeType.value, it1)
+                    } ?: run { U.FileUtils.getFileMIMEType(mimeType.value) }
+                }
+            }
         }
         Scaffold(
             topBar = {
-                CommonTopAppBar(head_title, TAG, in2_data, isMenuVisible,
+                CommonTopAppBar(head_title, TAG, in2_intent?.data, isMenuVisible,
                     additionalMenuItem = {
                         AddDropdownMenu(
                             token,
@@ -361,53 +358,43 @@ class MainPro : ComponentActivity() {
                     .padding(it),
             ) {
                 NetworkAware()
-                if (in2_action == Intent.ACTION_SEND) {
-
-                    // 根据mimeType处理不同的数据
-                    when {
-                        in2_type?.startsWith("text/") == true -> {
-                            // 获取extra中的文本数据
-                            val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT) ?: return@Box
-                            val html: String
-                            // 判断文本类型并进行合法性校验
-                            when (checkContentFormat(sharedText)) {
-                                "HTML" -> {
-                                    // 处理HTML文本
-                                    html = processHtml(sharedText)
-                                }
-
-                                "Markdown" -> {
-                                    // 处理Markdown文本
-                                    html = processMarkdown(sharedText)
-                                }
-
-                                else -> {
-                                    // 处理普通文本
-                                    html = processPlainText(sharedText)
-                                }
-                            }
-                            LazyColumn(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                item {
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    SelectableHtmlText(
-                                        html,
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .height(200.dp)
-                                            .padding(10.dp)
-                                    )
-                                    SendBtnPart(sharedText, token)
-                                }
-                            }
+                if (in2_intent?.action == Intent.ACTION_SEND && in2_intent?.type?.startsWith("text/") == true) {
+                    val sharedText = in2_intent?.getStringExtra(Intent.EXTRA_TEXT) ?: return@Box
+                    val html: String
+                    // 判断文本类型并进行合法性校验
+                    when (U.DOSC.checkContentFormat(sharedText)) {
+                        "HTML" -> {
+                            // 处理HTML文本
+                            html = U.DOSC.processHtml(sharedText)
                         }
 
-                        in2_type?.startsWith("image/") == true -> {
+                        "Markdown" -> {
+                            // 处理Markdown文本
+                            html = U.DOSC.processMarkdown(sharedText)
+                        }
+
+                        else -> {
+                            // 处理普通文本
+                            html = U.DOSC.processPlainText(sharedText)
+                        }
+                    }
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        item {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            SelectableHtmlText(
+                                html,
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .padding(10.dp)
+                            )
+                            SendBtnPart(sharedText, token)
                         }
                     }
                 } else if (isLandscape) {
@@ -415,36 +402,36 @@ class MainPro : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth(.4f)
-                                .fillMaxHeight()
-                                .padding(vertical = 16.dp),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            InfoPart(
-                                uri = in2_data,
-                                fileType = fileType,
-                                fileName = fileName,
-                                fileSize = fileSize
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth(.6f)
-                                .fillMaxHeight()
+                        if (fileType.value.isNotBlank() && fileName.value.isNotBlank() && fileSize.value.isNotBlank()) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth(.4f)
+                                    .fillMaxHeight()
+                                    .padding(vertical = 16.dp),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                InfoPart(
+                                    fileType = fileType,
+                                    fileName = fileName,
+                                    fileSize = fileSize
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth(.6f)
+                                    .fillMaxHeight()
 //                            .height(IntrinsicSize.Min)
-                                .padding(vertical = 16.dp),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            BtnPart(
-                                uri = in2_data,
-                                mimeType = mimeType,
-                                fileName = fileName
-                            )
+                                    .padding(vertical = 16.dp),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                BtnPart(
+                                    mimeType = mimeType,
+                                    fileName = fileName
+                                )
+                            }
                         }
                     }
                 } else {
@@ -458,13 +445,11 @@ class MainPro : ComponentActivity() {
                         item {
                             Spacer(modifier = Modifier.height(16.dp))
                             InfoPart(
-                                uri = in2_data,
                                 fileType = fileType,
                                 fileName = fileName,
                                 fileSize = fileSize
                             )
                             BtnPart(
-                                uri = in2_data,
                                 mimeType = mimeType,
                                 fileName = fileName
                             )
@@ -529,78 +514,6 @@ class MainPro : ComponentActivity() {
         )
     }
 
-    // 创建 Retrofit 实例
-    fun createRetrofit(baseUrl: String): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl(baseUrl)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-    }
-
-    // 获取笔记本列表
-    fun getNotebooks(
-        api: SiyuanNoteAPI,
-        token: String,
-        callback: (notebooks: List<INotebook>?, info: String) -> Unit
-    ) {
-        val body = mapOf("flashcard" to false)
-        val notebooksCall = api.getNotebooks(token, body)
-        notebooksCall.enqueue(object : Callback<IResponse<INbList>> {
-            override fun onResponse(
-                call: Call<IResponse<INbList>>,
-                response: Response<IResponse<INbList>>
-            ) {
-                if (response.isSuccessful && response.body()?.code == 0) {
-                    callback(response.body()?.data?.notebooks, "${response.body()}")
-                } else {
-                    callback(
-                        null,
-                        "Failed to get notebooks: ${response.code()} ${response.message()} \n ${response.body()}"
-                    )
-                }
-            }
-
-            override fun onFailure(call: Call<IResponse<INbList>>, t: Throwable) {
-                callback(null, "getNotebooks Error: ${t.message}")
-            }
-        })
-    }
-
-    // 创建新的 Markdown 笔记
-    fun createNote(
-        api: SiyuanNoteAPI,
-        payload: IPayload,
-        token: MutableState<String?>,
-        callback: (success: Boolean, info: String) -> Unit
-    ) {
-        val createNoteCall = api.createNote(payload, token.value)
-        createNoteCall.enqueue(object : Callback<IResponse<String>> {
-            override fun onResponse(
-                call: Call<IResponse<String>>,
-                response: Response<IResponse<String>>
-            ) {
-                if (response.isSuccessful && response.body()?.code == 0) {
-                    response.body()?.data?.let {
-                        U.startMainActivityWithBlock(
-                            "siyuan://blocks/$it",
-                            applicationContext
-                        )
-                    }
-                    callback(true, "Note created successfully. ${response.body()}")
-                } else {
-                    callback(
-                        false,
-                        "Failed to create note: ${response.code()} ${response.message()} \n ${response.body()}"
-                    )
-                }
-            }
-
-            override fun onFailure(call: Call<IResponse<String>>, t: Throwable) {
-                callback(false, "createNote Error: ${t.message}")
-            }
-        })
-    }
-
     // 在协程中调用sendMD2siyuan
     fun runSendMD2siyuan(markdownContent: String, token: MutableState<String?>) =
         runBlocking<Unit> { // 启动主协程
@@ -615,7 +528,7 @@ class MainPro : ComponentActivity() {
         val helpInfo =
             "请注意：（1）TOKEN是否正确；（2）当前工作空间是否存在有效笔记本；（3）笔记本是否被关闭了"
         token.value?.let { _token ->
-            getNotebooks(api, _token) { notebooks, info ->
+            siyuan.Works.getNotebooks(api, _token) { notebooks, info ->
                 if (notebooks.isNullOrEmpty()) {
                     // 处理笔记本列表为空的情况
                     thisActivity.runOnUiThread {
@@ -654,7 +567,7 @@ class MainPro : ComponentActivity() {
                                     }"
                                 )
 
-                                createNote(api, payload, token) { success, info ->
+                                siyuan.Works.createNote(api, payload, token) { success, info ->
                                     if (success) {
                                         // 处理创建笔记成功的情况
                                         BuglyLog.i(TAG, "Note creation succeeded. $info")
@@ -730,12 +643,18 @@ class MainPro : ComponentActivity() {
     }
 
     @Composable
-    fun InfoPart(uri: Uri?, fileType: String?, fileName: String?, fileSize: String?) {
+    fun InfoPart(
+        fileType: MutableState<String>,
+        fileName: MutableState<String>,
+        fileSize: MutableState<String>
+    ) {
         val TAG = "MainPro-InfoPart"
         val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
         val Thumbnail_Height = S.C.Thumbnail_Height.current
         val Thumbnail_Height_IMG = S.C.Thumbnail_Height_IMG.current
-
+        var bitmap: Bitmap? by rememberSaveable {
+            mutableStateOf(null)
+        }
         val isLandscape =
             LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
 
@@ -748,43 +667,51 @@ class MainPro : ComponentActivity() {
                     .fillMaxSize()
                     .wrapContentSize(Alignment.Center)
             ) {
-                if (fileType != null) {
-                    if (fileType.endsWith("图像")) {
-                        val bitmap = uri?.let { it1 ->
-                            thisActivity.contentResolver?.loadThumbnail(
-                                it1,
+                if (fileType.value.endsWith("图像")) {
+                    try {
+                        // 检查是否是 ACTION_SEND 并获取额外的文件 Uri
+                        val sharedFileUri = if (in2_intent?.action == Intent.ACTION_SEND) {
+                            in2_intent?.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+                        } else {
+                            in2_intent?.data
+                        }
+
+                        // 如果有文件 Uri，尝试加载缩略图
+                        bitmap = sharedFileUri?.let { uri ->
+                            thisActivity.contentResolver.loadThumbnail(
+                                uri,
                                 Size(
                                     if (isLandscape) Thumbnail_Height else Thumbnail_Height_IMG,
                                     if (isLandscape) Thumbnail_Height else Thumbnail_Height_IMG
-                                ), null
+                                ),
+                                null
                             )
                         }
-                        bitmap?.let {
-                            Image(
-                                bitmap = it.asImageBitmap(),
-                                contentDescription = "Thumbnail",
-                                modifier = Modifier
-                                    .size(Thumbnail_Height_IMG.dp)
-                                    .fillMaxSize()
-                            )
-                        }
-                    } else {
-                        val icon = U.FileUtils.getIconForFileType(fileType)
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = "File Type Icon",
-                            modifier = Modifier
-                                .size(Thumbnail_Height.dp)
-                        )
-                        //                    Image( // 对应的是 R.drawable.id 方案
-                        //                        painter = painterResource(id = icon),
-                        //                        contentDescription = null,
-                        //                        modifier = Modifier.size(100.dp)
-                        //                    )
+                    } catch (e: Exception) {
+                        // 捕获并记录异常
+                        BuglyLog.e(TAG, "Error loading thumbnail: ${e.message}")
                     }
+                    bitmap?.let {
+                        Image(
+                            bitmap = it.asImageBitmap(),
+                            contentDescription = "Thumbnail",
+                            modifier = Modifier
+                                .size(Thumbnail_Height_IMG.dp)
+                                .fillMaxSize()
+                        )
+                    }
+
+                } else {
+                    val icon = U.FileUtils.getIconForFileType(fileType.value)
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = "File Type Icon",
+                        modifier = Modifier
+                            .size(Thumbnail_Height.dp)
+                    )
                 }
 
-                fileName?.let { it1 ->
+                fileName.value.let { it1 ->
                     SelectableText(
                         text = it1, // 使用获取到的文件名
                         style = TextStyle(
@@ -793,7 +720,7 @@ class MainPro : ComponentActivity() {
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                     Text(
-                        text = "$fileSize ($fileType)",
+                        text = "${fileSize.value} (${fileType.value})",
                         fontSize = if (isLandscape) 12.sp else 14.sp,
                         color = Color.Gray,
                         modifier = if (isLandscape) Modifier.padding(top = 6.dp) else Modifier.padding(
@@ -808,7 +735,7 @@ class MainPro : ComponentActivity() {
 
     @SuppressLint("Range")
     @Composable
-    fun BtnPart(uri: Uri?, mimeType: String, fileName: String?) {
+    fun BtnPart(mimeType: MutableState<String>, fileName: MutableState<String>) {
         val TAG = "MainPro-BtnPart"
         val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
         val coroutineScope = rememberCoroutineScope()
@@ -832,17 +759,15 @@ class MainPro : ComponentActivity() {
 
 
         LaunchedEffect(key1 = mimeType) {
-            showSaveButton = uri != null
-            if (fileName != null) {
-                showAudioButton = mimeType.startsWith("audio/")
-                showVideoButton = mimeType.startsWith("video/")
-                showApkButton =
-                    mimeType == "application/vnd.android.package-archive" || (mimeType == "application/octet-stream" && fileName.endsWith(
-                        ".apk.1"
-                    ))
-            }
-            if (uri != null) {
-                when (uri.scheme) {
+            showSaveButton = in2_intent?.data != null
+            showAudioButton = mimeType.value.startsWith("audio/")
+            showVideoButton = mimeType.value.startsWith("video/")
+            showApkButton =
+                mimeType.value == "application/vnd.android.package-archive" || (mimeType.value == "application/octet-stream" && fileName.value.endsWith(
+                    ".apk.1"
+                ))
+            if (in2_intent?.data != null) {
+                when (in2_intent?.data?.scheme) {
                     "magnet" -> showMagnetButton = true
                 }
             }
@@ -852,7 +777,6 @@ class MainPro : ComponentActivity() {
             // 启动一个协程来执行任务
             coroutineScope.launch {
                 withContext(Dispatchers.IO) {
-
                     try {
                         if (!U.isStorageSpaceAvailable(
                                 thisActivity.contentResolver,
@@ -865,18 +789,18 @@ class MainPro : ComponentActivity() {
                         }
                         val sourceFilePath = U.FileUtils.getPathFromUri(thisActivity, uri_from_file)
                         // 复制文件到所选文件夹
-                        fileName?.let {
+                        fileName.value.let {
                             sourceFilePath?.let { it1 ->
                                 U.FileUtils.copyFileToFolderByDocumentTree(
                                     thisActivity, uri_to_dir, it,
-                                    it1, mimeType
+                                    it1, mimeType.value
                                 )
                             }
                         }
                         withContext(Dispatchers.Main) {
                             Toast.Show(thisActivity, "已复制到指定文件夹")
                         }
-                    } catch (e: IOException) {
+                    } catch (e: Exception) {
                         BuglyLog.e(TAG, e.toString())
                         withContext(Dispatchers.Main) {
                             U.DialogX.PopNoteShow(thisActivity, "任务失败", e.toString())
@@ -900,40 +824,46 @@ class MainPro : ComponentActivity() {
                             )
                         ) {
                             // 存储空间不足，处理逻辑
-                            U.DialogX.PopNoteShow(
-                                thisActivity,
-                                R.drawable.icon,
-                                "存储空间不足，请先清理"
-                            )
+                            withContext(Dispatchers.Main) {
+                                U.DialogX.PopNoteShow(
+                                    thisActivity,
+                                    R.drawable.icon,
+                                    "存储空间不足，请先清理"
+                                )
+                            }
                             return@withContext
                         }
                         val sourceFilePath = U.FileUtils.getPathFromUri(thisActivity, uri_from_file)
                         // 复制文件到所选文件夹
-                        fileName?.let {
+                        fileName.value.let {
                             sourceFilePath?.let { it1 ->
                                 try {
                                     U.FileUtils.copyFileToMyAppFolder(
                                         workspaceAssetsDir, it, it1
                                     )
-                                    U.DialogX.PopNoteShow(
-                                        thisActivity,
-                                        R.drawable.icon,
-                                        "已存入 ${workspaceAssetsDir}"
-                                    ).autoDismiss(5000)
+                                    withContext(Dispatchers.Main) {
+                                        U.DialogX.PopNoteShow(
+                                            thisActivity,
+                                            R.drawable.icon,
+                                            "已存入 ${workspaceAssetsDir}"
+                                        ).autoDismiss(5000)
+                                    }
                                 } catch (e: IOException) {
                                     BuglyLog.e(TAG, e.toString())
-                                    U.DialogX.PopNoteShow(
-                                        thisActivity,
-                                        R.drawable.icon,
-                                        "任务失败",
-                                        e.toString()
-                                    )
-                                        .noAutoDismiss()
+                                    withContext(Dispatchers.Main) {
+                                        U.DialogX.PopNoteShow(
+                                            thisActivity,
+                                            R.drawable.icon,
+                                            "任务失败",
+                                            e.toString()
+                                        )
+                                            .noAutoDismiss()
+                                    }
                                 }
 
                             }
                         }
-                    } catch (e: IOException) {
+                    } catch (e: Exception) {
                         BuglyLog.e(TAG, e.toString())
                         withContext(Dispatchers.Main) {
                             U.DialogX.PopNoteShow(
@@ -952,22 +882,23 @@ class MainPro : ComponentActivity() {
             }
         }
 
-        var manageAllFilesPermissionLauncher =
-            rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (U.PS.canManageAllFiles(thisActivity)) {
-                    if (isButton3OnClickRunning) {
-                        onCopyFileToFolderByDocumentTree()
-                    } else if (isButton4OnClickRunning) {
-                        onCopyFileToMyAppFolder()
-                    }
-
-                }
-            }
+// 尽量避免申请管理所有文件，通过 SAF 获取持久性权限
+//        var manageAllFilesPermissionLauncher =
+//            rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+//                if (U.PS.canManageAllFiles(thisActivity)) {
+//                    if (isButton3OnClickRunning) {
+//                        onCopyFileToFolderByDocumentTree()
+//                    } else if (isButton4OnClickRunning) {
+//                        onCopyFileToMyAppFolder()
+//                    }
+//
+//                }
+//            }
         val bt3TaskLauncher =
             rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == Activity.RESULT_OK) {
                     result.data?.data?.let { _uri ->
-                        if (uri == null) return@let
+                        if (in2_intent?.data == null) return@let
                         isButton3OnClickRunning = true  // 没有设置 LaunchedEffect 但是需要显示遮罩
                         // 通过 SAF 获取持久性权限
                         thisActivity.contentResolver.takePersistableUriPermission(
@@ -987,7 +918,18 @@ class MainPro : ComponentActivity() {
 //                            )
 //                        }
 
-                        uri_from_file = uri
+                        val sharedFileUri = if (in2_intent?.action == Intent.ACTION_SEND) {
+                            in2_intent?.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+                        } else {
+                            in2_intent?.data
+                        }
+                        uri_from_file =
+                            sharedFileUri?.let {
+                                U.FileUtils.getFileFromUri(
+                                    thisActivity,
+                                    it
+                                )?.toUri()
+                            }
                         uri_to_dir = _uri
                         onCopyFileToFolderByDocumentTree()
 //                        if (U.canManageAllFiles(thisActivity)) {
@@ -1003,7 +945,18 @@ class MainPro : ComponentActivity() {
 
         LaunchedEffect(key1 = isButton4OnClickRunning) {
             if (isButton4OnClickRunning) {
-                uri_from_file = uri
+                val sharedFileUri = if (in2_intent?.action == Intent.ACTION_SEND) {
+                    in2_intent?.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+                } else {
+                    in2_intent?.data
+                }
+                uri_from_file =
+                    sharedFileUri?.let {
+                        U.FileUtils.getFileFromUri(
+                            thisActivity,
+                            it
+                        )?.toUri()
+                    }
                 uri_to_dir = Uri.parse(workspaceAssetsDir)
                 onCopyFileToMyAppFolder()
 //                if (U.canManageAllFiles(thisActivity)) {
@@ -1099,7 +1052,7 @@ class MainPro : ComponentActivity() {
                     containerColor = S.C.btn_bgColor4.current,
                     contentColor = S.C.btn_Color1.current
                 ), enabled = true, onClick = {
-                    if (uri != null) {
+                    if (in2_intent?.data != null) {
                         BuglyLog.e(TAG, thisActivity.workspaceParentDir())
                         val directories =
                             U.FileUtils.getDirectoriesInPath(thisActivity.workspaceParentDir())
@@ -1152,7 +1105,7 @@ class MainPro : ComponentActivity() {
         //// 类型按键区
 
         fun ApkBTNonClick1() {
-            in2_data?.let {
+            in2_intent?.data?.let {
                 U.installApk2(
                     thisActivity,
                     it
@@ -1163,7 +1116,7 @@ class MainPro : ComponentActivity() {
         }
 
         fun ApkBTNonClick2() {
-            uri?.let {
+            in2_intent?.data?.let {
                 U.installApk(
                     thisActivity,
                     it
@@ -1174,14 +1127,14 @@ class MainPro : ComponentActivity() {
         }
 
         fun MagnetBTNonClick1() {
-            uri?.let {
+            in2_intent?.data?.let {
                 U.openUrl(it.toString(), true)
             }
         }
         if (inspectionMode || showAudioButton) {
-            uri?.let { AudioButtons(it) }
+            in2_intent?.data?.let { AudioButtons(it) }
         } else if (showVideoButton) {
-            uri?.let { VideoButtons(it) }
+            in2_intent?.data?.let { VideoButtons(it) }
         } else if (showApkButton) {
             ApkButtons(S.C.btnText5Apk1.current, ::ApkBTNonClick1)
             ApkButtons(S.C.btnText5Apk2.current, ::ApkBTNonClick2)
@@ -1201,7 +1154,7 @@ class MainPro : ComponentActivity() {
             S.C.Thumbnail_Height provides 250,
             S.C.Button_Width providesDefault 300,
         ) {
-            MyUI("")
+            MyUI("Preview")
         }
     }
 

@@ -204,6 +204,7 @@
             android:supportsPictureInPicture="true"
             android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"
             android:exported="true"
+            android:launchMode="singleTask"
             tools:ignore="DiscouragedApi">
 <!-- ref https://blog.csdn.net/qq_36009027/article/details/94627156 -->
             <!--在其他应用打开-->
