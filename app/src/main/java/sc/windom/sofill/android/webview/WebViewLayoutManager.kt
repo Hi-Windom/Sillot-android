@@ -43,6 +43,7 @@ import sc.windom.sofill.Us.U_Layout.visibleRect
  * - 导航方式：[全面屏手势，经典导航键]
  * - 屏幕方向：[竖屏，横屏]
  * - 特殊操作：[无，改变屏幕方向]
+ * - 输入法：[Jovi输入法Pro，QQ输入法，百度输入法，微信输入法，搜狗输入法，讯飞输入法]
  *
  * @since v0.35
  * @suppress 前端是否提供了键盘工具条，如果没有一般不需要赋值 JSonIme* ，不过建议保留 delayResetLayoutWhenImeShow 提供更好的视觉效果。
@@ -53,7 +54,7 @@ import sc.windom.sofill.Us.U_Layout.visibleRect
  * ```
  * @sample WebViewLayoutManager.assistActivity
  * @author https://ld246.com/member/soltus, GLM-4
- * @property delayResetLayoutWhenImeShow 收窄布局延时执行时间。键盘弹起到最后高度需要一个过程，因此收窄布局应当延时执行（不包括小窗和多窗口模式），延时多久没有标准，推荐赋值为 200
+ * @property delayResetLayoutWhenImeShow 收窄布局延时执行时间。键盘弹起到最后高度需要一个过程，因此收窄布局应当延时执行（不包括小窗和多窗口模式），延时多久没有标准，推荐赋值为 186
  * @property JSonImeShow 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
  * @property JSonImeHide 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
  * @property JSonImeShow0Height 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
