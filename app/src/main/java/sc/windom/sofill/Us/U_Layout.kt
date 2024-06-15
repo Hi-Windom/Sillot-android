@@ -89,4 +89,19 @@ object U_Layout {
             return visibleInsets.bottom
         }
 
+    /**
+     * 获取状态栏高度
+     */
+    val View.statusBarHeight: Int
+        get() {
+            // 获取当前视图的 WindowInsets
+            val insets = WindowInsetsCompat.toWindowInsetsCompat(this.rootWindowInsets ?: return 0)
+
+            // 获取系统窗口的可见区域
+            val visibleInsets = insets.getInsets(WindowInsetsCompat.Type.statusBars())
+
+            // 返回顶部系统窗口的不可见区域高度，这通常是状态栏的高度
+            return visibleInsets.top
+        }
+
 }

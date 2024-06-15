@@ -16,7 +16,6 @@ import android.widget.FrameLayout
 import androidx.annotation.RequiresApi
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.blankj.utilcode.util.BarUtils
 import com.tencent.bugly.crashreport.BuglyLog
 import com.tencent.mmkv.MMKV
 import sc.windom.sofill.U.applySystemThemeToWebView
@@ -24,6 +23,7 @@ import sc.windom.sofill.U.isInSpecialMode
 import sc.windom.sofill.Us.U_Layout.displayMetrics
 import sc.windom.sofill.Us.U_Layout.getRootViewHeight
 import sc.windom.sofill.Us.U_Layout.navigationBarHeight
+import sc.windom.sofill.Us.U_Layout.statusBarHeight
 import sc.windom.sofill.Us.U_Layout.visibleRect
 
 /**
@@ -226,7 +226,7 @@ class WebViewLayoutManager private constructor(
         )
         Log.d(
             TAG,
-            "navigationBarHeight: $navigationBarHeight, NavBarHeight: ${BarUtils.getNavBarHeight()}, StatusBarHeight: ${BarUtils.getStatusBarHeight()}" +
+            "navigationBarHeight: $navigationBarHeight, StatusBarHeight: ${view.statusBarHeight}" +
                     ", rootViewHeight: $rootViewHeight, display.heightPixels: ${display.heightPixels}"
                     + "\n------------------------------------------------\n"
         )
