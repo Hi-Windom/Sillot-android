@@ -88,7 +88,7 @@ class WebViewLayoutManager private constructor(
     private var imeHeight = 0 // 悬浮键盘的值为 0
     private var lastLayoutWidth = 0
     private var lastLayoutHeight = 0
-    private val view: View // Activity的内容视图
+    private val view: View // 绑定的 activity 的内容视图
 
     init {
         val frameLayout = activity.findViewById<FrameLayout>(android.R.id.content)
