@@ -1,21 +1,19 @@
-package sc.windom.sofill
+package sc.windom.sofill.android.webview
 
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ComponentCallbacks
-import android.content.Context
 import android.content.res.Configuration
-import android.graphics.Rect
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.DisplayMetrics
 import android.util.Log
 import android.view.View
-import android.view.ViewConfiguration
 import android.view.WindowInsets
 import android.view.WindowManager
 import android.webkit.WebView
 import android.widget.FrameLayout
+import androidx.annotation.RequiresApi
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.blankj.utilcode.util.BarUtils
@@ -23,28 +21,52 @@ import com.tencent.bugly.crashreport.BuglyLog
 import com.tencent.mmkv.MMKV
 import sc.windom.sofill.U.applySystemThemeToWebView
 import sc.windom.sofill.U.isInSpecialMode
+import sc.windom.sofill.Us.U_Layout.displayMetrics
+import sc.windom.sofill.Us.U_Layout.getRootViewHeight
+import sc.windom.sofill.Us.U_Layout.navigationBarHeight
+import sc.windom.sofill.Us.U_Layout.visibleRect
 
 /**
  * Android small window mode soft keyboard black occlusion [siyuan-note/siyuan-android#7](https://github.com/siyuan-note/siyuan-android/pull/7)
  *
  * 优化注册工具栏显示/隐藏跟随软键盘状态 [Hi-Windom/Sillot-android#84](https://github.com/Hi-Windom/Sillot-android/issues/84)
  *
- * 基于 [Yingyi](https://ld246.com/member/shuoying) 的 AndroidBug5497Workaround 改进，将原软键盘监听集成，统一调整布局。MIUI小窗底部有小白条，已进行抬高处理。
- * 本方案不使用 com.blankj.utilcode.util 的 KeyboardUtils.fixAndroidBug5497 和 KeyboardUtils.registerSoftInputChangedListener，
- * 因为该库不兼容小窗模式、不识别悬浮键盘。本方案使用 WindowInsets 的 isVisible(Type.ime()) 方法来检查输入法是否可见（Android 11+）。
+ * 基于 [Yingyi](https://ld246.com/member/shuoying) 的 AndroidBug5497Workaround 改进，将原软键盘监听集成，统一调整布局。
+ * 本方案不使用 com.blankj.utilcode.util 的 KeyboardUtils.fixAndroidBug5497、 KeyboardUtils.registerSoftInputChangedListener 和 BarUtils.getNavBarHeight()，
+ * 因为这些方法对安卓12+来说都已经过时，不兼容小窗模式、不识别悬浮键盘，getNavBarHeight获取的值错误等。本方案使用 WindowInsets 的 isVisible(Type.ime()) 方法来检查输入法是否可见（Android 11+）。
  * 如果在清单文件的 activity 节点声明了 android:windowSoftInputMode="adjustResize"，则普通键盘弹起时无需重新布局，
  * 但有个小缺陷：系统自动重新布局是与输入法弹起同时进行的，会导致用户能短暂看到布局底色。因此，推荐声明为 android:windowSoftInputMode="adjustPan"
  * 本方案会自动调整布局，这样不受系统自动重新布局影响，可以通过指定 delayResetLayoutWhenImeShow （默认值 0 ） 来避免用户短暂看到布局底色。
+ * 如果需要支持安卓11以下设备，可以考虑在代码中根据API级别动态设置 getWindow().setSoftInputMode 替代在清单文件中声明，并使用其他支持安卓11以下设备的方案替代本方案
  * 此外，推荐进一步声明为 android:windowSoftInputMode="stateHidden|adjustPan"，stateHidden 与 isImeVisible = false 初始化保持一致性。
+ *
+ * 测试场景覆盖以下状态的排列组合：
+ * - 设备与系统：[Xiaomi HyperOS Phone @Android14，vivo OriginOS4 Phone @Android14，Lenovo ZUI14 Pad @Android12]
+ * - 布局模式：[普通，小窗，多窗口]
+ * - 导航方式：[全面屏手势，经典导航键]
+ * - 屏幕方向：[竖屏，横屏]
+ * - 特殊操作：[无，改变屏幕方向]
+ *
+ * @since v0.35
+ * @suppress 前端是否提供了键盘工具条，如果没有一般不需要赋值 JSonIme* ，不过建议保留 delayResetLayoutWhenImeShow 提供更好的视觉效果。
+ * 如果手机端键盘工具条有而平板端没有，请自行判断设备。
  * @constructor - 在 Java 中（this指代当前activity）：
  * ```java
  * WebViewLayoutManager.assistActivity(this, webView).setDelayResetLayoutWhenImeShow(200);
  * ```
  * @sample WebViewLayoutManager.assistActivity
- * TODO: 平板端测试有一定延迟，后续优化
  * @author https://ld246.com/member/soltus, GLM-4
+ * @property autoWebViewDarkMode 是否自动在 webview 中应用暗黑模式。如果前端已经有暗黑模式配置，此项应为 false（默认值）
+ * @property delayResetLayoutWhenImeShow 收窄布局延时执行时间。键盘弹起到最后高度需要一个过程，因此收窄布局应当延时执行（不包括小窗和多窗口模式），延时多久没有标准，推荐赋值为 200
+ * @property JSonImeShow 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
+ * @property JSonImeHide 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
+ * @property JSonImeShow0Height 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
+ * @property JSonImeHide0Height 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
+ * @property softInputMode 覆盖清单中声明，默认值为 SOFT_INPUT_ADJUST_PAN，
+ * 可以动态设置，例如 SOFT_INPUT_ADJUST_RESIZE ，注意同步修改 delayResetLayoutWhenImeShow
  */
-@SuppressLint("WrongConstant")
+@SuppressLint("WrongConstant", "ObsoleteSdkInt")
+@RequiresApi(Build.VERSION_CODES.S)
 class WebViewLayoutManager private constructor(
     private val activity: Activity,
     private val webView: WebView
@@ -53,11 +75,13 @@ class WebViewLayoutManager private constructor(
     private var mmkv: MMKV = MMKV.defaultMMKV()
     var autoWebViewDarkMode: Boolean = false
     var delayResetLayoutWhenImeShow: Long =
-        0 // 默认与 android:windowSoftInputMode="adjustResize" 行为保持一致，推荐赋值为 200
+        0 // 默认与 android:windowSoftInputMode="adjustResize" 行为保持一致
     var JSonImeShow = ""
     var JSonImeHide = ""
     var JSonImeShow0Height = ""
     var JSonImeHide0Height = ""
+    var softInputMode =
+        WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN
     private var currentOrientation: Int = -1
     private var isImeVisible = false // 支持悬浮键盘
     private var imeHeight = 0 // 悬浮键盘的值为 0
@@ -88,6 +112,7 @@ class WebViewLayoutManager private constructor(
             if (currentWidth != this.lastLayoutWidth || currentHeight != this.lastLayoutHeight) {
                 this.lastLayoutWidth = currentWidth
                 this.lastLayoutHeight = currentHeight
+                activity.window.setSoftInputMode(this.softInputMode)
                 restLayout("监听布局变化")
             }
         }
@@ -121,41 +146,38 @@ class WebViewLayoutManager private constructor(
      * @param traker 跟踪调用者
      */
     private fun restLayout(traker: String) {
-        val newHight =
-            this.getRootViewHeight() - BarUtils.getNavBarHeight() / 2 + this.navigationBarHeight / 2
-        if (true || view.height != newHight && view.height + this.imeHeight != newHight) {
-//            logInfo()
-            Log.w(
-                TAG,
-                "restLayout@$traker, view.height: ${view.height}, newHight: $newHight, isImeVisible: ${this.isImeVisible}, imeHeight: ${this.imeHeight}, isInSpecialMode(): ${activity.isInSpecialMode()}"
-            )
-            if (this.isImeVisible) {
-                // 键盘弹起到最后高度需要一个过程，因此收窄布局应当延时执行（不包括小窗和多窗口模式），延时多久没有标准
-                // （如果声明了 android:windowSoftInputMode="adjustResize" 则无效，因为系统已经自动调整了布局）
-                Handler(Looper.getMainLooper()).postDelayed({
-                    if (this.imeHeight == 0 || activity.isInSpecialMode()) {
-                        webView.evaluateJavascript(this.JSonImeShow0Height, null)
-                    } else {
-                        webView.evaluateJavascript(this.JSonImeShow, null)
-                    }
-                    view.layoutParams.height =
-                        newHight - if (activity.isInSpecialMode()) 0 else this.imeHeight
-                    webView.layoutParams.height = -1 // 这里不能改，必须MATCH_PARENT
-                    view.requestLayout()
-                    webView.requestLayout()
-                }, if (activity.isInSpecialMode()) 0 else this.delayResetLayoutWhenImeShow)
-            } else {
-                // 填充布局应当立即执行
+        val newHight = view.getRootViewHeight() - view.navigationBarHeight // 兼容经典导航键、小米系统小窗底部小白条，o(￣ヘ￣o#)
+        // logInfo()
+        Log.w(
+            TAG,
+            "restLayout@$traker, view.height: ${view.height}, newHight: $newHight, isImeVisible: ${this.isImeVisible}, imeHeight: ${this.imeHeight}, isInSpecialMode(): ${activity.isInSpecialMode()}"
+        )
+        if (this.isImeVisible) {
+            // 键盘弹起到最后高度需要一个过程，因此收窄布局应当延时执行（不包括小窗和多窗口模式），延时多久没有标准
+            // （如果声明了 android:windowSoftInputMode="adjustResize" 则无效，因为系统已经自动调整了布局）
+            Handler(Looper.getMainLooper()).postDelayed({
                 if (this.imeHeight == 0 || activity.isInSpecialMode()) {
-                    webView.evaluateJavascript(this.JSonImeHide0Height, null)
+                    webView.evaluateJavascript(this.JSonImeShow0Height, null)
                 } else {
-                    webView.evaluateJavascript(this.JSonImeHide, null)
+                    webView.evaluateJavascript(this.JSonImeShow, null)
                 }
-                view.layoutParams.height = newHight
+                view.layoutParams.height =
+                    newHight - if (activity.isInSpecialMode()) 0 else this.imeHeight
                 webView.layoutParams.height = -1 // 这里不能改，必须MATCH_PARENT
                 view.requestLayout()
                 webView.requestLayout()
+            }, if (activity.isInSpecialMode()) 0 else this.delayResetLayoutWhenImeShow)
+        } else {
+            // 填充布局应当立即执行
+            if (this.imeHeight == 0 || activity.isInSpecialMode()) {
+                webView.evaluateJavascript(this.JSonImeHide0Height, null)
+            } else {
+                webView.evaluateJavascript(this.JSonImeHide, null)
             }
+            view.layoutParams.height = newHight
+            webView.layoutParams.height = -1 // 这里不能改，必须MATCH_PARENT
+            view.requestLayout()
+            webView.requestLayout()
         }
     }
 
@@ -182,11 +204,10 @@ class WebViewLayoutManager private constructor(
      * height = bottom - top
      */
     private fun logInfo() {
-        val rect = this.visibleRect
-        val rootViewHeight = this.getRootViewHeight()
-        val rootViewWidth = this.getRootViewWidth()
-        val display = this.displayMetrics
-        val navigationBarHeight = this.navigationBarHeight
+        val rect = view.visibleRect
+        val rootViewHeight = view.getRootViewHeight()
+        val display = activity.displayMetrics
+        val navigationBarHeight = view.navigationBarHeight
         Log.d(
             TAG,
             "rect.top: ${rect.top} | view.top: ${view.top} | webView.top: ${webView.top}"
@@ -210,81 +231,6 @@ class WebViewLayoutManager private constructor(
                     + "\n------------------------------------------------\n"
         )
     }
-
-    /**
-     * 计算可用高度
-     */
-    private fun computeUsableHeight(): Int {
-        val rect = visibleRect
-        return rect.height()
-    }
-
-    /**
-     * 计算可用宽度
-     */
-    private fun computeUsableWidth(): Int {
-        val rect = visibleRect
-        return rect.width()
-    }
-
-    /**
-     * 获取视图的可见区域
-     */
-    private val visibleRect: Rect
-        get() {
-            val rect = Rect()
-            view.getWindowVisibleDisplayFrame(rect)
-            return rect
-        }
-
-    /**
-     * 获取根视图的高度
-     */
-    private fun getRootViewHeight(): Int {
-        return view.rootView.height
-    }
-
-    /**
-     * 获取根视图的宽度
-     */
-    private fun getRootViewWidth(): Int {
-        return view.rootView.width
-    }
-
-    /**
-     * 获取显示度量
-     */
-    private val displayMetrics: DisplayMetrics
-        get() {
-            val displayMetrics = DisplayMetrics()
-            // 获取WindowManager服务
-            val windowManager = activity.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-            // 获取当前窗口度量
-            val windowMetrics = windowManager.currentWindowMetrics
-            // 获取窗口的边界
-            val bounds = windowMetrics.bounds
-            // 设置显示度量到窗口的大小
-            displayMetrics.widthPixels = bounds.width()
-            displayMetrics.heightPixels = bounds.height()
-            return displayMetrics
-        }
-
-    /**
-     * 获取导航栏高度
-     */
-    @get:SuppressLint("DiscouragedApi", "InternalInsetResource")
-    private val navigationBarHeight: Int
-        get() {
-            val context = view.context
-            val hasMenuKey = ViewConfiguration.get(context).hasPermanentMenuKey()
-            if (!hasMenuKey) {
-                val resourceId =
-                    context.resources.getIdentifier("navigation_bar_height", "dimen", "android")
-                return if (resourceId > 0) context.resources.getDimensionPixelSize(resourceId) else 0
-            } else {
-                return 0
-            }
-        }
 
 
     companion object {

@@ -42,7 +42,7 @@ package org.b3log.siyuan;
  import android.view.ViewGroup;
 
  import sc.windom.sofill.Us.U_FuckOtherApp;
- import sc.windom.sofill.WebViewLayoutManager;
+ import sc.windom.sofill.android.webview.WebViewLayoutManager;
  import sc.windom.sofill.Ss.S_Events;
  import sc.windom.sofill.Ss.S_Intent;
  import sc.windom.sofill.Ss.S_REQUEST_CODE;
@@ -81,7 +81,6 @@ package org.b3log.siyuan;
  import com.blankj.utilcode.util.AppUtils;
  import com.blankj.utilcode.util.StringUtils;
  import com.kongzue.dialogx.dialogs.BottomMenu;
- import com.kongzue.dialogx.dialogs.PopTip;
  import com.tencent.bugly.crashreport.BuglyLog;
  import com.tencent.bugly.crashreport.CrashReport;
  import com.tencent.mmkv.MMKV;
@@ -269,13 +268,15 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 // Fix https://github.com/siyuan-note/siyuan/issues/9726
                 // https://github.com/Hi-Windom/Sillot-android/issues/84
                 WebViewLayoutManager webViewLayoutManager = WebViewLayoutManager.assistActivity(this, webView);
-                webViewLayoutManager.setDelayResetLayoutWhenImeShow(200);
-                // showKeyboardToolbar 不知道在哪已经实现了随键盘呼出（有延时，大概率是在前端），这里依旧调用是因为响应更快
-                webViewLayoutManager.setJSonImeShow("showKeyboardToolbar();");
-                webViewLayoutManager.setJSonImeHide("hideKeyboardToolbar();");
-                // 锁定方便悬浮键盘不自动收起
-                webViewLayoutManager.setJSonImeShow0Height("window.Sillot.android.LockKeyboardToolbar=true;hideKeyboardToolbar();showKeyboardToolbar();");
-                webViewLayoutManager.setJSonImeHide0Height("window.Sillot.android.LockKeyboardToolbar=false;hideKeyboardToolbar();");
+                if (!U.getPHONE().isPad(this)) {
+                    webViewLayoutManager.setDelayResetLayoutWhenImeShow(200);
+                    // showKeyboardToolbar 不知道在哪已经实现了随键盘呼出（有延时，大概率是在前端），这里依旧调用是因为响应更快
+                    webViewLayoutManager.setJSonImeShow("showKeyboardToolbar();");
+                    webViewLayoutManager.setJSonImeHide("hideKeyboardToolbar();");
+                    // 锁定方便悬浮键盘不自动收起
+                    webViewLayoutManager.setJSonImeShow0Height("window.Sillot.android.LockKeyboardToolbar=true;hideKeyboardToolbar();showKeyboardToolbar();");
+                    webViewLayoutManager.setJSonImeHide0Height("window.Sillot.android.LockKeyboardToolbar=false;hideKeyboardToolbar();");
+                }
 
                 // 支持 OriginOS4 超级拖拽 #90
                 U_FuckOtherApp.setOnDragListenerForWebView(webView, MainPro.class);

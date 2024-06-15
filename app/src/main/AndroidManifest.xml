@@ -483,7 +483,7 @@
             android:configChanges="keyboard|keyboardHidden|screenLayout|uiMode|orientation|screenSize|smallestScreenSize"
             android:hardwareAccelerated="true"
             android:taskAffinity=".siyuan.task"
-            android:windowSoftInputMode="stateHidden|adjustPan" >
+            android:windowSoftInputMode="stateHidden|adjustResize" >
          <!-- android:windowSoftInputMode="adjustResize"
             是为了解决软键盘遮挡 https://github.com/siyuan-note/siyuan-android/pull/7
 

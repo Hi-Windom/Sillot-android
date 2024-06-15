@@ -46,6 +46,7 @@ import sc.windom.sofill.Us.U_DOSC
 import sc.windom.sofill.Us.U_DialogX
 import sc.windom.sofill.Us.U_FileUtils
 import sc.windom.sofill.Us.U_FuckOtherApp
+import sc.windom.sofill.Us.U_Layout
 import sc.windom.sofill.Us.U_Permission
 import sc.windom.sofill.Us.U_Phone
 import sc.windom.sofill.Us.U_Safe
@@ -88,6 +89,8 @@ object U {
 
     @JvmStatic
     val DOSC = U_DOSC
+
+    val LAYOUT = U_Layout
 
 
     @SuppressLint("ObsoleteSdkInt")
