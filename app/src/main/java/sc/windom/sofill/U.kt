@@ -107,6 +107,7 @@ object U {
         return this.isInMultiWindowMode || this.isInFreeformMode() || this.isInPictureInPictureMode
     }
 
+    @JvmStatic
     fun applySystemThemeToWebView(activity: Activity, webView: WebView, forceWebViewFollowSystemDarkMode: Boolean) {
         val currentNightMode: Int =
             activity.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK

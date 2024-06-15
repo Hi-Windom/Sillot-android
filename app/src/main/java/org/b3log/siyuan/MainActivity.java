@@ -28,6 +28,7 @@ package org.b3log.siyuan;
  import android.content.Intent;
  import android.content.ServiceConnection;
  import android.content.pm.PackageManager;
+ import android.content.res.Configuration;
  import android.graphics.Bitmap;
  import android.graphics.Color;
  import android.net.Uri;
@@ -262,12 +263,20 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 if (Utils.isDebugPackageAndMode(this)) {
                     WebView.setWebContentsDebuggingEnabled(true);
                 }
+                // autoWebViewDarkMode 决定是否自动在 webview 中应用暗黑模式。如果前端已经有暗黑模式配置，此项应为 false（默认值）
+                U.applySystemThemeToWebView(this, webView, mmkv.getBoolean("autoWebViewDarkMode", false));
 
                 // 注册工具栏显示/隐藏跟随软键盘状态
                 // Fix https://github.com/siyuan-note/siyuan/issues/9765
                 // Fix https://github.com/siyuan-note/siyuan/issues/9726
                 // https://github.com/Hi-Windom/Sillot-android/issues/84
                 WebViewLayoutManager webViewLayoutManager = WebViewLayoutManager.assistActivity(this, webView);
+//                webViewLayoutManager.setAutoWebViewDarkMode(mmkv.getBoolean("autoWebViewDarkMode", false));
+                webViewLayoutManager.setOnConfigurationChangedCallback((newConfig)->{
+                    U.applySystemThemeToWebView(this, webView, mmkv.getBoolean("autoWebViewDarkMode", false));
+                    BuglyLog.w(TAG, "新配置屏幕方向: " + newConfig.orientation);
+                    return null;
+                });
                 if (!U.getPHONE().isPad(this)) {
                     webViewLayoutManager.setDelayResetLayoutWhenImeShow(200);
                     // showKeyboardToolbar 不知道在哪已经实现了随键盘呼出（有延时，大概率是在前端），这里依旧调用是因为响应更快
@@ -761,7 +770,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         }
     }
 
-    // https://github.com/Hi-Windom/Sillot-android/issues/84 不能在此重写，否则 registActivityConfigurationChangWithSoftKeyboardToolbarInWebview() 里无效
+    // https://github.com/Hi-Windom/Sillot-android/issues/84 不能在此重写
 //    @Override
 //    public void onConfigurationChanged(@NonNull Configuration newConfig) {
 //        super.onConfigurationChanged(newConfig);

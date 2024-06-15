@@ -17,8 +17,6 @@ import androidx.annotation.RequiresApi
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.tencent.bugly.crashreport.BuglyLog
-import com.tencent.mmkv.MMKV
-import sc.windom.sofill.U.applySystemThemeToWebView
 import sc.windom.sofill.U.isInSpecialMode
 import sc.windom.sofill.Us.U_Layout.displayMetrics
 import sc.windom.sofill.Us.U_Layout.getRootViewHeight
@@ -56,13 +54,19 @@ import sc.windom.sofill.Us.U_Layout.visibleRect
  * ```
  * @sample WebViewLayoutManager.assistActivity
  * @author https://ld246.com/member/soltus, GLM-4
- * @property autoWebViewDarkMode 是否自动在 webview 中应用暗黑模式。如果前端已经有暗黑模式配置，此项应为 false（默认值）
  * @property delayResetLayoutWhenImeShow 收窄布局延时执行时间。键盘弹起到最后高度需要一个过程，因此收窄布局应当延时执行（不包括小窗和多窗口模式），延时多久没有标准，推荐赋值为 200
  * @property JSonImeShow 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
  * @property JSonImeHide 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
  * @property JSonImeShow0Height 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
  * @property JSonImeHide0Height 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
  * @property softInputMode 覆盖清单中声明，默认值为 SOFT_INPUT_ADJUST_PAN，
+ * @property onConfigurationChangedCallback 配置发生变化时的回调函数，如果赋值该项则不应在 activity 中重写 onConfigurationChanged 方法，否则回调无效。示例：
+ * ```java
+ * webViewLayoutManager.setOnConfigurationChangedCallback((newConfig)->{
+ *   Log.w(TAG, "新配置屏幕方向: " + newConfig.orientation);
+ *   return null; // java 中调用必须 return null
+ * });
+ * ```
  * 可以动态设置，例如 SOFT_INPUT_ADJUST_RESIZE ，注意同步修改 delayResetLayoutWhenImeShow
  */
 @SuppressLint("WrongConstant", "ObsoleteSdkInt")
@@ -72,8 +76,6 @@ class WebViewLayoutManager private constructor(
     private val webView: WebView
 ) {
     private val TAG = "WebViewLayoutManager"
-    private var mmkv: MMKV = MMKV.defaultMMKV()
-    var autoWebViewDarkMode: Boolean = false
     var delayResetLayoutWhenImeShow: Long =
         0 // 默认与 android:windowSoftInputMode="adjustResize" 行为保持一致
     var JSonImeShow = ""
@@ -82,7 +84,7 @@ class WebViewLayoutManager private constructor(
     var JSonImeHide0Height = ""
     var softInputMode =
         WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN
-    private var currentOrientation: Int = -1
+    var onConfigurationChangedCallback: ((Configuration) -> Unit)? = null
     private var isImeVisible = false // 支持悬浮键盘
     private var imeHeight = 0 // 悬浮键盘的值为 0
     private var lastLayoutWidth = 0
@@ -90,8 +92,6 @@ class WebViewLayoutManager private constructor(
     private val view: View // Activity的内容视图
 
     init {
-        autoWebViewDarkMode = mmkv.getBoolean("autoWebViewDarkMode", false)
-        applySystemThemeToWebView(activity, webView, autoWebViewDarkMode)
         val frameLayout = activity.findViewById<FrameLayout>(android.R.id.content)
         this.view = frameLayout.getChildAt(0)
         ViewCompat.setOnApplyWindowInsetsListener(this.view) { v: View?, insets: WindowInsetsCompat ->
@@ -116,29 +116,18 @@ class WebViewLayoutManager private constructor(
                 restLayout("监听布局变化")
             }
         }
-        // 监听配置变化
-        activity.registerComponentCallbacks(object : ComponentCallbacks {
-            override fun onConfigurationChanged(newConfig: Configuration) {
-                autoWebViewDarkMode = mmkv.getBoolean("autoWebViewDarkMode", false)
-                applySystemThemeToWebView(activity, webView, autoWebViewDarkMode)
-                Log.w(
-                    TAG,
-                    "新配置是否横屏: ${newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE}, " +
-                            "旧配置是否横屏: ${currentOrientation == Configuration.ORIENTATION_LANDSCAPE}"
-                )
-                logInfo()
-                if (newConfig.orientation != currentOrientation) {
-                    currentOrientation = newConfig.orientation
-                    restLayout("监听配置编号-屏幕方向已改变")
-                } else {
-                    restLayout("监听配置变化")
+        // 监听配置变化。如果 onConfigurationChangedCallback 不为空则不应在 activity 中重写 onConfigurationChanged 方法，否则回调无效。
+        onConfigurationChangedCallback?.let {
+            activity.registerComponentCallbacks(object : ComponentCallbacks {
+                override fun onConfigurationChanged(newConfig: Configuration) {
+                    it.invoke(newConfig)
                 }
-            }
 
-            override fun onLowMemory() {
-                TODO("Not yet implemented")
-            }
-        })
+                override fun onLowMemory() {
+                    TODO("Not yet implemented")
+                }
+            })
+        }
     }
 
     /**
@@ -146,11 +135,13 @@ class WebViewLayoutManager private constructor(
      * @param traker 跟踪调用者
      */
     private fun restLayout(traker: String) {
-        val newHight = view.getRootViewHeight() - view.navigationBarHeight // 兼容经典导航键、小米系统小窗底部小白条，o(￣ヘ￣o#)
+        val newHight =
+            view.getRootViewHeight() - view.navigationBarHeight // 兼容经典导航键、小米系统小窗底部小白条，o(￣ヘ￣o#)
         // logInfo()
         Log.w(
             TAG,
-            "restLayout@$traker, view.height: ${view.height}, newHight: $newHight, isImeVisible: ${this.isImeVisible}, imeHeight: ${this.imeHeight}, isInSpecialMode(): ${activity.isInSpecialMode()}"
+            "restLayout@$traker, view.height: ${view.height}, newHight: $newHight, " +
+                    "isImeVisible: ${this.isImeVisible}, imeHeight: ${this.imeHeight}, isInSpecialMode(): ${activity.isInSpecialMode()}"
         )
         if (this.isImeVisible) {
             // 键盘弹起到最后高度需要一个过程，因此收窄布局应当延时执行（不包括小窗和多窗口模式），延时多久没有标准
