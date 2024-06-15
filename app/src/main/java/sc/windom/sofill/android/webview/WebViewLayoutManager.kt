@@ -135,7 +135,7 @@ class WebViewLayoutManager private constructor(
      */
     private fun restLayout(traker: String) {
         val newHight =
-            view.getRootViewHeight() - view.navigationBarHeight // 兼容经典导航键、小米系统小窗底部小白条，o(￣ヘ￣o#)
+            view.getRootViewHeight() - view.navigationBarHeight // 兼容经典导航键、小米系统小窗底部小白条、实体键盘，o(￣ヘ￣o#)
         // logInfo()
         Log.w(
             TAG,
