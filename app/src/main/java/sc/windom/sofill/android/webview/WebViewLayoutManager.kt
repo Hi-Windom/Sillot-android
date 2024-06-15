@@ -16,7 +16,6 @@ import android.widget.FrameLayout
 import androidx.annotation.RequiresApi
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.tencent.bugly.crashreport.BuglyLog
 import sc.windom.sofill.U.isInSpecialMode
 import sc.windom.sofill.Us.U_Layout.displayMetrics
 import sc.windom.sofill.Us.U_Layout.getRootViewHeight
@@ -97,7 +96,7 @@ class WebViewLayoutManager private constructor(
         ViewCompat.setOnApplyWindowInsetsListener(this.view) { v: View?, insets: WindowInsetsCompat ->
             this.isImeVisible = insets.isVisible(WindowInsets.Type.ime())
             this.imeHeight = insets.getInsets(WindowInsets.Type.ime()).bottom
-            BuglyLog.w(TAG, "isImeVisible: ${this.isImeVisible}, imeHeight: ${this.imeHeight}")
+            Log.w(TAG, "isImeVisible: ${this.isImeVisible}, imeHeight: ${this.imeHeight}")
             restLayout("WindowInsets")
             insets
         }
