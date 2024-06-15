@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 
 /**
  * 汐洛绞架，暂时与思源汐洛版共存，逐步迁移过来
+ * 充分适配 Pad 端
  */
 class GibbetMainActivity : AppCompatActivity() {
 }
