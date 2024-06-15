@@ -173,25 +173,7 @@ class WebViewLayoutManager private constructor(
 
 
     /**
-     * 打印日志信息
-     *
-     * view.layoutParams.height：
-     * 这个属性指的是视图的布局参数中的高度设置。
-     * 它决定了视图在布局过程中应该占用多大的高度空间。
-     * LayoutParams类是视图的一个属性，用于定义如何将视图放置在其父视图容器中。
-     * height可以设置为具体的像素值（如LayoutParams.MATCH_PARENT，LayoutParams.WRAP_CONTENT或具体的数值），
-     * 或者是一个基于父容器的比例（如LayoutParams.FILL_PARENT，这已在新版本中不推荐使用）。
-     *
-     * view.height：
-     * 这个属性指的是视图在布局完成后实际的高度。
-     * 它是在布局过程结束后，系统根据view.layoutParams.height和其他因素（如视图的内容、父容器的限制等）计算出的实际高度值。
-     * 这个值是只读的，开发者在代码中不能直接设置view.height，它是由布局系统确定的。
-     *
-     * view.bottom：
-     * view.bottom是视图底边的坐标，相对于其父视图的坐标空间。它是视图顶部坐标加上视图高度的结果，即view.bottom = view.top + view.height。
-     * view.bottom通常用于确定视图在屏幕上的位置，特别是在计算视图之间的间隔或确定触摸事件的坐标时。
-     *
-     * height = bottom - top
+     * 打印日志信息，调试时使用
      */
     private fun logInfo() {
         val rect = view.visibleRect
