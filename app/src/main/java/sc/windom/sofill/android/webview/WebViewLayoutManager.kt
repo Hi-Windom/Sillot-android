@@ -61,12 +61,14 @@ import sc.windom.sofill.Us.U_Layout.visibleRect
  * @property JSonImeHide0Height 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
  * @property softInputMode 覆盖清单中声明，默认值为 SOFT_INPUT_ADJUST_PAN，
  * @property onConfigurationChangedCallback 配置发生变化时的回调函数，如果赋值该项则不应在 activity 中重写 onConfigurationChanged 方法，否则回调无效。示例：
+ * @property onWindowInsetsListenerCallback 暂无介绍
  * ```java
  * webViewLayoutManager.setOnConfigurationChangedCallback((newConfig)->{
  *   Log.w(TAG, "新配置屏幕方向: " + newConfig.orientation);
  *   return null; // java 中调用必须 return null
  * });
  * ```
+ * @property onLayoutChangedCallback 布局发生变化时的回调函数
  * 可以动态设置，例如 SOFT_INPUT_ADJUST_RESIZE ，注意同步修改 delayResetLayoutWhenImeShow
  */
 @SuppressLint("WrongConstant", "ObsoleteSdkInt")
@@ -85,6 +87,8 @@ class WebViewLayoutManager private constructor(
     var softInputMode =
         WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN
     var onConfigurationChangedCallback: ((Configuration) -> Unit)? = null
+    var onLayoutChangedCallback: ((frameLayout: FrameLayout) -> Unit)? = null
+    var onWindowInsetsListenerCallback: ((v: View?, insets: WindowInsetsCompat) -> Unit)? = null
     private var isImeVisible = false // 支持悬浮键盘
     private var imeHeight = 0 // 悬浮键盘的值为 0
     private var lastLayoutWidth = 0
@@ -99,6 +103,7 @@ class WebViewLayoutManager private constructor(
             this.imeHeight = insets.getInsets(WindowInsets.Type.ime()).bottom
             Log.w(TAG, "isImeVisible: ${this.isImeVisible}, imeHeight: ${this.imeHeight}")
             restLayout("WindowInsets")
+            onWindowInsetsListenerCallback?.invoke(v, insets)
             insets
         }
 
@@ -114,6 +119,7 @@ class WebViewLayoutManager private constructor(
                 this.lastLayoutHeight = currentHeight
                 activity.window.setSoftInputMode(this.softInputMode)
                 restLayout("监听布局变化")
+                onLayoutChangedCallback?.invoke(frameLayout)
             }
         }
         // 监听配置变化。如果 onConfigurationChangedCallback 不为空则不应在 activity 中重写 onConfigurationChanged 方法，否则回调无效。

@@ -6,10 +6,10 @@ import android.content.ActivityNotFoundException
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Rect
 import android.media.MediaScannerConnection
 import android.net.Uri
@@ -23,21 +23,15 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.view.ViewConfiguration
 import android.view.Window
-import android.view.WindowInsetsController
 import android.view.WindowManager
 import android.webkit.WebSettings
 import android.webkit.WebView
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import androidx.webkit.WebSettingsCompat
-import androidx.webkit.WebViewFeature
 import com.blankj.utilcode.util.ActivityUtils.startActivity
 import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.dialogs.PopTip
 import com.tencent.mmkv.MMKV
 import org.b3log.siyuan.MainActivity
-import org.b3log.siyuan.R
 import org.b3log.siyuan.Utils
 import org.b3log.siyuan.andapi.Toast
 import org.b3log.siyuan.videoPlayer.SimplePlayer
@@ -58,8 +52,6 @@ import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.SecretKeySpec
-import kotlin.math.pow
-import kotlin.math.sqrt
 
 
 object U {
@@ -107,70 +99,33 @@ object U {
         return this.isInMultiWindowMode || this.isInFreeformMode() || this.isInPictureInPictureMode
     }
 
-    @JvmStatic
-    fun applySystemThemeToWebView(activity: Activity, webView: WebView, forceWebViewFollowSystemDarkMode: Boolean) {
-        val currentNightMode: Int =
-            activity.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-        val OSTheme = if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) "dark" else "light"
-        val isAndroidDarkMode = if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) 1 else 0
-        webView.evaluateJavascript(
-            "javascript:document.documentElement.setAttribute('data-theme-mode', '$OSTheme')",
-            null
-        )
-        webView.evaluateJavascript(
-            "javascript:window.Sillot.android.isAndroidDarkMode = $isAndroidDarkMode",
-            null
-        )
-        if (forceWebViewFollowSystemDarkMode) {
-            if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
-                // 系统处于暗色模式
-                DialogX.PopNoteShow(activity, R.drawable.icon, "系统深色模式", "已开启 WebView 自动明暗（实验性功能）")
-                if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-                    WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), true)
-                }
-                // 系统处于暗色模式，设置状态栏为深色
-                activity.window.statusBarColor = ContextCompat.getColor(activity, R.color.darkFull)
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES) // 向下兼容代码，可以删除
-            } else {
-                // 系统处于亮色模式
-                DialogX.PopNoteShow(activity, R.drawable.icon, "系统明亮模式", "已开启 WebView 自动明暗（实验性功能）")
-                if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-                    WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), false)
-                }
-                // 系统处于亮色模式，设置状态栏为浅色
-                activity.window.statusBarColor = ContextCompat.getColor(activity, R.color.white)
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO) // 向下兼容代码，可以删除
-            }
-            // 使用WindowInsetsController来控制状态栏的图标颜色
-            activity.window.insetsController?.apply {
-                // 对于亮色背景和暗色图标
-                if (currentNightMode != Configuration.UI_MODE_NIGHT_YES) {
-                    setSystemBarsAppearance(
-                        WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
-                        WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
-                    )
-                } else {
-                    // 对于暗色背景和亮色图标，清除亮色图标标志
-                    setSystemBarsAppearance(0, WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS)
-                }
-            }
-            // 设置沉浸式通知栏
-            activity.window.setDecorFitsSystemWindows(false)
-            activity.window.decorView.setOnApplyWindowInsetsListener { _, insets ->
-                insets
-            }
-        }
+    /**
+     * 判断颜色是否为亮色
+     */
+    fun Int.isLightColor(): Boolean {
+        val darkness = 1 - (0.299 * Color.red(this) + 0.587 * Color.green(this) + 0.114 * Color.blue(this)) / 255
+        return darkness < 0.5
     }
 
     fun genSpannableColorfulString(text: CharSequence, color: Int): SpannableString {
         val spannableString = SpannableString(text)
         val foregroundColorSpan = ForegroundColorSpan(color)
         // 设置颜色范围为整个字符串，从起始位置0到字符串长度
-        spannableString.setSpan(foregroundColorSpan, 0, spannableString.length, Spanned.SPAN_INCLUSIVE_EXCLUSIVE)
+        spannableString.setSpan(
+            foregroundColorSpan,
+            0,
+            spannableString.length,
+            Spanned.SPAN_INCLUSIVE_EXCLUSIVE
+        )
         return spannableString
     }
 
-    fun genSpannableColorfulRangeString(text: CharSequence, color: Int, start: Int, end: Int): SpannableString {
+    fun genSpannableColorfulRangeString(
+        text: CharSequence,
+        color: Int,
+        start: Int,
+        end: Int
+    ): SpannableString {
         val spannableString = SpannableString(text)
         val foregroundColorSpan = ForegroundColorSpan(color)
         // 设置颜色范围为整个字符串，从起始位置0到字符串长度
@@ -228,7 +183,8 @@ object U {
     private fun getNavigationBarHeight(activity: Activity): Int {
         val hasMenuKey = ViewConfiguration.get(activity).hasPermanentMenuKey()
         return if (!hasMenuKey) {
-            val resourceId = activity.resources.getIdentifier("navigation_bar_height", "dimen", "android")
+            val resourceId =
+                activity.resources.getIdentifier("navigation_bar_height", "dimen", "android")
             if (resourceId > 0) activity.resources.getDimensionPixelSize(resourceId) else 0
         } else {
             0
@@ -279,7 +235,8 @@ object U {
     }
 
     fun isSystemDarkMode(context: Context): Boolean {
-        val currentNightMode = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+        val currentNightMode =
+            context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
         return currentNightMode == Configuration.UI_MODE_NIGHT_YES
     }
 
@@ -531,7 +488,10 @@ object U {
                     Toast.Show(activity, "请先授予汐洛安装未知应用权限")
                     // 启动授权 activity
                     val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
-                    activity.startActivityForResult(intent, S.REQUEST_CODE.REQUEST_CODE_INSTALL_PERMISSION)
+                    activity.startActivityForResult(
+                        intent,
+                        S.REQUEST_CODE.REQUEST_CODE_INSTALL_PERMISSION
+                    )
                     return
                 }
             }
@@ -550,7 +510,7 @@ object U {
             activity.startActivity(installIntent)
         } catch (e: Exception) {
             Log.e("Us.installApk", e.toString())
-            DialogX.PopNoteShow(activity,"任务失败", e.toString()).noAutoDismiss()
+            DialogX.PopNoteShow(activity, "任务失败", e.toString()).noAutoDismiss()
         }
     }
 
@@ -580,7 +540,7 @@ object U {
             )
         } catch (e: Exception) {
             Log.e("Us.installApk", e.toString())
-            DialogX.PopNoteShow(activity,"任务失败", e.toString()).noAutoDismiss()
+            DialogX.PopNoteShow(activity, "任务失败", e.toString()).noAutoDismiss()
         }
     }
 
@@ -605,14 +565,14 @@ object U {
                 activity.startActivity(chooserIntent)
             } else {
                 // 如果没有找到可以处理的应用，提示用户
-                DialogX.PopNoteShow(activity,"任务失败", "没有找到可以播放此视频的应用")
+                DialogX.PopNoteShow(activity, "任务失败", "没有找到可以播放此视频的应用")
             }
         } catch (e: ActivityNotFoundException) {
             // 如果没有找到可以处理的应用，提示用户
-            DialogX.PopNoteShow(activity,"任务失败", "没有找到可以播放此视频的应用")
+            DialogX.PopNoteShow(activity, "任务失败", "没有找到可以播放此视频的应用")
         } catch (e: Exception) {
             // 其他异常处理
-            DialogX.PopNoteShow(activity,"任务失败", "打开视频时出错: ${e.message}")
+            DialogX.PopNoteShow(activity, "任务失败", "打开视频时出错: ${e.message}")
         }
     }
 
@@ -637,14 +597,14 @@ object U {
                 activity.startActivity(chooserIntent)
             } else {
                 // 如果没有找到可以处理的应用，提示用户
-                DialogX.PopNoteShow(activity,"任务失败", "没有找到可以播放此视频的应用")
+                DialogX.PopNoteShow(activity, "任务失败", "没有找到可以播放此视频的应用")
             }
         } catch (e: ActivityNotFoundException) {
             // 如果没有找到可以处理的应用，提示用户
-            DialogX.PopNoteShow(activity,"任务失败", "没有找到可以播放此视频的应用")
+            DialogX.PopNoteShow(activity, "任务失败", "没有找到可以播放此视频的应用")
         } catch (e: Exception) {
             // 其他异常处理
-            DialogX.PopNoteShow(activity,"任务失败", "打开音频时出错: ${e.message}")
+            DialogX.PopNoteShow(activity, "任务失败", "打开音频时出错: ${e.message}")
         }
     }
 

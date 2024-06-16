@@ -18,6 +18,7 @@
 package org.b3log.siyuan;
 
  import static sc.windom.sofill.Us.U_DialogX.PopTipShow;
+ import static sc.windom.sofill.android.webview.WebViewThemeKt.applySystemThemeToWebView;
 
  import android.annotation.SuppressLint;
  import android.app.Activity;
@@ -28,9 +29,7 @@ package org.b3log.siyuan;
  import android.content.Intent;
  import android.content.ServiceConnection;
  import android.content.pm.PackageManager;
- import android.content.res.Configuration;
  import android.graphics.Bitmap;
- import android.graphics.Color;
  import android.net.Uri;
  import android.os.Build;
  import android.os.Bundle;
@@ -123,6 +122,7 @@ package org.b3log.siyuan;
  */
 public class MainActivity extends AppCompatActivity implements com.blankj.utilcode.util.Utils.OnAppStatusChangedListener {
     private final String TAG = "MainActivity-SiYuan";
+    private Activity thisActivity;
     public WebView webView;
     private FrameLayout webViewContainer;
     private ImageView bootLogo;
@@ -253,9 +253,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             initUIElements();
 
             AppUtils.registerAppStatusChangedListener(this);
-
-            // 沉浸式状态栏设置
-            UltimateBarX.statusBarOnly(this).transparent().light(false).color(Color.parseColor(S.getColorStringHex().getBgColor_light())).apply();
             if (webView != null) {
                 ((ViewGroup) webView.getParent()).setPadding(0, UltimateBarX.getStatusBarHeight(), 0, 0);
 
@@ -263,18 +260,23 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 if (Utils.isDebugPackageAndMode(this)) {
                     WebView.setWebContentsDebuggingEnabled(true);
                 }
-                // autoWebViewDarkMode 决定是否自动在 webview 中应用暗黑模式。如果前端已经有暗黑模式配置，此项应为 false（默认值）
-                U.applySystemThemeToWebView(this, webView, mmkv.getBoolean("autoWebViewDarkMode", false));
 
                 // 注册工具栏显示/隐藏跟随软键盘状态
                 // Fix https://github.com/siyuan-note/siyuan/issues/9765
                 // Fix https://github.com/siyuan-note/siyuan/issues/9726
                 // https://github.com/Hi-Windom/Sillot-android/issues/84
                 WebViewLayoutManager webViewLayoutManager = WebViewLayoutManager.assistActivity(this, webView);
-//                webViewLayoutManager.setAutoWebViewDarkMode(mmkv.getBoolean("autoWebViewDarkMode", false));
                 webViewLayoutManager.setOnConfigurationChangedCallback((newConfig)->{
-                    U.applySystemThemeToWebView(this, webView, mmkv.getBoolean("autoWebViewDarkMode", false));
+                    applySystemThemeToWebView(this, webView, mmkv.getBoolean("autoWebViewDarkMode", false));
                     BuglyLog.w(TAG, "新配置屏幕方向: " + newConfig.orientation);
+                    return null;
+                });
+                webViewLayoutManager.setOnLayoutChangedCallback((frameLayout)->{
+                    applySystemThemeToWebView(thisActivity, webView, mmkv.getBoolean("autoWebViewDarkMode", false));
+                    return null;
+                });
+                webViewLayoutManager.setOnWindowInsetsListenerCallback((v, insets)->{
+                    applySystemThemeToWebView(thisActivity, webView, mmkv.getBoolean("autoWebViewDarkMode", false));
                     return null;
                 });
                 if (!U.getPHONE().isPad(this)) {
@@ -329,6 +331,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     protected void onCreate(final Bundle savedInstanceState) { // 只执行一次。在这里设置布局和初始化数据。在大多数情况下，不需要在 onRestart 中做太多事情，因为 onStart 已经处理了活动可见时的初始化。
         BuglyLog.w(TAG, "onCreate() invoked");
         super.onCreate(savedInstanceState);
+        thisActivity = this;
         setContentView(R.layout.activity_main);
         bindBootService();
         mmkv = MMKV.defaultMMKV();
@@ -568,6 +571,9 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                     bootDetailsText.setVisibility(View.GONE);
                     bootLogo.setVisibility(View.GONE);
                 }, 186);
+
+                // autoWebViewDarkMode 决定是否自动在 webview 中应用暗黑模式。如果前端已经有暗黑模式配置，此项应为 false（默认值）
+                applySystemThemeToWebView(thisActivity, webView, mmkv.getBoolean("autoWebViewDarkMode", false));
             }
 
             @Override
