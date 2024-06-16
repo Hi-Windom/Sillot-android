@@ -41,8 +41,8 @@ package org.b3log.siyuan;
  import android.view.View;
  import android.view.ViewGroup;
 
- import sc.windom.sofill.Us.U_FuckOtherApp;
  import sc.windom.sofill.Us.U_Layout;
+ import sc.windom.sofill.Us.U_Pro;
  import sc.windom.sofill.android.webview.WebViewLayoutManager;
  import sc.windom.sofill.Ss.S_Events;
  import sc.windom.sofill.Ss.S_Intent;
@@ -254,47 +254,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             initUIElements();
 
             AppUtils.registerAppStatusChangedListener(this);
-            if (webView != null) {
-                // 避免和状态栏之间存在留白
-                U_Layout.applyStatusBarConfigurationV2(this, false); // 可以伸到状态栏和导航栏的位置（沉浸式）
-                ((ViewGroup) webView.getParent()).setPadding(0, U_Layout.getStatusBarHeight(webView), 0, 0);
-
-                // 使用 Chromium 调试 WebView
-                if (Utils.isDebugPackageAndMode(this)) {
-                    WebView.setWebContentsDebuggingEnabled(true);
-                }
-
-                // 注册工具栏显示/隐藏跟随软键盘状态
-                // Fix https://github.com/siyuan-note/siyuan/issues/9765
-                // Fix https://github.com/siyuan-note/siyuan/issues/9726
-                // https://github.com/Hi-Windom/Sillot-android/issues/84
-                WebViewLayoutManager webViewLayoutManager = WebViewLayoutManager.assistActivity(this, webView);
-                webViewLayoutManager.setOnConfigurationChangedCallback((newConfig)->{
-                    applySystemThemeToWebView(this, webView, mmkv.getBoolean("autoWebViewDarkMode", false));
-                    BuglyLog.w(TAG, "新配置屏幕方向: " + newConfig.orientation);
-                    return null;
-                });
-                webViewLayoutManager.setOnLayoutChangedCallback((frameLayout)->{
-                    applySystemThemeToWebView(thisActivity, webView, mmkv.getBoolean("autoWebViewDarkMode", false));
-                    return null;
-                });
-                webViewLayoutManager.setOnWindowInsetsListenerCallback((v, insets)->{
-                    applySystemThemeToWebView(thisActivity, webView, mmkv.getBoolean("autoWebViewDarkMode", false));
-                    return null;
-                });
-                if (!U.getPHONE().isPad(this)) {
-                    webViewLayoutManager.setDelayResetLayoutWhenImeShow(120);
-                    // showKeyboardToolbar 不知道在哪已经实现了随键盘呼出（有延时，大概率是在前端），这里依旧调用是因为响应更快
-                    webViewLayoutManager.setJSonImeShow("showKeyboardToolbar();");
-                    webViewLayoutManager.setJSonImeHide("hideKeyboardToolbar();");
-                    // 锁定方便悬浮键盘不自动收起
-                    webViewLayoutManager.setJSonImeShow0Height("window.Sillot.android.LockKeyboardToolbar=true;hideKeyboardToolbar();showKeyboardToolbar();");
-                    webViewLayoutManager.setJSonImeHide0Height("window.Sillot.android.LockKeyboardToolbar=false;hideKeyboardToolbar();");
-                }
-
-                // 支持 OriginOS4 超级拖拽 #90
-                U_FuckOtherApp.setOnDragListenerForWebView(webView, MainPro.class);
-            }
         } else {
             // 服务尚未绑定或实例为空，处理错误或等待绑定
             U.getDialogX();
@@ -336,6 +295,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         super.onCreate(savedInstanceState);
         thisActivity = this;
         setContentView(R.layout.activity_main);
+        U_Layout.applyStatusBarConfigurationV2(this, false); // 可以伸到状态栏和导航栏的位置（沉浸式）
         bindBootService();
         mmkv = MMKV.defaultMMKV();
         // 注册 EventBus
@@ -409,7 +369,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         bootLogo = findViewById(R.id.bootLogo);
         bootProgressBar = findViewById(R.id.progressBar);
         bootDetailsText = findViewById(R.id.bootDetails);
-//        webView = bootService.getWebView();
         if (webView != null) {
             // 设置WebView的布局参数
             webView.setLayoutParams(new FrameLayout.LayoutParams(
@@ -430,6 +389,41 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 }
             }
 
+            // 避免和状态栏之间存在留白
+            ((ViewGroup) webView.getParent()).setPadding(0, U_Layout.getStatusBarHeight(webView), 0, 0);
+
+            // 注册工具栏显示/隐藏跟随软键盘状态
+            // Fix https://github.com/siyuan-note/siyuan/issues/9765
+            // Fix https://github.com/siyuan-note/siyuan/issues/9726
+            // https://github.com/Hi-Windom/Sillot-android/issues/84
+            WebViewLayoutManager webViewLayoutManager = WebViewLayoutManager.assistActivity(this, webView);
+            webViewLayoutManager.setOnConfigurationChangedCallback((newConfig)->{
+                applySystemThemeToWebView(this, webView, mmkv.getBoolean("autoWebViewDarkMode", false));
+                BuglyLog.w(TAG, "新配置屏幕方向: " + newConfig.orientation);
+                return null;
+            });
+            webViewLayoutManager.setOnLayoutChangedCallback((frameLayout)->{
+                applySystemThemeToWebView(thisActivity, webView, mmkv.getBoolean("autoWebViewDarkMode", false));
+                return null;
+            });
+            webViewLayoutManager.setOnWindowInsetsListenerCallback((v, insets)->{
+                applySystemThemeToWebView(thisActivity, webView, mmkv.getBoolean("autoWebViewDarkMode", false));
+                return null;
+            });
+            if (!U.getPHONE().isPad(this)) {
+                webViewLayoutManager.setDelayResetLayoutWhenImeShow(120);
+                // showKeyboardToolbar 不知道在哪已经实现了随键盘呼出（有延时，大概率是在前端），这里依旧调用是因为响应更快
+                webViewLayoutManager.setJSonImeShow("showKeyboardToolbar();");
+                webViewLayoutManager.setJSonImeHide("hideKeyboardToolbar();");
+                // 锁定方便悬浮键盘不自动收起
+                webViewLayoutManager.setJSonImeShow0Height("window.Sillot.android.LockKeyboardToolbar=true;hideKeyboardToolbar();showKeyboardToolbar();");
+                webViewLayoutManager.setJSonImeHide0Height("window.Sillot.android.LockKeyboardToolbar=false;hideKeyboardToolbar();");
+            }
+
+            // 使用 Chromium 调试 WebView
+            if (Utils.isDebugPackageAndMode(this)) {
+                WebView.setWebContentsDebuggingEnabled(true);
+            }
 
             webView.setWebChromeClient(new WebChromeClient() {
             // setWebViewClient 和 setWebChromeClient 并不同，别看走眼了
@@ -507,7 +501,10 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
         });
 
-            webView.setOnDragListener((v, event) -> {
+            webView.setOnDragListener((view, event) -> {
+                BuglyLog.d(TAG, "webView.setOnDragListener((view, event) -> view: " + view.toString() + ", event: " + event.toString());
+                // 支持 OriginOS4 超级拖拽 #90
+                U_Pro.onDragSend2Producer(webView, event, MainPro.class);
                 // 禁用拖拽 https://github.com/siyuan-note/siyuan/issues/6436
                 return DragEvent.ACTION_DRAG_ENDED != event.getAction();
             });

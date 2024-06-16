@@ -43,6 +43,7 @@ import sc.windom.sofill.Us.U_FuckOtherApp
 import sc.windom.sofill.Us.U_Layout
 import sc.windom.sofill.Us.U_Permission
 import sc.windom.sofill.Us.U_Phone
+import sc.windom.sofill.Us.U_Pro
 import sc.windom.sofill.Us.U_Safe
 import java.io.File
 import java.net.URLDecoder
@@ -82,7 +83,11 @@ object U {
     @JvmStatic
     val DOSC = U_DOSC
 
+    @JvmStatic
     val LAYOUT = U_Layout
+
+    @JvmStatic
+    val PRO = U_Pro
 
 
     @SuppressLint("ObsoleteSdkInt")
