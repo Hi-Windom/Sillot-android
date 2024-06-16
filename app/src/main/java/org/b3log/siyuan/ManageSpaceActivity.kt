@@ -192,16 +192,40 @@ class ManageSpaceActivity : AppCompatActivity() {
                     modifier = Modifier
                         .padding(20.dp)
                 ) {
-                    Text(
-                        text = message.toString(),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = S.C.text_fontSize_xxxx.current,
-                        lineHeight = S.C.text_lineHeight_xxxx.current,
-                        maxLines = 6,
-                        overflow = TextOverflow.Ellipsis, // 如果文本仍然太长，则显示省略号
-                    )
                     ErrorText(t)
-                    ErrorText("基于用户数据安全考虑，您必须认证成功才能继续。")
+                    if (state == BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE || state == BiometricManager.BIOMETRIC_ERROR_UNSUPPORTED) {
+                        Text(
+                            text = "由于${message}，您当前可以跳过认证。",
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = S.C.text_fontSize_xxxx.current,
+                            lineHeight = S.C.text_lineHeight_xxxx.current,
+                            maxLines = 6,
+                            overflow = TextOverflow.Ellipsis, // 如果文本仍然太长，则显示省略号
+                        )
+                        Button(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = {
+                                setContent {
+                                    CascadeMaterialTheme {
+                                        UI(intent, TAG)
+                                    }
+                                }
+                                return@Button
+                            },
+                        ) {
+                            Text("跳过认证")
+                        }
+                    } else {
+                        Text(
+                            text = message.toString(),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = S.C.text_fontSize_xxxx.current,
+                            lineHeight = S.C.text_lineHeight_xxxx.current,
+                            maxLines = 6,
+                            overflow = TextOverflow.Ellipsis, // 如果文本仍然太长，则显示省略号
+                        )
+                        ErrorText("基于用户数据安全考虑，您必须认证成功才能继续。")
+                    }
                 }
             }
         }
