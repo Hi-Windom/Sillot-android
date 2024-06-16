@@ -42,7 +42,7 @@ import sc.windom.sofill.Us.U_Layout.visibleRect
  * - 布局模式：[普通，小窗，多窗口]
  * - 导航方式：[全面屏手势，经典导航键]
  * - 屏幕方向：[竖屏，横屏]
- * - 特殊操作：[无，改变屏幕方向]
+ * - 特殊操作：[无，改变屏幕方向，悬浮键盘与非悬浮键盘之间切换]
  * - 输入法：[Jovi输入法Pro，QQ输入法，百度输入法，微信输入法，搜狗输入法，讯飞输入法]
  *
  * @since v0.35
@@ -55,7 +55,7 @@ import sc.windom.sofill.Us.U_Layout.visibleRect
  * @sample WebViewLayoutManager.assistActivity
  * @author https://ld246.com/member/soltus, GLM-4
  * @see [applySystemThemeToWebView]
- * @property delayResetLayoutWhenImeShow 收窄布局延时执行时间。键盘弹起到最后高度需要一个过程，因此收窄布局应当延时执行（不包括小窗和多窗口模式），延时多久没有标准，推荐赋值为 186
+ * @property delayResetLayoutWhenImeShow 收窄布局延时执行时间。键盘弹起到最后高度需要一个过程，因此收窄布局应当延时执行（不包括小窗和多窗口模式），延时多久没有标准，推荐赋值为 120-186
  * @property JSonImeShow 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
  * @property JSonImeHide 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
  * @property JSonImeShow0Height 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
@@ -91,7 +91,9 @@ class WebViewLayoutManager private constructor(
     var onLayoutChangedCallback: ((frameLayout: FrameLayout) -> Unit)? = null
     var onWindowInsetsListenerCallback: ((v: View?, insets: WindowInsetsCompat) -> Unit)? = null
     private var isImeVisible = false // 支持悬浮键盘
+    private var currentImeVisible = false // 记录上次的状态，用于识别从悬浮键盘切换至非悬浮键盘
     private var imeHeight = 0 // 悬浮键盘的值为 0
+    private var currentImeHeight = 0 // 记录上次的状态，用于识别从悬浮键盘切换至非悬浮键盘
     private var lastLayoutWidth = 0
     private var lastLayoutHeight = 0
     private val view: View // 绑定的 activity 的内容视图
@@ -137,45 +139,66 @@ class WebViewLayoutManager private constructor(
         }
     }
 
+    private val lock = Any() // 定义一个锁对象
+
     /**
      * 重置布局
      * @param traker 跟踪调用者
      */
     private fun restLayout(traker: String) {
-        val newHight =
-            view.getRootViewHeight() - view.navigationBarHeight // 兼容经典导航键、小米系统小窗底部小白条、实体键盘，o(￣ヘ￣o#)
-        // logInfo()
-        Log.w(
-            TAG,
-            "restLayout@$traker, view.height: ${view.height}, newHight: $newHight, " +
-                    "isImeVisible: ${this.isImeVisible}, imeHeight: ${this.imeHeight}, isInSpecialMode(): ${activity.isInSpecialMode()}"
-        )
-        if (this.isImeVisible) {
-            // 键盘弹起到最后高度需要一个过程，因此收窄布局应当延时执行（不包括小窗和多窗口模式），延时多久没有标准
-            // （如果声明了 android:windowSoftInputMode="adjustResize" 则无效，因为系统已经自动调整了布局）
-            Handler(Looper.getMainLooper()).postDelayed({
-                if (this.imeHeight == 0 || activity.isInSpecialMode()) {
-                    webView.evaluateJavascript(this.JSonImeShow0Height, null)
+        // 使用 let 函数来确保 this 的正确性（指向类）
+        this.let {
+            synchronized(lock) { // 使用锁来同步代码块
+                val newHight =
+                    view.getRootViewHeight() - view.navigationBarHeight // 兼容经典导航键、小米系统小窗底部小白条、实体键盘，o(￣ヘ￣o#
+                // logInfo()
+                Log.w(
+                    TAG,
+                    "restLayout@$traker, view.height:${view.height}, newHight: $newHight, currentImeVisible: ${it.currentImeVisible}, " +
+                            "isImeVisible: ${it.isImeVisible}, imeHeight:${it.imeHeight}, isInSpecialMode(): ${activity.isInSpecialMode()}"
+                )
+                val isInSpecialMode_lock =
+                    it.imeHeight == 0 || activity.isInSpecialMode() // 小窗和多窗口模式
+                val fromFloating2Normal_lock =
+                    it.currentImeVisible && it.currentImeHeight == 0 && it.imeHeight != 0 // 从悬浮键盘切换至非悬浮键盘
+                it.currentImeVisible = it.isImeVisible
+                it.currentImeHeight = it.imeHeight
+                if (this.isImeVisible) {
+                    // 键盘弹起到最后高度需要一个过程，因此收窄布局应当延时执行（不包括小窗和多窗口模式），延时多久没有标准
+                    // （如果声明了 android:windowSoftInputMode="adjustResize" 则无效，因为系统已经自动调整了布局）
+                    Handler(Looper.getMainLooper()).postDelayed(
+                        {
+                            view.layoutParams.height =
+                                newHight - if (isInSpecialMode_lock || fromFloating2Normal_lock) 0 else it.imeHeight
+                            webView.layoutParams.height = -1 // 这里不能改，必须MATCH_PARENT
+                            view.requestLayout()
+                            webView.requestLayout()
+                        },
+                        if (isInSpecialMode_lock || fromFloating2Normal_lock) 0 else it.delayResetLayoutWhenImeShow
+                    )
+                    Handler(Looper.getMainLooper()).postDelayed(
+                        {
+                            if (isInSpecialMode_lock) {
+                                webView.evaluateJavascript(it.JSonImeShow0Height, null)
+                            } else {
+                                webView.evaluateJavascript(it.JSonImeShow, null)
+                            }
+                        },
+                        if (isInSpecialMode_lock || fromFloating2Normal_lock) 0 else it.delayResetLayoutWhenImeShow + 20
+                    )
                 } else {
-                    webView.evaluateJavascript(this.JSonImeShow, null)
+                    // 填充布局应当立即执行，如果前端键盘工具条有动画可以延时收起
+                    if (isInSpecialMode_lock) {
+                        webView.evaluateJavascript(it.JSonImeHide0Height, null)
+                    } else {
+                        webView.evaluateJavascript(it.JSonImeHide, null)
+                    }
+                    view.layoutParams.height = newHight
+                    webView.layoutParams.height = -1 // 这里不能改，必须MATCH_PARENT
+                    view.requestLayout()
+                    webView.requestLayout()
                 }
-                view.layoutParams.height =
-                    newHight - if (activity.isInSpecialMode()) 0 else this.imeHeight
-                webView.layoutParams.height = -1 // 这里不能改，必须MATCH_PARENT
-                view.requestLayout()
-                webView.requestLayout()
-            }, if (activity.isInSpecialMode()) 0 else this.delayResetLayoutWhenImeShow)
-        } else {
-            // 填充布局应当立即执行
-            if (this.imeHeight == 0 || activity.isInSpecialMode()) {
-                webView.evaluateJavascript(this.JSonImeHide0Height, null)
-            } else {
-                webView.evaluateJavascript(this.JSonImeHide, null)
             }
-            view.layoutParams.height = newHight
-            webView.layoutParams.height = -1 // 这里不能改，必须MATCH_PARENT
-            view.requestLayout()
-            webView.requestLayout()
         }
     }
 

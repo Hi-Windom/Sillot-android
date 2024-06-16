@@ -280,7 +280,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                     return null;
                 });
                 if (!U.getPHONE().isPad(this)) {
-                    webViewLayoutManager.setDelayResetLayoutWhenImeShow(186);
+                    webViewLayoutManager.setDelayResetLayoutWhenImeShow(120);
                     // showKeyboardToolbar 不知道在哪已经实现了随键盘呼出（有延时，大概率是在前端），这里依旧调用是因为响应更快
                     webViewLayoutManager.setJSonImeShow("showKeyboardToolbar();");
                     webViewLayoutManager.setJSonImeHide("hideKeyboardToolbar();");
