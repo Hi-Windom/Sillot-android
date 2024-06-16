@@ -18,9 +18,13 @@ import sc.windom.sofill.U.isLightColor
 /**
  * 推荐在四处调用，将良好的沉浸式状态栏体验带到webview：
  * 在 WebViewLayoutManager 的 onConfigurationChangedCallback、 onLayoutChangedCallback 和 onWindowInsetsListenerCallback 中调用，
- * webViewd 的 WebViewClient 的 onPageFinished 中调用
+ * webViewd 的 WebViewClient 的 onPageFinished 中调用.
  *
- * forceWebViewFollowSystemDarkMode 决定是否自动在 webview 中强制跟随系统通过算法处理暗黑模式。如果前端已经有暗黑模式配置，此项应为 false（默认值）
+ * `webView.rootView.setBackgroundColor(statusBarBelowColor)` 与 [WebViewLayoutManager] 进行联动（键盘弹出时延时重置布局并不总是理想，有时候还是会漏出布局底色露馅，
+ * 一般来说 statusBarBelowColor 与网页背景色是一致的，因此不容易被发现）
+ *
+ * @param forceWebViewFollowSystemDarkMode 决定是否自动在 webview 中强制跟随系统通过算法处理暗黑模式。如果前端已经有暗黑模式配置，此项应为 false（默认值）
+ *
  */
 fun applySystemThemeToWebView(
     activity: Activity,
@@ -67,7 +71,8 @@ fun applySystemThemeToWebView(
         }
     }
     Handler(Looper.getMainLooper()).postDelayed({
-        activity.setStatusBarColorFromBelowStatusBar(webView)
+        val statusBarBelowColor = activity.setStatusBarColorFromBelowStatusBar(webView)
+        webView.rootView.setBackgroundColor(statusBarBelowColor)
     }, 0) // 延时只有调试的时候需要
 }
 
@@ -80,13 +85,14 @@ private fun Activity.setStatusBarIconColorAccordingToColor(color: Int) {
     )
 }
 
-private fun Activity.setStatusBarColorFromBelowStatusBar(view: View) {
+private fun Activity.setStatusBarColorFromBelowStatusBar(view: View): Int {
     // 获取状态栏下方的颜色
     val statusBarBelowColor = getDominantColorFromBelowStatusBar(view)
     // 设置状态栏颜色
     window.statusBarColor = statusBarBelowColor
     // 根据状态栏颜色调整图标颜色（深色或浅色）
     setStatusBarIconColorAccordingToColor(statusBarBelowColor)
+    return statusBarBelowColor
 }
 
 private fun Activity.getDominantColorFromBelowStatusBar(view: View): Int {
