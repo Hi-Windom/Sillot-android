@@ -1,0 +1,1 @@
+与汐洛安卓一致，API兼容性为 @RequiresApi(Build.VERSION_CODES.S) 等级 31，即安卓12+

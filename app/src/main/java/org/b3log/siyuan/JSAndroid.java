@@ -23,6 +23,7 @@ import static com.blankj.utilcode.util.ViewUtils.runOnUiThread;
 
 import static sc.windom.sofill.Us.U_DialogX.PopTipShow;
 import static sc.windom.sofill.Us.U_Phone.toggleFullScreen;
+import static sc.windom.sofill.android.webview.WebViewThemeKt.applySystemThemeToWebView;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -51,7 +52,6 @@ import androidx.core.app.ShareCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
-import com.blankj.utilcode.util.BarUtils;
 import com.blankj.utilcode.util.StringUtils;
 import com.kongzue.dialogx.dialogs.MessageDialog;
 import com.kongzue.dialogx.dialogs.TipDialog;
@@ -59,7 +59,6 @@ import com.kongzue.dialogx.dialogs.WaitDialog;
 import com.kongzue.dialogx.util.TextInfo;
 import com.tencent.bugly.crashreport.BuglyLog;
 import com.tencent.bugly.crashreport.CrashReport;
-import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -68,9 +67,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
-import java.util.concurrent.atomic.AtomicReference;
 
 import mobile.Mobile;
 import sc.windom.sofill.S;
@@ -650,41 +647,8 @@ public final class JSAndroid {
     public void changeStatusBarColor(final String color, final int appearanceMode) {
         BuglyLog.d(TAG, "changeStatusBarColor() invoked");
         activity.runOnUiThread(() -> {
-            UltimateBarX.statusBarOnly(activity).transparent().light(appearanceMode == 0).color(parseColor(color)).apply();
-
-            BarUtils.setNavBarLightMode(activity, appearanceMode == 0);
-            BarUtils.setNavBarColor(activity, parseColor(color));
+            applySystemThemeToWebView(activity, activity.webView, false);
         });
     }
-
-    private int parseColor(String str) {
-        try {
-            str = str.trim();
-            if (str.toLowerCase().contains("rgb")) {
-                String splitStr = str.substring(str.indexOf('(') + 1, str.indexOf(')'));
-                String[] splitString = splitStr.split(",");
-
-                final int[] colorValues = new int[splitString.length];
-                for (int i = 0; i < splitString.length; i++) {
-                    colorValues[i] = Integer.parseInt(splitString[i].trim());
-                }
-                return Color.rgb(colorValues[0], colorValues[1], colorValues[2]);
-            }
-            if (7 > str.length()) {
-                // https://stackoverflow.com/questions/10230331/how-to-convert-3-digit-html-hex-colors-to-6-digit-flex-hex-colors
-                str = str.replaceAll("#([0-9a-fA-F])([0-9a-fA-F])([0-9a-fA-F])", "#$1$1$2$2$3$3");
-            }
-            if (9 == str.length() && '#' == str.charAt(0)) {
-                // The status bar color on Android is incorrect https://github.com/siyuan-note/siyuan/issues/10278
-                // 将 #RRGGBBAA 转换为 #AARRGGBB
-                str = "#" + str.substring(7, 9) + str.substring(1, 7);
-            }
-            return Color.parseColor(str);
-        } catch (final Exception e) {
-            Utils.LogError("js", "parse color failed", e);
-            return Color.parseColor("#212224");
-        }
-    }
-
 
 }

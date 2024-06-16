@@ -42,6 +42,7 @@ package org.b3log.siyuan;
  import android.view.ViewGroup;
 
  import sc.windom.sofill.Us.U_FuckOtherApp;
+ import sc.windom.sofill.Us.U_Layout;
  import sc.windom.sofill.android.webview.WebViewLayoutManager;
  import sc.windom.sofill.Ss.S_Events;
  import sc.windom.sofill.Ss.S_Intent;
@@ -85,7 +86,6 @@ package org.b3log.siyuan;
  import com.tencent.bugly.crashreport.BuglyLog;
  import com.tencent.bugly.crashreport.CrashReport;
  import com.tencent.mmkv.MMKV;
- import com.zackratos.ultimatebarx.ultimatebarx.java.UltimateBarX;
 
  import org.b3log.siyuan.appUtils.HWs;
  import org.b3log.siyuan.producer.MainPro;
@@ -255,7 +255,9 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
             AppUtils.registerAppStatusChangedListener(this);
             if (webView != null) {
-                ((ViewGroup) webView.getParent()).setPadding(0, UltimateBarX.getStatusBarHeight(), 0, 0);
+                // 避免和状态栏之间存在留白
+                U_Layout.applyStatusBarConfigurationV2(this, false); // 可以伸到状态栏和导航栏的位置（沉浸式）
+                ((ViewGroup) webView.getParent()).setPadding(0, U_Layout.getStatusBarHeight(webView), 0, 0);
 
                 // 使用 Chromium 调试 WebView
                 if (Utils.isDebugPackageAndMode(this)) {

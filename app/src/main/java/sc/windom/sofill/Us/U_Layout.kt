@@ -9,6 +9,7 @@ import android.os.Build
 import android.util.DisplayMetrics
 import android.view.View
 import android.view.ViewConfiguration
+import android.view.WindowInsetsController
 import android.view.WindowManager
 import androidx.annotation.RequiresApi
 import androidx.annotation.VisibleForTesting
@@ -76,6 +77,7 @@ object U_Layout {
     /**
      * 获取导航栏高度
      */
+    @JvmStatic
     val View.navigationBarHeight: Int
         @SuppressLint("ObsoleteSdkInt") @RequiresApi(Build.VERSION_CODES.S)
         get() {
@@ -92,6 +94,7 @@ object U_Layout {
     /**
      * 获取状态栏高度
      */
+    @JvmStatic
     val View.statusBarHeight: Int
         get() {
             // 获取当前视图的 WindowInsets
@@ -103,5 +106,46 @@ object U_Layout {
             // 返回顶部系统窗口的不可见区域高度，这通常是状态栏的高度
             return visibleInsets.top
         }
+
+
+    @Deprecated("安卓12+请使用applyStatusBarConfigurationV2")
+    @JvmStatic
+    fun Activity.applyStatusBarConfiguration(fitWindow: Boolean) {
+        // 获取WindowInsetsController
+        val insetsController = window.insetsController ?: return
+
+        // 设置是否占用系统窗口空间
+        val systemUiVisibility = if (fitWindow) {
+            // 占用系统窗口空间
+            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        } else {
+            // 不占用系统窗口空间
+            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        }
+        window.decorView.systemUiVisibility = systemUiVisibility
+
+        // 应用配置
+        insetsController.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+    }
+
+    @SuppressLint("ObsoleteSdkInt")
+    @JvmStatic
+    @RequiresApi(Build.VERSION_CODES.S)
+    fun Activity.applyStatusBarConfigurationV2(fitWindow: Boolean) {
+        // 获取WindowInsetsController
+        val insetsController = window.insetsController ?: return
+
+        // 设置是否占用系统窗口空间
+        window.setDecorFitsSystemWindows(fitWindow)
+
+        // 控制系统栏的可见性
+        insetsController.apply {
+            // 设置系统栏的行为
+            systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
+    }
 
 }

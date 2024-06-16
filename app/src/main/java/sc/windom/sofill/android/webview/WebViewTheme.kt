@@ -13,6 +13,7 @@ import androidx.webkit.WebViewFeature
 import org.b3log.siyuan.R
 import sc.windom.sofill.U.DialogX
 import sc.windom.sofill.U.isLightColor
+import sc.windom.sofill.Us.U_Layout.statusBarHeight
 
 
 /**
@@ -21,7 +22,9 @@ import sc.windom.sofill.U.isLightColor
  * webViewd 的 WebViewClient 的 onPageFinished 中调用.
  *
  * `webView.rootView.setBackgroundColor(statusBarBelowColor)` 与 [WebViewLayoutManager] 进行联动（键盘弹出时延时重置布局并不总是理想，有时候还是会漏出布局底色露馅，
- * 一般来说 statusBarBelowColor 与网页背景色是一致的，因此不容易被发现）
+ * 一般来说 statusBarBelowColor 与网页背景色是一致的，因此不容易被发现）。
+ * @suppress 不可能一直监听状态栏下方区域颜色是否变化，这样的开销没必要。因此如果切换主题不触发页面重载，即不经过onPageFinished，可以通过其他方式手动触发一下，问题不大。
+ * 或者可以通过 JSAndroid 调用触发
  *
  * @param forceWebViewFollowSystemDarkMode 决定是否自动在 webview 中强制跟随系统通过算法处理暗黑模式。如果前端已经有暗黑模式配置，此项应为 false（默认值）
  *
@@ -95,10 +98,9 @@ private fun Activity.setStatusBarColorFromBelowStatusBar(view: View): Int {
     return statusBarBelowColor
 }
 
-private fun Activity.getDominantColorFromBelowStatusBar(view: View): Int {
+private fun getDominantColorFromBelowStatusBar(view: View): Int {
     // 获取状态栏高度
-    val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
-    val statusBarHeight = resources.getDimensionPixelSize(resourceId)
+    val statusBarHeight = view.statusBarHeight
 
     // 获取状态栏下方的视图
     val statusBarBelowView = view.rootView.findViewById<View>(android.R.id.content)
