@@ -49,6 +49,7 @@ package org.b3log.siyuan;
  import sc.windom.sofill.Us.U_DialogX;
  import sc.windom.sofill.android.webview.WebPoolsPro;
  import android.view.WindowManager;
+ import android.webkit.ConsoleMessage;
  import android.webkit.CookieManager;
  import android.webkit.JsResult;
  import android.webkit.PermissionRequest;
@@ -487,13 +488,20 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 String formattedDate = sdf.format(date);
 
                 new AlertDialog.Builder(MainActivity.this)
-                        .setTitle("onJsAlert from WebView")
+                        .setTitle("[WebChromeClient] onJsAlert from WebView")
                         .setMessage("\n--------------------------------------------\n" + message + "\n--------------------------------------------\n\n* " + view.getTitle() + "\n* " + formattedDate)
                         .setPositiveButton("OK", (dialog, which) -> result.confirm())
                         .setCancelable(false)
                         .show();
                 return true;
             }
+
+                @Override
+                public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
+                    String message = consoleMessage.message();
+                    BuglyLog.d(TAG, "[WebChromeClient] onConsoleMessage -> " + message);
+                    return super.onConsoleMessage(consoleMessage);
+                }
 
         });
 
@@ -516,14 +524,14 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request) {
                 final Uri uri = request.getUrl();
                 final String url = uri.toString();
-                BuglyLog.w(TAG, "showBootIndex() -> [WebViewClient] shouldOverrideUrlLoading <- "+url);
+                BuglyLog.w(TAG, "[WebViewClient] shouldOverrideUrlLoading <- "+url);
                 if (url.contains("127.0.0.1")) {
                     var AppCheckInState = mmkv.getString("AppCheckInState", "");
                     if (AppCheckInState.equals("lockScreen")) {
                         try {
                             String encodedUrl = URLEncoder.encode(url, "UTF-8");
                             String gotourl = "http://127.0.0.1:58131/check-auth?to=" + encodedUrl;
-                            BuglyLog.w(TAG,"showBootIndex() -> [WebViewClient] shouldOverrideUrlLoading -> " + gotourl);
+                            BuglyLog.w(TAG,"[WebViewClient] shouldOverrideUrlLoading -> " + gotourl);
                             view.loadUrl(gotourl);
                         } catch (UnsupportedEncodingException e) {
                             // 编码失败的处理
@@ -563,7 +571,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             @Override
             public void onPageFinished(WebView view, String url) {
                 // 页面加载完成时调用
-                BuglyLog.d("WebViewClient", "onPageFinished: " + url);
+                BuglyLog.d(TAG, "[WebViewClient] onPageFinished: " + url);
                 view.evaluateJavascript("javascript:document.body.classList.add(\"body--mobile\")", null);
                 bootLogo.postDelayed(() -> {
                     bootLogo.setVisibility(View.GONE);

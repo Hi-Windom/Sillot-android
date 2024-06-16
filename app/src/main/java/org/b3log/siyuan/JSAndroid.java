@@ -40,7 +40,9 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.webkit.JavascriptInterface;
+import android.webkit.WebSettings;
 import android.widget.LinearLayout;
 
 import androidx.biometric.BiometricManager;
@@ -52,7 +54,6 @@ import androidx.core.content.FileProvider;
 import com.blankj.utilcode.util.BarUtils;
 import com.blankj.utilcode.util.StringUtils;
 import com.kongzue.dialogx.dialogs.MessageDialog;
-import com.kongzue.dialogx.dialogs.PopTip;
 import com.kongzue.dialogx.dialogs.TipDialog;
 import com.kongzue.dialogx.dialogs.WaitDialog;
 import com.kongzue.dialogx.util.TextInfo;
@@ -67,6 +68,9 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.atomic.AtomicReference;
 
 import mobile.Mobile;
 import sc.windom.sofill.S;
@@ -85,11 +89,30 @@ import sc.windom.sofill.android.permission.Ps;
 public final class JSAndroid {
     private MainActivity activity;
     private final String TAG = "JSAndroid.java";
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
     public JSAndroid(final MainActivity activity) {
         this.activity = activity;
     }
 
     //// Sillot extend start
+    @JavascriptInterface
+    public String getUA() {
+        FutureTask<String> futureTask = new FutureTask<>(() -> {
+            // 在主线程中执行
+            WebSettings settings = activity.webView.getSettings();
+            return settings.getUserAgentString();
+        });
+
+        mainHandler.post(futureTask);
+
+        try {
+            // 等待任务完成并返回结果
+            return futureTask.get();
+        } catch (Exception e) {
+            BuglyLog.e(TAG, e.toString());
+            return null;
+        }
+    }
     @JavascriptInterface
     public boolean isMIUI() {
         U.getPHONE();
@@ -255,7 +278,7 @@ public final class JSAndroid {
                 // 显示权限说明
                 PopTipShow(activity, "必要权限缺失，请处理！");
                 // 打开应用详情界面
-                Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 intent.setData(Uri.parse("package:" + activity.getPackageName()));
                 startActivity(intent);
@@ -293,7 +316,6 @@ public final class JSAndroid {
     @JavascriptInterface
     public void showBiometricPrompt(final String captcha) {
         BuglyLog.d(TAG, "showBiometricPrompt() invoked");
-        Handler mainHandler = new Handler(Looper.getMainLooper());
         // 在主线程中执行
         mainHandler.post(() -> {
         // 在 MainActivity 中调用 showBiometricPrompt 方法
