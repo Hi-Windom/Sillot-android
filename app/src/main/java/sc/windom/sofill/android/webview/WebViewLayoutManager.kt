@@ -22,6 +22,7 @@ import sc.windom.sofill.Us.U_Layout.getRootViewHeight
 import sc.windom.sofill.Us.U_Layout.navigationBarHeight
 import sc.windom.sofill.Us.U_Layout.statusBarHeight
 import sc.windom.sofill.Us.U_Layout.visibleRect
+import splitties.systemservices.inputMethodManager
 
 /**
  * Android small window mode soft keyboard black occlusion [siyuan-note/siyuan-android#7](https://github.com/siyuan-note/siyuan-android/pull/7)
@@ -44,6 +45,8 @@ import sc.windom.sofill.Us.U_Layout.visibleRect
  * - 屏幕方向：[竖屏，横屏]
  * - 特殊操作：[无，改变屏幕方向，悬浮键盘与非悬浮键盘之间切换]
  * - 输入法：[Jovi输入法Pro，QQ输入法，百度输入法，微信输入法，搜狗输入法，讯飞输入法]
+ *
+ * 已知问题：小窗模式下，点击原光标地方呼出键盘时 isImeVisible 为 false，这个目前看来无法解决。
  *
  * @since v0.35
  * @suppress 前端是否提供了键盘工具条，如果没有一般不需要赋值 JSonIme* ，不过建议保留 delayResetLayoutWhenImeShow 提供更好的视觉效果。
@@ -92,19 +95,20 @@ class WebViewLayoutManager private constructor(
     var onWindowInsetsListenerCallback: ((v: View?, insets: WindowInsetsCompat) -> Unit)? = null
     private var isImeVisible = false // 支持悬浮键盘
     private var currentImeVisible = false // 记录上次的状态，用于识别从悬浮键盘切换至非悬浮键盘
-    private var imeHeight = 0 // 悬浮键盘的值为 0
+    private var imeHeight = 0 // 不等于实际键盘高度， 悬浮键盘的值为 0
     private var currentImeHeight = 0 // 记录上次的状态，用于识别从悬浮键盘切换至非悬浮键盘
     private var lastLayoutWidth = 0
     private var lastLayoutHeight = 0
+    private var lastStatusBarHeight = 0 // 保留属性
+    private var lastNavigationBarHeight = 0 // 保留属性
     private val view: View // 绑定的 activity 的内容视图
 
     init {
         val frameLayout = activity.findViewById<FrameLayout>(android.R.id.content)
         this.view = frameLayout.getChildAt(0)
         ViewCompat.setOnApplyWindowInsetsListener(this.view) { v: View?, insets: WindowInsetsCompat ->
-            this.isImeVisible = insets.isVisible(WindowInsets.Type.ime())
+            this.isImeVisible = insets.isVisible(WindowInsets.Type.ime()) // 不支持小窗模式
             this.imeHeight = insets.getInsets(WindowInsets.Type.ime()).bottom
-            Log.w(TAG, "isImeVisible: ${this.isImeVisible}, imeHeight: ${this.imeHeight}")
             restLayout("WindowInsets")
             onWindowInsetsListenerCallback?.invoke(v, insets)
             insets
@@ -115,6 +119,8 @@ class WebViewLayoutManager private constructor(
         frameLayout.viewTreeObserver.addOnGlobalLayoutListener {
             val currentWidth = frameLayout.width
             val currentHeight = frameLayout.height
+            lastStatusBarHeight = frameLayout.statusBarHeight
+            lastNavigationBarHeight = frameLayout.navigationBarHeight
 
             // 为了避免循环调用，因此需要检查布局的宽度和高度是否发生了变化
             if (currentWidth != this.lastLayoutWidth || currentHeight != this.lastLayoutHeight) {
@@ -150,19 +156,26 @@ class WebViewLayoutManager private constructor(
         this.let {
             synchronized(lock) { // 使用锁来同步代码块
                 val newHight =
-                    view.getRootViewHeight() - view.navigationBarHeight // 兼容经典导航键、小米系统小窗底部小白条、实体键盘，o(￣ヘ￣o#
+                    view.getRootViewHeight() - if (it.imeHeight == 0) view.navigationBarHeight else 0 // 兼容经典导航键、小米系统小窗底部小白条、实体键盘，
                 // logInfo()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    Log.w(TAG, "${inputMethodManager.currentInputMethodInfo}") // 输入法信息
+                }
+                val isInSpecialMode_lock =
+                    it.imeHeight == 0 && activity.isInSpecialMode() // 小窗和多窗口模式
+                val fromFloating2Normal_lock =
+                    it.currentImeVisible && it.currentImeHeight == 0 && it.imeHeight != 0 // 从悬浮键盘切换至非悬浮键盘
+                val ImeHequalsNavBarH = it.imeHeight == view.navigationBarHeight // 小米系统上会遇到
+                val isIme0H = it.imeHeight == 0 || ImeHequalsNavBarH
+                it.currentImeVisible = it.isImeVisible
+                it.currentImeHeight = it.imeHeight
                 Log.w(
                     TAG,
                     "restLayout@$traker, view.height:${view.height}, newHight: $newHight, currentImeVisible: ${it.currentImeVisible}, " +
-                            "isImeVisible: ${it.isImeVisible}, imeHeight:${it.imeHeight}, isInSpecialMode(): ${activity.isInSpecialMode()}"
+                            "isImeVisible: ${it.isImeVisible}, imeHeight:${it.imeHeight}, isInSpecialMode: ${activity.isInSpecialMode()},  " +
+                            "view.navigationBarHeight: ${view.navigationBarHeight}, lastNavigationBarHeight: ${it.lastNavigationBarHeight}" +
+                    "fromFloating2Normal_lock: $fromFloating2Normal_lock"
                 )
-                val isInSpecialMode_lock =
-                    it.imeHeight == 0 || activity.isInSpecialMode() // 小窗和多窗口模式
-                val fromFloating2Normal_lock =
-                    it.currentImeVisible && it.currentImeHeight == 0 && it.imeHeight != 0 // 从悬浮键盘切换至非悬浮键盘
-                it.currentImeVisible = it.isImeVisible
-                it.currentImeHeight = it.imeHeight
                 if (this.isImeVisible) {
                     // 键盘弹起到最后高度需要一个过程，因此收窄布局应当延时执行（不包括小窗和多窗口模式），延时多久没有标准
                     // （如果声明了 android:windowSoftInputMode="adjustResize" 则无效，因为系统已经自动调整了布局）
@@ -178,7 +191,7 @@ class WebViewLayoutManager private constructor(
                     )
                     Handler(Looper.getMainLooper()).postDelayed(
                         {
-                            if (isInSpecialMode_lock) {
+                            if (isIme0H) {
                                 webView.evaluateJavascript(it.JSonImeShow0Height, null)
                             } else {
                                 webView.evaluateJavascript(it.JSonImeShow, null)
@@ -188,7 +201,7 @@ class WebViewLayoutManager private constructor(
                     )
                 } else {
                     // 填充布局应当立即执行，如果前端键盘工具条有动画可以延时收起
-                    if (isInSpecialMode_lock) {
+                    if (isIme0H) {
                         webView.evaluateJavascript(it.JSonImeHide0Height, null)
                     } else {
                         webView.evaluateJavascript(it.JSonImeHide, null)
