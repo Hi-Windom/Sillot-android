@@ -41,6 +41,7 @@ package org.b3log.siyuan;
  import android.view.View;
  import android.view.ViewGroup;
 
+ import sc.windom.sofill.Us.U_DEBUG;
  import sc.windom.sofill.Us.U_Layout;
  import sc.windom.sofill.Us.U_Pro;
  import sc.windom.sofill.android.webview.WebViewLayoutManager;
@@ -421,7 +422,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             }
 
             // 使用 Chromium 调试 WebView
-            if (Utils.isDebugPackageAndMode(this)) {
+            if (U_DEBUG.isDebugPackageAndMode(this)) {
+                BuglyLog.w(TAG, "已启用 Chromium 调试 WebView。Edge 浏览器请访问 edge://inspect ，更多信息请访问 https://learn.microsoft.com/zh-cn/microsoft-edge/devtools-guide-chromium/remote-debugging/webviews");
                 WebView.setWebContentsDebuggingEnabled(true);
             }
 
