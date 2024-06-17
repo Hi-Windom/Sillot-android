@@ -7,13 +7,29 @@ import android.content.res.Configuration
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
+import android.view.inputmethod.InputMethodInfo
 import com.blankj.utilcode.util.ScreenUtils
 import sc.windom.sofill.S
 import sc.windom.sofill.U
+import splitties.systemservices.inputMethodManager
 import kotlin.math.pow
 import kotlin.math.sqrt
 
 object U_Phone {
+    @JvmStatic
+    fun inputMethodList(): MutableList<InputMethodInfo> {
+        return inputMethodManager.inputMethodList
+    }
+
+    @JvmStatic
+    fun enabledInputMethodList(): MutableList<InputMethodInfo> {
+        return inputMethodManager.enabledInputMethodList
+    }
+
+    @JvmStatic
+    fun showInputMethodPicker() {
+        inputMethodManager.showInputMethodPicker()
+    }
 
     @JvmStatic
     fun isOriginOS(applicationContext: Context): Boolean {

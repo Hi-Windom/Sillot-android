@@ -93,6 +93,10 @@ public final class JSAndroid {
 
     //// Sillot extend start
     @JavascriptInterface
+    public void  showSoftKeyboardPicker() {
+        U_Phone.showInputMethodPicker();
+    }
+    @JavascriptInterface
     public String getUA() {
         FutureTask<String> futureTask = new FutureTask<>(() -> {
             // 在主线程中执行
