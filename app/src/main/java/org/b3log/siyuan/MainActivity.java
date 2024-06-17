@@ -467,18 +467,35 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 return true;
             }
 
+                /**
+                 * 当网页请求其他权限时，会回调此方法以询问用户是否允许
+                 * @param request the PermissionRequest from current web content.
+                 */
             @Override
-            public void onPermissionRequest(final PermissionRequest request) { // 当网页请求其他权限时，会回调此方法以询问用户是否允许
+            public void onPermissionRequest(final PermissionRequest request) {
                 request.grant(request.getResources());
             }
 
+                /**
+                 * 当 WebView 加载页面时，会多次回调此方法以报告加载进度
+                 * @param webView The WebView that initiated the callback.
+                 * @param progress Current page loading progress, represented by
+                 *                    an integer between 0 and 100.
+                 */
             @Override
-            public void onProgressChanged(WebView webView, int progress) { // 当 WebView 加载页面时，会多次回调此方法以报告加载进度
+            public void onProgressChanged(WebView webView, int progress) {
                 // 增加Javascript异常监控
                 CrashReport.setJavascriptMonitor(webView, true);
                 super.onProgressChanged(webView, progress);
             }
 
+                /**
+                 * 自定义处理前端默认弹窗，后续可以考虑使用 DialogX 等库美化
+                 * @param view The WebView that initiated the callback.
+                 * @param url The url of the page requesting the dialog.
+                 * @param message Message to be displayed in the window.
+                 * @param result A JsResult to confirm that the user closed the window.
+                 */
             @Override
             public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
                 Date date = new Date();
@@ -494,11 +511,15 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 return true;
             }
 
+                /**
+                 * 这里可以通过捕获控制台输出，进行特定的操作
+                 * @param consoleMessage Object containing details of the console message.
+                 */
                 @Override
                 public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
-                    String message = consoleMessage.message();
-                    BuglyLog.d(TAG, "[WebChromeClient] onConsoleMessage -> " + message);
-                    return super.onConsoleMessage(consoleMessage);
+                    BuglyLog.d(TAG + " [WebChromeClient] ", "onConsoleMessage -> " + U_DEBUG.prettyConsoleMessage(consoleMessage));
+                    return true; // 屏蔽默认日志输出避免刷屏
+                    // return super.onConsoleMessage(consoleMessage);
                 }
 
         });

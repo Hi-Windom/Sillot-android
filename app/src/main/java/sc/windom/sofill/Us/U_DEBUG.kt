@@ -6,6 +6,7 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.provider.Settings
 import android.text.TextUtils
+import android.webkit.ConsoleMessage
 import com.tencent.bugly.crashreport.BuglyLog
 import java.io.BufferedReader
 import java.io.FileReader
@@ -13,6 +14,27 @@ import java.io.IOException
 
 
 object U_DEBUG {
+    @JvmStatic
+    fun prettyConsoleMessage(consoleMessage: ConsoleMessage): String {
+        val messageLevel = when (consoleMessage.messageLevel()) {
+            ConsoleMessage.MessageLevel.TIP -> "T"
+            ConsoleMessage.MessageLevel.LOG -> "I"
+            ConsoleMessage.MessageLevel.WARNING -> "W"
+            ConsoleMessage.MessageLevel.ERROR -> "E"
+            ConsoleMessage.MessageLevel.DEBUG -> "D"
+            else -> "Unknown"
+        }
+
+        // 根据消息级别决定是否包含行号和来源
+        val lineNumberAndSource = if (consoleMessage.messageLevel() == ConsoleMessage.MessageLevel.ERROR) {
+            " line ${consoleMessage.lineNumber()} in ${consoleMessage.sourceId()}"
+        } else {
+            ""
+        }
+
+        // 格式化输出
+        return "$messageLevel ${consoleMessage.message()} $lineNumberAndSource"
+    }
     /**
      * 检查当前应用程序是否为内测版或公测版，并且是否处于调试模式。
      *
