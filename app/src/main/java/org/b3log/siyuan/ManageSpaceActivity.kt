@@ -8,20 +8,22 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.FileOpen
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -342,7 +344,7 @@ private fun UI(intent: Intent?, TAG: String) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Checkbox(
@@ -358,18 +360,27 @@ private fun UI(intent: Intent?, TAG: String) {
                                 }
                             }
                         )
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = file.name,
-                                fontSize = 16.sp,
-                                color = if (isExternalFilesDir) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
+                        Column(modifier = Modifier
+                            .weight(1f)
+                            .padding(0.dp)) {
+                            Row {
+                                Icon(
+                                    imageVector = if (file.isDirectory) Icons.Filled.Folder else if (file.isFile) Icons.Filled.FileOpen else Icons.Filled.Archive,
+                                    contentDescription = "item type",
+                                    Modifier.size(16.dp).align(Alignment.CenterVertically)
+                                )
+                                Text(
+                                    text = file.name,
+                                    fontSize = 14.sp,
+                                    color = if (isExternalFilesDir) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.padding(start = 4.dp).align(Alignment.CenterVertically)
+                                )
+                            }
                             Text(
                                 text = file.absolutePath,
                                 color = Color.Gray,
-                                fontSize = 10.sp,
-                                lineHeight = 12.sp,
+                                fontSize = 8.sp,
+                                lineHeight = 10.sp,
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis, // 如果文本仍然太长，则显示省略号
                                 modifier = Modifier.padding(top = 4.dp)
@@ -377,8 +388,8 @@ private fun UI(intent: Intent?, TAG: String) {
                         }
                         Text(
                             text = U.FileUtils.getFileOrFolderSize(file),
-                            fontSize = 14.sp,
-                            modifier = Modifier.padding(start = 16.dp)
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(start = 14.dp).align(Alignment.CenterVertically)
                         )
                     }
                 }
