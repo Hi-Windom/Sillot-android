@@ -69,6 +69,7 @@ import splitties.systemservices.inputMethodManager
  * @property softInputMode 覆盖清单中声明，默认值为 SOFT_INPUT_ADJUST_PAN，
  * @property onConfigurationChangedCallback 配置发生变化时的回调函数，如果赋值该项则不应在 activity 中重写 onConfigurationChanged 方法，否则回调无效。示例：
  * @property onWindowInsetsListenerCallback 暂无介绍
+ * @property onLayoutChangedCallback 布局变化的回调函数
  * ```java
  * webViewLayoutManager.setOnConfigurationChangedCallback((newConfig)->{
  *   Log.w(TAG, "新配置屏幕方向: " + newConfig.orientation);
@@ -162,7 +163,7 @@ class WebViewLayoutManager private constructor(
             synchronized(lock) { // 使用锁来同步代码块
                 val newHight =
                     view.getRootViewHeight() - if (it.imeHeight == 0) view.navigationBarHeightV else 0 // 兼容经典导航键、小米系统小窗底部小白条、实体键盘，
-                logInfo()
+                // logInfo()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     Log.w(TAG, "${inputMethodManager.currentInputMethodInfo}") // 输入法信息
                 }
