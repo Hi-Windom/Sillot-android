@@ -3,16 +3,15 @@ package sc.windom.sofill.Us
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
-import android.graphics.Point
 import android.graphics.Rect
 import android.os.Build
 import android.util.DisplayMetrics
 import android.view.View
-import android.view.ViewConfiguration
+import android.view.ViewGroup
 import android.view.WindowInsetsController
 import android.view.WindowManager
 import androidx.annotation.RequiresApi
-import androidx.annotation.VisibleForTesting
+import androidx.core.graphics.Insets
 import androidx.core.view.WindowInsetsCompat
 
 object U_Layout {
@@ -75,21 +74,53 @@ object U_Layout {
         }
 
     /**
-     * 获取导航栏高度
+     * 获取导航栏高度，在竖屏时调用
      */
     @JvmStatic
-    val View.navigationBarHeight: Int
+    val View.navigationBarHeightV: Int
         @SuppressLint("ObsoleteSdkInt") @RequiresApi(Build.VERSION_CODES.S)
         get() {
-            // 获取当前视图的 WindowInsets
             val insets = WindowInsetsCompat.toWindowInsetsCompat(this.rootWindowInsets ?: return 0)
-
-            // 获取系统窗口的可见区域
             val visibleInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-
-            // 返回底部系统窗口的不可见区域高度，这通常是导航栏的高度
             return visibleInsets.bottom
         }
+
+    /**
+     * 获取导航栏高度，在横屏时调用
+     */
+    @JvmStatic
+    val View.navigationBarHeightH: Int
+        @SuppressLint("ObsoleteSdkInt") @RequiresApi(Build.VERSION_CODES.S)
+        get() {
+            val insets = WindowInsetsCompat.toWindowInsetsCompat(this.rootWindowInsets ?: return 0)
+            val visibleInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            return maxOf(visibleInsets.left, visibleInsets.right)
+        }
+
+    /**
+     * 获取系统栏（状态栏和导航栏）
+     */
+    @JvmStatic
+    fun View.getSystemBarInsets(): Insets {
+        val insets = WindowInsetsCompat.toWindowInsetsCompat(rootWindowInsets)
+        return insets.getInsets(WindowInsetsCompat.Type.systemBars())
+    }
+
+    /**
+     * 调整布局边距以避免被系统栏遮挡
+     */
+    @JvmStatic
+    fun View.adjustLayoutMarginForSystemBars() {
+        val systemBarInsets = getSystemBarInsets()
+        layoutParams?.let { layoutParams ->
+            if (layoutParams is ViewGroup.MarginLayoutParams) {
+                layoutParams.bottomMargin = systemBarInsets.bottom
+                layoutParams.leftMargin = systemBarInsets.left
+                layoutParams.rightMargin = systemBarInsets.right
+                requestLayout()
+            }
+        }
+    }
 
     /**
      * 获取状态栏高度
