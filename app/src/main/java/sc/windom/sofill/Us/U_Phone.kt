@@ -8,6 +8,7 @@ import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodInfo
+import android.view.inputmethod.InputMethodManager
 import com.blankj.utilcode.util.ScreenUtils
 import sc.windom.sofill.S
 import sc.windom.sofill.U
@@ -28,6 +29,12 @@ object U_Phone {
 
     @JvmStatic
     fun showInputMethodPicker() {
+        inputMethodManager.showInputMethodPicker()
+    }
+
+    @JvmStatic
+    fun showInputMethodPicker(context: Context) {
+        val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         inputMethodManager.showInputMethodPicker()
     }
 

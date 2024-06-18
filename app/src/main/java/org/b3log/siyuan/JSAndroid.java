@@ -93,7 +93,7 @@ public final class JSAndroid {
 
     //// Sillot extend start
     @JavascriptInterface
-    public void  showSoftKeyboardPicker() {
+    public void showInputMethodPicker() {
         U_Phone.showInputMethodPicker();
     }
     @JavascriptInterface
