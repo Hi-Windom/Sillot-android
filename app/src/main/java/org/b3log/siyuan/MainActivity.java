@@ -144,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
      /**
       * dispatchKeyEvent 是一个更高级的方法，它可以处理所有类型的按键事件，包括按键按下、抬起和长按。
       * dispatchKeyEvent 方法在事件传递给 onKeyDown、onKeyUp 或其他控件之前被调用。
-      * REF https://ld246.com/article/1711543259805
+      * TODO: <a href="https://ld246.com/article/1711543259805">部分安卓平板上无法正常使用 ESC 键</a>
       * @param event The key event.
       *
       * @return
@@ -303,23 +303,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         mmkv = MMKV.defaultMMKV();
         // 注册 EventBus
         EventBus.getDefault().register(this);
-        // 这段代码并不会直接导致高刷率的生效，它只是在获取支持的显示模式中寻找高刷率最大的模式，并将其设置为首选模式。
-        Display display = null;
-        display = this.getDisplay(); // 等效于 getApplicationContext().getDisplay() 因为Activity已经实现了Context接口，所以用 this 替换
-        if (display != null) {
-            Display.Mode[] modes = display.getSupportedModes();
-            Display.Mode preferredMode = modes[0];
-            for (Display.Mode mode : modes) {
-                BuglyLog.d("MainActivity Display", "supported mode: " + mode.toString());
-                if (mode.getRefreshRate() > preferredMode.getRefreshRate() && mode.getPhysicalWidth() >= preferredMode.getPhysicalWidth()) {
-                    preferredMode = mode;
-                }
-            }
-            BuglyLog.d("MainActivity Display", "preferredMode mode: " + preferredMode.toString());
-            WindowManager.LayoutParams params = getWindow().getAttributes();
-            params.preferredDisplayModeId = preferredMode.getModeId();
-            getWindow().setAttributes(params);
-        }
+        // 适配高刷新率
+        U_Phone.setPreferredDisplayMode(this);
 
         // 获取OnBackPressedDispatcher
         OnBackPressedDispatcher onBackPressedDispatcher = getOnBackPressedDispatcher();

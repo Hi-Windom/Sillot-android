@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.util.Log
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
@@ -16,6 +17,29 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 object U_Phone {
+    private val TAG = "Us.U_Phone"
+
+    /**
+     * 并不会直接导致高刷率的生效，它只是在获取支持的显示模式中寻找高刷率最大的模式，并将其设置为首选模式。
+     */
+    @JvmStatic
+    fun Activity.setPreferredDisplayMode() {
+        val display = this.display ?: return
+        val modes = display.supportedModes
+        var preferredMode = modes[0]
+
+        for (mode in modes) {
+            // Log.d(TAG, "supported mode: $mode")
+            if (mode.refreshRate > preferredMode.refreshRate && mode.physicalWidth >= preferredMode.physicalWidth) {
+                preferredMode = mode
+            }
+        }
+
+        Log.d(TAG, "preferredMode mode: $preferredMode")
+        val params = window.attributes
+        params.preferredDisplayModeId = preferredMode.modeId
+        window.attributes = params
+    }
     @JvmStatic
     fun inputMethodList(): MutableList<InputMethodInfo> {
         return inputMethodManager.inputMethodList
