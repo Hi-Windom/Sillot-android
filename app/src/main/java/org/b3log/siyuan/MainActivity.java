@@ -35,7 +35,6 @@ package org.b3log.siyuan;
  import android.os.Bundle;
  import android.os.IBinder;
  import android.provider.MediaStore;
- import android.view.Display;
  import android.view.DragEvent;
  import android.view.KeyEvent;
  import android.view.View;
@@ -52,7 +51,6 @@ package org.b3log.siyuan;
  import sc.windom.sofill.Ss.S_REQUEST_CODE;
  import sc.windom.sofill.Us.U_DialogX;
  import sc.windom.sofill.android.webview.WebPoolsPro;
- import android.view.WindowManager;
  import android.webkit.ConsoleMessage;
  import android.webkit.CookieManager;
  import android.webkit.JsResult;
@@ -140,7 +138,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
      public ActivityResultLauncher<String[]> requestPermissionLauncher;
      public int requestPermissionAll_works = 0;
 
-
      /**
       * dispatchKeyEvent 是一个更高级的方法，它可以处理所有类型的按键事件，包括按键按下、抬起和长按。
       * dispatchKeyEvent 方法在事件传递给 onKeyDown、onKeyUp 或其他控件之前被调用。
@@ -153,10 +150,13 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     public boolean dispatchKeyEvent(KeyEvent event) {
         if (event.getAction() == KeyEvent.ACTION_DOWN) {
             if (event.getKeyCode() == KeyEvent.KEYCODE_ESCAPE) { // getKeyCode 的数字只能拿来和 KeyEvent 里面的对比，不然没有意义
-                // 处理ESC键按下事件，并不能阻止输入法对ESC的响应
+                // 处理ESC键按下事件，并不能阻止输入法对ESC的响应，只有输入法退出了才轮到这里。
+                // 除非设置 WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM，那键盘需要自己处理了
                 BuglyLog.e("ESC键被按下",String.valueOf(event.getKeyCode()));
+                // return true; // 返回true表示事件已被处理，不再传递
             }
         }
+        // 事件未被处理，继续传递事件
         return super.dispatchKeyEvent(event);
     }
 
