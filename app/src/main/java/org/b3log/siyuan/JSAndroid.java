@@ -72,6 +72,7 @@ import java.util.concurrent.FutureTask;
 import mobile.Mobile;
 import sc.windom.sofill.S;
 import sc.windom.sofill.U;
+import sc.windom.sofill.Us.U_Permission;
 import sc.windom.sofill.Us.U_Phone;
 import sc.windom.sofill.android.permission.Ps;
 
@@ -161,7 +162,7 @@ public final class JSAndroid {
     }
     @JavascriptInterface
     public boolean requestExternalStoragePermission() {
-        Utils.requestExternalStoragePermission(activity);
+        U_Permission.requestExternalStoragePermission(activity);
         return true;
     }
     @JavascriptInterface
@@ -172,7 +173,7 @@ public final class JSAndroid {
         }
         if (id.equals("Battery")) {
             if (callback.equals("androidReboot")) {
-                if (Utils.isIgnoringBatteryOptimizations(activity)) {
+                if (U_Permission.isIgnoringBatteryOptimizations(activity)) {
                     // 应用在电池优化的豁免列表中
                     MessageDialog messageDialog = new MessageDialog("伺服已开启，重启后生效"
                             , "稍后手动重启可能导致未知的错误，非必要不选择"
@@ -217,7 +218,7 @@ public final class JSAndroid {
     @JavascriptInterface
     public boolean requestPermission(final String id, final String Msg) {
         BuglyLog.d(TAG, "requestPermission() invoked");
-        if (Utils.isValidPermission(id)) {
+        if (U_Permission.isValidPermission(id)) {
             BuglyLog.d(TAG, "requestPermission("+id+")  return false");
             return false;
         }

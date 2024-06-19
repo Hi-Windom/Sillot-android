@@ -9,7 +9,6 @@ import android.view.WindowInsetsController
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodInfo
 import android.view.inputmethod.InputMethodManager
-import com.blankj.utilcode.util.ScreenUtils
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 import splitties.systemservices.inputMethodManager
@@ -62,6 +61,7 @@ object U_Phone {
         }
     }
 
+    @JvmStatic
     fun isLargeScreenMachine(context: Context): Boolean {
         // 获取屏幕的方向
         val screenLayout = context.resources.configuration.screenLayout
@@ -75,6 +75,7 @@ object U_Phone {
                 screenSize == Configuration.SCREENLAYOUT_SIZE_LARGE
     }
 
+    @JvmStatic
     fun isPad(context: Context): Boolean { // Converted from Utils.java
         val metrics = context.resources.displayMetrics
         val widthInches = metrics.widthPixels / metrics.xdpi
@@ -89,6 +90,7 @@ object U_Phone {
     /**
      * 是否为竖屏
      */
+    @JvmStatic
     fun Context.isPortrait(): Boolean {
         return resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
     }
@@ -96,6 +98,7 @@ object U_Phone {
     /**
      * 是否为横屏
      */
+    @JvmStatic
     fun Context.isLandscape(): Boolean {
         return resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     }
@@ -128,6 +131,7 @@ object U_Phone {
         }
     }
 
+    @JvmStatic
     fun isFullScreen(activity: Activity): Boolean {
         val windowInsets = activity.window.decorView.rootWindowInsets
         val insets = windowInsets?.getInsets(WindowInsets.Type.systemBars())

@@ -43,6 +43,8 @@ package org.b3log.siyuan;
 
  import sc.windom.sofill.Us.U_DEBUG;
  import sc.windom.sofill.Us.U_Layout;
+ import sc.windom.sofill.Us.U_Permission;
+ import sc.windom.sofill.Us.U_Phone;
  import sc.windom.sofill.Us.U_Pro;
  import sc.windom.sofill.android.webview.WebViewLayoutManager;
  import sc.windom.sofill.Ss.S_Events;
@@ -327,7 +329,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             @Override
             public void handleOnBackPressed() {
                 // 在这里处理后退逻辑
-                if (Utils.isPad(getApplicationContext())) {
+                if (U_Phone.isPad(getApplicationContext())) {
                     if ((System.currentTimeMillis() - exitTime) > 2000) {
                         PopTipShow(getApplicationContext() , "再按一次退出汐洛绞架");
                         exitTime = System.currentTimeMillis();
@@ -847,12 +849,12 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     @Override
     protected void onStart() { // 当活动变得对用户可见时，系统会调用这个方法。这是在活动即将进入前台并且用户可以看到它时进行最后准备的地方。在这里进行用户可见时的初始化，比如开始动画、注册广播接收器等。
         super.onStart();
-        BuglyLog.w(TAG, "onStart() -> canPopInBackground "+Utils.canPopInBackground(this));
-        BuglyLog.w(TAG, "onStart() -> canShowOnTop "+Utils.canShowOnTop(this));
-        BuglyLog.w(TAG, "onStart() -> isShowingOnLockScreen "+Utils.isShowingOnLockScreen(this));
-        BuglyLog.w(TAG, "onStart() -> canManageAllFiles "+Utils.canManageAllFiles(this));
-        BuglyLog.w(TAG, "onStart() -> canAccessDeviceState "+Utils.canAccessDeviceState(this));
-        BuglyLog.w(TAG, "onStart() -> canRequestPackageInstalls "+Utils.canRequestPackageInstalls(this));
+        BuglyLog.w(TAG, "onStart() -> canPopInBackground "+ U_Permission.canPopInBackground(this));
+        BuglyLog.w(TAG, "onStart() -> canShowOnTop "+U_Permission.canShowOnTop(this));
+        BuglyLog.w(TAG, "onStart() -> isShowingOnLockScreen "+U_Permission.isShowingOnLockScreen(this));
+        BuglyLog.w(TAG, "onStart() -> canManageAllFiles "+U_Permission.canManageAllFiles(this));
+        BuglyLog.w(TAG, "onStart() -> canAccessDeviceState "+U_Permission.canAccessDeviceState(this));
+        BuglyLog.w(TAG, "onStart() -> canRequestPackageInstalls "+U_Permission.canRequestPackageInstalls(this));
     }
 
     @Override

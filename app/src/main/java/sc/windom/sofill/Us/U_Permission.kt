@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import sc.windom.sofill.S
 
 object U_Permission {
+    @JvmStatic
     fun isValidPermission(id: String?): Boolean { // Converted from Utils.java
         if (id.isNullOrEmpty()) {
             return false
@@ -35,6 +36,7 @@ object U_Permission {
         return true
     }
 
+    @JvmStatic
     fun requestExternalStoragePermission(activity: Activity) {
         if (!canManageAllFiles(activity)) {
             val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
@@ -47,6 +49,7 @@ object U_Permission {
         }
     }
 
+    @JvmStatic
     fun canManageAllFiles(context: Context): Boolean { // 管理所有文件
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             Environment.isExternalStorageManager()
@@ -58,16 +61,19 @@ object U_Permission {
         // permissions are sufficient to manage all files.
     }
 
+    @JvmStatic
     fun canAccessDeviceState(context: Context): Boolean { // 访问设备状态信息
         return context.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) ==
                 PackageManager.PERMISSION_GRANTED
     }
 
+    @JvmStatic
     fun isIgnoringBatteryOptimizations(context: Context): Boolean { // 忽略电池优化
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
         return powerManager.isIgnoringBatteryOptimizations(context.packageName)
     }
 
+    @JvmStatic
     fun isShowingOnLockScreen(context: Context): Boolean { // 锁屏显示
         val keyguardManager = context.getSystemService(
             KeyguardManager::class.java
@@ -75,6 +81,7 @@ object U_Permission {
         return keyguardManager?.isDeviceLocked ?: false
     }
 
+    @JvmStatic
     fun hasPermission_FOREGROUND_SERVICE_LOCATION(context: Context): Boolean {
         return ContextCompat.checkSelfPermission(
             context,
@@ -82,6 +89,7 @@ object U_Permission {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    @JvmStatic
     fun canShowOnTop(context: Context?): Boolean { // 悬浮窗
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             Settings.canDrawOverlays(context)
@@ -89,6 +97,7 @@ object U_Permission {
         // Assuming it's allowed on older versions
     }
 
+    @JvmStatic
     fun canPopInBackground(context: Context?): Boolean { // 后台弹出界面
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Settings.canDrawOverlays(context)
@@ -96,6 +105,7 @@ object U_Permission {
         // Assuming it's allowed on older versions
     }
 
+    @JvmStatic
     fun canRequestPackageInstalls(context: Context): Boolean { // 安装未知应用
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.packageManager.canRequestPackageInstalls()

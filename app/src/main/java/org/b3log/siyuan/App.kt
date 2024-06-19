@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.os.Looper
 import android.os.Process
 import cn.jpush.android.api.JPushInterface
-import com.blankj.utilcode.util.Utils
 import com.kongzue.dialogx.DialogX
 import com.kongzue.dialogx.style.MIUIStyle
 import com.microsoft.clarity.Clarity
@@ -82,7 +81,7 @@ class App : Application() {
         BuglyLog.w(TAG, "new one")
         super.onCreate()
         var refCount = 0
-        Utils.init(this)
+        com.blankj.utilcode.util.Utils.init(this)
         JPushInterface.setDebugMode(true)
         JPushInterface.init(this)
         MMKV.initialize(this)

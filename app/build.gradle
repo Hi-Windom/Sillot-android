@@ -178,16 +178,16 @@ dependencies {
     def couchbase_lite_version = "3.2.0-beta.1"
     def realm_version = "1.11.0"
     def moshi_version = "1.15.1"
-    def camerax_version = "1.4.0-alpha02"
+    def camerax_version = "1.4.0-beta02"
     def navigation_version = "2.7.7"
     def google_accompanist_version = "0.34.0"
-    def media3_version = "1.3.0"
+    def media3_version = "1.3.1"
     def biometric_version = "1.2.0-alpha05"
-    def lifecycle_version = "2.7.0"
+    def lifecycle_version = "2.8.2"
     def work_version = "2.9.0"
     // Sillot 仅需兼容 Android 11+ ，放心升级，无需理会下面的不要升级警告（仅针对 Android 版本）
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.10.0'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
     implementation "androidx.lifecycle:lifecycle-process:${lifecycle_version}"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:${lifecycle_version}"
     implementation "androidx.lifecycle:lifecycle-service:${lifecycle_version}"
@@ -280,7 +280,7 @@ dependencies {
     // Huawei scan kit
     implementation 'com.huawei.hms:scanplus:2.12.0.301'
 
-    def composeBom = platform('androidx.compose:compose-bom:2024.05.00')
+    def composeBom = platform('androidx.compose:compose-bom:2024.06.00')
     implementation composeBom
     androidTestImplementation composeBom
 
@@ -419,5 +419,16 @@ dependencies {
     // optional - Multiprocess support
     // implementation "androidx.work:work-multiprocess:$work_version"
 
-    implementation "androidx.webkit:webkit:1.9.0"
+    implementation "androidx.webkit:webkit:1.11.0"
+
+    implementation("com.github.ajalt.colormath:colormath:3.5.0")
+
+    // optional extensions for interop with other platforms
+    //
+    // android.graphics.Color
+    implementation("com.github.ajalt.colormath:colormath-ext-android-color:3.5.0")
+    // androidx.annotation.ColorInt
+    implementation("com.github.ajalt.colormath:colormath-ext-android-colorint:3.5.0")
+    // androidx.compose.ui.graphics.Color
+    implementation("com.github.ajalt.colormath:colormath-ext-jetpack-compose:3.5.0")
 }
