@@ -303,9 +303,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         mmkv = MMKV.defaultMMKV();
         // 注册 EventBus
         EventBus.getDefault().register(this);
-        // 适配高刷新率
-        U_Phone.setPreferredDisplayMode(this);
-
         // 获取OnBackPressedDispatcher
         OnBackPressedDispatcher onBackPressedDispatcher = getOnBackPressedDispatcher();
 

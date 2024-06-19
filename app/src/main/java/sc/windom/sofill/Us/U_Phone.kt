@@ -35,7 +35,7 @@ object U_Phone {
             }
         }
 
-        Log.d(TAG, "preferredMode mode: $preferredMode")
+        Log.d(TAG, "apply preferredMode mode: $preferredMode to ${this.javaClass.simpleName}")
         val params = window.attributes
         params.preferredDisplayModeId = preferredMode.modeId
         window.attributes = params

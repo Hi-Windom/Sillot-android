@@ -28,6 +28,7 @@ import org.b3log.siyuan.common.ForegroundPushManager
 import org.b3log.siyuan.services.BootService
 import sc.windom.sofill.S
 import sc.windom.sofill.U
+import sc.windom.sofill.Us.U_Phone.setPreferredDisplayMode
 import java.net.InetAddress
 import java.net.UnknownHostException
 
@@ -154,6 +155,7 @@ class App : Application() {
                     TAG,
                     "onActivityPreCreated() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
+                activity.setPreferredDisplayMode() // 全局高刷新率
                 super.onActivityPreCreated(activity, savedInstanceState)
             }
 
