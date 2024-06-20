@@ -176,7 +176,7 @@ public final class JSAndroid {
                 if (U_Permission.isIgnoringBatteryOptimizations(activity)) {
                     // 应用在电池优化的豁免列表中
                     MessageDialog messageDialog = new MessageDialog("伺服已开启，重启后生效"
-                            , "稍后手动重启可能导致未知的错误，非必要不选择"
+                            , "为了重启内核，汐洛其他活动会被杀死，请确认重启前其他汐洛活动不存在未保存内容。\n\n稍后手动重启可能导致未知的错误，非必要不选择"
                             , "立即重启", "稍后手动重启", null)
                             .setCancelable(false) //是否允许点击外部区域或返回键关闭
                             .setMaskColor(Color.parseColor("#3D000000"))
@@ -188,7 +188,12 @@ public final class JSAndroid {
                 } else {
                     // 应用不在电池优化的豁免列表中
                     MessageDialog messageDialog = new MessageDialog("伺服已开启，重启后生效"
-                            , "申请权限忽略电源优化（需系统支持）能获得稳定的伺服体验，代价是增加耗电，请按需选择。如果已经忽略，可选择立即重启。\n\n稍后手动重启可能导致未知的错误，非必要不选择"
+                            , """
+                            申请权限忽略电源优化（需系统支持）能获得稳定的伺服体验，代价是增加耗电，请按需选择。如果已经忽略，可选择立即重启。
+                            
+                            为了重启内核，汐洛其他活动会被杀死，请确认重启前其他汐洛活动不存在未保存内容。
+
+                            稍后手动重启可能导致未知的错误，非必要不选择"""
                             , "申请权限并重启", "稍后手动重启", "立即重启")
                             .setButtonOrientation(LinearLayout.VERTICAL)  // 选项竖向排列
                             .setCancelable(false) //是否允许点击外部区域或返回键关闭

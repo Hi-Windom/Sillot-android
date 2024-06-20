@@ -898,7 +898,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
-//       android.os.Process.killProcess(android.os.Process.myPid()); // 暂时无法解决杀死其他任务栈的冲突，不加这句重启活动会崩溃
+       android.os.Process.killProcess(android.os.Process.myPid()); // 暂时无法解决杀死其他任务栈的冲突，不加这句无法重启内核
     }
 
     public void startSyncData() {

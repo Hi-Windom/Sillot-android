@@ -84,8 +84,10 @@ class BootService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        BuglyLog.i(TAG, "onDestroy() invoked")
         webView?.let { webViewKey?.let { it1 -> WebPoolsPro.instance?.recycle(it, it1) } }
         server?.stop()
+        Mobile.stopKernel()
     }
 
     private val binder = LocalBinder()
@@ -101,17 +103,19 @@ class BootService : Service() {
 
     private fun works() {
         // 初始化 UI 元素
-        BuglyLog.w(TAG, "onStart() -> initUIElements() invoked")
+        BuglyLog.d(TAG, "-> 初始化 UI 元素")
         init_webView()
 
         // 拉起内核
-        BuglyLog.w(TAG, "onStart() -> startKernel() invoked")
+        BuglyLog.d(TAG, "-> 拉起内核")
         startKernel()
 
         // 周期同步数据
+        BuglyLog.d(TAG, "-> 周期同步数据")
         scheduleSyncDataWork()
 
         // 内核心跳检测
+        BuglyLog.d(TAG, "-> 内核心跳检测")
         scheduleCheckHttpServerWork()
     }
 
