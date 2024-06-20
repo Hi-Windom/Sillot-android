@@ -12,7 +12,9 @@ import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.util.Base64
 import android.util.Size
 import android.webkit.WebView
@@ -68,6 +70,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
+import androidx.lifecycle.lifecycleScope
 import com.kongzue.dialogx.dialogs.BottomMenu
 import com.kongzue.dialogx.dialogs.InputDialog
 import com.kongzue.dialogx.interfaces.OnBottomMenuButtonClickListener
@@ -78,6 +81,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
+import mobile.Mobile
 import org.b3log.siyuan.App
 import org.b3log.siyuan.R
 import org.b3log.siyuan.andapi.Toast
@@ -103,6 +108,8 @@ import sc.windom.sofill.compose.components.WaitUI
 import sc.windom.sofill.compose.partialCom.DdMenuI
 import sc.windom.sofill.compose.partialCom.NetworkAware
 import sc.windom.sofill.compose.theme.CascadeMaterialTheme
+import sc.windom.sofill.dataClass.ICreateDocWithMdRequest
+import sc.windom.sofill.dataClass.INotebook
 import sc.windom.sofill.dataClass.IPayload
 import java.io.IOException
 import java.util.Date
@@ -184,8 +191,7 @@ class MainPro : ComponentActivity() {
         )
 
         if (S.isUriMatched(in2_intent?.data, S.case_ld246_1) || S.isUriMatched(
-                in2_intent?.data,
-                S.case_ld246_2
+                in2_intent?.data, S.case_ld246_2
             ) || S.isUriMatched(in2_intent?.data, S.case_github_1)
         ) {
             // 转发处理
@@ -194,9 +200,7 @@ class MainPro : ComponentActivity() {
             startActivity(homeIntent)
             finish() // 不需要返回MainPro，在这里结束它
         } else if (in2_intent?.data != null && in2_intent?.data?.scheme.isNullOrEmpty() || listOf(
-                "http",
-                "https",
-                "siyuan"
+                "http", "https", "siyuan"
             ).contains(
                 in2_intent?.data?.scheme
             )
@@ -287,9 +291,7 @@ class MainPro : ComponentActivity() {
             }
             BuglyLog.i(TAG, "$head_title @ $in2_intent")
             token.value = U.getDecryptedToken(
-                mmkv,
-                S.KEY_TOKEN_Sillot_Gibbet,
-                S.KEY_AES_TOKEN_Sillot_Gibbet
+                mmkv, S.KEY_TOKEN_Sillot_Gibbet, S.KEY_AES_TOKEN_Sillot_Gibbet
             )
             when (in2_intent?.action) {
                 Intent.ACTION_SEND -> {
@@ -315,20 +317,17 @@ class MainPro : ComponentActivity() {
                     // 处理其他类型的 intent
                     fileName.value = in2_intent?.data?.let {
                         U.FileUtils.getFileName(
-                            thisActivity,
-                            it
+                            thisActivity, it
                         )
                     }.toString()
                     fileSize.value = in2_intent?.data?.let {
                         U.FileUtils.getFileSize(
-                            thisActivity,
-                            it
+                            thisActivity, it
                         )
                     }.toString()
                     mimeType.value = in2_intent?.data?.let {
                         U.FileUtils.getMimeType(
-                            thisActivity,
-                            it
+                            thisActivity, it
                         )
                     } ?: ""
                     fileType.value = fileName.value.let { it1 ->
@@ -341,13 +340,15 @@ class MainPro : ComponentActivity() {
         }
         Scaffold(
             topBar = {
-                CommonTopAppBar(head_title, TAG, in2_intent?.data, isMenuVisible,
+                CommonTopAppBar(
+                    head_title,
+                    TAG,
+                    in2_intent?.data,
+                    isMenuVisible,
                     additionalMenuItem = {
-                        AddDropdownMenu(
-                            token,
-                            onDismiss = {
-                                isMenuVisible.value = false
-                            })
+                        AddDropdownMenu(token, onDismiss = {
+                            isMenuVisible.value = false
+                        })
                     }) {
                     // 将Context对象安全地转换为Activity
                     thisActivity.finish() // 结束活动
@@ -414,9 +415,7 @@ class MainPro : ComponentActivity() {
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 InfoPart(
-                                    fileType = fileType,
-                                    fileName = fileName,
-                                    fileSize = fileSize
+                                    fileType = fileType, fileName = fileName, fileSize = fileSize
                                 )
                             }
                             Spacer(modifier = Modifier.width(16.dp))
@@ -430,8 +429,7 @@ class MainPro : ComponentActivity() {
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 BtnPart(
-                                    mimeType = mimeType,
-                                    fileName = fileName
+                                    mimeType = mimeType, fileName = fileName
                                 )
                             }
                         }
@@ -447,13 +445,10 @@ class MainPro : ComponentActivity() {
                         item {
                             Spacer(modifier = Modifier.height(16.dp))
                             InfoPart(
-                                fileType = fileType,
-                                fileName = fileName,
-                                fileSize = fileSize
+                                fileType = fileType, fileName = fileName, fileSize = fileSize
                             )
                             BtnPart(
-                                mimeType = mimeType,
-                                fileName = fileName
+                                mimeType = mimeType, fileName = fileName
                             )
                         }
                     }
@@ -476,18 +471,13 @@ class MainPro : ComponentActivity() {
             cb = {
                 onDismiss()
                 val deToken = U.getDecryptedToken(
-                    mmkv,
-                    S.KEY_TOKEN_Sillot_Gibbet,
-                    S.KEY_AES_TOKEN_Sillot_Gibbet
+                    mmkv, S.KEY_TOKEN_Sillot_Gibbet, S.KEY_AES_TOKEN_Sillot_Gibbet
                 )
-                InputDialog(
-                    "🛸 API TOKEN",
+                InputDialog("🛸 API TOKEN",
                     "可在汐洛绞架 设置 - 关于 中找到 API Token，固定以 'token ' 开头\n\n温馨提示：应用存储 Token 时进行了一定的处理，且不会传输到网络，但用户仍需注意防止 Token 泄露！建议使用前先阅读源代码",
                     "确定",
                     "取消",
-                    deToken?.let { deToken } ?: run { "token " }
-                )
-                    .setCancelable(false)
+                    deToken?.let { deToken } ?: run { "token " }).setCancelable(false)
                     .setOkButton { baseDialog, v, inputStr ->
                         token.value = inputStr
                         // 生成AES密钥
@@ -500,18 +490,14 @@ class MainPro : ComponentActivity() {
                         mmkv.encode(S.KEY_AES_TOKEN_Sillot_Gibbet, encodedKey)
                         mmkv.encode(S.KEY_TOKEN_Sillot_Gibbet, encryptedToken)
                         U.DialogX.PopNoteShow(
-                            thisActivity,
-                            "TOKEN已更新（${
+                            thisActivity, "TOKEN已更新（${
                                 U.displayTokenLimiter(
-                                    inputStr,
-                                    "token ".length + 4,
-                                    4
+                                    inputStr, "token ".length + 4, 4
                                 )
                             }）"
                         ).noAutoDismiss()
                         false
-                    }
-                    .show()
+                    }.show()
             },
         )
     }
@@ -519,7 +505,7 @@ class MainPro : ComponentActivity() {
     // 在协程中调用sendMD2siyuan
     fun runSendMD2siyuan(markdownContent: String, token: MutableState<String?>) =
         runBlocking<Unit> { // 启动主协程
-            launch { // 启动一个新协程并运行挂起函数
+            launch { // 启动一个新协程并运行挂起函数，避免阻塞UI
                 sendMD2siyuan(markdownContent, token)
             }
         }
@@ -535,9 +521,7 @@ class MainPro : ComponentActivity() {
                     // 处理笔记本列表为空的情况
                     thisActivity.runOnUiThread {
                         U.DialogX.PopNoteShow(
-                            thisActivity,
-                            TAG,
-                            "No notebooks received. reason:\n$info\n$helpInfo"
+                            thisActivity, TAG, "No notebooks received. reason:\n$info\n$helpInfo"
                         ).noAutoDismiss()
                     }
                 } else {
@@ -548,49 +532,121 @@ class MainPro : ComponentActivity() {
                         "（${if (it.closed) "不可用" else "可使用"}）${it.name}"
                     }.toTypedArray()
                     var selectMenuIndex = 0
-                    BottomMenu.show(notebookInfos)
-                        .setMessage("仅支持当前工作空间")
-                        .setTitle("选择要存入的笔记本")
-                        .setSelection(selectMenuIndex) //指定已选择的位置
+                    BottomMenu.show(notebookInfos).setMessage("仅支持当前工作空间")
+                        .setTitle("选择要存入的笔记本").setSelection(selectMenuIndex) //指定已选择的位置
                         .setOnMenuItemClickListener { dialog, text, index ->
                             selectMenuIndex = index
                             dialog.refreshUI() // 在 compose 里需要强制刷新
                             true // 点击菜单后不会自动关闭
-                        }
-                        .setOkButton("确定",
-                            OnBottomMenuButtonClickListener { menu, view ->
-                                val notebookId = notebookIDs[selectMenuIndex]
-                                BuglyLog.e(TAG, notebookId)
-                                val payload = IPayload(
-                                    markdownContent, notebookId, "/来自汐洛受赏 ${
-                                        U.dateFormat_full1.format(
-                                            Date()
-                                        )
-                                    }"
-                                )
+                        }.setOkButton("确定", OnBottomMenuButtonClickListener { menu, view ->
+                            val notebookId = notebookIDs[selectMenuIndex]
+                            BuglyLog.e(TAG, notebookId)
+                            val payload = IPayload(
+                                markdownContent, notebookId, "/来自汐洛受赏 ${
+                                    U.dateFormat_full1.format(
+                                        Date()
+                                    )
+                                }"
+                            )
 
-                                siyuan.Works.createNote(api, payload, token) { success, info ->
-                                    if (success) {
-                                        // 处理创建笔记成功的情况
-                                        BuglyLog.i(TAG, "Note creation succeeded. $info")
-                                    } else {
-                                        // 处理创建笔记失败的情况
-                                        thisActivity.runOnUiThread {
-                                            U.DialogX.PopNoteShow(
-                                                thisActivity,
-                                                TAG,
-                                                "Note creation failed. reason:\n$info\n$helpInfo"
-                                            ).noAutoDismiss()
-                                        }
+                            siyuan.Works.createNote(api, payload, token) { success, info ->
+                                if (success) {
+                                    // 处理创建笔记成功的情况
+                                    BuglyLog.i(TAG, "Note creation succeeded. $info")
+                                } else {
+                                    // 处理创建笔记失败的情况
+                                    thisActivity.runOnUiThread {
+                                        U.DialogX.PopNoteShow(
+                                            thisActivity,
+                                            TAG,
+                                            "Note creation failed. reason:\n$info\n$helpInfo"
+                                        ).noAutoDismiss()
                                     }
                                 }
-                                false
-                            })
-                        .setCancelButton("取消",
-                            OnBottomMenuButtonClickListener { menu, view ->
-                                false
-                            })
+                            }
+                            false
+                        }).setCancelButton("取消", OnBottomMenuButtonClickListener { menu, view ->
+                            false
+                        })
                 }
+            }
+        }
+    }
+
+    fun sendMD2siyuanWithoutToken(md: String) {
+        val helpInfo =
+            "请注意：（1）内核是否存活；（2）当前工作空间是否存在有效笔记本；（3）笔记本是否被关闭了"
+
+        val response = Mobile.getNotebooks(false)
+        if (response.error.isNotEmpty()) {
+            BuglyLog.e(TAG, "Error: ${response.error}")
+        } else {
+            val notebooksJSON = response.notebooksJSON
+            val notebooks =
+                kotlinx.serialization.json.Json.decodeFromString<List<INotebook>>(notebooksJSON)
+            if (notebooks.isEmpty()) {
+                // 处理笔记本列表为空的情况
+                thisActivity.runOnUiThread {
+                    U.DialogX.PopNoteShow(
+                        thisActivity, TAG, "No notebooks received. \n$helpInfo"
+                    ).noAutoDismiss()
+                }
+            } else {
+                // 处理获取到的笔记本列表
+                BuglyLog.i(TAG, "Received ${notebooks.size} notebooks.")
+                val notebookIDs: Array<String> = notebooks.map { it.id }.toTypedArray()
+                val notebookInfos: Array<String> = notebooks.map {
+                    "（${if (it.closed) "不可用" else "可使用"}）${it.name}"
+                }.toTypedArray()
+                var selectMenuIndex = 0
+                BottomMenu.show(notebookInfos).setMessage("仅支持当前工作空间")
+                    .setTitle("选择要存入的笔记本").setSelection(selectMenuIndex) //指定已选择的位置
+                    .setOnMenuItemClickListener { dialog, text, index ->
+                        selectMenuIndex = index
+                        dialog.refreshUI() // 在 compose 里需要强制刷新
+                        true // 点击菜单后不会自动关闭
+                    }.setOkButton("确定", OnBottomMenuButtonClickListener { menu, view ->
+                        menu.dismiss()
+
+                        val notebookId = notebookIDs[selectMenuIndex]
+                        BuglyLog.i(TAG, notebookId)
+
+                        // 使用Handler来执行耗时操作
+                        val handler = Handler(Looper.getMainLooper())
+                        handler.post {
+                            // 在子线程中执行耗时操作
+                            val payload = ICreateDocWithMdRequest(
+                                Notebook = notebookId,
+                                Path = "/来自汐洛受赏 ${U.dateFormat_full1.format(Date())}",
+                                Markdown = md
+                            )
+                            val paramsJSON = kotlinx.serialization.json.Json.encodeToString(payload)
+                            BuglyLog.i(TAG, paramsJSON)
+
+                            val response2 = Mobile.createDocWithMd(paramsJSON)
+
+                            // 切换回主线程更新UI
+                            thisActivity.runOnUiThread {
+                                if (response2.error.isEmpty()) {
+                                    BuglyLog.i(TAG, "Created document with ID: ${response2.id}")
+                                    U.startMainActivityWithBlock(
+                                        "siyuan://blocks/${response2.id}",
+                                        App.application
+                                    )
+                                } else {
+                                    BuglyLog.e(TAG, "Error: ${response2.error}")
+                                    U.DialogX.PopNoteShow(
+                                        thisActivity,
+                                        TAG,
+                                        "Error: ${response2.error}\n$helpInfo"
+                                    ).noAutoDismiss()
+                                }
+                            }
+                        }
+                        false
+                    }).setCancelButton("取消", OnBottomMenuButtonClickListener { menu, view ->
+                        false
+                    })
             }
         }
     }
@@ -603,9 +659,10 @@ class MainPro : ComponentActivity() {
             .width(S.C.Button_Width.current.dp)
             .padding(top = if (isLandscape) S.C.btn_PaddingTopH.current else S.C.btn_PaddingTopV.current),
             colors = ButtonDefaults.buttonColors(
-                containerColor = S.C.btn_bgColor3.current,
-                contentColor = S.C.btn_Color1.current
-            ), enabled = true, onClick = {
+                containerColor = S.C.btn_bgColor3.current, contentColor = S.C.btn_Color1.current
+            ),
+            enabled = true,
+            onClick = {
                 if (token.value.isNullOrEmpty()) {
                     U.DialogX.PopNoteShow(thisActivity, "TOKEN为空，请在右上角设置 TOKEN 后重试")
                         .noAutoDismiss()
@@ -613,10 +670,7 @@ class MainPro : ComponentActivity() {
                 }
                 if (bootService == null) {
                     U.DialogX.PopNoteShow(
-                        thisActivity,
-                        R.drawable.icon,
-                        "汐洛绞架内核尚未就绪",
-                        "请稍后再试"
+                        thisActivity, R.drawable.icon, "汐洛绞架内核尚未就绪", "请稍后再试"
                     ).noAutoDismiss()
                     return@Button
                 }
@@ -638,6 +692,44 @@ class MainPro : ComponentActivity() {
             }) {
             Text(
                 text = S.C.btnText5.current,
+                letterSpacing = S.C.btn_lspace.current,
+                fontSize = if (isLandscape) S.C.btn_TextFontsizeH.current else S.C.btn_TextFontsizeV.current
+            )
+        }
+        Button(modifier = Modifier
+            .width(S.C.Button_Width.current.dp)
+            .padding(top = if (isLandscape) S.C.btn_PaddingTopH.current else S.C.btn_PaddingTopV.current),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = S.C.btn_bgColor3.current, contentColor = S.C.btn_Color1.current
+            ),
+            enabled = true,
+            onClick = {
+                if (bootService == null) {
+                    U.DialogX.PopNoteShow(
+                        thisActivity, R.drawable.icon, "汐洛绞架内核尚未就绪", "请稍后再试"
+                    ).noAutoDismiss()
+                    return@Button
+                }
+                if (markdown != null) {
+                    val directories =
+                        U.FileUtils.getDirectoriesInPath(thisActivity.workspaceParentDir())
+                    val filteredDirectories = directories.filter { it != "home" }
+                    if (filteredDirectories.isNotEmpty()) {
+                        lifecycleScope.launch { // 使用 lifecycleScope 在生命周期内启动协程
+                            sendMD2siyuanWithoutToken(markdown)
+                        }
+                    } else {
+                        U.DialogX.PopNoteShow(
+                            thisActivity,
+                            R.drawable.icon,
+                            "未发现任何工作空间",
+                            "请检查是否初始化了，或者路径存在异常 ${thisActivity.workspaceParentDir()}/"
+                        ).noAutoDismiss()
+                    }
+                }
+            }) {
+            Text(
+                text = S.C.btnText6.current,
                 letterSpacing = S.C.btn_lspace.current,
                 fontSize = if (isLandscape) S.C.btn_TextFontsizeH.current else S.C.btn_TextFontsizeV.current
             )
@@ -681,12 +773,10 @@ class MainPro : ComponentActivity() {
                         // 如果有文件 Uri，尝试加载缩略图
                         bitmap = sharedFileUri?.let { uri ->
                             thisActivity.contentResolver.loadThumbnail(
-                                uri,
-                                Size(
+                                uri, Size(
                                     if (isLandscape) Thumbnail_Height else Thumbnail_Height_IMG,
                                     if (isLandscape) Thumbnail_Height else Thumbnail_Height_IMG
-                                ),
-                                null
+                                ), null
                             )
                         }
                     } catch (e: Exception) {
@@ -708,8 +798,7 @@ class MainPro : ComponentActivity() {
                     Icon(
                         imageVector = icon,
                         contentDescription = "File Type Icon",
-                        modifier = Modifier
-                            .size(Thumbnail_Height.dp)
+                        modifier = Modifier.size(Thumbnail_Height.dp)
                     )
                 }
 
@@ -718,8 +807,7 @@ class MainPro : ComponentActivity() {
                         text = it1, // 使用获取到的文件名
                         style = TextStyle(
                             fontSize = if (isLandscape) 14.sp else 16.sp
-                        ),
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        ), modifier = Modifier.padding(bottom = 8.dp)
                     )
                     Text(
                         text = "${fileSize.value} (${fileType.value})",
@@ -781,8 +869,7 @@ class MainPro : ComponentActivity() {
                 withContext(Dispatchers.IO) {
                     try {
                         if (!U.isStorageSpaceAvailable(
-                                thisActivity.contentResolver,
-                                uri_from_file
+                                thisActivity.contentResolver, uri_from_file
                             )
                         ) {
                             // 存储空间不足，处理逻辑
@@ -794,8 +881,7 @@ class MainPro : ComponentActivity() {
                         fileName.value.let {
                             sourceFilePath?.let { it1 ->
                                 U.FileUtils.copyFileToFolderByDocumentTree(
-                                    thisActivity, uri_to_dir, it,
-                                    it1, mimeType.value
+                                    thisActivity, uri_to_dir, it, it1, mimeType.value
                                 )
                             }
                         }
@@ -821,16 +907,13 @@ class MainPro : ComponentActivity() {
                 withContext(Dispatchers.IO) {
                     try {
                         if (!U.isStorageSpaceAvailable(
-                                thisActivity.contentResolver,
-                                uri_from_file
+                                thisActivity.contentResolver, uri_from_file
                             )
                         ) {
                             // 存储空间不足，处理逻辑
                             withContext(Dispatchers.Main) {
                                 U.DialogX.PopNoteShow(
-                                    thisActivity,
-                                    R.drawable.icon,
-                                    "存储空间不足，请先清理"
+                                    thisActivity, R.drawable.icon, "存储空间不足，请先清理"
                                 )
                             }
                             return@withContext
@@ -854,12 +937,8 @@ class MainPro : ComponentActivity() {
                                     BuglyLog.e(TAG, e.toString())
                                     withContext(Dispatchers.Main) {
                                         U.DialogX.PopNoteShow(
-                                            thisActivity,
-                                            R.drawable.icon,
-                                            "任务失败",
-                                            e.toString()
-                                        )
-                                            .noAutoDismiss()
+                                            thisActivity, R.drawable.icon, "任务失败", e.toString()
+                                        ).noAutoDismiss()
                                     }
                                 }
 
@@ -869,12 +948,8 @@ class MainPro : ComponentActivity() {
                         BuglyLog.e(TAG, e.toString())
                         withContext(Dispatchers.Main) {
                             U.DialogX.PopNoteShow(
-                                thisActivity,
-                                R.drawable.icon,
-                                "任务失败",
-                                e.toString()
-                            )
-                                .noAutoDismiss()
+                                thisActivity, R.drawable.icon, "任务失败", e.toString()
+                            ).noAutoDismiss()
                         }
                     } finally {
                         // 执行任务完成后，关闭遮罩
@@ -925,13 +1000,11 @@ class MainPro : ComponentActivity() {
                         } else {
                             in2_intent?.data
                         }
-                        uri_from_file =
-                            sharedFileUri?.let {
-                                U.FileUtils.getFileFromUri(
-                                    thisActivity,
-                                    it
-                                )?.toUri()
-                            }
+                        uri_from_file = sharedFileUri?.let {
+                            U.FileUtils.getFileFromUri(
+                                thisActivity, it
+                            )?.toUri()
+                        }
                         uri_to_dir = _uri
                         onCopyFileToFolderByDocumentTree()
 //                        if (U.canManageAllFiles(thisActivity)) {
@@ -952,13 +1025,11 @@ class MainPro : ComponentActivity() {
                 } else {
                     in2_intent?.data
                 }
-                uri_from_file =
-                    sharedFileUri?.let {
-                        U.FileUtils.getFileFromUri(
-                            thisActivity,
-                            it
-                        )?.toUri()
-                    }
+                uri_from_file = sharedFileUri?.let {
+                    U.FileUtils.getFileFromUri(
+                        thisActivity, it
+                    )?.toUri()
+                }
                 uri_to_dir = Uri.parse(workspaceAssetsDir)
                 onCopyFileToMyAppFolder()
 //                if (U.canManageAllFiles(thisActivity)) {
@@ -979,16 +1050,13 @@ class MainPro : ComponentActivity() {
                     isButton3OnClickRunning = false
                     isButton4OnClickRunning = false
                     selectedFolder = null
-                },
-                properties = DialogProperties(
-                    dismissOnBackPress = false,
-                    dismissOnClickOutside = false
+                }, properties = DialogProperties(
+                    dismissOnBackPress = false, dismissOnClickOutside = false
                 )
             ) {
                 // 遮罩内容
                 Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
                 ) {
                     if (false) {
                         LinearProgressIndicator(
@@ -1032,9 +1100,10 @@ class MainPro : ComponentActivity() {
                 .width(S.C.Button_Width.current.dp)
                 .padding(top = if (isLandscape) S.C.btn_PaddingTopH.current else S.C.btn_PaddingTopV.current),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = S.C.btn_bgColor3.current,
-                    contentColor = S.C.btn_Color1.current
-                ), enabled = true, onClick = {
+                    containerColor = S.C.btn_bgColor3.current, contentColor = S.C.btn_Color1.current
+                ),
+                enabled = true,
+                onClick = {
                     val btn3_intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
                     bt3TaskLauncher.launch(btn3_intent)
                     // 非阻塞
@@ -1051,9 +1120,10 @@ class MainPro : ComponentActivity() {
                 .width(S.C.Button_Width.current.dp)
                 .padding(top = if (isLandscape) S.C.btn_PaddingTopH.current else S.C.btn_PaddingTopV.current),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = S.C.btn_bgColor4.current,
-                    contentColor = S.C.btn_Color1.current
-                ), enabled = true, onClick = {
+                    containerColor = S.C.btn_bgColor4.current, contentColor = S.C.btn_Color1.current
+                ),
+                enabled = true,
+                onClick = {
                     if (in2_intent?.data != null) {
                         BuglyLog.e(TAG, thisActivity.workspaceParentDir())
                         val directories =
@@ -1062,8 +1132,7 @@ class MainPro : ComponentActivity() {
                         if (filteredDirectories.isNotEmpty()) {
                             var selectMenuIndex = 0
                             var selectMenuText = "sillot"
-                            BottomMenu.show(filteredDirectories)
-                                .setMessage("sillot 是默认工作空间")
+                            BottomMenu.show(filteredDirectories).setMessage("sillot 是默认工作空间")
                                 .setTitle("选择要存入的工作空间")
                                 .setSelection(selectMenuIndex) //指定已选择的位置
                                 .setOnMenuItemClickListener { dialog, text, index ->
@@ -1072,16 +1141,15 @@ class MainPro : ComponentActivity() {
                                     dialog.refreshUI() // 在 compose 里需要强制刷新
                                     true // 点击菜单后不会自动关闭
                                 }
-                                .setOkButton("确定",
-                                    OnBottomMenuButtonClickListener { menu, view ->
-                                        BuglyLog.e(TAG, "${selectMenuText}")
+                                .setOkButton("确定", OnBottomMenuButtonClickListener { menu, view ->
+                                    BuglyLog.e(TAG, "${selectMenuText}")
 
-                                        workspaceAssetsDir =
-                                            "${thisActivity.workspaceParentDir()}/${selectMenuText}/data/assets"
-                                        isButton4OnClickRunning = true // 值变化时会触发重组
-                                        false
-                                    })
-                                .setCancelButton("取消",
+                                    workspaceAssetsDir =
+                                        "${thisActivity.workspaceParentDir()}/${selectMenuText}/data/assets"
+                                    isButton4OnClickRunning = true // 值变化时会触发重组
+                                    false
+                                }).setCancelButton(
+                                    "取消",
                                     OnBottomMenuButtonClickListener { menu, view ->
                                         false
                                     })
@@ -1109,8 +1177,7 @@ class MainPro : ComponentActivity() {
         fun ApkBTNonClick1() {
             in2_intent?.data?.let {
                 U.installApk2(
-                    thisActivity,
-                    it
+                    thisActivity, it
                 )
             } ?: run {
                 U.DialogX.PopNoteShow(thisActivity, "安装失败", "无法获取安装包 uri")
@@ -1120,8 +1187,7 @@ class MainPro : ComponentActivity() {
         fun ApkBTNonClick2() {
             in2_intent?.data?.let {
                 U.installApk(
-                    thisActivity,
-                    it
+                    thisActivity, it
                 )
             } ?: run {
                 U.DialogX.PopNoteShow(thisActivity, "安装失败", "无法获取安装包 uri")
