@@ -257,6 +257,7 @@ class App : Application() {
 
         })
 
+        DialogX.globalTheme = DialogX.THEME.AUTO
         if (U.PHONE.isMIUI(applicationContext) || U.PHONE.isLargeScreenMachine(this)) {
             DialogX.globalStyle = MIUIStyle()
         } else {

@@ -33,6 +33,7 @@ object U_DialogX {
      *  PopNoteShow().noAutoDismiss() 是支持的
      */
     @JvmStatic
+    @Deprecated("之前没注意可以通过 DialogX.globalTheme = DialogX.THEME.AUTO 全局适配，这里保留作为多参数工具函数参考")
     fun PopNoteShow(context: Context, vararg params: Any): PopNotification {
         val isDarkMode = isSystemDarkMode(context)
         val builder = PopNotification.build()
@@ -98,6 +99,7 @@ object U_DialogX {
      *  按钮背景色目前没找到 DialogX 设置，因此暗黑模式显示有点违和
      */
     @JvmStatic
+    @Deprecated("之前没注意可以通过 DialogX.globalTheme = DialogX.THEME.AUTO 全局适配，这里保留作为多参数工具函数参考")
     fun PopTipShow(context: Context, vararg params: Any): PopTip {
         val isDarkMode = isSystemDarkMode(context)
         val builder = PopTip.build()
