@@ -258,6 +258,7 @@ class App : Application() {
         })
 
         DialogX.globalTheme = DialogX.THEME.AUTO
+        DialogX.autoRunOnUIThread = true // 自动在主线程执行
         if (U.PHONE.isMIUI(applicationContext) || U.PHONE.isLargeScreenMachine(this)) {
             DialogX.globalStyle = MIUIStyle()
         } else {
