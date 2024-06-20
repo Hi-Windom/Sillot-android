@@ -76,6 +76,8 @@ class App : Application() {
 
         val isMainThread: Boolean
             get() = Looper.getMainLooper().thread.id == Thread.currentThread().id
+
+        var KernelService: BootService? = null
     }
 
     override fun onCreate() {

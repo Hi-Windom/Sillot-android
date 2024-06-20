@@ -39,6 +39,7 @@ import mobile.Mobile
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.filefilter.DirectoryFileFilter
 import org.apache.commons.io.filefilter.TrueFileFilter
+import org.b3log.siyuan.App
 import org.b3log.siyuan.Utils
 import org.b3log.siyuan.workers.CheckHttpServerWorker
 import org.b3log.siyuan.workers.SyncDataWorker
@@ -93,6 +94,7 @@ class BootService : Service() {
     private val binder = LocalBinder()
 
     override fun onBind(intent: Intent): IBinder {
+        App.KernelService = this
         webViewKey = intent.getStringExtra(S.INTENT.EXTRA_WEB_VIEW_KEY)
         return binder
     }
@@ -485,6 +487,7 @@ class BootService : Service() {
 
     /**
      * 这种方法并不是官方推荐的，因为它可能会导致任务之间的延迟，并且在高频率下可能会对系统资源造成压力。
+     * 实际上如果不显示前台WIFI悬浮窗的话这个很快就会失效。
      */
     private fun scheduleCheckHttpServerWork() {
         val constraints = Constraints.Builder()
