@@ -61,4 +61,50 @@ object S_Compose {
     val text_lineHeight_xxxx = compositionLocalOf { 24.sp }
     val text_fontSize_xxxxx = compositionLocalOf { 24.sp }
     val text_lineHeight_xxxxx = compositionLocalOf { 26.sp }
+
+    /**
+     * lnco 主题色的 Material Compose 适配
+     *
+     * 0xF0123456 <-> #123456F0
+     */
+    object lnco {
+        object light {
+            val __b3_theme_primary = 0xffe6c829
+            val __b3_theme_primary_light = 0xe0e6c829
+            val __b3_theme_primary_lighter = 0xbae6c829
+            val __b3_theme_primary_lightest = 0x85e6c829
+            val __b3_theme_secondary = 0xffa48c8e
+            val __b3_theme_background = 0xfa402020
+            val __b3_theme_background_light = 0xd1402020
+            val __b3_theme_surface = 0xff422424
+            val __b3_theme_surface_light = 0xc7422424
+            val __b3_theme_surface_lighter = 0xad422424
+            val __b3_theme_error = 0xf792123c
+            val __b3_theme_on_primary = 0xff000000
+            val __b3_theme_on_secondary = 0xff00ab7c
+            val __b3_theme_on_background = 0xffdffcff
+            val __b3_theme_on_surface = 0xffd2cee5
+            val __b3_theme_on_surface_light = 0xf090fbf5
+            val __b3_theme_on_error = 0xffd7e0e0
+        }
+        object dark {
+            val __b3_theme_primary = 0xffffa300
+            val __b3_theme_primary_light = 0xb8ffa300
+            val __b3_theme_primary_lighter = 0x94ffa300
+            val __b3_theme_primary_lightest = 0x4fffa300
+            val __b3_theme_secondary = 0xffa48c8e
+            val __b3_theme_background = 0xff000000
+            val __b3_theme_background_light = 0xb8000000
+            val __b3_theme_surface = 0xe0000807
+            val __b3_theme_surface_light = 0x94000807
+            val __b3_theme_surface_lighter = 0x4f000807
+            val __b3_theme_error = 0xff820020
+            val __b3_theme_on_primary = 0xff000000
+            val __b3_theme_on_secondary = 0xff00ab7c
+            val __b3_theme_on_background = 0xffb3d8c9
+            val __b3_theme_on_surface = 0x9600eee7
+            val __b3_theme_on_surface_light = 0xFF8F9D69
+            val __b3_theme_on_error = 0xff00e2e6
+        }
+    }
 }
