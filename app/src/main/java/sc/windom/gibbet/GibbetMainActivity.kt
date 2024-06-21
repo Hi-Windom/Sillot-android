@@ -1,4 +1,4 @@
-package org.b3log.siyuan
+package sc.windom.gibbet
 
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
@@ -20,6 +20,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.b3log.siyuan.R
 
 /**
  * 汐洛绞架，暂时与思源汐洛版共存，逐步迁移过来

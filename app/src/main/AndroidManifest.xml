@@ -170,7 +170,7 @@
         android:appCategory="social"
         android:isGame="false"
         android:debuggable="true"
-        android:manageSpaceActivity="org.b3log.siyuan.ManageSpaceActivity"
+        android:manageSpaceActivity="sc.windom.potter.ManageSpaceActivity"
         android:allowTaskReparenting="true"
         android:backupInForeground="false"
         android:resizeableActivity="true"
@@ -594,7 +594,7 @@
 
 <!--    将"清除数据"项变为"管理空间"，自定义数据清除    https://github.com/Hi-Windom/Sillot-android/issues/49-->
         <activity
-            android:name=".ManageSpaceActivity"
+            android:name="sc.windom.potter.ManageSpaceActivity"
             android:label="@string/ManageSpaceActivity"
             android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"
             android:exported="true" />

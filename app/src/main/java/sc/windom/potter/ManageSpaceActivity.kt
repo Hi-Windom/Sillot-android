@@ -1,4 +1,4 @@
-package org.b3log.siyuan
+package sc.windom.potter
 
 import android.annotation.SuppressLint
 import android.app.Activity
