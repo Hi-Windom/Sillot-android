@@ -88,7 +88,7 @@ package org.b3log.siyuan;
  import com.tencent.mmkv.MMKV;
 
  import sc.windom.sofill.android.HWs;
- import org.b3log.siyuan.producer.MainPro;
+ import sc.windom.potter.producer.MainPro;
  import org.b3log.siyuan.services.BootService;
  import org.b3log.siyuan.workers.SyncDataWorker;
  import org.greenrobot.eventbus.EventBus;

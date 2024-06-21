@@ -206,7 +206,7 @@
         <meta-data android:name="io.sentry.anr.enable" android:value="true" />
 
         <activity
-            android:name=".producer.MainPro"
+            android:name="sc.windom.potter.producer.MainPro"
             android:label="Sillot MainPro"
             android:screenOrientation="fullSensor"
             android:supportsPictureInPicture="true"

@@ -1,6 +1,6 @@
 @file:Suppress("CompositionLocalNaming", "CompositionLocalNaming")
 
-package org.b3log.siyuan.producer
+package sc.windom.potter.producer
 
 import android.annotation.SuppressLint
 import android.app.Activity
