@@ -73,6 +73,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.kongzue.dialogx.dialogs.BottomMenu
 import com.kongzue.dialogx.dialogs.InputDialog
+import com.kongzue.dialogx.dialogs.PopTip
 import com.kongzue.dialogx.interfaces.OnBottomMenuButtonClickListener
 import com.tencent.bugly.crashreport.BuglyLog
 import com.tencent.mmkv.MMKV
@@ -315,24 +316,23 @@ class MainPro : ComponentActivity() {
 
                 else -> {
                     // 处理其他类型的 intent
-                    fileName.value = in2_intent?.data?.let {
-                        U.FileUtils.getFileName(
+                    in2_intent?.data?.let {
+                        fileName.value = U.FileUtils.getFileName(
+                            thisActivity, it
+                        ).toString()
+                        fileSize.value = U.FileUtils.getFileSize(
                             thisActivity, it
                         )
-                    }.toString()
-                    fileSize.value = in2_intent?.data?.let {
-                        U.FileUtils.getFileSize(
+                        mimeType.value = U.FileUtils.getMimeType(
                             thisActivity, it
-                        )
-                    }.toString()
-                    mimeType.value = in2_intent?.data?.let {
-                        U.FileUtils.getMimeType(
-                            thisActivity, it
-                        )
-                    } ?: ""
-                    fileType.value = fileName.value.let { it1 ->
-                        U.FileUtils.getFileMIMEType(mimeType.value, it1)
-                    } ?: run { U.FileUtils.getFileMIMEType(mimeType.value) }
+                        ).toString()
+                        fileType.value = fileName.value.let { it1 ->
+                            U.FileUtils.getFileMIMEType(mimeType.value, it1)
+                        }
+                    } ?: {
+                        mimeType.value = ""
+                        fileType.value = U.FileUtils.getFileMIMEType(mimeType.value)
+                    }
                 }
             }
 
@@ -780,7 +780,6 @@ class MainPro : ComponentActivity() {
                             )
                         }
                     } catch (e: Exception) {
-                        // 捕获并记录异常
                         BuglyLog.e(TAG, "Error loading thumbnail: ${e.message}")
                     }
                     bitmap?.let {
@@ -830,25 +829,25 @@ class MainPro : ComponentActivity() {
         val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
         val coroutineScope = rememberCoroutineScope()
 
-        var showSaveButton by remember { mutableStateOf(false) }
-        var showAudioButton by remember { mutableStateOf(false) }
-        var showVideoButton by remember { mutableStateOf(false) }
-        var showApkButton by remember { mutableStateOf(false) }
-        var showMagnetButton by remember { mutableStateOf(false) }
+        var showSaveButton by rememberSaveable { mutableStateOf(false) }
+        var showAudioButton by rememberSaveable { mutableStateOf(false) }
+        var showVideoButton by rememberSaveable { mutableStateOf(false) }
+        var showApkButton by rememberSaveable { mutableStateOf(false) }
+        var showMagnetButton by rememberSaveable { mutableStateOf(false) }
 
         val isLandscape =
             LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
 
-        var progressValue by remember { mutableStateOf(0) }
-        var isButton3OnClickRunning by remember { mutableStateOf(false) }
-        var isButton4OnClickRunning by remember { mutableStateOf(false) }
-        var workspaceAssetsDir by remember { mutableStateOf("${thisActivity.workspaceParentDir()}/sillot/data/assets") }
-        var uri_from_file by remember { mutableStateOf(Uri.parse("")) }
-        var uri_to_dir by remember { mutableStateOf(Uri.parse("")) }
-        var selectedFolder by remember { mutableStateOf<Uri?>(null) }
+        var progressValue by rememberSaveable { mutableStateOf(0) }
+        var isButton3OnClickRunning by rememberSaveable { mutableStateOf(false) }
+        var isButton4OnClickRunning by rememberSaveable { mutableStateOf(false) }
+        var workspaceAssetsDir by rememberSaveable { mutableStateOf("${thisActivity.workspaceParentDir()}/sillot/data/assets") }
+        var uri_from_file by rememberSaveable { mutableStateOf(Uri.parse("")) }
+        var uri_to_dir by rememberSaveable { mutableStateOf(Uri.parse("")) }
+        var selectedFolder by rememberSaveable { mutableStateOf<Uri?>(null) }
 
 
-        LaunchedEffect(key1 = mimeType) {
+        LaunchedEffect(key1 = fileName) {
             showSaveButton = in2_intent?.data != null
             showAudioButton = mimeType.value.startsWith("audio/")
             showVideoButton = mimeType.value.startsWith("video/")
@@ -959,23 +958,11 @@ class MainPro : ComponentActivity() {
             }
         }
 
-// 尽量避免申请管理所有文件，通过 SAF 获取持久性权限
-//        var manageAllFilesPermissionLauncher =
-//            rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-//                if (U.PS.canManageAllFiles(thisActivity)) {
-//                    if (isButton3OnClickRunning) {
-//                        onCopyFileToFolderByDocumentTree()
-//                    } else if (isButton4OnClickRunning) {
-//                        onCopyFileToMyAppFolder()
-//                    }
-//
-//                }
-//            }
         val bt3TaskLauncher =
             rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                BuglyLog.w(TAG, "BT3: $result")
                 if (result.resultCode == Activity.RESULT_OK) {
                     result.data?.data?.let { _uri ->
-                        if (in2_intent?.data == null) return@let
                         isButton3OnClickRunning = true  // 没有设置 LaunchedEffect 但是需要显示遮罩
                         // 通过 SAF 获取持久性权限
                         thisActivity.contentResolver.takePersistableUriPermission(
@@ -983,61 +970,44 @@ class MainPro : ComponentActivity() {
                             Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                         )
 
-//                Us.requestExternalStoragePermission(thisActivity)
-                        // 使用DocumentFile处理URI
-//                        val rootDocument = DocumentFile.fromTreeUri(thisActivity, _uri)
-                        // 例如，列出根目录下的文件和文件夹
-//                        rootDocument?.listFiles()?.forEach { file ->
-//                            // 处理文件或文件夹
-//                            BuglyLog.d(
-//                                TAG,
-//                                "File name: ${file.name}, Is directory: ${file.isDirectory}, mimeType: ${file.type}, canRead: ${file.canRead()}, canWrite: ${file.canWrite()}, lastModified: ${file.lastModified()} "
-//                            )
-//                        }
-
                         val sharedFileUri = if (in2_intent?.action == Intent.ACTION_SEND) {
                             in2_intent?.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
                         } else {
                             in2_intent?.data
                         }
-                        uri_from_file = sharedFileUri?.let {
-                            U.FileUtils.getFileFromUri(
+                        sharedFileUri?.let {
+                            uri_from_file = U.FileUtils.getFileFromUri(
                                 thisActivity, it
                             )?.toUri()
+                            uri_to_dir = _uri
+                            onCopyFileToFolderByDocumentTree()
+                        } ?: {
+                            BuglyLog.e(TAG, "无法获取 sharedFileUri")
                         }
-                        uri_to_dir = _uri
-                        onCopyFileToFolderByDocumentTree()
-//                        if (U.canManageAllFiles(thisActivity)) {
-//                            onCopyFileToFolderByDocumentTree()
-//                        } else {
-//                            val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-//                            manageAllFilesPermissionLauncher.launch(intent)
-//                        }
-
                     }
                 }
             }
 
         LaunchedEffect(key1 = isButton4OnClickRunning) {
             if (isButton4OnClickRunning) {
-                val sharedFileUri = if (in2_intent?.action == Intent.ACTION_SEND) {
-                    in2_intent?.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
-                } else {
-                    in2_intent?.data
+                try {
+                    val sharedFileUri = if (in2_intent?.action == Intent.ACTION_SEND) {
+                        in2_intent?.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+                    } else {
+                        in2_intent?.data
+                    }
+                    sharedFileUri?.let {
+                        uri_from_file = U.FileUtils.getFileFromUri(
+                            thisActivity, it
+                        )?.toUri()
+                        uri_to_dir = Uri.parse(workspaceAssetsDir)
+                        onCopyFileToMyAppFolder()
+                    } ?: {
+                        BuglyLog.e(TAG, "无法获取 sharedFileUri")
+                    }
+                } catch (e: Exception) {
+                    BuglyLog.e(TAG, "Error when isButton4OnClickRunning: ${e.message}")
                 }
-                uri_from_file = sharedFileUri?.let {
-                    U.FileUtils.getFileFromUri(
-                        thisActivity, it
-                    )?.toUri()
-                }
-                uri_to_dir = Uri.parse(workspaceAssetsDir)
-                onCopyFileToMyAppFolder()
-//                if (U.canManageAllFiles(thisActivity)) {
-//                    onCopyFileToMyAppFolder()
-//                } else {
-//                    val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-//                    manageAllFilesPermissionLauncher.launch(intent)
-//                }
 
             }
         }
@@ -1124,43 +1094,41 @@ class MainPro : ComponentActivity() {
                 ),
                 enabled = true,
                 onClick = {
-                    if (in2_intent?.data != null) {
-                        BuglyLog.e(TAG, thisActivity.workspaceParentDir())
-                        val directories =
-                            U.FileUtils.getDirectoriesInPath(thisActivity.workspaceParentDir())
-                        val filteredDirectories = directories.filter { it != "home" }
-                        if (filteredDirectories.isNotEmpty()) {
-                            var selectMenuIndex = 0
-                            var selectMenuText = "sillot"
-                            BottomMenu.show(filteredDirectories).setMessage("sillot 是默认工作空间")
-                                .setTitle("选择要存入的工作空间")
-                                .setSelection(selectMenuIndex) //指定已选择的位置
-                                .setOnMenuItemClickListener { dialog, text, index ->
-                                    selectMenuIndex = index
-                                    selectMenuText = text as String
-                                    dialog.refreshUI() // 在 compose 里需要强制刷新
-                                    true // 点击菜单后不会自动关闭
-                                }
-                                .setOkButton("确定", OnBottomMenuButtonClickListener { menu, view ->
-                                    BuglyLog.e(TAG, "${selectMenuText}")
+                    BuglyLog.d(TAG, thisActivity.workspaceParentDir())
+                    val directories =
+                        U.FileUtils.getDirectoriesInPath(thisActivity.workspaceParentDir())
+                    val filteredDirectories = directories.filter { it != "home" }
+                    if (filteredDirectories.isNotEmpty()) {
+                        var selectMenuIndex = 0
+                        var selectMenuText = "sillot"
+                        BottomMenu.show(filteredDirectories).setMessage("sillot 是默认工作空间")
+                            .setTitle("选择要存入的工作空间")
+                            .setSelection(selectMenuIndex) //指定已选择的位置
+                            .setOnMenuItemClickListener { dialog, text, index ->
+                                selectMenuIndex = index
+                                selectMenuText = text as String
+                                dialog.refreshUI() // 在 compose 里需要强制刷新
+                                true // 点击菜单后不会自动关闭
+                            }
+                            .setOkButton("确定", OnBottomMenuButtonClickListener { menu, view ->
+                                BuglyLog.e(TAG, "${selectMenuText}")
 
-                                    workspaceAssetsDir =
-                                        "${thisActivity.workspaceParentDir()}/${selectMenuText}/data/assets"
-                                    isButton4OnClickRunning = true // 值变化时会触发重组
+                                workspaceAssetsDir =
+                                    "${thisActivity.workspaceParentDir()}/${selectMenuText}/data/assets"
+                                isButton4OnClickRunning = true // 值变化时会触发重组
+                                false
+                            }).setCancelButton(
+                                "取消",
+                                OnBottomMenuButtonClickListener { menu, view ->
                                     false
-                                }).setCancelButton(
-                                    "取消",
-                                    OnBottomMenuButtonClickListener { menu, view ->
-                                        false
-                                    })
-                        } else {
-                            U.DialogX.PopNoteShow(
-                                thisActivity,
-                                R.drawable.icon,
-                                "未发现任何工作空间",
-                                "请检查是否初始化了，或者路径存在异常 ${thisActivity.workspaceParentDir()}/"
-                            ).noAutoDismiss()
-                        }
+                                })
+                    } else {
+                        U.DialogX.PopNoteShow(
+                            thisActivity,
+                            R.drawable.icon,
+                            "未发现任何工作空间",
+                            "请检查是否初始化了，或者路径存在异常 ${thisActivity.workspaceParentDir()}/"
+                        ).noAutoDismiss()
                     }
                 }) {
                 Text(
