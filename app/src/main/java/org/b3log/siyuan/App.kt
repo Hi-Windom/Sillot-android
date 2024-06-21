@@ -24,7 +24,7 @@ import io.realm.kotlin.RealmConfiguration
 import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.annotations.Ignore
 import io.realm.kotlin.types.annotations.PrimaryKey
-import org.b3log.siyuan.common.ForegroundPushManager
+import org.b3log.siyuan.MG.ForegroundPushManager
 import org.b3log.siyuan.services.BootService
 import sc.windom.sofill.S
 import sc.windom.sofill.U

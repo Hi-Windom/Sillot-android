@@ -1,16 +1,14 @@
 package sc.windom.sofill.Us
 
-import android.app.Activity
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
-import com.kongzue.dialogx.dialogs.PopTip
 import com.kongzue.dialogx.dialogs.TipDialog
 import com.kongzue.dialogx.dialogs.WaitDialog
-import org.b3log.siyuan.BiometricHelper
-import org.b3log.siyuan.BiometricHelper.BiometricCallback
+import sc.windom.sofill.android.BiometricHelper
+import sc.windom.sofill.android.BiometricHelper.BiometricCallback
 
 object U_Safe {
     private val TAG = "sc.windom.sofill.Us.U_Safe"

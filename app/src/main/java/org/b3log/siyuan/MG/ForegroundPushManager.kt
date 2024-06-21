@@ -1,4 +1,4 @@
-package org.b3log.siyuan.common
+package org.b3log.siyuan.MG
 
 import android.annotation.SuppressLint
 import android.app.Notification
@@ -8,7 +8,6 @@ import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import sc.windom.sofill.S
@@ -65,13 +64,8 @@ object ForegroundPushManager {
 
         activityIntent.component = ComponentName(context, S.ACTIVITY.URIMainActivity)
         activityIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
-        val pendingIntent: PendingIntent
-        pendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val pendingIntent: PendingIntent =
             PendingIntent.getActivity(context, 123, activityIntent, PendingIntent.FLAG_IMMUTABLE)
-        } else {
-            PendingIntent.getActivity(context, 123, activityIntent,
-                PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE)
-        }
 
 //        val pendingIntent = PendingIntent.getActivity(context, 1, activityIntent, PendingIntent.FLAG_CANCEL_CURRENT )
         builder.setContentIntent(pendingIntent)

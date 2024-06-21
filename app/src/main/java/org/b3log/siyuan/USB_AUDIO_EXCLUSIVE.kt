@@ -70,6 +70,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
 import com.tencent.bugly.crashreport.BuglyLog
 import kotlinx.coroutines.launch
+import org.b3log.siyuan.services.MusicService
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 

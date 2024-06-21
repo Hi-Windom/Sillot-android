@@ -1,4 +1,4 @@
-package org.b3log.siyuan
+package org.b3log.siyuan.services
 
 import android.app.Notification
 import android.service.notification.NotificationListenerService

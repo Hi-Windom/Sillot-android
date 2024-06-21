@@ -25,17 +25,12 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.app.KeyguardManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.os.Build;
-import android.os.Environment;
 import android.os.PowerManager;
-import android.provider.Settings;
 import android.text.TextUtils;
-import android.util.DisplayMetrics;
-import android.Manifest;
 
 import com.blankj.utilcode.util.StringUtils;
 import com.blankj.utilcode.util.TimeUtils;
@@ -50,7 +45,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -61,7 +55,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import mobile.Mobile;
-import sc.windom.sofill.S;
 
 /**
  * 工具类.

@@ -60,6 +60,8 @@ import com.kongzue.dialogx.util.TextInfo;
 import com.tencent.bugly.crashreport.BuglyLog;
 import com.tencent.bugly.crashreport.CrashReport;
 
+import sc.windom.sofill.android.BiometricHelper;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;

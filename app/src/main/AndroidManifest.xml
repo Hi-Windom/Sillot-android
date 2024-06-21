@@ -539,7 +539,7 @@
             </intent-filter>
         </activity>
         <service
-            android:name=".common.UserService"
+            android:name=".jpush.UserService"
             android:process=":pushcore"
             android:exported="true">
             <intent-filter>

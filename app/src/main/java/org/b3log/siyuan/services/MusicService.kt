@@ -1,4 +1,4 @@
-package org.b3log.siyuan
+package org.b3log.siyuan.services
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -25,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.b3log.siyuan.R
 import sc.windom.sofill.S
 import java.io.IOException
 import androidx.media.app.NotificationCompat as MediaNotificationCompat
@@ -255,7 +256,9 @@ class MusicService : LifecycleService(), MediaPlayer.OnCompletionListener,
                                     .putLong(MediaMetadataCompat.METADATA_KEY_DURATION,
                                         mediaPlayer.duration.toLong()
                                     )
-                                    .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, BitmapFactory.decodeResource(resources, R.drawable.icon)) // 专辑图片
+                                    .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, BitmapFactory.decodeResource(resources,
+                                        R.drawable.icon
+                                    )) // 专辑图片
                                     .build()
                             )
 //                            mediaController.transportControls.play()
