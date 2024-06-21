@@ -1,6 +1,7 @@
 package sc.windom.sofill.Us
 
 import android.content.Context
+import android.widget.Toast
 import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.dialogs.PopTip
 import com.kongzue.dialogx.interfaces.OnDialogButtonClickListener
@@ -8,6 +9,11 @@ import sc.windom.sofill.S
 import sc.windom.sofill.U.genSpannableColorfulString
 import sc.windom.sofill.U.isSystemDarkMode
 
+
+object Toast {
+    fun Show(mContext: Context,mBody: String) {
+        Toast.makeText(mContext, mBody, Toast.LENGTH_LONG).show()} // 适合全局的简单文本显示
+}
 
 object U_DialogX {
     private val TAG = "sc.windom.sofill.U.DialogX"

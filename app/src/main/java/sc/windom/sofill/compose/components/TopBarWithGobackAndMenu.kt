@@ -58,9 +58,9 @@ import org.b3log.siyuan.R
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 import org.b3log.siyuan.Utils
-import org.b3log.siyuan.andapi.Toast
 import sc.windom.sofill.U.disableScreenshot
 import sc.windom.sofill.U.enableScreenshot
+import sc.windom.sofill.Us.Toast
 import sc.windom.sofill.Us.U_Phone.toggleFullScreen
 
 

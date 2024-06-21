@@ -12,8 +12,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import sc.windom.sofill.S
 import org.b3log.siyuan.OnSiYuanMainRequestEvent
-import org.b3log.siyuan.andapi.Toast
 import org.greenrobot.eventbus.EventBus
+import sc.windom.sofill.Us.Toast
 
 
 class Overlay : AppCompatActivity() {

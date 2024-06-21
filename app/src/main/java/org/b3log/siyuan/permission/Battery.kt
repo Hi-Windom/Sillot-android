@@ -12,8 +12,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import org.b3log.siyuan.OnSiYuanMainRequestEvent
 import sc.windom.sofill.S
-import org.b3log.siyuan.andapi.Toast
 import org.greenrobot.eventbus.EventBus
+import sc.windom.sofill.Us.Toast
 
 
 class Battery : AppCompatActivity() {

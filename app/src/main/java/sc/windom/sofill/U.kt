@@ -33,8 +33,8 @@ import com.kongzue.dialogx.dialogs.PopTip
 import com.tencent.mmkv.MMKV
 import org.b3log.siyuan.MainActivity
 import org.b3log.siyuan.Utils
-import org.b3log.siyuan.andapi.Toast
 import org.b3log.siyuan.videoPlayer.SimplePlayer
+import sc.windom.sofill.Us.Toast
 import sc.windom.sofill.Us.U_DEBUG
 import sc.windom.sofill.Us.U_DOSC
 import sc.windom.sofill.Us.U_DialogX
