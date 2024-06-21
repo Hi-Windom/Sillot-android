@@ -104,7 +104,6 @@ import coil.size.Scale
 import coil.size.Size
 import com.kongzue.dialogx.dialogs.FullScreenDialog
 import com.kongzue.dialogx.dialogs.InputDialog
-import com.kongzue.dialogx.dialogs.PopTip
 import com.kongzue.dialogx.interfaces.DialogLifecycleCallback
 import com.kongzue.dialogx.interfaces.OnBindView
 import com.kongzue.dialogx.util.views.ActivityScreenShotImageView
@@ -118,12 +117,11 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.launch
 import org.b3log.siyuan.R
-import org.b3log.siyuan.appUtils.HWs
+import sc.windom.sofill.android.HWs
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_DialogX.PopTipShow
@@ -210,7 +208,7 @@ class HomeActivity : ComponentActivity() {
                         PopTipShow(thisActivity , "再按一次结束当前活动")
                         exitTime = System.currentTimeMillis()
                     } else {
-                        HWs.getInstance().vibratorWaveform(
+                        HWs.instance?.vibratorWaveform(
                             applicationContext,
                             longArrayOf(0, 30, 25, 40, 25, 10),
                             intArrayOf(2, 4, 3, 2, 2, 2),
@@ -226,7 +224,7 @@ class HomeActivity : ComponentActivity() {
 //                        exitProcess(0)
                     }
                 }
-                HWs.getInstance().vibratorWaveform(
+                HWs.instance?.vibratorWaveform(
                     applicationContext,
                     longArrayOf(0, 30, 25, 40, 25),
                     intArrayOf(9, 2, 1, 7, 2),

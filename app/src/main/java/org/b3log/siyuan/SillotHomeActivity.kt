@@ -9,9 +9,8 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import coil.load
 import coil.size.Scale
-import com.kongzue.dialogx.dialogs.PopTip
 import com.tencent.bugly.crashreport.BuglyLog
-import org.b3log.siyuan.appUtils.HWs
+import sc.windom.sofill.android.HWs
 import org.b3log.siyuan.json.testmoshi
 import org.b3log.siyuan.realm.TestRealm
 import sc.windom.sofill.Us.U_DialogX.PopTipShow
@@ -67,7 +66,7 @@ class SillotHomeActivity : AppCompatActivity() {
                         PopTipShow(applicationContext , "再按一次结束当前活动")
                         exitTime = System.currentTimeMillis()
                     } else {
-                        HWs.getInstance().vibratorWaveform(
+                        HWs.instance?.vibratorWaveform(
                             applicationContext,
                             longArrayOf(0, 30, 25, 40, 25, 10),
                             intArrayOf(2, 4, 3, 2, 2, 2),
@@ -82,7 +81,7 @@ class SillotHomeActivity : AppCompatActivity() {
                         finish()
 //                        exitProcess(0)
                     }
-                HWs.getInstance().vibratorWaveform(
+                HWs.instance?.vibratorWaveform(
                     applicationContext,
                     longArrayOf(0, 30, 25, 40, 25),
                     intArrayOf(9, 2, 1, 7, 2),

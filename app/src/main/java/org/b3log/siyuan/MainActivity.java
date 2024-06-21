@@ -31,7 +31,6 @@ package org.b3log.siyuan;
  import android.content.pm.PackageManager;
  import android.graphics.Bitmap;
  import android.net.Uri;
- import android.os.Build;
  import android.os.Bundle;
  import android.os.IBinder;
  import android.provider.MediaStore;
@@ -88,7 +87,7 @@ package org.b3log.siyuan;
  import com.tencent.bugly.crashreport.CrashReport;
  import com.tencent.mmkv.MMKV;
 
- import org.b3log.siyuan.appUtils.HWs;
+ import sc.windom.sofill.android.HWs;
  import org.b3log.siyuan.producer.MainPro;
  import org.b3log.siyuan.services.BootService;
  import org.b3log.siyuan.workers.SyncDataWorker;
@@ -131,12 +130,17 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     private ProgressBar bootProgressBar;
     private TextView bootDetailsText;
     private ValueCallback<Uri[]> uploadMessage;
-    private static final int REQUEST_SELECT_FILE = S.getREQUEST_CODE().REQUEST_SELECT_FILE;
-    private static final int REQUEST_CAMERA = S.getREQUEST_CODE().REQUEST_CAMERA;
+    private static final int REQUEST_SELECT_FILE;
+    private static final int REQUEST_CAMERA;
+    static {
+         S.getREQUEST_CODE();
+         REQUEST_SELECT_FILE = S_REQUEST_CODE.REQUEST_SELECT_FILE;
+         REQUEST_CAMERA = S_REQUEST_CODE.REQUEST_CAMERA;
+    }
     private long exitTime;
     public MMKV mmkv;
-     public ActivityResultLauncher<String[]> requestPermissionLauncher;
-     public int requestPermissionAll_works = 0;
+    public ActivityResultLauncher<String[]> requestPermissionLauncher;
+    public int requestPermissionAll_works = 0;
 
      /**
       * dispatchKeyEvent 是一个更高级的方法，它可以处理所有类型的按键事件，包括按键按下、抬起和长按。
@@ -422,12 +426,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 uploadMessage = filePathCallback;
 
                 if (fileChooserParams.isCaptureEnabled()) {
-                    if (Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q) {
-                        // 不支持 Android 10 以下
-                        PopTipShow(getApplicationContext() , "Capture is not supported on your device (Android 10+ required)");
-                        uploadMessage = null;
-                        return false;
-                    }
 
                     final String[] permissions = {android.Manifest.permission.CAMERA};
                     if (!hasPermissions(permissions)) {
@@ -562,7 +560,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                     return true; // 这里返回 true 阻止网页导航
                 }
 
-                if (uri.getScheme().toLowerCase().startsWith("http")) {
+                if (Objects.requireNonNull(uri.getScheme()).toLowerCase().startsWith("http")) {
                     final Intent i = new Intent(Intent.ACTION_VIEW, uri);
                     i.addCategory(Intent.CATEGORY_BROWSABLE);
                     i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
@@ -612,9 +610,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         ws.setJavaScriptEnabled(true);
         ws.setDomStorageEnabled(true);
         ws.setCacheMode(WebSettings.LOAD_NO_CACHE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            ws.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-        }
+        ws.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         ws.setTextZoom(100);
         ws.setUseWideViewPort(true);
         ws.setLoadWithOverviewMode(true);
