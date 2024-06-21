@@ -31,3 +31,17 @@ data class ICreateDocWithMdRequest(
     val ParentID: String? = null,
     val WithMath: Boolean = false
     )
+
+@Serializable
+data class IAppendBlockRequest(
+    val Data: String,
+    val DataType: String,
+    val ParentID: String,
+)
+
+@Serializable
+data class IInsertBlockNextRequest(
+    val Data: String,
+    val DataType: String,
+    val PreviousID: String,
+)

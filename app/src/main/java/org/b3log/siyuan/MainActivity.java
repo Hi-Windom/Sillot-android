@@ -17,6 +17,7 @@
  */
 package org.b3log.siyuan;
 
+ import static org.b3log.siyuan.MainActivityHelperKt.onDragInsertIntoWebView;
  import static sc.windom.sofill.Us.U_DialogX.PopTipShow;
  import static sc.windom.sofill.android.webview.WebViewThemeKt.applySystemThemeToWebView;
 
@@ -43,7 +44,6 @@ package org.b3log.siyuan;
  import sc.windom.sofill.Us.U_Layout;
  import sc.windom.sofill.Us.U_Permission;
  import sc.windom.sofill.Us.U_Phone;
- import sc.windom.sofill.Us.U_Pro;
  import sc.windom.sofill.android.webview.WebViewLayoutManager;
  import sc.windom.sofill.Ss.S_Events;
  import sc.windom.sofill.Ss.S_Intent;
@@ -88,7 +88,7 @@ package org.b3log.siyuan;
  import com.tencent.mmkv.MMKV;
 
  import sc.windom.sofill.android.HWs;
- import sc.windom.potter.producer.MainPro;
+
  import org.b3log.siyuan.services.BootService;
  import org.b3log.siyuan.workers.SyncDataWorker;
  import org.greenrobot.eventbus.EventBus;
@@ -509,7 +509,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             webView.setOnDragListener((view, event) -> {
                 BuglyLog.d(TAG, "webView.setOnDragListener((view, event) -> view: " + view.toString() + ", event: " + event.toString());
                 // 支持 OriginOS4 超级拖拽 #90
-                U_Pro.onDragSend2Producer(webView, event, MainPro.class);
+                onDragInsertIntoWebView(webView, event);
                 // 禁用拖拽 https://github.com/siyuan-note/siyuan/issues/6436
                 return DragEvent.ACTION_DRAG_ENDED != event.getAction();
             });

@@ -4,6 +4,7 @@ import com.tencent.bugly.crashreport.BuglyLog
 import org.commonmark.node.Node
 import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.HtmlRenderer
+import org.commonmark.renderer.markdown.MarkdownRenderer
 import org.jsoup.Jsoup
 import org.jsoup.safety.Safelist
 
@@ -43,19 +44,29 @@ object U_DOSC {
         // 对HTML进行校验和清理
         val safeHtml = sanitizeHtml(html)
         // 处理安全的HTML文本
-        BuglyLog.e(TAG, "HTML: $safeHtml")
+        BuglyLog.d(TAG, "HTML: $safeHtml")
         return safeHtml
     }
 
     fun processMarkdown(markdown: String): String {
         val validMarkdown = validateMarkdown2HTML(markdown)
-        BuglyLog.e(TAG, "Markdown: $validMarkdown")
+        BuglyLog.d(TAG, "validateMarkdown2HTML: $validMarkdown")
+        return validMarkdown
+    }
+
+    fun text2Markdown(text: String): String {
+        // 使用CommonMark解析器解析Markdown
+        val parser = Parser.builder().build()
+        val renderer = MarkdownRenderer.builder().build()
+        val document: Node = parser.parse(text)
+        val validMarkdown = renderer.render(document)
+        BuglyLog.d(TAG, "validMarkdown: $validMarkdown")
         return validMarkdown
     }
 
     fun processPlainText(text: String): String {
         // 处理普通文本
-        BuglyLog.e(TAG, text)
+        BuglyLog.d(TAG, text)
         return text
     }
 
