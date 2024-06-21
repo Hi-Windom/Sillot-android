@@ -1,4 +1,4 @@
-package org.b3log.siyuan.ld246.utils
+package org.b3log.ld246.utils
 
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse

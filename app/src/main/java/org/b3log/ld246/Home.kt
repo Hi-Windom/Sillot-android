@@ -1,4 +1,4 @@
-package org.b3log.siyuan.ld246
+package org.b3log.ld246
 
 import android.annotation.SuppressLint
 import android.app.Activity

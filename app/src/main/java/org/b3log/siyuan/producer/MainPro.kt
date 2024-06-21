@@ -85,7 +85,7 @@ import kotlinx.serialization.encodeToString
 import mobile.Mobile
 import org.b3log.siyuan.App
 import org.b3log.siyuan.R
-import org.b3log.siyuan.ld246.HomeActivity
+import org.b3log.ld246.HomeActivity
 import org.b3log.siyuan.services.BootService
 import sc.windom.sofill.S
 import sc.windom.sofill.U

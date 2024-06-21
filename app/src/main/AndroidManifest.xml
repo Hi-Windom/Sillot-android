@@ -364,7 +364,7 @@
 <!--        </service>-->
         <!--        汐洛链滴社区客户端主入口-->
         <activity
-            android:name=".ld246.HomeActivity"
+            android:name="org.b3log.ld246.HomeActivity"
             android:icon="@drawable/icon"
             android:label="@string/activity_name_ld246Home"
             android:autoRemoveFromRecents="false"
