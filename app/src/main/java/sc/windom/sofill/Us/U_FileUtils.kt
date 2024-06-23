@@ -13,6 +13,7 @@ import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.util.Log
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddLink
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Book
@@ -72,22 +73,47 @@ object U_FileUtils {
         return filesDir.absolutePath
     }
 
-    @SuppressLint("Range", "ObsoleteSdkInt")
+    @SuppressLint("Range")
     fun getFileName(context: Context, uri: Uri): String? {
         var result: String? = null
-        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+        val scheme = uri.scheme
+
+        if (scheme == "content") {
+            // 对于内容URI，尝试使用ContentResolver查询文件名
+            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+                }
             }
+            // 如果是临时权限，尝试获取读取权限
+            if (result == null) {
+                // 检查是否有临时权限
+                val flags = context.contentResolver.persistedUriPermissions
+                val hasReadPermission = flags.any { it.uri == uri && it.isReadPermission }
+
+                if (!hasReadPermission) {
+                    // 尝试获取持久化权限
+                    try {
+                        val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        context.contentResolver.takePersistableUriPermission(uri, takeFlags)
+                    } catch (e: SecurityException) {
+                        // 处理异常，可能是没有权限或者其他原因
+                        Log.e("getFileName", "Failed to take persistable permission", e)
+                    }
+                }
+                result = getFileNameFromUri(context, uri)
+            }
+        } else if (scheme == "magnet") {
+            // 对于磁力链接，直接返回整个链接作为文件名
+            result = uri.toString()
+        } else {
+            // 对于其他类型的URI，尝试使用URI的最后一部分作为名称
+            result = uri.lastPathSegment ?: uri.toString()
         }
-        // 如果是临时权限，尝试获取读取权限
-        if (result == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-            context.contentResolver.takePersistableUriPermission(uri, takeFlags)
-            result = getFileNameFromUri(context, uri)
-        }
-        return result ?: uri.lastPathSegment // Fallback to the last segment of the URI if the query didn't return a name
+
+        return result
     }
+
     private fun getFileNameFromUri(context: Context, uri: Uri): String? {
         val resolver = context.contentResolver
         val openFileDescriptor = resolver.openFileDescriptor(uri, "r", null)
@@ -526,7 +552,7 @@ object U_FileUtils {
         return if (fileSizeInBytes > 0) {
             formatFileSize(fileSizeInBytes)
         } else {
-            "unknown"
+            "未知大小"
         }
     }
 
@@ -546,8 +572,25 @@ object U_FileUtils {
         return "${df.format(fileSize)}${units[unitIndex]}"
     }
 
+
+    /**
+     * 对于非文件的链接，返回自定义的MIME类型
+     */
     fun getMimeType(context: Context, uri: Uri): String? {
-        return context.contentResolver.getType(uri)
+        var mimeType: String? = context.contentResolver.getType(uri)
+
+        if (mimeType == null) {
+            val scheme = uri.scheme
+            when (scheme) {
+                "magnet" -> {
+                    // 磁力链接通常用于BitTorrent，但没有官方的MIME类型
+                    mimeType = "application/x-magnet"
+                }
+                // 添加更多的case来处理其他非标准URI的scheme
+            }
+        }
+
+        return mimeType
     }
 
 
@@ -563,6 +606,9 @@ object U_FileUtils {
 //}
     fun getIconForFileType(fileType: String): ImageVector {
         return when {
+            // 自定义的MIME类型::开始
+            fileType == "磁力链接" -> Icons.Default.AddLink
+            // 自定义的MIME类型::结束
             fileType == "其他文本" -> Icons.Default.TextFields
             fileType == "HTML" -> Icons.Default.Html
             fileType == "CSS" -> Icons.Default.Css
@@ -591,6 +637,10 @@ object U_FileUtils {
             }
         }
         return when {
+            // 自定义的MIME类型::开始
+            mimeType == "application/x-magnet" -> "磁力链接"
+            // 自定义的MIME类型::结束
+
             mimeType.startsWith("video/") -> {
                 when (mimeType) {
                     "video/mp4" -> "MP4 视频"
