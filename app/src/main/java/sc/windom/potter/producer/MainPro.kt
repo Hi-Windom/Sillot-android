@@ -53,7 +53,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -73,7 +72,6 @@ import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.kongzue.dialogx.dialogs.BottomMenu
 import com.kongzue.dialogx.dialogs.InputDialog
-import com.kongzue.dialogx.dialogs.PopTip
 import com.kongzue.dialogx.interfaces.OnBottomMenuButtonClickListener
 import com.tencent.bugly.crashreport.BuglyLog
 import com.tencent.mmkv.MMKV
@@ -84,9 +82,9 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import mobile.Mobile
+import org.b3log.ld246.HomeActivity
 import org.b3log.siyuan.App
 import org.b3log.siyuan.R
-import org.b3log.ld246.HomeActivity
 import org.b3log.siyuan.services.BootService
 import sc.windom.sofill.S
 import sc.windom.sofill.U
@@ -847,7 +845,7 @@ class MainPro : ComponentActivity() {
         var selectedFolder by rememberSaveable { mutableStateOf<Uri?>(null) }
 
 
-        LaunchedEffect(key1 = fileName) {
+        LaunchedEffect(key1 = fileName.value, key2 = mimeType.value) {
             showSaveButton = in2_intent?.data != null
             showAudioButton = mimeType.value.startsWith("audio/")
             showVideoButton = mimeType.value.startsWith("video/")
