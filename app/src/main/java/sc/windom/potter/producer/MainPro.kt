@@ -495,7 +495,7 @@ class MainPro : ComponentActivity() {
                             }）"
                         ).noAutoDismiss()
                         false
-                    }.show()
+                    }.show(thisActivity)
             },
         )
     }

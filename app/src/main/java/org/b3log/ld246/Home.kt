@@ -106,7 +106,6 @@ import com.kongzue.dialogx.dialogs.FullScreenDialog
 import com.kongzue.dialogx.dialogs.InputDialog
 import com.kongzue.dialogx.interfaces.DialogLifecycleCallback
 import com.kongzue.dialogx.interfaces.OnBindView
-import com.kongzue.dialogx.util.views.ActivityScreenShotImageView
 import com.tencent.bugly.crashreport.BuglyLog
 import com.tencent.mmkv.MMKV
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -117,7 +116,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.launch
 import org.b3log.siyuan.R
-import sc.windom.sofill.android.HWs
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -125,6 +123,7 @@ import retrofit2.Retrofit
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_DialogX.PopTipShow
+import sc.windom.sofill.android.HWs
 import sc.windom.sofill.api.MyRetrofit.createRetrofit
 import sc.windom.sofill.api.ld246.ApiServiceNotification
 import sc.windom.sofill.compose.MyTagHandler
@@ -186,8 +185,6 @@ class HomeActivity : ComponentActivity() {
         retrofit = createRetrofit("https://${S.HOST_ld246}/")
         // 创建API服务实例
         apiService = retrofit?.create(ApiServiceNotification::class.java)
-        ActivityScreenShotImageView.hideContentView =
-            true; // https://github.com/kongzue/DialogX/wiki/%E5%85%A8%E5%B1%8F%E5%AF%B9%E8%AF%9D%E6%A1%86-FullScreenDialog
         // 获取OnBackPressedDispatcher
         val onBackPressedDispatcher = onBackPressedDispatcher
         // 设置OnBackPressedCallback
@@ -554,7 +551,7 @@ class HomeActivity : ComponentActivity() {
                         ).noAutoDismiss()
                         false
                     }
-                    .show()
+                    .show(thisActivity)
             },
         )
     }
@@ -1201,7 +1198,8 @@ class HomeActivity : ComponentActivity() {
                         fullScreenDialog = null
                     }
                 })
-            }.show()
+            }
+            fullScreenDialog?.show(thisActivity)
         } else {
             fullScreenDialog?.let { dialog ->
                 val webView = dialog.getCustomView()?.findViewById<WebView>(R.id.webView)

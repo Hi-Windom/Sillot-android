@@ -11,6 +11,7 @@ import android.os.Process
 import cn.jpush.android.api.JPushInterface
 import com.kongzue.dialogx.DialogX
 import com.kongzue.dialogx.style.MIUIStyle
+import com.kongzue.dialogx.util.views.ActivityScreenShotImageView
 import com.microsoft.clarity.Clarity
 import com.microsoft.clarity.ClarityConfig
 import com.microsoft.clarity.models.LogLevel
@@ -266,6 +267,8 @@ class App : Application() {
         } else {
             // 其他主题感觉都不好看，暂时默认，以后可能自己弄个
         }
+        ActivityScreenShotImageView.hideContentView =
+            true; // https://github.com/kongzue/DialogX/wiki/%E5%85%A8%E5%B1%8F%E5%AF%B9%E8%AF%9D%E6%A1%86-FullScreenDialog
     }
 
     override fun onLowMemory() {
