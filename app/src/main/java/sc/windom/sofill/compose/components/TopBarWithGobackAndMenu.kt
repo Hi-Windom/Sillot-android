@@ -70,7 +70,7 @@ data class MenuItem31(val title: String, val action: () -> Unit)
 @Composable
 fun CommonTopAppBar(
     title: String, // 应用栏标题
-    sourceFile: String, // 源代码文件名（包括后缀名），以 App.kt 为根目录，如果不在根目录请包含路径，例如 ld246/Home.kt
+    srcPath: String, // 源代码文件名（包括后缀名），以 App.kt 为根目录，如果不在根目录请包含路径，例如 ld246/Home.kt
     uri: Uri?,
     isMenuVisible: MutableState<Boolean>,
     additionalMenuItem: @Composable (() -> Unit)? = null,
@@ -102,7 +102,7 @@ fun CommonTopAppBar(
             TopRightMenu(
                 expanded = isMenuVisible.value,
                 onDismiss = { isMenuVisible.value = false },
-                sourceFile = sourceFile,
+                srcPath = srcPath,
                 uri = uri,
                 additionalMenuItem = additionalMenuItem // 将额外的菜单项传递给 TopRightMenu
             )
@@ -113,7 +113,7 @@ fun CommonTopAppBar(
 @Composable
 fun TopRightMenu(
     expanded: Boolean,
-    sourceFile: String,
+    srcPath: String,
     uri: Uri?,
     onDismiss: () -> Unit,
     additionalMenuItem: @Composable (() -> Unit)? = null,
@@ -256,7 +256,7 @@ fun TopRightMenu(
                         Lcc.packageManager,
                         S.emailAdress,
                         "汐洛安卓反馈 - 报告此页",
-                        "sourceFile: ${sourceFile}\n${Utils.getDeviceInfoString()}"
+                        "sourceFile: ${srcPath}\n${Utils.getDeviceInfoString()}"
                     )
                     },
                 )
@@ -268,7 +268,7 @@ fun TopRightMenu(
                 DropdownMenuItem(
                     text = { Text("查看源码") },
                     leadingIcon = { Icon(Icons.TwoTone.Code, contentDescription = null) },
-                    onClick = { onDismiss();U.openUrl("${S.gitRepoUrl}/blob/HEAD/app/src/main/java/org/b3log/siyuan/${sourceFile}") },
+                    onClick = { onDismiss();U.openUrl("${S.gitRepoUrl}/blob/HEAD/app/src/main/java/${srcPath}") },
                 )
             },
         )

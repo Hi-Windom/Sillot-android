@@ -122,6 +122,7 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import sc.windom.sofill.S
 import sc.windom.sofill.U
+import sc.windom.sofill.Us.U_DEBUG.srcPath
 import sc.windom.sofill.Us.U_DialogX.PopTipShow
 import sc.windom.sofill.android.HWs
 import sc.windom.sofill.api.MyRetrofit.createRetrofit
@@ -137,7 +138,8 @@ import sc.windom.sofill.dataClass.ld246_User
 
 
 class HomeActivity : ComponentActivity() {
-    val TAG = "ld246/Home.kt"
+    private val TAG = "Home.kt"
+    private val srcPath = srcPath(TAG)
     private lateinit var thisActivity: Activity
     private var mmkv: MMKV = MMKV.defaultMMKV()
     val ua = "Sillot-anroid/0.35"
@@ -177,7 +179,7 @@ class HomeActivity : ComponentActivity() {
         }
         setContent {
             CascadeMaterialTheme {
-                UI(intent, TAG)
+                UI(intent)
             }
         }
         viewmodel = NotificationsViewModel()
@@ -293,7 +295,7 @@ class HomeActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
     @Composable
-    private fun UI(intent: Intent?, TAG: String) {
+    private fun UI(intent: Intent?) {
         val uri = intent?.data
         val Lcc = LocalContext.current
         val token = rememberSaveable {
@@ -381,7 +383,7 @@ class HomeActivity : ComponentActivity() {
             topBar = {
                 CommonTopAppBar(
                     "汐洛链滴社区客户端",
-                    TAG,
+                    srcPath,
                     uri,
                     isMenuVisible,
                     additionalMenuItem = {
@@ -1105,7 +1107,7 @@ class HomeActivity : ComponentActivity() {
     @Preview(showBackground = true)
     @Composable
     private fun DefaultPreview() {
-        UI(null, "")
+        UI(null)
     }
 
     private fun handleUrlLoading(view: WebView, url: String): Boolean {

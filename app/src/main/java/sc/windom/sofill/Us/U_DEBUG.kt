@@ -14,6 +14,15 @@ import java.io.IOException
 
 
 object U_DEBUG {
+    /**
+     * 将类的全名转换为使用斜杠的路径形式，并附加给定的文件名。
+     */
+    fun Any.srcPath(fileName: String): String {
+        val className = this::class.java.name
+        val packageName = className.substring(0, className.lastIndexOf('.'))
+        val slashedPackageName = packageName.replace('.', '/')
+        return "$slashedPackageName/$fileName"
+    }
     @JvmStatic
     fun prettyConsoleMessage(consoleMessage: ConsoleMessage): String {
         val messageLevel = when (consoleMessage.messageLevel()) {

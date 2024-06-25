@@ -89,6 +89,7 @@ import org.b3log.siyuan.services.BootService
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.Toast
+import sc.windom.sofill.Us.U_DEBUG.srcPath
 import sc.windom.sofill.Us.U_FileUtils.workspaceParentDir
 import sc.windom.sofill.android.webview.WebPoolsPro
 import sc.windom.sofill.android.webview.WebPoolsPro.Companion.instance
@@ -121,7 +122,8 @@ import java.util.Objects
 // TODO: 如果是 workspaceParentDir 目录下的文件支持删除
 // TODO: 文件被删除时处理异常
 class MainPro : ComponentActivity() {
-    val TAG = "producer/MainPro.kt"
+    private val TAG = "MainPro.kt"
+    private val srcPath = srcPath(TAG)
     private var mmkv: MMKV = MMKV.defaultMMKV()
     private lateinit var thisActivity: Activity
     private var in2_intent: Intent? = null
@@ -223,7 +225,7 @@ class MainPro : ComponentActivity() {
         created.value = true
         setContent {
             CascadeMaterialTheme {
-                MyUI(TAG)
+                MyUI()
             }
         }
 
@@ -247,7 +249,7 @@ class MainPro : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
     @Composable
-    fun MyUI(TAG: String) {
+    fun MyUI() {
         val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
         val coroutineScope = rememberCoroutineScope()
         val targetIntent = rememberSaveable { mutableStateOf(in2_intent) }
@@ -340,7 +342,7 @@ class MainPro : ComponentActivity() {
             topBar = {
                 CommonTopAppBar(
                     head_title,
-                    TAG,
+                    srcPath,
                     in2_intent?.data,
                     isMenuVisible,
                     additionalMenuItem = {
@@ -1188,7 +1190,7 @@ class MainPro : ComponentActivity() {
             S.C.Thumbnail_Height provides 250,
             S.C.Button_Width providesDefault 300,
         ) {
-            MyUI("Preview")
+            MyUI()
         }
     }
 

@@ -53,6 +53,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import sc.windom.sofill.S
 import sc.windom.sofill.U
+import sc.windom.sofill.Us.U_DEBUG.srcPath
 import sc.windom.sofill.Us.U_FileUtils.getSizeRecursively
 import sc.windom.sofill.compose.components.CommonTopAppBar
 import sc.windom.sofill.compose.components.WaitUI
@@ -61,8 +62,8 @@ import java.io.File
 
 // TODO: 添加更多可清理内容
 class ManageSpaceActivity : AppCompatActivity() {
-    //     将"清除数据"项变为"管理空间"，自定义数据清除    https://github.com/Hi-Windom/Sillot-android/issues/49
-    val TAG = "ManageSpaceActivity.kt"
+    private val TAG = "ManageSpaceActivity.kt"
+    private val srcPath = srcPath(TAG)
     private lateinit var thisActivity: AppCompatActivity
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,7 +92,7 @@ class ManageSpaceActivity : AppCompatActivity() {
         // 认证成功，导航到主屏幕
         setContent {
             CascadeMaterialTheme {
-                UI(intent, TAG)
+                UI(intent, srcPath)
             }
         }
     }
@@ -207,11 +208,7 @@ class ManageSpaceActivity : AppCompatActivity() {
                         Button(
                             modifier = Modifier.fillMaxWidth(),
                             onClick = {
-                                setContent {
-                                    CascadeMaterialTheme {
-                                        UI(intent, TAG)
-                                    }
-                                }
+                                navigateToMainScreen()
                                 return@Button
                             },
                         ) {
