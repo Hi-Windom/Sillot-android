@@ -852,7 +852,13 @@ class MainPro : ComponentActivity() {
 
 
         LaunchedEffect(key1 = fileName.value, key2 = mimeType.value) {
-            showSaveButton = in2_intent?.data != null
+            // 检查是否是 ACTION_SEND 并获取额外的文件 Uri
+            val sharedFileUri = if (in2_intent?.action == Intent.ACTION_SEND) {
+                in2_intent?.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+            } else {
+                in2_intent?.data
+            }
+            showSaveButton = sharedFileUri != null
             showAudioButton = mimeType.value.startsWith("audio/")
             showVideoButton = mimeType.value.startsWith("video/")
             showApkButton =
