@@ -752,7 +752,31 @@ class MainPro : ComponentActivity() {
         val isLandscape =
             LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
 
-        // 显示图像缩略图或文件类型图标
+        LaunchedEffect(key1 = fileName.value, key2 = fileType.value) {
+            if (fileType.value.endsWith("图像")) {
+                try {
+                    // 检查是否是 ACTION_SEND 并获取额外的文件 Uri
+                    val sharedFileUri = if (in2_intent?.action == Intent.ACTION_SEND) {
+                        in2_intent?.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+                    } else {
+                        in2_intent?.data
+                    }
+
+                    // 如果有文件 Uri，尝试加载缩略图
+                    bitmap = sharedFileUri?.let { uri ->
+                        thisActivity.contentResolver.loadThumbnail(
+                            uri, Size(
+                                if (isLandscape) Thumbnail_Height else Thumbnail_Height_IMG,
+                                if (isLandscape) Thumbnail_Height else Thumbnail_Height_IMG
+                            ), null
+                        )
+                    }
+                } catch (e: Exception) {
+                    BuglyLog.e(TAG, "Error loading thumbnail: ${e.message}")
+                }
+            }
+        }
+
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -762,26 +786,6 @@ class MainPro : ComponentActivity() {
                     .wrapContentSize(Alignment.Center)
             ) {
                 if (fileType.value.endsWith("图像")) {
-                    try {
-                        // 检查是否是 ACTION_SEND 并获取额外的文件 Uri
-                        val sharedFileUri = if (in2_intent?.action == Intent.ACTION_SEND) {
-                            in2_intent?.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
-                        } else {
-                            in2_intent?.data
-                        }
-
-                        // 如果有文件 Uri，尝试加载缩略图
-                        bitmap = sharedFileUri?.let { uri ->
-                            thisActivity.contentResolver.loadThumbnail(
-                                uri, Size(
-                                    if (isLandscape) Thumbnail_Height else Thumbnail_Height_IMG,
-                                    if (isLandscape) Thumbnail_Height else Thumbnail_Height_IMG
-                                ), null
-                            )
-                        }
-                    } catch (e: Exception) {
-                        BuglyLog.e(TAG, "Error loading thumbnail: ${e.message}")
-                    }
                     bitmap?.let {
                         Image(
                             bitmap = it.asImageBitmap(),
