@@ -4,16 +4,30 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import android.os.Build
 import android.provider.Settings
 import android.text.TextUtils
 import android.webkit.ConsoleMessage
 import com.tencent.bugly.crashreport.BuglyLog
+import org.b3log.siyuan.BuildConfig
 import java.io.BufferedReader
 import java.io.FileReader
 import java.io.IOException
 
 
 object U_DEBUG {
+    @JvmStatic
+    fun getDeviceInfoString(): String {
+        val sb = StringBuilder()
+        sb.append("\n- via -\n")
+        sb.append("Device: ").append(Build.BRAND).append("-").append(Build.MODEL).append(" (")
+            .append(Build.MANUFACTURER).append(")\n")
+        sb.append("Android: ").append(Build.VERSION.RELEASE).append(" (SDK_")
+            .append(Build.VERSION.SDK_INT).append(")\n")
+        sb.append("Apk: ").append(BuildConfig.VERSION_NAME).append(" (")
+            .append(BuildConfig.VERSION_CODE).append(")\n")
+        return sb.toString()
+    }
     /**
      * 将类的全名转换为使用斜杠的路径形式，并附加给定的文件名。
      */

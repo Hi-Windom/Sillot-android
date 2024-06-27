@@ -71,15 +71,6 @@ public final class Utils {
      */
     public static final String version = BuildConfig.VERSION_NAME;
 
-    public static String getDeviceInfoString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("\n- via -\n");
-        sb.append("Device: ").append(Build.BRAND).append("-").append(Build.MODEL).append(" (").append(Build.MANUFACTURER).append(")\n");
-        sb.append("Android: ").append(Build.VERSION.RELEASE).append(" (SDK_").append(Build.VERSION.SDK_INT).append(")\n");
-        sb.append("Apk: ").append(BuildConfig.VERSION_NAME).append(" (").append(BuildConfig.VERSION_CODE).append(")\n");
-        return sb.toString();
-    }
-
     public static boolean isFirstLaunch(Activity activity) {
         SharedPreferences sharedPreferences = activity.getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
         boolean isFirstLaunch = sharedPreferences.getBoolean("is_first_launch", true);
@@ -87,27 +78,6 @@ public final class Utils {
             sharedPreferences.edit().putBoolean("is_first_launch", false).apply();
         }
         return isFirstLaunch;
-    }
-
-    public static void requestPermissionActivity(Context context, final String id, final String Msg) { // id 对应的是具体的类，在 permission 文件夹，没有事先创建则会报错
-
-
-        if (id.equals("Battery")) {
-            Intent battery = new Intent("sc.windom.sillot.intent.permission." + id);
-            battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            // 获取 Application Context 并启动 Activity
-            context.getApplicationContext().startActivity(battery);
-        }
-        if (Msg != null && !Msg.isEmpty()) {
-            PopTip.show(Msg);
-        }
-    }
-    public static boolean hasBatteryOptimizationPermission(Context context) {
-            PowerManager pm = (PowerManager) context.getSystemService(POWER_SERVICE);
-            if (pm != null) {
-                return pm.isIgnoringBatteryOptimizations(context.getPackageName());
-            }
-        return false;
     }
 
     public static void unzipAsset(final AssetManager assetManager, final String zipName, final String targetDirectory) {

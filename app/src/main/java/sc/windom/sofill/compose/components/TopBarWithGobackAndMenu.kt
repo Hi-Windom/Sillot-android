@@ -6,9 +6,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.view.WindowInsets
-import android.view.WindowInsetsController
-import android.view.WindowManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
@@ -40,7 +37,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -57,10 +53,10 @@ import me.saket.cascade.rememberCascadeState
 import org.b3log.siyuan.R
 import sc.windom.sofill.S
 import sc.windom.sofill.U
-import org.b3log.siyuan.Utils
 import sc.windom.sofill.U.disableScreenshot
 import sc.windom.sofill.U.enableScreenshot
 import sc.windom.sofill.Us.Toast
+import sc.windom.sofill.Us.U_DEBUG
 import sc.windom.sofill.Us.U_Phone.toggleFullScreen
 
 
@@ -256,7 +252,7 @@ fun TopRightMenu(
                         Lcc.packageManager,
                         S.emailAdress,
                         "汐洛安卓反馈 - 报告此页",
-                        "sourceFile: ${srcPath}\n${Utils.getDeviceInfoString()}"
+                        "sourceFile: ${srcPath}\n${U_DEBUG.getDeviceInfoString()}"
                     )
                     },
                 )

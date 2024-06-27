@@ -12,9 +12,36 @@ import android.os.PowerManager
 import android.provider.Settings
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.kongzue.dialogx.dialogs.PopTip
 import sc.windom.sofill.S
 
 object U_Permission {
+    /**
+     * @param id 对应的是具体的类，在 permission 文件夹，没有事先创建则会报错
+     */
+    @JvmStatic
+    fun requestPermissionActivity(
+        context: Context,
+        id: String,
+        Msg: String?
+    ) {
+        if (id == "Battery") {
+            val battery = Intent("sc.windom.sillot.intent.permission.$id")
+            battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            // 获取 Application Context 并启动 Activity
+            context.applicationContext.startActivity(battery)
+        }
+        if (!Msg.isNullOrEmpty()) {
+            PopTip.show(Msg)
+        }
+    }
+
+    @JvmStatic
+    fun hasBatteryOptimizationPermission(context: Context): Boolean {
+        val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        return pm.isIgnoringBatteryOptimizations(context.packageName)
+    }
+
     @JvmStatic
     fun isValidPermission(id: String?): Boolean { // Converted from Utils.java
         if (id.isNullOrEmpty()) {
