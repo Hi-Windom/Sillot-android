@@ -69,10 +69,12 @@ class BootService : Service() {
     private lateinit var mHandlerThread: HandlerThread
     private lateinit var mHandler: Handler
     private var webViewKey: String? = null
-    private val dataDir = filesDir.absolutePath
-    private val appDir = "$dataDir/app"
+    private lateinit var dataDir: String
+    private lateinit var appDir: String
     override fun onCreate() {
         super.onCreate()
+        dataDir = filesDir.absolutePath
+        appDir = "$dataDir/app"
         mHandlerThread = HandlerThread("MyHandlerThread")
         mHandlerThread.start()
         mHandler = Handler(mHandlerThread.looper)
