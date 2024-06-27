@@ -97,16 +97,13 @@ public final class Utils {
                 }
 
                 final File dir = ze.isDirectory() ? file : file.getParentFile();
-                if (!dir.isDirectory() && !dir.mkdirs())
+                if (dir != null && !dir.isDirectory() && !dir.mkdirs())
                     throw new FileNotFoundException("Failed to ensure directory: " + dir.getAbsolutePath());
                 if (ze.isDirectory())
                     continue;
-                FileOutputStream fout = new FileOutputStream(file);
-                try {
+                try (FileOutputStream fout = new FileOutputStream(file)) {
                     while ((count = zis.read(buffer)) != -1)
                         fout.write(buffer, 0, count);
-                } finally {
-                    fout.close();
                 }
             /* if time should be restored as well
             long time = ze.getTime();
@@ -224,7 +221,7 @@ public final class Utils {
         try {
             appInfo = packageManager.getApplicationInfo(context.getPackageName(), 0);
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            LogError("isDebugPackageAndMode", e.getLocalizedMessage(), e);
         }
 
         // Check if the package name contains ".debug"
