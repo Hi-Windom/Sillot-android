@@ -69,6 +69,8 @@ class BootService : Service() {
     private lateinit var mHandlerThread: HandlerThread
     private lateinit var mHandler: Handler
     private var webViewKey: String? = null
+    private val dataDir = filesDir.absolutePath
+    private val appDir = "$dataDir/app"
     override fun onCreate() {
         super.onCreate()
         mHandlerThread = HandlerThread("MyHandlerThread")
@@ -307,8 +309,6 @@ class BootService : Service() {
 
     private fun needUnzipAssets(): Boolean {
         BuglyLog.i(TAG, "needUnzipAssets() invoked")
-        val dataDir = filesDir.absolutePath
-        val appDir = "$dataDir/app"
         val appDirFile = File(appDir)
         appDirFile.mkdirs()
         var ret = true
@@ -330,8 +330,6 @@ class BootService : Service() {
 
     private fun initAppAssets() {
         if (needUnzipAssets()) {
-            val dataDir = filesDir.absolutePath
-            val appDir = "$dataDir/app"
             val appVerFile = File(appDir, "VERSION")
             BuglyLog.i(TAG, "Clearing appearance... 20%")
             try {
