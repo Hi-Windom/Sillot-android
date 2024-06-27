@@ -101,12 +101,6 @@ android {
         }
     }
 
-    repositories {
-        flatDir {
-            dirs 'libs'
-        }
-    }
-
     // SB Android
     // SB Java
     // SB JVM Target

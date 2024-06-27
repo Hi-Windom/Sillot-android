@@ -1,2 +1,23 @@
 include ':app'
 rootProject.name = "Sillot"
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        flatDir {
+            // local
+            dirs 'app/libs'
+        }
+        // 阿里云Maven中央仓库下载源
+        // https://developer.aliyun.com/mvn/guide?spm=a2c6h.13651104.0.0.435836a4Lghjtb
+        maven { url 'https://maven.aliyun.com/repository/google' }
+//        maven { url 'https://maven.aliyun.com/repository/public' } // 不许用，不然满江红
+        // 不在GitHub Actions中使用的仓库配置
+        if (!System.getenv().containsKey('CI')) {
+            maven { url 'https://mirrors.tencent.com/nexus/repository/maven-public/' }
+        }
+        maven { url 'https://developer.huawei.com/repo/'}
+        google()
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
+    }
+}
