@@ -935,6 +935,9 @@ class MainPro : ComponentActivity() {
                                     U.FileUtils.copyFileToMyAppFolder(
                                         workspaceAssetsDir, it, it1
                                     )
+                                    Mobile.updateAssets()
+                                    Mobile.reindexAssetContentOnce()
+                                    Mobile.incSyncOnce()
                                     withContext(Dispatchers.Main) {
                                         U.DialogX.PopNoteShow(
                                             thisActivity,
