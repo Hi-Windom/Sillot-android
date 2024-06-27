@@ -45,7 +45,7 @@ android {
 
         ndk {
             //只接入对应 cpu 类型的 .so 库。
-            abiFilters 'arm64-v8a','x86','x86_64'
+            abiFilters 'arm64-v8a'
         }
 
         manifestPlaceholders = [
