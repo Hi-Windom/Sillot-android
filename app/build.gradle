@@ -255,8 +255,6 @@ dependencies {
     implementation "io.realm.kotlin:library-sync:${realm_version}"// If using Device Sync
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3' // If using coroutines with the SDK
 
-    implementation 'com.tencent.tav:libpag:4.3.51'
-
     // To recognize Chinese script
     implementation 'com.google.mlkit:text-recognition-chinese:16.0.0' // REF https://developers.google.cn/ml-kit/vision/text-recognition/v2/android?hl=zh-cn
     // Use this dependency to bundle the model with your app
