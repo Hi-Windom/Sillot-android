@@ -193,7 +193,7 @@ class HomeActivity : ComponentActivity() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 // 在这里处理后退逻辑
-                if (fullScreenDialog?.isShow() == true) {
+                if (fullScreenDialog?.isShow == true) {
                     // 如果全屏对话框正在显示，优先处理对话框内的返回逻辑
                     val webView =
                         fullScreenDialog?.getCustomView()?.findViewById<WebView>(R.id.webView)
