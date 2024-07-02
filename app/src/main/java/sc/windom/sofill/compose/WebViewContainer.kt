@@ -40,6 +40,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -53,29 +54,38 @@ import androidx.core.app.ActivityCompat
 import com.kongzue.dialogx.dialogs.PopTip
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_DEBUG
+import sc.windom.sofill.android.webview.WebPoolsPro
 import sc.windom.sofill.android.webview.applySystemThemeToWebView
+import sc.windom.sofill.pioneer.getSavedValue
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun FullScreenWebView(originUrl: String, onDismiss: () -> Unit) {
+fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Unit) {
     val TAG = "FullScreenWebView"
-    val Lcc = LocalContext.current
-    var webView: WebView? = null
+//    val Lcc = LocalContext.current
+    var thisWebView: WebView? = WebPoolsPro.instance?.createWebView(activity, "FullScreenWebView")
     var canGoBack by rememberSaveable { mutableStateOf(false) }
     var canGoForward by rememberSaveable { mutableStateOf(false) }
     val openBrowserSettingsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { /* Handle the result if needed */ }
 
+    DisposableEffect(Unit) {
+        // 在 Composition 销毁时始终回收 thisWebView
+        thisWebView?.let { WebPoolsPro.instance?.recycle(it, "FullScreenWebView") }
+        onDispose { }
+    }
+
     Scaffold(
         content = { padding ->
             Box(modifier = Modifier.padding(padding)) {
                 // 使用AndroidView嵌入WebView
                 AndroidView(factory = {
-                    WebView(it).apply {
+                    val webViewToUse = thisWebView ?: WebView(activity)
+                    webViewToUse.apply {
                         this.webViewClient = object : WebViewClient() {
                             override fun shouldOverrideUrlLoading(
                                 view: WebView?,
@@ -86,14 +96,14 @@ fun FullScreenWebView(originUrl: String, onDismiss: () -> Unit) {
                                 }
                                 val url = request.url.toString()
                                 Log.d(TAG, "shouldOverrideUrlLoading -> $url")
-                                return handleUrlLoading(Lcc as Activity, url)
+                                return handleUrlLoading(activity, url)
                             }
                             override fun onPageFinished(view: WebView, url: String) {
                                 Log.d(TAG, "onPageFinished -> $url")
                                 super.onPageFinished(view, url)
                                 canGoBack = view.canGoBack()
                                 canGoForward = view.canGoForward()
-                                applySystemThemeToWebView(Lcc as Activity, view)
+                                applySystemThemeToWebView(activity, view)
                                 injectLocalJS(view)
                             }
 
@@ -104,7 +114,7 @@ fun FullScreenWebView(originUrl: String, onDismiss: () -> Unit) {
                             ) {
                                 Log.d(TAG, "onPageStarted -> $url")
                                 super.onPageStarted(view, url, favicon)
-                                applySystemThemeToWebView(Lcc as Activity, view)
+                                applySystemThemeToWebView(activity, view)
                             }
 
                             override fun onLoadResource(view: WebView?, url: String?) {
@@ -153,7 +163,7 @@ fun FullScreenWebView(originUrl: String, onDismiss: () -> Unit) {
                                 val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA)
                                 val formattedDate = sdf.format(date)
 
-                                AlertDialog.Builder(Lcc)
+                                AlertDialog.Builder(activity)
                                     .setTitle("[WebChromeClient] onJsAlert from WebView")
                                     .setMessage(
                                         """
@@ -211,7 +221,7 @@ fun FullScreenWebView(originUrl: String, onDismiss: () -> Unit) {
                                 )
                             }
                         }
-                        webView = this
+                        thisWebView = this
                         CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
                         val ws = this.settings
                         ws.javaScriptEnabled = true
@@ -236,7 +246,7 @@ fun FullScreenWebView(originUrl: String, onDismiss: () -> Unit) {
                             CookieManager.getInstance().apply {
                                 removeAllCookies { success ->
                                     if (success) {
-                                        webView?.clearCache(true)
+                                        thisWebView?.clearCache(true)
                                         PopTip.show("<(￣︶￣)↗[success]")
                                     } else {
                                         PopTip.show(" ￣へ￣ [failed]")
@@ -268,13 +278,13 @@ fun FullScreenWebView(originUrl: String, onDismiss: () -> Unit) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = { webView?.goBack() }, enabled = canGoBack) {
+                    IconButton(onClick = { thisWebView?.goBack() }, enabled = canGoBack) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
-                    IconButton(onClick = { webView?.goForward() }, enabled = canGoForward) {
+                    IconButton(onClick = { thisWebView?.goForward() }, enabled = canGoForward) {
                         Icon(Icons.Filled.ArrowForward, contentDescription = "Forward")
                     }
-                    IconButton(onClick = { webView?.reload() }) {
+                    IconButton(onClick = { thisWebView?.reload() }) {
                         Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
                     }
                     IconButton(onClick = onDismiss) {
@@ -292,9 +302,9 @@ fun FullScreenWebView(originUrl: String, onDismiss: () -> Unit) {
                         CookieManager.getInstance().apply {
                             removeAllCookies { success ->
                                 if (success) {
-                                    webView?.clearCache(true)
+                                    thisWebView?.clearCache(true)
                                     PopTip.show("<(￣︶￣)↗[success]")
-                                    webView?.reload()
+                                    thisWebView?.reload()
                                 } else {
                                     PopTip.show(" ￣へ￣ [failed]")
                                 }

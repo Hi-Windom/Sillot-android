@@ -1084,7 +1084,7 @@ class HomeActivity : ComponentActivity() {
         BuglyLog.w("showFullScreenDialog", url)
         // 不是最佳实践，但是先凑合
         setContent {
-            FullScreenWebView(url) {
+            FullScreenWebView(thisActivity, url) {
                 setContent {
                     CascadeMaterialTheme {
                         UI(intent)
