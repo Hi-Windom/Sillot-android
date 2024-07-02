@@ -386,16 +386,12 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             // https://github.com/Hi-Windom/Sillot-android/issues/84
             WebViewLayoutManager webViewLayoutManager = WebViewLayoutManager.assistActivity(this, webView);
             webViewLayoutManager.setOnConfigurationChangedCallback((newConfig)->{
-                applySystemThemeToWebView(this, webView, mmkv.getBoolean("autoWebViewDarkMode", false));
                 BuglyLog.w(TAG, "新配置屏幕方向: " + newConfig.orientation);
+                applySystemThemeToWebView(this, webView);
                 return null;
             });
             webViewLayoutManager.setOnLayoutChangedCallback((frameLayout)->{
-                applySystemThemeToWebView(thisActivity, webView, mmkv.getBoolean("autoWebViewDarkMode", false));
-                return null;
-            });
-            webViewLayoutManager.setOnWindowInsetsListenerCallback((v, insets)->{
-                applySystemThemeToWebView(thisActivity, webView, mmkv.getBoolean("autoWebViewDarkMode", false));
+                applySystemThemeToWebView(thisActivity, webView);
                 return null;
             });
             if (!U.getPHONE().isPad(this)) {
@@ -584,7 +580,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 }, 186);
 
                 // autoWebViewDarkMode 决定是否自动在 webview 中应用暗黑模式。如果前端已经有暗黑模式配置，此项应为 false（默认值）
-                applySystemThemeToWebView(thisActivity, webView, mmkv.getBoolean("autoWebViewDarkMode", false));
+                applySystemThemeToWebView(thisActivity, webView);
             }
 
             @Override

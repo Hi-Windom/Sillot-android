@@ -129,12 +129,6 @@ public final class JSAndroid {
         return U_Phone.isOriginOS(activity.getApplicationContext());
     }
     @JavascriptInterface
-    public void toggleDarkModeAuto() {
-        boolean autoWebViewDarkMode = activity.mmkv.getBoolean("autoWebViewDarkMode", false);
-        activity.mmkv.putBoolean("autoWebViewDarkMode", !autoWebViewDarkMode);
-       PopTip.show("知道了，玩去吧~");
-    }
-    @JavascriptInterface
     public void toggleFullScreenState() {
         toggleFullScreen(activity);
         OnDialogButtonClickListener<PopTip> cb = (popTip, view) -> {
@@ -659,7 +653,7 @@ public final class JSAndroid {
     public void changeStatusBarColor(final String color, final int appearanceMode) {
         BuglyLog.d(TAG, "changeStatusBarColor() invoked");
         activity.runOnUiThread(() -> {
-            applySystemThemeToWebView(activity, activity.webView, false);
+            applySystemThemeToWebView(activity, activity.webView);
         });
     }
 

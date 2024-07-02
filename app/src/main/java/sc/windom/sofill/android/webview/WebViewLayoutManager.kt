@@ -67,8 +67,7 @@ import splitties.systemservices.inputMethodManager
  * @property JSonImeShow0Height 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
  * @property JSonImeHide0Height 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
  * @property softInputMode 覆盖清单中声明，默认值为 SOFT_INPUT_ADJUST_PAN，
- * @property onConfigurationChangedCallback 配置发生变化时的回调函数，如果赋值该项则不应在 activity 中重写 onConfigurationChanged 方法，否则回调无效。示例：
- * @property onWindowInsetsListenerCallback 暂无介绍
+ * @property onConfigurationChangedCallback 配置发生变化时的回调函数，如果赋值该项则不应在 activity 中重写 onConfigurationChanged 方法，否则回调无效。
  * @property onLayoutChangedCallback 布局变化的回调函数
  * ```java
  * webViewLayoutManager.setOnConfigurationChangedCallback((newConfig)->{
@@ -96,7 +95,6 @@ class WebViewLayoutManager private constructor(
         WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN
     var onConfigurationChangedCallback: ((Configuration) -> Unit)? = null
     var onLayoutChangedCallback: ((frameLayout: FrameLayout) -> Unit)? = null
-    var onWindowInsetsListenerCallback: ((v: View?, insets: WindowInsetsCompat) -> Unit)? = null
     private var isImeVisible = false // 支持悬浮键盘
     private var currentImeVisible = false // 记录上次的状态，用于识别从悬浮键盘切换至非悬浮键盘
     private var imeHeight = 0 // 不等于实际键盘高度， 悬浮键盘的值为 0
@@ -114,8 +112,8 @@ class WebViewLayoutManager private constructor(
         ViewCompat.setOnApplyWindowInsetsListener(this.view) { v: View?, insets: WindowInsetsCompat ->
             this.isImeVisible = insets.isVisible(WindowInsets.Type.ime()) // 不支持小窗模式
             this.imeHeight = insets.getInsets(WindowInsets.Type.ime()).bottom
+            // 此监听器触发条件非常宽松，不直接提供 onWindowInsetsListenerCallback 以免死循环发生。
             restLayout("WindowInsets")
-            onWindowInsetsListenerCallback?.invoke(v, insets)
             insets
         }
 
