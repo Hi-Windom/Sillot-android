@@ -9,11 +9,11 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import coil.load
 import coil.size.Scale
+import com.kongzue.dialogx.dialogs.PopTip
 import com.tencent.bugly.crashreport.BuglyLog
-import sc.windom.sofill.android.HWs
 import org.b3log.siyuan.json.testmoshi
 import org.b3log.siyuan.realm.TestRealm
-import sc.windom.sofill.Us.U_DialogX.PopTipShow
+import sc.windom.sofill.android.HWs
 
 
 class SillotHomeActivity : AppCompatActivity() {
@@ -63,7 +63,7 @@ class SillotHomeActivity : AppCompatActivity() {
             override fun handleOnBackPressed() {
                 // 在这里处理后退逻辑
                     if (System.currentTimeMillis() - exitTime > 2000) {
-                        PopTipShow(applicationContext , "再按一次结束当前活动")
+                        PopTip.show("再按一次结束当前活动")
                         exitTime = System.currentTimeMillis()
                     } else {
                         HWs.instance?.vibratorWaveform(
@@ -111,7 +111,7 @@ class SillotHomeActivity : AppCompatActivity() {
             }
         }
         BuglyLog.e(TAG, HWs.getNetworkType(this))
-        PopTipShow(this , "测试完毕")
+        PopTip.show("测试完毕")
 //        val intent = Intent(this, POST_NOTIFICATIONS::class.java)
 //        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 //        startActivity(intent)

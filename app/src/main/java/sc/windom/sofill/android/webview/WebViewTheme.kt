@@ -10,6 +10,7 @@ import android.webkit.WebView
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
+import com.kongzue.dialogx.dialogs.PopNotification
 import org.b3log.siyuan.R
 import sc.windom.sofill.U.DialogX
 import sc.windom.sofill.U.isLightColor
@@ -39,8 +40,7 @@ fun applySystemThemeToWebView(
     if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
         // 系统处于暗色模式
         if (forceWebViewFollowSystemDarkMode) {
-            DialogX.PopNoteShow(
-                activity,
+            PopNotification.show(
                 R.drawable.icon,
                 "系统深色模式",
                 "已开启 WebView 自动明暗（实验性功能）"
@@ -57,8 +57,7 @@ fun applySystemThemeToWebView(
     } else {
         // 系统处于亮色模式
         if (forceWebViewFollowSystemDarkMode) {
-            DialogX.PopNoteShow(
-                activity,
+            PopNotification.show(
                 R.drawable.icon,
                 "系统明亮模式",
                 "已开启 WebView 自动明暗（实验性功能）"

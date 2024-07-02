@@ -103,6 +103,8 @@ import coil.size.Scale
 import coil.size.Size
 import com.kongzue.dialogx.dialogs.FullScreenDialog
 import com.kongzue.dialogx.dialogs.InputDialog
+import com.kongzue.dialogx.dialogs.PopNotification
+import com.kongzue.dialogx.dialogs.PopTip
 import com.kongzue.dialogx.interfaces.DialogLifecycleCallback
 import com.kongzue.dialogx.interfaces.OnBindView
 import com.tencent.bugly.crashreport.BuglyLog
@@ -122,7 +124,6 @@ import retrofit2.Retrofit
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_DEBUG.srcPath
-import sc.windom.sofill.Us.U_DialogX.PopTipShow
 import sc.windom.sofill.android.HWs
 import sc.windom.sofill.api.MyRetrofit.createRetrofit
 import sc.windom.sofill.api.ld246.ApiServiceNotification
@@ -206,7 +207,7 @@ class HomeActivity : ComponentActivity() {
                     }
                 } else {
                     if (System.currentTimeMillis() - exitTime > 2000) {
-                        PopTipShow(thisActivity , "再按一次结束当前活动")
+                        PopTip.show("再按一次结束当前活动")
                         exitTime = System.currentTimeMillis()
                     } else {
                         HWs.instance?.vibratorWaveform(
@@ -218,7 +219,7 @@ class HomeActivity : ComponentActivity() {
                         try {
                             Thread.sleep(200)
                         } catch (e: Exception) {
-                            U.DialogX.PopNoteShow(thisActivity, e.cause.toString(), e.toString())
+                            PopNotification.show(e.cause.toString(), e.toString())
                         }
                         BuglyLog.w(TAG, "再见")
                         finish()
@@ -276,17 +277,15 @@ class HomeActivity : ComponentActivity() {
         val message = "Error Response: ${response.message()}"
         when (response.code()) {
             200 ->
-                PopTipShow(thisActivity , "<(￣︶￣)↗[${response.code()}]")
+                PopTip.show("<(￣︶￣)↗[${response.code()}]")
 
-            401 -> U.DialogX.PopNoteShow(
-                thisActivity,
+            401 -> PopNotification.show(
                 message,
                 "TOKEN为空或者错误，请在右上角设置 TOKEN 后下拉刷新"
             ).noAutoDismiss()
 
-            403 -> U.DialogX.PopNoteShow(thisActivity, message, "权限不足").noAutoDismiss()
-            else -> U.DialogX.PopNoteShow(
-                thisActivity,
+            403 -> PopNotification.show(message, "权限不足").noAutoDismiss()
+            else -> PopNotification.show(
                 " ￣へ￣ [${response.code()}]",
                 response.toString()
             )
@@ -332,7 +331,7 @@ class HomeActivity : ComponentActivity() {
                                 userPageData,
                                 pullToRefreshState
                             )
-                        } ?: { U.DialogX.PopNoteShow(Lcc, "token 异常") }
+                        } ?: { PopNotification.show("token 异常") }
                     } else {
                         viewmodel?.fetchNotificationV2(pullToRefreshState, it, currentTab, token)
                     }
@@ -353,7 +352,7 @@ class HomeActivity : ComponentActivity() {
                                     userPageData,
                                     pullToRefreshState
                                 )
-                            } ?: { U.DialogX.PopNoteShow(Lcc, "token 异常") }
+                            } ?: { PopNotification.show("token 异常") }
                         } else {
                             viewmodel?.fetchNotificationV2(
                                 pullToRefreshState,
@@ -544,8 +543,7 @@ class HomeActivity : ComponentActivity() {
                         mmkv.encode(S.KEY_AES_TOKEN_ld246, encodedKey)
                         mmkv.encode(S.KEY_TOKEN_ld246, encryptedToken)
                         pullToRefreshState.startRefresh()
-                        U.DialogX.PopNoteShow(
-                            thisActivity,
+                        PopNotification.show(
                             "TOKEN已更新（${
                                 U.displayTokenLimiter(
                                     inputStr,
@@ -984,8 +982,7 @@ class HomeActivity : ComponentActivity() {
                                         calls[5] -> map["积分"] = data?.pointNotifications
                                     }
                                 } catch (e: Exception) {
-                                    U.DialogX.PopNoteShow(
-                                        thisActivity,
+                                    PopNotification.show(
                                         e.cause.toString(),
                                         e.toString()
                                     )
@@ -1003,7 +1000,7 @@ class HomeActivity : ComponentActivity() {
 
                         override fun onFailure(call: Call<ld246_Response>, t: Throwable) {
                             // 处理异常
-                            U.DialogX.PopNoteShow(thisActivity, call.toString(), t.toString())
+                            PopNotification.show(call.toString(), t.toString())
                                 .noAutoDismiss()
                             viewModelScope.launch {
                                 pullToRefreshState?.endRefresh()
@@ -1064,8 +1061,7 @@ class HomeActivity : ComponentActivity() {
                                         }
                                         map[currentTab.value] = notifications
                                     } catch (e: Exception) {
-                                        U.DialogX.PopNoteShow(
-                                            thisActivity,
+                                        PopNotification.show(
                                             e.cause.toString(),
                                             e.toString()
                                         )
@@ -1081,7 +1077,7 @@ class HomeActivity : ComponentActivity() {
 
                             override fun onFailure(call: Call<ld246_Response>, t: Throwable) {
                                 // 处理异常
-                                U.DialogX.PopNoteShow(thisActivity, call.toString(), t.toString())
+                                PopNotification.show(call.toString(), t.toString())
                                     .noAutoDismiss()
                                 viewModelScope.launch {
                                     pullToRefreshState.endRefresh()
@@ -1096,7 +1092,7 @@ class HomeActivity : ComponentActivity() {
                     }
                 } catch (e: Exception) {
                     // 处理错误
-                    U.DialogX.PopNoteShow(thisActivity, "任务失败", e.toString()).noAutoDismiss()
+                    PopNotification.show("任务失败", e.toString()).noAutoDismiss()
                 } finally {
                     // 此处执行则不会等待
                 }
@@ -1125,7 +1121,7 @@ class HomeActivity : ComponentActivity() {
                 ActivityCompat.startActivityForResult(view.context as Activity, intent, 1, null)
                 true
             } catch (e: Exception) {
-                U.DialogX.PopNoteShow(thisActivity, TAG, e.toString()).noAutoDismiss()
+                PopNotification.show(TAG, e.toString()).noAutoDismiss()
                 false
             }
         } else {
@@ -1150,10 +1146,10 @@ class HomeActivity : ComponentActivity() {
                 if (success) {
                     webView?.clearCache(true)
                     fullScreenDialog?.dismiss()
-                    PopTipShow(thisActivity , "<(￣︶￣)↗[success]")
+                    PopTip.show("<(￣︶￣)↗[success]")
                 } else {
                     fullScreenDialog?.dismiss()
-                    PopTipShow(thisActivity , " ￣へ￣ [failed]")
+                    PopTip.show(" ￣へ￣ [failed]")
                 }
             }
         }

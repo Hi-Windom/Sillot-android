@@ -18,7 +18,6 @@
 package org.b3log.siyuan;
 
  import static org.b3log.siyuan.MainActivityHelperKt.onDragInsertIntoWebView;
- import static sc.windom.sofill.Us.U_DialogX.PopTipShow;
  import static sc.windom.sofill.android.webview.WebViewThemeKt.applySystemThemeToWebView;
 
  import android.annotation.SuppressLint;
@@ -48,7 +47,6 @@ package org.b3log.siyuan;
  import sc.windom.sofill.Ss.S_Events;
  import sc.windom.sofill.Ss.S_Intent;
  import sc.windom.sofill.Ss.S_REQUEST_CODE;
- import sc.windom.sofill.Us.U_DialogX;
  import sc.windom.sofill.android.webview.WebPoolsPro;
  import android.webkit.ConsoleMessage;
  import android.webkit.CookieManager;
@@ -83,6 +81,8 @@ package org.b3log.siyuan;
  import com.blankj.utilcode.util.AppUtils;
  import com.blankj.utilcode.util.StringUtils;
  import com.kongzue.dialogx.dialogs.BottomMenu;
+ import com.kongzue.dialogx.dialogs.PopNotification;
+ import com.kongzue.dialogx.dialogs.PopTip;
  import com.tencent.bugly.crashreport.BuglyLog;
  import com.tencent.bugly.crashreport.CrashReport;
  import com.tencent.mmkv.MMKV;
@@ -263,8 +263,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
             AppUtils.registerAppStatusChangedListener(this);
         } else {
             // 服务尚未绑定或实例为空，处理错误或等待绑定
-            U.getDialogX();
-            U_DialogX.PopNoteShow(this, "服务尚未绑定或实例为空").noAutoDismiss();
+            PopNotification.show("服务尚未绑定或实例为空").noAutoDismiss();
         }
     }
 
@@ -291,7 +290,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
 
              return file.getAbsolutePath();
          } catch (Exception e) {
-             U_DialogX.PopNoteShow(this, TAG, e.toString());
+             PopNotification.show(TAG, e.toString());
              return null;
          }
      }
@@ -317,7 +316,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 // 在这里处理后退逻辑
                 if (U_Phone.isPad(getApplicationContext())) {
                     if ((System.currentTimeMillis() - exitTime) > 2000) {
-                        PopTipShow(getApplicationContext() , "再按一次退出汐洛绞架");
+                        PopTip.show( "再按一次退出汐洛绞架");
                         exitTime = System.currentTimeMillis();
                     } else {
                         HWs.getInstance().vibratorWaveform(getApplicationContext(), new long[]{0, 30, 25, 40, 25, 10}, new int[]{2, 4, 3, 2, 2, 2}, -1);
@@ -443,7 +442,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                     startActivityForResult(intent, REQUEST_SELECT_FILE);
                 } catch (final Exception e) {
                     uploadMessage = null;
-                    PopTipShow(getApplicationContext() , "Cannot open file chooser");
+                    PopTip.show("Cannot open file chooser");
                     return false;
                 }
                 return true;
@@ -665,7 +664,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                 return;
             }
 
-            PopTipShow(this , "Permission denied");
+            PopTip.show("Permission denied");
         }
 
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);

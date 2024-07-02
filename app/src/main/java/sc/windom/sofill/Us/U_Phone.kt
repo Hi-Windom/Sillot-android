@@ -10,6 +10,7 @@ import android.view.WindowInsetsController
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodInfo
 import android.view.inputmethod.InputMethodManager
+import com.kongzue.dialogx.dialogs.PopNotification
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 import splitties.systemservices.inputMethodManager
@@ -138,7 +139,7 @@ object U_Phone {
                 val isFullScreen = isFullScreen(activity)
                 activity.toggleFullScreen(!isFullScreen)
             } catch (e: Exception) {
-                U.DialogX.PopNoteShow(activity, "Error toggling full screen", e)
+                PopNotification.show("Error toggling full screen", e.toString())
             }
         }
     }

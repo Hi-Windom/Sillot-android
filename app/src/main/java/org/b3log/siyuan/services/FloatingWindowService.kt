@@ -289,7 +289,7 @@ class FloatingWindowService : Service() {
                     notificationManager.notify(1, newNotification)
                 }
             } catch (e: Exception) {
-                PopNotification(TAG, "Error getting LAN IP address : $e")
+                PopNotification.show(TAG, "Error getting LAN IP address : $e")
             }
         }
     }

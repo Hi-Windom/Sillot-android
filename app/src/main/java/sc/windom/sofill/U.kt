@@ -515,7 +515,7 @@ object U {
             activity.startActivity(installIntent)
         } catch (e: Exception) {
             Log.e("Us.installApk", e.toString())
-            DialogX.PopNoteShow(activity, "任务失败", e.toString()).noAutoDismiss()
+            PopNotification.show("任务失败", e.toString()).noAutoDismiss()
         }
     }
 
@@ -538,14 +538,13 @@ object U {
             activity.startActivity(chooserIntent)
         } catch (e: ActivityNotFoundException) {
             // 如果没有找到可以处理的应用，提示用户
-            DialogX.PopNoteShow(
-                activity,
+            PopNotification.show(
                 "任务失败",
                 "没有找到可以安装APK的应用，请尝试使用文件管理器或其他第三方应用打开APK文件。"
             )
         } catch (e: Exception) {
             Log.e("Us.installApk", e.toString())
-            DialogX.PopNoteShow(activity, "任务失败", e.toString()).noAutoDismiss()
+            PopNotification.show("任务失败", e.toString()).noAutoDismiss()
         }
     }
 
@@ -570,14 +569,14 @@ object U {
                 activity.startActivity(chooserIntent)
             } else {
                 // 如果没有找到可以处理的应用，提示用户
-                DialogX.PopNoteShow(activity, "任务失败", "没有找到可以播放此视频的应用")
+                PopNotification.show("任务失败", "没有找到可以播放此视频的应用")
             }
         } catch (e: ActivityNotFoundException) {
             // 如果没有找到可以处理的应用，提示用户
-            DialogX.PopNoteShow(activity, "任务失败", "没有找到可以播放此视频的应用")
+            PopNotification.show("任务失败", "没有找到可以播放此视频的应用")
         } catch (e: Exception) {
             // 其他异常处理
-            DialogX.PopNoteShow(activity, "任务失败", "打开视频时出错: ${e.message}")
+            PopNotification.show("任务失败", "打开视频时出错: ${e.message}")
         }
     }
 
@@ -602,14 +601,14 @@ object U {
                 activity.startActivity(chooserIntent)
             } else {
                 // 如果没有找到可以处理的应用，提示用户
-                DialogX.PopNoteShow(activity, "任务失败", "没有找到可以播放此视频的应用")
+                PopNotification.show("任务失败", "没有找到可以播放此视频的应用")
             }
         } catch (e: ActivityNotFoundException) {
             // 如果没有找到可以处理的应用，提示用户
-            DialogX.PopNoteShow(activity, "任务失败", "没有找到可以播放此视频的应用")
+            PopNotification.show("任务失败", "没有找到可以播放此视频的应用")
         } catch (e: Exception) {
             // 其他异常处理
-            DialogX.PopNoteShow(activity, "任务失败", "打开音频时出错: ${e.message}")
+            PopNotification.show("任务失败", "打开音频时出错: ${e.message}")
         }
     }
 

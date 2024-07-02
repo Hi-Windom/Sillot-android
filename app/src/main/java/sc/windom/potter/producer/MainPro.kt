@@ -72,7 +72,8 @@ import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.kongzue.dialogx.dialogs.BottomMenu
 import com.kongzue.dialogx.dialogs.InputDialog
-import com.kongzue.dialogx.interfaces.OnBottomMenuButtonClickListener
+import com.kongzue.dialogx.dialogs.PopNotification
+import com.kongzue.dialogx.interfaces.OnMenuButtonClickListener
 import com.tencent.bugly.crashreport.BuglyLog
 import com.tencent.mmkv.MMKV
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -489,8 +490,8 @@ class MainPro : ComponentActivity() {
                         // 将加密后的Token存储到MMKV中
                         mmkv.encode(S.KEY_AES_TOKEN_Sillot_Gibbet, encodedKey)
                         mmkv.encode(S.KEY_TOKEN_Sillot_Gibbet, encryptedToken)
-                        U.DialogX.PopNoteShow(
-                            thisActivity, "TOKEN已更新（${
+                        PopNotification.show(
+                            "TOKEN已更新（${
                                 U.displayTokenLimiter(
                                     inputStr, "token ".length + 4, 4
                                 )
@@ -520,8 +521,8 @@ class MainPro : ComponentActivity() {
                 if (notebooks.isNullOrEmpty()) {
                     // 处理笔记本列表为空的情况
                     thisActivity.runOnUiThread {
-                        U.DialogX.PopNoteShow(
-                            thisActivity, TAG, "No notebooks received. reason:\n$info\n$helpInfo"
+                        PopNotification.show(
+                            TAG, "No notebooks received. reason:\n$info\n$helpInfo"
                         ).noAutoDismiss()
                     }
                 } else {
@@ -538,7 +539,7 @@ class MainPro : ComponentActivity() {
                             selectMenuIndex = index
                             dialog.refreshUI() // 在 compose 里需要强制刷新
                             true // 点击菜单后不会自动关闭
-                        }.setOkButton("确定", OnBottomMenuButtonClickListener { menu, view ->
+                        }.setOkButton("确定", OnMenuButtonClickListener { menu, view ->
                             val notebookId = notebookIDs[selectMenuIndex]
                             BuglyLog.e(TAG, notebookId)
                             val payload = IPayload(
@@ -556,8 +557,7 @@ class MainPro : ComponentActivity() {
                                 } else {
                                     // 处理创建笔记失败的情况
                                     thisActivity.runOnUiThread {
-                                        U.DialogX.PopNoteShow(
-                                            thisActivity,
+                                        PopNotification.show(
                                             TAG,
                                             "Note creation failed. reason:\n$info\n$helpInfo"
                                         ).noAutoDismiss()
@@ -565,7 +565,7 @@ class MainPro : ComponentActivity() {
                                 }
                             }
                             false
-                        }).setCancelButton("取消", OnBottomMenuButtonClickListener { menu, view ->
+                        }).setCancelButton("取消", OnMenuButtonClickListener { menu, view ->
                             false
                         })
                 }
@@ -587,8 +587,8 @@ class MainPro : ComponentActivity() {
             if (notebooks.isEmpty()) {
                 // 处理笔记本列表为空的情况
                 thisActivity.runOnUiThread {
-                    U.DialogX.PopNoteShow(
-                        thisActivity, TAG, "No notebooks received. \n$helpInfo"
+                    PopNotification.show(
+                        TAG, "No notebooks received. \n$helpInfo"
                     ).noAutoDismiss()
                 }
             } else {
@@ -605,7 +605,7 @@ class MainPro : ComponentActivity() {
                         selectMenuIndex = index
                         dialog.refreshUI() // 在 compose 里需要强制刷新
                         true // 点击菜单后不会自动关闭
-                    }.setOkButton("确定", OnBottomMenuButtonClickListener { menu, view ->
+                    }.setOkButton("确定", OnMenuButtonClickListener { menu, view ->
                         menu.dismiss()
 
                         val notebookId = notebookIDs[selectMenuIndex]
@@ -635,8 +635,7 @@ class MainPro : ComponentActivity() {
                                     )
                                 } else {
                                     BuglyLog.e(TAG, "Error: ${response2.error}")
-                                    U.DialogX.PopNoteShow(
-                                        thisActivity,
+                                    PopNotification.show(
                                         TAG,
                                         "Error: ${response2.error}\n$helpInfo"
                                     ).noAutoDismiss()
@@ -644,7 +643,7 @@ class MainPro : ComponentActivity() {
                             }
                         }
                         false
-                    }).setCancelButton("取消", OnBottomMenuButtonClickListener { menu, view ->
+                    }).setCancelButton("取消", OnMenuButtonClickListener { menu, view ->
                         false
                     })
             }
@@ -664,13 +663,13 @@ class MainPro : ComponentActivity() {
             enabled = true,
             onClick = {
                 if (token.value.isNullOrEmpty()) {
-                    U.DialogX.PopNoteShow(thisActivity, "TOKEN为空，请在右上角设置 TOKEN 后重试")
+                    PopNotification.show("TOKEN为空，请在右上角设置 TOKEN 后重试")
                         .noAutoDismiss()
                     return@Button
                 }
                 if (bootService == null) {
-                    U.DialogX.PopNoteShow(
-                        thisActivity, R.drawable.icon, "汐洛绞架内核尚未就绪", "请稍后再试"
+                    PopNotification.show(
+                        R.drawable.icon, "汐洛绞架内核尚未就绪", "请稍后再试"
                     ).noAutoDismiss()
                     return@Button
                 }
@@ -681,8 +680,7 @@ class MainPro : ComponentActivity() {
                     if (filteredDirectories.isNotEmpty()) {
                         runSendMD2siyuan(markdown, token)
                     } else {
-                        U.DialogX.PopNoteShow(
-                            thisActivity,
+                        PopNotification.show(
                             R.drawable.icon,
                             "未发现任何工作空间",
                             "请检查是否初始化了，或者路径存在异常 ${thisActivity.workspaceParentDir()}/"
@@ -705,8 +703,8 @@ class MainPro : ComponentActivity() {
             enabled = true,
             onClick = {
                 if (bootService == null) {
-                    U.DialogX.PopNoteShow(
-                        thisActivity, R.drawable.icon, "汐洛绞架内核尚未就绪", "请稍后再试"
+                    PopNotification.show(
+                        R.drawable.icon, "汐洛绞架内核尚未就绪", "请稍后再试"
                     ).noAutoDismiss()
                     return@Button
                 }
@@ -719,8 +717,7 @@ class MainPro : ComponentActivity() {
                             sendMD2siyuanWithoutToken(markdown)
                         }
                     } else {
-                        U.DialogX.PopNoteShow(
-                            thisActivity,
+                        PopNotification.show(
                             R.drawable.icon,
                             "未发现任何工作空间",
                             "请检查是否初始化了，或者路径存在异常 ${thisActivity.workspaceParentDir()}/"
@@ -900,7 +897,7 @@ class MainPro : ComponentActivity() {
                     } catch (e: Exception) {
                         BuglyLog.e(TAG, e.toString())
                         withContext(Dispatchers.Main) {
-                            U.DialogX.PopNoteShow(thisActivity, "任务失败", e.toString())
+                            PopNotification.show( "任务失败", e.toString())
                                 .noAutoDismiss()
                         }
                     }
@@ -921,8 +918,8 @@ class MainPro : ComponentActivity() {
                         ) {
                             // 存储空间不足，处理逻辑
                             withContext(Dispatchers.Main) {
-                                U.DialogX.PopNoteShow(
-                                    thisActivity, R.drawable.icon, "存储空间不足，请先清理"
+                                PopNotification.show(
+                                    R.drawable.icon, "存储空间不足，请先清理"
                                 )
                             }
                             return@withContext
@@ -939,8 +936,7 @@ class MainPro : ComponentActivity() {
                                     Mobile.reindexAssetContentOnce()
                                     Mobile.incSyncOnce()
                                     withContext(Dispatchers.Main) {
-                                        U.DialogX.PopNoteShow(
-                                            thisActivity,
+                                        PopNotification.show(
                                             R.drawable.icon,
                                             "已存入 ${workspaceAssetsDir}"
                                         ).autoDismiss(5000)
@@ -948,8 +944,8 @@ class MainPro : ComponentActivity() {
                                 } catch (e: IOException) {
                                     BuglyLog.e(TAG, e.toString())
                                     withContext(Dispatchers.Main) {
-                                        U.DialogX.PopNoteShow(
-                                            thisActivity, R.drawable.icon, "任务失败", e.toString()
+                                        PopNotification.show(
+                                            R.drawable.icon, "任务失败", e.toString()
                                         ).noAutoDismiss()
                                     }
                                 }
@@ -959,8 +955,8 @@ class MainPro : ComponentActivity() {
                     } catch (e: Exception) {
                         BuglyLog.e(TAG, e.toString())
                         withContext(Dispatchers.Main) {
-                            U.DialogX.PopNoteShow(
-                                thisActivity, R.drawable.icon, "任务失败", e.toString()
+                            PopNotification.show(
+                                R.drawable.icon, "任务失败", e.toString()
                             ).noAutoDismiss()
                         }
                     } finally {
@@ -1123,7 +1119,7 @@ class MainPro : ComponentActivity() {
                                 dialog.refreshUI() // 在 compose 里需要强制刷新
                                 true // 点击菜单后不会自动关闭
                             }
-                            .setOkButton("确定", OnBottomMenuButtonClickListener { menu, view ->
+                            .setOkButton("确定", OnMenuButtonClickListener { menu, view ->
                                 BuglyLog.e(TAG, "${selectMenuText}")
 
                                 workspaceAssetsDir =
@@ -1132,12 +1128,11 @@ class MainPro : ComponentActivity() {
                                 false
                             }).setCancelButton(
                                 "取消",
-                                OnBottomMenuButtonClickListener { menu, view ->
+                                OnMenuButtonClickListener { menu, view ->
                                     false
                                 })
                     } else {
-                        U.DialogX.PopNoteShow(
-                            thisActivity,
+                        PopNotification.show(
                             R.drawable.icon,
                             "未发现任何工作空间",
                             "请检查是否初始化了，或者路径存在异常 ${thisActivity.workspaceParentDir()}/"
@@ -1161,7 +1156,7 @@ class MainPro : ComponentActivity() {
                     thisActivity, it
                 )
             } ?: run {
-                U.DialogX.PopNoteShow(thisActivity, "安装失败", "无法获取安装包 uri")
+                PopNotification.show("安装失败", "无法获取安装包 uri")
             }
         }
 
@@ -1171,7 +1166,7 @@ class MainPro : ComponentActivity() {
                     thisActivity, it
                 )
             } ?: run {
-                U.DialogX.PopNoteShow(thisActivity, "安装失败", "无法获取安装包 uri")
+                PopNotification.show("安装失败", "无法获取安装包 uri")
             }
         }
 
