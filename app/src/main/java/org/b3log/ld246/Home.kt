@@ -75,7 +75,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -135,6 +134,9 @@ import sc.windom.sofill.compose.theme.CascadeMaterialTheme
 import sc.windom.sofill.dataClass.ld246_Response
 import sc.windom.sofill.dataClass.ld246_Response_Data_Notification
 import sc.windom.sofill.dataClass.ld246_User
+import sc.windom.sofill.pioneer.getSavedValue
+import sc.windom.sofill.pioneer.rememberSaveableMMKV
+import sc.windom.sofill.pioneer.saveValue
 
 
 class HomeActivity : ComponentActivity() {
@@ -145,7 +147,7 @@ class HomeActivity : ComponentActivity() {
     val ua = "Sillot-anroid/0.35"
     private var exitTime: Long = 0
     private var fullScreenDialog: FullScreenDialog? = null
-    private var openUrlExternal: Boolean = false
+    private var openUrlExternal: Boolean = mmkv.getSavedValue("${S.AppQueryIDs.汐洛}_@openUrlExternal", false) // 全局同步配置
     private val titles_icons = listOf(
         Icons.TwoTone.Article,
         Icons.TwoTone.Quickreply,
@@ -307,10 +309,10 @@ class HomeActivity : ComponentActivity() {
                 )
             )
         }
-        val currentTab = rememberSaveable { mutableStateOf("用户") }
+        val currentTab = rememberSaveableMMKV(mmkv,"${srcPath}_@currentTab","用户")
+        val isShowBottomText = rememberSaveableMMKV(mmkv,"${srcPath}_@isShowBottomText",false)
         val pullToRefreshState = rememberPullToRefreshState()
         val isMenuVisible = rememberSaveable { mutableStateOf(false) }
-        val isShowBottomText = rememberSaveable { mutableStateOf(false) }
         val userPageData = remember { mutableStateOf(ld246_User()) }
 
         DisposableEffect(viewmodel) {
@@ -505,6 +507,7 @@ class HomeActivity : ComponentActivity() {
             cb = {
                 onDismiss()
                 openUrlExternal = !openUrlExternal
+                mmkv.saveValue("${S.AppQueryIDs.汐洛}_@openUrlExternal", openUrlExternal)
             }
         )
         DdMenuI(
@@ -565,7 +568,7 @@ class HomeActivity : ComponentActivity() {
         isShowBottomText: MutableState<Boolean>,
     ) {
         // REF https://www.composables.com/material3/tabrow
-        var state by rememberSaveable { mutableIntStateOf(S.API.ld246_notification_type.size) }
+        val state by rememberSaveable { mutableIntStateOf(S.API.ld246_notification_type.size) }
         val selectedContentColor = S.C.btn_bgColor_pink.current    // 选中时文字颜色
         val unselectedContentColor = Color.Gray // 未选中时文字颜色
 
@@ -583,9 +586,8 @@ class HomeActivity : ComponentActivity() {
                 }
             ) {
                 Tab(
-                    selected = state == S.API.ld246_notification_type.size,
+                    selected = currentTab.value == "用户",
                     onClick = {
-                        state = S.API.ld246_notification_type.size
                         currentTab.value = "用户"
                     },
                     selectedContentColor = selectedContentColor,
@@ -617,9 +619,8 @@ class HomeActivity : ComponentActivity() {
                 )
                 S.API.ld246_notification_type.forEachIndexed { index, title ->
                     Tab(
-                        selected = state == index,
+                        selected = currentTab.value == title,
                         onClick = {
-                            state = index
                             currentTab.value = title
                         },
                         selectedContentColor = selectedContentColor,

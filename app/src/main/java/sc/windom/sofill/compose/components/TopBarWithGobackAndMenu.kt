@@ -33,12 +33,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,6 +43,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import com.tencent.mmkv.MMKV
 import me.saket.cascade.CascadeDropdownMenu
 import me.saket.cascade.rememberCascadeState
 import org.b3log.siyuan.R
@@ -58,6 +54,7 @@ import sc.windom.sofill.U.enableScreenshot
 import sc.windom.sofill.Us.Toast
 import sc.windom.sofill.Us.U_DEBUG
 import sc.windom.sofill.Us.U_Phone.toggleFullScreen
+import sc.windom.sofill.pioneer.rememberSaveableMMKV
 
 
 data class MenuItem31(val title: String, val action: () -> Unit)
@@ -72,7 +69,6 @@ fun CommonTopAppBar(
     additionalMenuItem: @Composable (() -> Unit)? = null,
     onBackPressed: () -> Unit, // 返回按钮的点击事件
 ) {
-//    var isMenuVisible by rememberSaveable { mutableStateOf(false) }
     val Lcc = LocalContext.current
     TopAppBar(
         title = {
@@ -117,15 +113,14 @@ fun TopRightMenu(
 ) {
     val state = rememberCascadeState()
     val Lcc = LocalContext.current
-    var isFullScreen by rememberSaveable { mutableStateOf(false) }
-    var canCaptureScreenshot by rememberSaveable { mutableStateOf(true) }
-    LaunchedEffect(isFullScreen) {
+    val mmkv: MMKV = MMKV.defaultMMKV()
+    val isFullScreen = rememberSaveableMMKV(mmkv,"${srcPath}_@isFullScreen",false) { _, it->
         val activity = Lcc as Activity
-        activity.toggleFullScreen(isFullScreen)
+        activity.toggleFullScreen(it.value)
     }
-    LaunchedEffect(canCaptureScreenshot) {
+    var canCaptureScreenshot = rememberSaveableMMKV(mmkv,"${srcPath}_@canCaptureScreenshot",true) { _, it->
         val activity = Lcc as Activity
-        if (canCaptureScreenshot) {
+        if (it.value) {
             activity.enableScreenshot()
         } else {
             activity.disableScreenshot()
@@ -217,19 +212,19 @@ fun TopRightMenu(
             additionalMenuItem()
         }
         DropdownMenuItem(
-            text = { Text(if (isFullScreen) "正常模式" else "全屏模式") },
+            text = { Text(if (isFullScreen.value) "正常模式" else "全屏模式") },
             leadingIcon = { Icon(Icons.TwoTone.FitScreen, contentDescription = null) },
             onClick = {
                 onDismiss()
-                isFullScreen = !isFullScreen
+                isFullScreen.value = !isFullScreen.value
             },
         )
         DropdownMenuItem(
-            text = { Text(if (canCaptureScreenshot) "禁用截屏" else "允许截屏") },
+            text = { Text(if (canCaptureScreenshot.value) "禁用截屏" else "允许截屏") },
             leadingIcon = { Icon(Icons.TwoTone.Screenshot, contentDescription = null) },
             onClick = {
                 onDismiss()
-                canCaptureScreenshot = !canCaptureScreenshot
+                canCaptureScreenshot.value = !canCaptureScreenshot.value
             },
         )
         DropdownMenuItem(
