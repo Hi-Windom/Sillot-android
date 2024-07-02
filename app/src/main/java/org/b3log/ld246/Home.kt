@@ -11,11 +11,7 @@ import android.text.style.ClickableSpan
 import android.text.style.URLSpan
 import android.util.Base64
 import android.view.MotionEvent
-import android.view.View
-import android.webkit.CookieManager
-import android.webkit.WebResourceRequest
 import android.webkit.WebView
-import android.webkit.WebViewClient
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
@@ -40,7 +36,6 @@ import androidx.compose.material.icons.twotone.Album
 import androidx.compose.material.icons.twotone.Article
 import androidx.compose.material.icons.twotone.Attribution
 import androidx.compose.material.icons.twotone.CenterFocusWeak
-import androidx.compose.material.icons.twotone.Cookie
 import androidx.compose.material.icons.twotone.Navigation
 import androidx.compose.material.icons.twotone.OpenInBrowser
 import androidx.compose.material.icons.twotone.Person
@@ -93,7 +88,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.app.ActivityCompat
 import androidx.core.text.HtmlCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -105,8 +99,6 @@ import com.kongzue.dialogx.dialogs.FullScreenDialog
 import com.kongzue.dialogx.dialogs.InputDialog
 import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.dialogs.PopTip
-import com.kongzue.dialogx.interfaces.DialogLifecycleCallback
-import com.kongzue.dialogx.interfaces.OnBindView
 import com.tencent.bugly.crashreport.BuglyLog
 import com.tencent.mmkv.MMKV
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -127,6 +119,7 @@ import sc.windom.sofill.Us.U_DEBUG.srcPath
 import sc.windom.sofill.android.HWs
 import sc.windom.sofill.api.MyRetrofit.createRetrofit
 import sc.windom.sofill.api.ld246.ApiServiceNotification
+import sc.windom.sofill.compose.FullScreenWebView
 import sc.windom.sofill.compose.MyTagHandler
 import sc.windom.sofill.compose.components.CommonTopAppBar
 import sc.windom.sofill.compose.partialCom.DdMenuI
@@ -147,7 +140,6 @@ class HomeActivity : ComponentActivity() {
     private var mmkv: MMKV = MMKV.defaultMMKV()
     val ua = "Sillot-anroid/0.35"
     private var exitTime: Long = 0
-    private var fullScreenDialog: FullScreenDialog? = null
     private var openUrlExternal: Boolean = mmkv.getSavedValue("${S.AppQueryIDs.汐洛}_@openUrlExternal", false) // 全局同步配置
     private val titles_icons = listOf(
         Icons.TwoTone.Article,
@@ -196,16 +188,6 @@ class HomeActivity : ComponentActivity() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 // 在这里处理后退逻辑
-                if (fullScreenDialog?.isShow == true) {
-                    // 如果全屏对话框正在显示，优先处理对话框内的返回逻辑
-                    val webView =
-                        fullScreenDialog?.getCustomView()?.findViewById<WebView>(R.id.webView)
-                    if (webView?.canGoBack() == true) {
-                        webView.goBack()
-                    } else {
-                        fullScreenDialog?.dismiss()
-                    }
-                } else {
                     if (System.currentTimeMillis() - exitTime > 2000) {
                         PopTip.show("再按一次结束当前活动")
                         exitTime = System.currentTimeMillis()
@@ -225,7 +207,6 @@ class HomeActivity : ComponentActivity() {
                         finish()
 //                        exitProcess(0)
                     }
-                }
                 HWs.instance?.vibratorWaveform(
                     applicationContext,
                     longArrayOf(0, 30, 25, 40, 25),
@@ -507,14 +488,6 @@ class HomeActivity : ComponentActivity() {
                 onDismiss()
                 openUrlExternal = !openUrlExternal
                 mmkv.saveValue("${S.AppQueryIDs.汐洛}_@openUrlExternal", openUrlExternal)
-            }
-        )
-        DdMenuI(
-            text = { Text("清除 Cookie") },
-            icon = { Icon(Icons.TwoTone.Cookie, contentDescription = null) },
-            cb = {
-                onDismiss()
-                showFullScreenDialog("action?=Logout")
             }
         )
         DdMenuI(
@@ -1107,103 +1080,16 @@ class HomeActivity : ComponentActivity() {
         UI(null)
     }
 
-    private fun handleUrlLoading(view: WebView, url: String): Boolean {
-        val _url = U.replaceScheme_deepDecode(url, "googlechrome://", "slld246://")
-        val real_url = U.replaceEncodeScheme(url, "googlechrome://", "slld246://")
-        BuglyLog.d(TAG, _url)
-
-        return if (_url.startsWith("mqq://") || _url.startsWith("wtloginmqq://") || _url.startsWith(
-                "sinaweibo://"
-            )
-        ) {
-            try {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(real_url))
-                ActivityCompat.startActivityForResult(view.context as Activity, intent, 1, null)
-                true
-            } catch (e: Exception) {
-                PopNotification.show(TAG, e.toString()).noAutoDismiss()
-                false
-            }
-        } else {
-            false
-        }
-    }
-
-    private fun webViewClient(): WebViewClient {
-        return object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(
-                view: WebView,
-                request: WebResourceRequest
-            ): Boolean {
-                return handleUrlLoading(view, request.url.toString())
-            }
-        }
-    }
-
-    private fun clearWebViewCookies(webView: WebView?) {
-        CookieManager.getInstance().apply {
-            removeAllCookies { success ->
-                if (success) {
-                    webView?.clearCache(true)
-                    fullScreenDialog?.dismiss()
-                    PopTip.show("<(￣︶￣)↗[success]")
-                } else {
-                    fullScreenDialog?.dismiss()
-                    PopTip.show(" ￣へ￣ [failed]")
-                }
-            }
-        }
-    }
-
     private fun showFullScreenDialog(url: String) {
         BuglyLog.w("showFullScreenDialog", url)
-        if (fullScreenDialog == null) {
-            fullScreenDialog = FullScreenDialog.build().apply {
-                setDialogLifecycleCallback(object : DialogLifecycleCallback<FullScreenDialog?>() {
-                    override fun onShow(dialog: FullScreenDialog?) {
-                        when (url) {
-                            "action?=Logout" -> {
-                                dialog?.hide() // 隐藏处理过程
-                                val webView =
-                                    dialog?.getCustomView()?.findViewById<WebView>(R.id.webView)
-                                clearWebViewCookies(webView)
-                                return
-                            }
-
-                            else -> {}
-                        }
-                        dialog?.setCustomView(object :
-                            OnBindView<FullScreenDialog?>(R.layout.layout_full_screen) {
-                            override fun onBind(dialog: FullScreenDialog?, v: View) {
-                                val webView = v.findViewById<WebView>(R.id.webView)
-                                webView.webViewClient = webViewClient()
-                                webView.loadUrl(url)
-
-                                val btnRefresh = v.findViewById<TextView>(R.id.btnRefresh)
-                                btnRefresh.setOnClickListener {
-                                    webView.reload()
-                                }
-
-                                val btnClose = v.findViewById<TextView>(R.id.btnClose)
-                                btnClose.setOnClickListener {
-                                    dialog?.dismiss()
-                                }
-                            }
-                        })
+        // 不是最佳实践，但是先凑合
+        setContent {
+            FullScreenWebView(url) {
+                setContent {
+                    CascadeMaterialTheme {
+                        UI(intent)
                     }
-
-                    override fun onDismiss(dialog: FullScreenDialog?) {
-                        // 对话框关闭时的操作
-                        fullScreenDialog = null
-                    }
-                })
-            }
-            fullScreenDialog?.show(thisActivity)
-        } else {
-            fullScreenDialog?.let { dialog ->
-                val webView = dialog.getCustomView()?.findViewById<WebView>(R.id.webView)
-                BuglyLog.w(fullScreenDialog.toString(), webView.toString())
-                webView?.loadUrl(url)
+                }
             }
         }
     }

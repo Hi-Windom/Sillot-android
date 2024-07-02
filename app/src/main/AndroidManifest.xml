@@ -128,6 +128,31 @@
 
 <!--    https://developer.android.com/training/package-visibility/use-cases?hl=zh-cn -->
     <queries>
+        <!-- 指定能够打开的链接类型 -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="sillot" />
+        </intent>
+        <!-- 指定能够打开的链接类型 -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="siyuan" />
+        </intent>
+        <!-- 指定能够打开的链接类型 -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="mqq" />
+        </intent>
+        <!-- 指定能够打开的链接类型 -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="wtloginmqq" />
+        </intent>
+        <!-- 指定能够打开的链接类型 -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="sinaweibo" />
+        </intent>
         <!-- 检查浏览器是否可用 -->
         <intent>
             <action android:name="android.intent.action.VIEW" />
@@ -387,6 +412,22 @@
             <intent-filter>
                 <action android:name="android.intent.action.shortcut_ld246_dailycheck" />
                 <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="wtloginmqq" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="mqq" />
             </intent-filter>
             <!-- shortcutId | android:name 不能重复-->
             <meta-data
