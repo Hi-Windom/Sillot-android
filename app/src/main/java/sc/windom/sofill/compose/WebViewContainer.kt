@@ -48,6 +48,7 @@ import androidx.compose.material.icons.filled.DesktopWindows
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
@@ -63,6 +64,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -71,17 +73,20 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import androidx.core.app.ActivityCompat
+import com.blankj.utilcode.util.ActivityUtils.startActivity
 import com.kongzue.dialogx.dialogs.PopTip
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -89,6 +94,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_DEBUG
+import sc.windom.sofill.Us.U_FileUtils.isCommonSupportDownloadMIMEType
 import sc.windom.sofill.android.webview.applySystemThemeToWebView
 import java.net.HttpURLConnection
 import java.net.URL
@@ -109,12 +115,14 @@ data class MenuOption(
     val titleInActive: String = title,
     val state: MenuOptionState = MenuOptionState.Default,
     val canToggle: Boolean = false, // 表示选项是否可以在 Default 和 Active 之间切换
-    val closeMenuAfterClick: Boolean = true, // 点击后是否收起菜单
+    val hideMenuAfterClick: Boolean = true, // 点击后是否收起菜单
+    val closeMenuAfterClick: Boolean = false, // 点击后是否关闭菜单（需要重新渲染）, 只有当 hideMenuAfterClick 也为真时才生效
     val onClick: () -> Unit,
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Menu(options: List<MenuOption>, columnCount: Int, openBottomSheet: MutableState<Boolean>) {
+fun Menu(options: List<MenuOption>, columnCount: Int, openBottomSheet: MutableState<Boolean>, bottomSheetState: SheetState) {
     // 一行 n 列
     options.chunked(columnCount).forEach { rowOptions ->
         Row(
@@ -144,6 +152,8 @@ fun Menu(options: List<MenuOption>, columnCount: Int, openBottomSheet: MutableSt
                                 // 只有可切换的选项会在点击时切换状态
                                 isActive.value = !isActive.value
                             }
+                            if (option.hideMenuAfterClick) {
+                            }
                             if (option.closeMenuAfterClick) {
                                 openBottomSheet.value = false
                             }
@@ -171,21 +181,29 @@ fun Menu(options: List<MenuOption>, columnCount: Int, openBottomSheet: MutableSt
 
 /**
  * 参考了 https://www.composables.com/material3/modalbottomsheet
+ * @param openBottomSheet 控制是否渲染
+ * @param bottomSheetState 状态控制，比如展开收起
+ * @param sheetContent 内容
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MaterialBottomMenu(
     openBottomSheet: MutableState<Boolean>,
+    bottomSheetState: SheetState,
     sheetContent: @Composable () -> Unit
 ) {
-    var skipPartiallyExpanded by rememberSaveable { mutableStateOf(false) }
-    val bottomSheetState =
-        rememberModalBottomSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
-
+    val scope = rememberCoroutineScope()
     // Sheet content
     if (openBottomSheet.value) {
         ModalBottomSheet(
-            onDismissRequest = { openBottomSheet.value = false },
+            onDismissRequest = {
+                scope
+                    .launch { bottomSheetState.hide() }
+                    .invokeOnCompletion {
+                        if (!bottomSheetState.isVisible) {
+                            openBottomSheet.value = false
+                        }
+                    }},
             sheetState = bottomSheetState
         ) {
             Column {
@@ -199,13 +217,19 @@ fun MaterialBottomMenu(
 
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Unit) {
     val TAG = "FullScreenWebView"
     var thisWebView: WebView? = null
+    val uriHandler = LocalUriHandler.current
+    var currentUrl by rememberSaveable { mutableStateOf("") }
     var canGoBack by rememberSaveable { mutableStateOf(false) }
     var canGoForward by rememberSaveable { mutableStateOf(false) }
+    val skipPartiallyExpanded by rememberSaveable { mutableStateOf(false) }
+    val bottomSheetState =
+        rememberModalBottomSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
     val openBrowserSettingsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { /* Handle the result if needed */ }
@@ -234,7 +258,17 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
             titleInActive = "移动端网页") { /* 点击事件 */ },
         MenuOption("前往", Icons.Filled.TravelExplore, state = MenuOptionState.Disabled) { /* 点击事件 */ },
         MenuOption("翻译", Icons.Filled.Translate, state = MenuOptionState.Disabled) { /* 点击事件 */ },
-        MenuOption("分享", Icons.Filled.Share, state = MenuOptionState.Disabled) { /* 点击事件 */ },
+        MenuOption("分享", Icons.Filled.Share) {
+            val sendIntent: Intent = Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_TEXT, currentUrl)
+                type = "text/plain"
+            }
+
+            val shareIntent = Intent.createChooser(sendIntent, null)
+            startActivity(shareIntent)
+        },
+        MenuOption("默认打开", Icons.Filled.OpenInBrowser) { uriHandler.openUri(currentUrl) },
         MenuOption("深色模式", Icons.Filled.DarkMode, state = MenuOptionState.Disabled) { /* 点击事件 */ },
         MenuOption("刷新", Icons.Filled.Refresh) { thisWebView?.reload() },
         MenuOption("退出", Icons.Filled.Close) { onDismiss.invoke() },
@@ -248,7 +282,7 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
     }
 
     // 菜单面板
-    MaterialBottomMenu(expanded) { Menu(menuOptions, 5, expanded) }
+    MaterialBottomMenu(expanded, bottomSheetState) { Menu(menuOptions, 4, expanded, bottomSheetState) }
 
     Scaffold(
         modifier = Modifier.imePadding(), // 布局适配软键盘，一般来说不需要嵌套声明
@@ -257,7 +291,7 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
                 .padding(padding)
                 .fillMaxSize()) {
                 // 使用AndroidView嵌入WebView
-                AndroidView(factory = {
+                AndroidView(modifier = Modifier.fillMaxSize(), factory = {
                     WebView(it).apply {
                         this.webViewClient = object : WebViewClient() {
                             override fun shouldOverrideUrlLoading(
@@ -280,11 +314,12 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
 
                             override fun onPageStarted(
                                 view: WebView,
-                                url: String?,
+                                url: String,
                                 favicon: Bitmap?
                             ) {
                                 Log.d(TAG, "onPageStarted -> $url")
                                 super.onPageStarted(view, url, favicon)
+                                currentUrl = url
                             }
 
                             override fun onLoadResource(view: WebView?, url: String?) {
@@ -475,34 +510,7 @@ private fun handleUrlLoading(activity: Activity, request: WebResourceRequest): B
     val _url = U.replaceScheme_deepDecode(url, "googlechrome://", "slld246://")
     val real_url = U.replaceEncodeScheme(url, "googlechrome://", "slld246://")
     Log.d(TAG, "[handleUrlLoading] isForMainFrame:${request.isForMainFrame} $_url -> $real_url")
-    // 在IO线程尝试下载，不阻塞
-    GlobalScope.launch(Dispatchers.IO) {
-        // 发送HEAD请求以获取Content-Type
-        var connection: HttpURLConnection? = null
-        try {
-            connection = URL(url).openConnection() as HttpURLConnection
-            connection.requestMethod = "HEAD"
-            connection.connect()
 
-            val contentType = connection.contentType
-            if (contentType != null && contentType.startsWith("application/")) {
-                // 如果Content-Type指示它是一个应用程序文件（例如zip, pdf等），则下载文件
-                val downloadRequest = DownloadManager.Request(Uri.parse(url))
-                downloadRequest.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
-                downloadRequest.setTitle(URLUtil.guessFileName(url, null, null))
-                downloadRequest.setDescription("Downloading file...")
-                downloadRequest.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                downloadRequest.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, URLUtil.guessFileName(url, null, null))
-
-                val downloadManager = activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-                downloadManager.enqueue(downloadRequest)
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error while checking Content-Type: ", e)
-        } finally {
-            connection?.disconnect()
-        }
-    }
     return if (_url.startsWith("mqq://") || _url.startsWith("wtloginmqq://") || _url.startsWith(
             "sinaweibo://"
         )
@@ -517,6 +525,34 @@ private fun handleUrlLoading(activity: Activity, request: WebResourceRequest): B
             false
         }
     } else {
+        // 在IO线程尝试下载，不阻塞
+        GlobalScope.launch(Dispatchers.IO) {
+            // 发送HEAD请求以获取Content-Type
+            var connection: HttpURLConnection? = null
+            try {
+                connection = URL(url).openConnection() as HttpURLConnection
+                connection.requestMethod = "HEAD"
+                connection.connect()
+
+                val contentType = connection.contentType
+                if (contentType != null && isCommonSupportDownloadMIMEType(contentType)) {
+                    // 如果Content-Type指示它是一个应用程序文件（例如zip, pdf等），则下载文件
+                    val downloadRequest = DownloadManager.Request(Uri.parse(url))
+                    downloadRequest.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
+                    downloadRequest.setTitle(URLUtil.guessFileName(url, null, null))
+                    downloadRequest.setDescription("Downloading file...")
+                    downloadRequest.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                    downloadRequest.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, URLUtil.guessFileName(url, null, null))
+
+                    val downloadManager = activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+                    downloadManager.enqueue(downloadRequest)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error while checking Content-Type: ", e)
+            } finally {
+                connection?.disconnect()
+            }
+        }
         false
     }
 }

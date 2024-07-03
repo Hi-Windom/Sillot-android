@@ -629,6 +629,29 @@ object U_FileUtils {
         }
     }
 
+    fun isCommonSupportDownloadMIMEType(mimeType: String, fileName: String = ""): Boolean {
+        when {
+            fileName.endsWith(".apk.1") -> {
+                return true
+            }
+        }
+        when (mimeType) {
+            "video/mp4" -> return true
+            "audio/mpeg" -> return true
+            "audio/x-wav" -> return true
+            "application/vnd.android.package-archive" -> return true
+            "application/pdf" -> return true
+            "application/zip" -> return true
+            "application/epub+zip" -> return true
+            "application/msword" -> return true
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> return true
+            "application/vnd.ms-excel" -> return true
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" -> return true
+            "application/vnd.ms-powerpoint" -> return true
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation" -> return true
+        }
+        return false
+    }
 
     fun getFileMIMEType(mimeType: String, fileName: String = ""): String {
         when {
