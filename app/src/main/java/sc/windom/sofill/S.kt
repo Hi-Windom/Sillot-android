@@ -1,7 +1,6 @@
 @file:Suppress("CompositionLocalNaming", "CompositionLocalNaming")
 package sc.windom.sofill
 
-import android.net.Uri
 import sc.windom.sofill.Ss.S_API
 import sc.windom.sofill.Ss.S_Activity
 import sc.windom.sofill.Ss.S_ColorInt
@@ -11,6 +10,8 @@ import sc.windom.sofill.Ss.S_DEBUG
 import sc.windom.sofill.Ss.S_Events
 import sc.windom.sofill.Ss.S_Intent
 import sc.windom.sofill.Ss.S_REQUEST_CODE
+import sc.windom.sofill.Ss.S_Uri
+import sc.windom.sofill.Ss.S_WebView
 import sc.windom.sofill.Ss.S_packageName
 
 object S {
@@ -76,12 +77,10 @@ object S {
     @JvmStatic
     val AppQueryIDs = S_packageName
 
-    data class UriMatchPattern(val scheme: String, val host: String)
+    @JvmStatic
+    val WEBVIEW = S_WebView
 
-    fun isUriMatched(uri: Uri?, pattern: UriMatchPattern): Boolean {
-        return uri?.scheme == pattern.scheme && uri.host == pattern.host
-    }
-    val case_ld246_1 = UriMatchPattern("https", "ssl.ptlogin2.qq.com") // 目前必须将默认打开方式浏览器设置为汐洛，否则QQ回调进不来
-    val case_ld246_2 = UriMatchPattern("https", "ld246.com")
-    val case_github_1 = UriMatchPattern("https", "github.com")
+    @JvmStatic
+    val URI = S_Uri
+
 }

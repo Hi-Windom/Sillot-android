@@ -11,7 +11,6 @@ import android.text.style.ClickableSpan
 import android.text.style.URLSpan
 import android.util.Base64
 import android.view.MotionEvent
-import android.webkit.WebView
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
@@ -95,7 +94,6 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Scale
 import coil.size.Size
-import com.kongzue.dialogx.dialogs.FullScreenDialog
 import com.kongzue.dialogx.dialogs.InputDialog
 import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.dialogs.PopTip
@@ -108,12 +106,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.launch
-import org.b3log.siyuan.R
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import sc.windom.sofill.S
+import sc.windom.sofill.Ss.S_Uri
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_DEBUG.srcPath
 import sc.windom.sofill.android.HWs
@@ -217,10 +215,12 @@ class HomeActivity : ComponentActivity() {
         })
 
         if (uri != null) {
-            if (S.isUriMatched(uri, S.case_ld246_1) || S.isUriMatched(
-                    uri,
-                    S.case_ld246_2
-                ) || S.isUriMatched(uri, S.case_github_1) || uri.scheme?.startsWith("http") == true
+            if (
+                S_Uri.isUriMatched(uri, S_Uri.case_ld246_1)
+                || S_Uri.isUriMatched(uri, S_Uri.case_ld246_2)
+                || S_Uri.isUriMatched(uri, S_Uri.case_github_1)
+                || S_Uri.isUriMatched(uri, S_Uri.case_mqq_1) // 拉起QQ授权
+                || uri.scheme?.startsWith("http") == true
             ) {
                 showFullScreenDialog(uri.toString())
             }

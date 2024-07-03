@@ -39,6 +39,7 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.security.MessageDigest
 import java.text.DecimalFormat
+import java.util.Locale
 
 object U_FileUtils {
 
@@ -629,26 +630,30 @@ object U_FileUtils {
         }
     }
 
-    fun isCommonSupportDownloadMIMEType(mimeType: String, fileName: String = ""): Boolean {
+    /**
+     * 为了避免重复请求下载的情况（例如先请求 https://.../eg 然后请求 https://.../eg.zip），采用 mimeType + fileName 联合判断
+     */
+    fun isCommonSupportDownloadMIMEType(mimeType: String, fileName: String): Boolean {
+        val fn = fileName.lowercase(Locale.CHINESE)
         when {
-            fileName.endsWith(".apk.1") -> {
+            fn.endsWith(".apk.1") -> {
                 return true
             }
         }
         when (mimeType) {
-            "video/mp4" -> return true
-            "audio/mpeg" -> return true
-            "audio/x-wav" -> return true
-            "application/vnd.android.package-archive" -> return true
-            "application/pdf" -> return true
-            "application/zip" -> return true
-            "application/epub+zip" -> return true
-            "application/msword" -> return true
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> return true
-            "application/vnd.ms-excel" -> return true
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" -> return true
-            "application/vnd.ms-powerpoint" -> return true
-            "application/vnd.openxmlformats-officedocument.presentationml.presentation" -> return true
+            "video/mp4" -> return fn.endsWith(".mp4")
+            "audio/mpeg" -> return fn.endsWith(".mp3")
+            "audio/x-wav" -> return fn.endsWith(".wav")
+            "application/vnd.android.package-archive" -> return fn.endsWith(".apk")
+            "application/pdf" -> return fn.endsWith(".pdf")
+            "application/zip" -> return fn.endsWith(".zip")
+            "application/epub+zip" -> return fn.endsWith(".epub")
+            "application/msword" -> return fn.endsWith(".doc") || fn.endsWith(".dot")
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> return fn.endsWith(".docx")
+            "application/vnd.ms-excel" -> return fn.endsWith(".xls") || fn.endsWith(".xlt") || fn.endsWith(".xlm") || fn.endsWith(".xlsm")
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" -> return fn.endsWith(".xlsx")
+            "application/vnd.ms-powerpoint" -> return fn.endsWith(".ppt") || fn.endsWith(".pps") || fn.endsWith(".pot")
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation" -> return fn.endsWith(".pptx")
         }
         return false
     }

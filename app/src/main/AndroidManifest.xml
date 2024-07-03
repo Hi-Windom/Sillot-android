@@ -442,6 +442,16 @@
 
                 <data android:scheme="slld246" />
             </intent-filter>
+            <!-- QQ授权回调，目前无效 -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                        android:scheme="https"
+                        android:host="ssl.ptlogin2.qq.com" />
+            </intent-filter>
+
             <!-- shortcutId | android:name 不能重复-->
             <meta-data
                 android:name="android.app.shortcuts_ld246"

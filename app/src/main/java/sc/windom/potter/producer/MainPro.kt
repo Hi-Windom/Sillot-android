@@ -88,6 +88,7 @@ import org.b3log.siyuan.App
 import org.b3log.siyuan.R
 import org.b3log.siyuan.services.BootService
 import sc.windom.sofill.S
+import sc.windom.sofill.Ss.S_Uri
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.Toast
 import sc.windom.sofill.Us.U_DEBUG.srcPath
@@ -192,15 +193,18 @@ class MainPro : ComponentActivity() {
             "scheme: $scheme, host: $host, action: ${in2_intent?.action}, type: ${in2_intent?.type}"
         )
 
-        if (S.isUriMatched(in2_intent?.data, S.case_ld246_1) || S.isUriMatched(
-                in2_intent?.data, S.case_ld246_2
-            ) || S.isUriMatched(in2_intent?.data, S.case_github_1)
+        if (
+            S_Uri.isUriMatched(in2_intent?.data, S_Uri.case_ld246_1)
+            || S_Uri.isUriMatched(in2_intent?.data, S_Uri.case_ld246_2)
+            || S_Uri.isUriMatched(in2_intent?.data, S_Uri.case_github_1)
+            || S_Uri.isUriMatched(in2_intent?.data, S_Uri.case_mqq_1) // 拉起QQ授权
         ) {
             // 转发处理
             val homeIntent = Intent(this, HomeActivity::class.java)
             homeIntent.data = in2_intent?.data // 将URI数据传递给HomeActivity
             startActivity(homeIntent)
             finish() // 不需要返回MainPro，在这里结束它
+            return
         } else if (in2_intent?.data != null && in2_intent?.data?.scheme.isNullOrEmpty() || listOf(
                 "http", "https", "siyuan"
             ).contains(
@@ -213,6 +217,7 @@ class MainPro : ComponentActivity() {
             homeIntent.data = in2_intent?.data // 将URI数据传递给HomeActivity
             startActivity(homeIntent)
             finish() // 不需要返回MainPro，在这里结束它
+            return
         } else {
             // ...
         }

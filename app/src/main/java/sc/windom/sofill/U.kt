@@ -45,6 +45,7 @@ import sc.windom.sofill.Us.U_Permission
 import sc.windom.sofill.Us.U_Phone
 import sc.windom.sofill.Us.U_Pro
 import sc.windom.sofill.Us.U_Safe
+import sc.windom.sofill.Us.U_Uri
 import java.io.File
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -88,6 +89,9 @@ object U {
 
     @JvmStatic
     val PRO = U_Pro
+
+    @JvmStatic
+    val URI = U_Uri
 
 
     @SuppressLint("ObsoleteSdkInt")
