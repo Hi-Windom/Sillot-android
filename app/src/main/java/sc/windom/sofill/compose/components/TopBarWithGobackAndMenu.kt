@@ -54,6 +54,7 @@ import sc.windom.sofill.U.enableScreenshot
 import sc.windom.sofill.Us.Toast
 import sc.windom.sofill.Us.U_DEBUG
 import sc.windom.sofill.Us.U_Phone.toggleFullScreen
+import sc.windom.sofill.Us.U_Uri
 import sc.windom.sofill.pioneer.rememberSaveableMMKV
 
 
@@ -114,18 +115,19 @@ fun TopRightMenu(
     val state = rememberCascadeState()
     val Lcc = LocalContext.current
     val mmkv: MMKV = MMKV.defaultMMKV()
-    val isFullScreen = rememberSaveableMMKV(mmkv,"${srcPath}_@isFullScreen",false) { _, it->
+    val isFullScreen = rememberSaveableMMKV(mmkv, "${srcPath}_@isFullScreen", false) { _, it ->
         val activity = Lcc as Activity
         activity.toggleFullScreen(it.value)
     }
-    var canCaptureScreenshot = rememberSaveableMMKV(mmkv,"${srcPath}_@canCaptureScreenshot",true) { _, it->
-        val activity = Lcc as Activity
-        if (it.value) {
-            activity.enableScreenshot()
-        } else {
-            activity.disableScreenshot()
+    var canCaptureScreenshot =
+        rememberSaveableMMKV(mmkv, "${srcPath}_@canCaptureScreenshot", true) { _, it ->
+            val activity = Lcc as Activity
+            if (it.value) {
+                activity.enableScreenshot()
+            } else {
+                activity.disableScreenshot()
+            }
         }
-    }
     // 只有直接在CascadeDropdownMenu中才能使用childrenHeader和children，抽离出去的additionalMenuItem不行
     CascadeDropdownMenu(
         state = state,
@@ -254,12 +256,12 @@ fun TopRightMenu(
                 DropdownMenuItem(
                     text = { Text("反馈此页") },
                     leadingIcon = { Icon(Icons.TwoTone.BugReport, contentDescription = null) },
-                    onClick = { onDismiss();U.openUrl("${S.gitRepoUrl}/issues/new") },
+                    onClick = { onDismiss();U_Uri.openUrl("${S.gitRepoUrl}/issues/new") },
                 )
                 DropdownMenuItem(
                     text = { Text("查看源码") },
                     leadingIcon = { Icon(Icons.TwoTone.Code, contentDescription = null) },
-                    onClick = { onDismiss();U.openUrl("${S.gitRepoUrl}/blob/HEAD/app/src/main/java/${srcPath}") },
+                    onClick = { onDismiss();U_Uri.openUrl("${S.gitRepoUrl}/blob/HEAD/app/src/main/java/${srcPath}") },
                 )
             },
         )

@@ -10,6 +10,7 @@ plugins {
 //    id 'kotlin-kapt'
     id("com.google.devtools.ksp") // 使用 ksp 而不是 kapt
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.9.22'
+    id 'kotlin-parcelize' // https://developer.android.com/kotlin/parcelize
 }
 
 

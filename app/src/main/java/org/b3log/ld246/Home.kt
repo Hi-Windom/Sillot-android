@@ -17,6 +17,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -75,6 +76,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -114,6 +116,7 @@ import sc.windom.sofill.S
 import sc.windom.sofill.Ss.S_Uri
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_DEBUG.srcPath
+import sc.windom.sofill.Us.U_Uri
 import sc.windom.sofill.android.HWs
 import sc.windom.sofill.api.MyRetrofit.createRetrofit
 import sc.windom.sofill.api.ld246.ApiServiceNotification
@@ -140,7 +143,8 @@ class HomeActivity : ComponentActivity() {
     private var mmkv: MMKV = MMKV.defaultMMKV()
     val ua = "Sillot-anroid/0.35"
     private var exitTime: Long = 0
-    private var openUrlExternal: Boolean = mmkv.getSavedValue("${S.AppQueryIDs.汐洛}_@openUrlExternal", false) // 全局同步配置
+    private var openUrlExternal: Boolean =
+        mmkv.getSavedValue("${S.AppQueryIDs.汐洛}_@openUrlExternal", false) // 全局同步配置
     private val titles_icons = listOf(
         Icons.TwoTone.Article,
         Icons.TwoTone.Quickreply,
@@ -157,6 +161,14 @@ class HomeActivity : ComponentActivity() {
     private var viewmodel: NotificationsViewModel? = null
     private var retrofit: Retrofit? = null
     private var apiService: ApiServiceNotification? = null
+    private var FullScreenWebView_url: MutableState<String?> = mutableStateOf(null)
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        BuglyLog.d(TAG, "outState: $outState")
+        if (outState.isEmpty) return // avoid crash
+        super.onSaveInstanceState(outState)
+        // 可添加额外需要保存可序列化的数据
+    }
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
@@ -185,25 +197,25 @@ class HomeActivity : ComponentActivity() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 // 在这里处理后退逻辑
-                    if (System.currentTimeMillis() - exitTime > 2000) {
-                        PopTip.show("再按一次结束当前活动")
-                        exitTime = System.currentTimeMillis()
-                    } else {
-                        HWs.instance?.vibratorWaveform(
-                            applicationContext,
-                            longArrayOf(0, 30, 25, 40, 25, 10),
-                            intArrayOf(2, 4, 3, 2, 2, 2),
-                            -1
-                        )
-                        try {
-                            Thread.sleep(200)
-                        } catch (e: Exception) {
-                            PopNotification.show(e.cause.toString(), e.toString())
-                        }
-                        BuglyLog.w(TAG, "再见")
-                        finish()
-//                        exitProcess(0)
+                if (System.currentTimeMillis() - exitTime > 2000) {
+                    PopTip.show("再按一次结束当前活动")
+                    exitTime = System.currentTimeMillis()
+                } else {
+                    HWs.instance?.vibratorWaveform(
+                        applicationContext,
+                        longArrayOf(0, 30, 25, 40, 25, 10),
+                        intArrayOf(2, 4, 3, 2, 2, 2),
+                        -1
+                    )
+                    try {
+                        Thread.sleep(200)
+                    } catch (e: Exception) {
+                        PopNotification.show(e.cause.toString(), e.toString())
                     }
+                    BuglyLog.w(TAG, "再见")
+                    finish()
+//                        exitProcess(0)
+                }
                 HWs.instance?.vibratorWaveform(
                     applicationContext,
                     longArrayOf(0, 30, 25, 40, 25),
@@ -235,7 +247,7 @@ class HomeActivity : ComponentActivity() {
                 || S_Uri.isUriMatched(uri, S_Uri.case_mqq_1) // 拉起QQ授权
                 || uri.scheme?.startsWith("http") == true
             ) {
-                showFullScreenDialog(uri.toString())
+                FullScreenWebView_url.value = uri.toString()
             }
         }
     }
@@ -302,11 +314,12 @@ class HomeActivity : ComponentActivity() {
                 )
             )
         }
-        val currentTab = rememberSaveableMMKV(mmkv,"${srcPath}_@currentTab","用户")
-        val isShowBottomText = rememberSaveableMMKV(mmkv,"${srcPath}_@isShowBottomText",false)
+        val currentTab = rememberSaveableMMKV(mmkv, "${srcPath}_@currentTab", "用户")
+        val isShowBottomText = rememberSaveableMMKV(mmkv, "${srcPath}_@isShowBottomText", false)
         val pullToRefreshState = rememberPullToRefreshState()
         val isMenuVisible = rememberSaveable { mutableStateOf(false) }
         val userPageData = remember { mutableStateOf(ld246_User()) }
+        val showFullScreenWebView = rememberSaveable { mutableStateOf(false) }
 
         DisposableEffect(viewmodel) {
             onDispose {
@@ -374,74 +387,89 @@ class HomeActivity : ComponentActivity() {
             }
         }
 
-        Scaffold(
-            topBar = {
-                CommonTopAppBar(
-                    "汐洛链滴社区客户端",
-                    srcPath,
-                    uri,
-                    isMenuVisible,
-                    additionalMenuItem = {
-                        AddDropdownMenu(onDismiss = {
-                            isMenuVisible.value = false
-                        }, isShowBottomText, token, pullToRefreshState)
-                    }) {
-                    // 将Context对象安全地转换为Activity
-                    if (Lcc is Activity) {
-                        Lcc.finish() // 结束活动
+        LaunchedEffect(FullScreenWebView_url.value) {
+            if (!FullScreenWebView_url.value.isNullOrBlank()) {
+                showFullScreenWebView.value = true
+            }
+        }
+
+        // 不是最佳实践，但是先凑合
+        // 试试 ModalBottomSheet（已经有过实践）或者 BottomDrawer（非模态，应该可以实现最小化收起）
+        if (!FullScreenWebView_url.value.isNullOrBlank() && showFullScreenWebView.value) {
+            FullScreenWebView(thisActivity, FullScreenWebView_url.value!!) {
+                showFullScreenWebView.value = false
+                FullScreenWebView_url.value = null
+            }
+        } else {
+            Scaffold(
+                topBar = {
+                    CommonTopAppBar(
+                        "汐洛链滴社区客户端",
+                        srcPath,
+                        uri,
+                        isMenuVisible,
+                        additionalMenuItem = {
+                            AddDropdownMenu(onDismiss = {
+                                isMenuVisible.value = false
+                            }, isShowBottomText, token, pullToRefreshState)
+                        }) {
+                        // 将Context对象安全地转换为Activity
+                        if (Lcc is Activity) {
+                            Lcc.finish() // 结束活动
+                        }
                     }
-                }
-            }, modifier = Modifier
-                .background(Color.Gray)
-                .nestedScroll(pullToRefreshState.nestedScrollConnection)
-        ) {
-            Box(
-                Modifier
-                    .padding(it)
-                    .fillMaxSize()
+                }, modifier = Modifier
+                    .background(Color.Gray)
+                    .nestedScroll(pullToRefreshState.nestedScrollConnection)
             ) {
-                NetworkAware()
-                Box(modifier = Modifier.fillMaxSize()) {
-                    if (currentTab.value == "用户") {
-                        if (userPageData.value.userName?.isBlank() == true) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column {
-                                    Text(
-                                        text = "未登录",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 24.sp
-                                    )
-                                    Text(
-                                        text = "请先配置 API Token",
-                                        fontSize = 16.sp
-                                    )
+                Box(
+                    Modifier
+                        .padding(it)
+                        .fillMaxSize()
+                ) {
+                    NetworkAware()
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        if (currentTab.value == "用户") {
+                            if (userPageData.value.userName?.isBlank() == true) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = "未登录",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 24.sp
+                                        )
+                                        Text(
+                                            text = "请先配置 API Token",
+                                            fontSize = 16.sp
+                                        )
+                                    }
                                 }
+                            } else {
+                                UserPage(userPageData.value)
                             }
                         } else {
-                            UserPage(userPageData.value)
+                            notificationsState?.let { it1 -> NotificationsScreen(it1) }
                         }
-                    } else {
-                        notificationsState?.let { it1 -> NotificationsScreen(it1) }
-                    }
 
-                    SecondaryTextTabs(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(top = 31.dp),
-                        currentTab,
-                        isShowBottomText
-                    )
-                }
-                if (pullToRefreshState.isRefreshing) {
-                    LinearProgressIndicator(Modifier.fillMaxWidth())
-                } else {
-                    LinearProgressIndicator(
-                        progress = { pullToRefreshState.progress },
-                        Modifier.fillMaxWidth()
-                    )
+                        SecondaryTextTabs(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(top = 31.dp),
+                            currentTab,
+                            isShowBottomText
+                        )
+                    }
+                    if (pullToRefreshState.isRefreshing) {
+                        LinearProgressIndicator(Modifier.fillMaxWidth())
+                    } else {
+                        LinearProgressIndicator(
+                            progress = { pullToRefreshState.progress },
+                            Modifier.fillMaxWidth()
+                        )
+                    }
                 }
             }
         }
@@ -816,12 +844,17 @@ class HomeActivity : ComponentActivity() {
         val v = n.value
         if (v.isNullOrEmpty()) {
             // 显示空数据状态的占位符
-            LazyColumn {
+            LazyColumn(
+                modifier = Modifier.padding(
+                    bottom = 70.dp, // 避免被底栏遮住
+                    top = 5.dp, // 顶部有进度条，留空更美观
+                )
+            ) {
                 items(13) { index ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(10.dp),
+                            .padding(bottom = 6.dp, top = 2.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = Color(0x31F1F2F3),
                             contentColor = Color.Black
@@ -835,7 +868,10 @@ class HomeActivity : ComponentActivity() {
             }
         } else {
             LazyColumn(
-                modifier = Modifier.padding(bottom = 70.dp) // 避免被底栏遮住
+                modifier = Modifier.padding(
+                    bottom = 70.dp, // 避免被底栏遮住
+                    top = 5.dp, // 顶部有进度条，留空更美观
+                )
             ) {
                 item {
                     v.forEach { notification ->
@@ -852,18 +888,18 @@ class HomeActivity : ComponentActivity() {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(5.dp),
+                .padding(bottom = 6.dp, top = 2.dp),
             colors = if (notification.hasRead) {
                 // 如果已读
                 CardDefaults.cardColors(
-                    containerColor = S.C.Card_bgColor_green1.current,
-                    contentColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface
                 )
             } else {
                 // 如果未读
                 CardDefaults.cardColors(
-                    containerColor = S.C.Card_bgColor_gold1.current,
-                    contentColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         ) {
@@ -876,7 +912,6 @@ class HomeActivity : ComponentActivity() {
                         uriHandler
                     )
                 }) {
-                // 积分通知
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -906,14 +941,25 @@ class HomeActivity : ComponentActivity() {
                 notification.title?.let {
                     Text(
                         text = it,
-                        fontSize = 15.sp,
+                        fontSize = 17.sp,
                         fontStyle = FontStyle.Italic,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.fillMaxWidth()
+                        color = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                _openURL(
+                                    "https://${S.HOST_ld246}/article/${notification.dataId}",
+                                    uriHandler
+                                )
+                            }
                     )
                 }
 
-                SelectableUrlHandleHtmlText(notification.content)
+                SelectableUrlHandleHtmlText(
+                    notification.content,
+                    MaterialTheme.colorScheme.onBackground.toArgb()
+                )
             }
         }
     }
@@ -1093,35 +1139,27 @@ class HomeActivity : ComponentActivity() {
         UI(null)
     }
 
-    private fun showFullScreenDialog(url: String) {
-        BuglyLog.w("showFullScreenDialog", url)
-        // 不是最佳实践，但是先凑合
-        setContent {
-            FullScreenWebView(thisActivity, url) {
-                setContent {
-                    CascadeMaterialTheme {
-                        UI(intent)
-                    }
-                }
-            }
-        }
-    }
-
-    fun _openURL(url: String, uriHandler: UriHandler? = null) {
+    private fun _openURL(url: String, uriHandler: UriHandler? = null) {
         if (openUrlExternal) {
             if (uriHandler != null) {
                 uriHandler.openUri(url)
             } else {
-                U.openUrl(url)
+                U_Uri.openUrl(url)
             }
         } else {
-            showFullScreenDialog(url)
+            FullScreenWebView_url.value = url
         }
     }
 
+    /**
+     * 完全体（CustomLinkMovementMethod），因为需要共享一些数据不好抽离，基础版在 [sc.windom.sofill.compose.SelectableHtmlText]
+     */
     @Composable
-    private fun SelectableUrlHandleHtmlText(html: String, modifier: Modifier = Modifier) {
-        // 完全体（CustomLinkMovementMethod），因为需要共享一些数据不好抽离，基础版在 sc.windom.sofill.compose.HTML.kt
+    private fun SelectableUrlHandleHtmlText(
+        html: String,
+        textColorInt: Int,
+        modifier: Modifier = Modifier
+    ) {
         AndroidView(
             modifier = modifier.fillMaxWidth(),
             factory = { context ->
@@ -1131,8 +1169,9 @@ class HomeActivity : ComponentActivity() {
                     // 设置MovementMethod以使链接可点击，需放在后面
                     // 尝试过自定义处理逻辑，结果替换个链接都费劲
                     movementMethod = LinkMovementMethod.getInstance()
-                    // 设置全局字体大小
-                    textSize = 17f
+                    textSize = 15f // 设置全局字体大小
+                    setTextColor(textColorInt) // 设置字体颜色
+                    // setLinkTextColor() // 设置链接颜色
                 }
             },
             update = { textView ->

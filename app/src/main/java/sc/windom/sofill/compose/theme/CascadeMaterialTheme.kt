@@ -24,9 +24,9 @@ fun CascadeMaterialTheme(
         background =  Color(lnco.light.__b3_theme_background), // 背景色，用于整个屏幕或面板的背景
         onBackground = Color(lnco.light.__b3_theme_on_background), // 背景色上的文字颜色
         surface = Color(lnco.light.__b3_theme_surface), // 表面颜色，用于卡片、菜单和对话框等表面元素的背景
-        surfaceVariant = Color(0xFF356859), // 表面变体颜色，用于表面元素的不同状态或层次
+        surfaceVariant = Color(0xEF697A7B), // 表面变体颜色，用于表面元素的不同状态或层次，比如 Switch 里的填充色、LinearProgressIndicator 的颜色
         onSurface = Color(lnco.light.__b3_theme_on_surface), // 表面颜色上的文字颜色
-        onSurfaceVariant = Color(lnco.light.__b3_theme_on_surface_light), // 表面变体颜色上的文字颜色，比如图标
+        onSurfaceVariant = Color(lnco.light.__b3_theme_on_surface_light), // 表面变体颜色上的文字颜色，比如图标激活态
         primaryContainer = Color(0xFFBBAAD8), // 主要颜色容器背景
         onPrimaryContainer = Color(0xFF050223), // 主要颜色容器上的文字颜色
         secondary = Color(lnco.light.__b3_theme_secondary), // 次要颜色
@@ -53,9 +53,9 @@ fun CascadeMaterialTheme(
         background = Color(lnco.dark.__b3_theme_background), // 背景色，用于整个屏幕或面板的背景
         onBackground = Color(lnco.dark.__b3_theme_on_background), // 背景色上的文字颜色
         surface = Color(lnco.dark.__b3_theme_surface), // 表面颜色，用于卡片、菜单和对话框等表面元素的背景
-        surfaceVariant = Color(0xFF356859), // 表面变体颜色，用于表面元素的不同状态或层次
+        surfaceVariant = Color(0xEF10482B), // 表面变体颜色，用于表面元素的不同状态或层次，比如 Switch 里的填充色、LinearProgressIndicator 的颜色
         onSurface = Color(lnco.dark.__b3_theme_on_surface), // 表面颜色上的文字颜色
-        onSurfaceVariant = Color(lnco.dark.__b3_theme_on_surface_light), // 表面变体颜色上的文字颜色，比如图标
+        onSurfaceVariant = Color(lnco.dark.__b3_theme_on_surface_light), // 表面变体颜色上的文字颜色，比如图标激活态
         primaryContainer = Color(0xCF554263), // 主要颜色容器背景
         onPrimaryContainer = Color(0xFF655203), // 主要颜色容器上的文字颜色
         secondary = Color(lnco.dark.__b3_theme_secondary), // 次要颜色

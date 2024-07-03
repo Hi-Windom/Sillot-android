@@ -9,13 +9,13 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Environment
+import android.os.Parcelable
 import android.util.Log
 import android.webkit.ConsoleMessage
 import android.webkit.CookieManager
 import android.webkit.JsPromptResult
 import android.webkit.JsResult
 import android.webkit.PermissionRequest
-import android.webkit.URLUtil
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
@@ -65,7 +65,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SheetState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -88,55 +87,52 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
-import androidx.core.app.ActivityCompat
 import com.blankj.utilcode.util.ActivityUtils.startActivity
-import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.dialogs.PopTip
 import com.tencent.mmkv.MMKV
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import okhttp3.internal.notifyAll
-import okhttp3.internal.wait
+import kotlinx.parcelize.Parcelize
+import kotlinx.parcelize.RawValue
 import sc.windom.sofill.Ss.S_WebView
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_DEBUG
 import sc.windom.sofill.Us.U_FileUtils.isCommonSupportDownloadMIMEType
 import sc.windom.sofill.Us.U_Uri.askIntentForSUS
 import sc.windom.sofill.android.webview.applySystemThemeToWebView
+import sc.windom.sofill.compose.theme.activeColor
+import sc.windom.sofill.compose.theme.defaultColor
+import sc.windom.sofill.compose.theme.disabledColor
 import sc.windom.sofill.pioneer.getSavedValue
 import sc.windom.sofill.pioneer.rememberSaveableMMKV
-import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.concurrent.ConcurrentHashMap
 
-sealed class MenuOptionState {
-    object Disabled : MenuOptionState()
-    object Default : MenuOptionState()
-    object Active : MenuOptionState()
+
+@Parcelize
+sealed class MenuOptionState : Parcelable {
+    data object Disabled : MenuOptionState()
+    data object Default : MenuOptionState()
+    data object Active : MenuOptionState()
 }
 
+@Parcelize
 data class MenuOption(
     val title: String,
-    val icon: ImageVector,
-    val iconInActive: ImageVector = icon,
+    val icon: @RawValue ImageVector,
+    val iconInActive: @RawValue ImageVector = icon,
     val titleInActive: String = title,
     val state: MenuOptionState = MenuOptionState.Default,
+    val isActive: @RawValue MutableState<Boolean> = mutableStateOf(state == MenuOptionState.Active),
     val canToggle: Boolean = false, // 表示选项是否可以在 Default 和 Active 之间切换
-    val closeMenuAfterClick: Boolean = true, // 点击后是否关闭菜单（需要重新渲染）, 只有当 hideMenuAfterClick 也为真时才生效
+    val closeMenuAfterClick: Boolean = state != MenuOptionState.Disabled, // 点击后是否关闭菜单（需要重新渲染）, 默认值为非禁用则为 true
     val onClick: () -> Unit,
-)
-
-data class SettingItem(
-    val title: String,
-    val options: List<String>? = null, // 如果是下拉选择，提供选项列表
-    val onValueChanged: (String) -> Unit = {}
-)
+) : Parcelable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -217,7 +213,11 @@ fun SettingRadioButton(title: String, options: List<String>, onValueChanged: (St
 }
 
 @Composable
-fun SettingSwitch(title: String, state: MutableState<Boolean>, onValueChanged: ((Boolean) -> Unit)? = null) {
+fun SettingSwitch(
+    title: String,
+    state: MutableState<Boolean>,
+    onValueChanged: ((Boolean) -> Unit)? = null
+) {
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -251,15 +251,9 @@ fun Menu(
         ) {
             rowOptions.forEach { option ->
                 val tint = when (option.state) {
-                    MenuOptionState.Disabled -> Color.Gray
-                    MenuOptionState.Default -> Color.Black
-                    MenuOptionState.Active -> Color.Blue
-                }
-                val isActive = if (option.canToggle) {
-                    rememberSaveable { mutableStateOf(option.state == MenuOptionState.Active) }
-                } else {
-                    // 对于不可切换的选项，直接使用其初始状态
-                    remember { mutableStateOf(option.state == MenuOptionState.Active) }
+                    MenuOptionState.Disabled -> disabledColor()
+                    MenuOptionState.Default -> defaultColor()
+                    MenuOptionState.Active -> activeColor()
                 }
 
                 Column(
@@ -268,7 +262,7 @@ fun Menu(
                         .clickable(enabled = tint != Color.Gray) {
                             if (option.canToggle) {
                                 // 只有可切换的选项会在点击时切换状态
-                                isActive.value = !isActive.value
+                                option.isActive.value = !option.isActive.value
                             }
                             if (option.closeMenuAfterClick) {
                                 openBottomSheet.value = false
@@ -279,14 +273,14 @@ fun Menu(
                     horizontalAlignment = Alignment.CenterHorizontally // 居中图标和文本
                 ) {
                     Icon(
-                        if (option.canToggle && isActive.value) option.iconInActive else option.icon,
+                        if (option.canToggle && option.isActive.value) option.iconInActive else option.icon,
                         contentDescription = null,
-                        tint = if (option.canToggle && isActive.value) Color.Blue else tint,
+                        tint = if (option.canToggle && option.isActive.value) Color.Blue else tint,
                         modifier = Modifier.size(34.dp)
                     )
                     Text(
-                        text = if (option.canToggle && isActive.value) option.titleInActive else option.title,
-                        color = if (option.canToggle && isActive.value) Color.Blue else tint,
+                        text = if (option.canToggle && option.isActive.value) option.titleInActive else option.title,
+                        color = if (option.canToggle && option.isActive.value) Color.Blue else tint,
                         fontSize = 12.sp
                     )
                 }
@@ -298,7 +292,6 @@ fun Menu(
 /**
  * 参考了 https://www.composables.com/material3/modalbottomsheet
  * @param openBottomSheet 控制是否渲染
- * @param bottomSheetState 状态控制，比如展开收起
  * @param sheetContent 内容
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -337,16 +330,14 @@ fun MaterialBottomMenu(
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
-@SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Unit) {
     val TAG = "FullScreenWebView"
-    var thisWebView: WebView? = null
+    val thisWebView: MutableState<WebView?> = rememberSaveable { mutableStateOf(null) }
     val uriHandler = LocalUriHandler.current
-    var currentUrl by rememberSaveable { mutableStateOf("") }
-    var canGoBack by rememberSaveable { mutableStateOf(false) }
-    var canGoForward by rememberSaveable { mutableStateOf(false) }
+    val currentUrl = rememberSaveable { mutableStateOf("") }
+    val canGoBack = rememberSaveable { mutableStateOf(false) }
+    val canGoForward = rememberSaveable { mutableStateOf(false) }
     val expanded = rememberSaveable { mutableStateOf(false) } // 控制菜单面板
     val showSettings = rememberSaveable { mutableStateOf(false) } // 控制设置面板
     val openBrowserSettingsLauncher = rememberLauncherForActivityResult(
@@ -366,9 +357,9 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
             CookieManager.getInstance().apply {
                 removeAllCookies { success ->
                     if (success) {
-                        thisWebView?.clearCache(true)
+                        thisWebView.value?.clearCache(true)
                         PopTip.show("<(￣︶￣)↗[success]")
-                        thisWebView?.reload()
+                        thisWebView.value?.reload()
                     } else {
                         PopTip.show(" ￣へ￣ [failed]")
                     }
@@ -379,7 +370,21 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
             "桌面版网页", Icons.Filled.DesktopWindows, canToggle = true,
             iconInActive = Icons.Filled.PhoneAndroid,
             titleInActive = "移动端网页"
-        ) { /* 点击事件 */ },
+        ) {
+            // 切换用户代理字符串
+            thisWebView.value?.settings?.apply {
+                if (userAgentString.contains("Mobile")) {
+                    // 设置为桌面版用户代理
+                    userAgentString = S_WebView.UA_win10
+                    PopTip.show("已切换到桌面版网页")
+                } else {
+                    // 设置为移动端用户代理
+                    userAgentString = S_WebView.UA_edge_android
+                    PopTip.show("已切换到移动端网页")
+                }
+            }
+            thisWebView.value?.reload()
+        },
         MenuOption(
             "前往",
             Icons.Filled.TravelExplore,
@@ -393,20 +398,20 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
         MenuOption("分享", Icons.Filled.Share) {
             val sendIntent: Intent = Intent().apply {
                 action = Intent.ACTION_SEND
-                putExtra(Intent.EXTRA_TEXT, currentUrl)
+                putExtra(Intent.EXTRA_TEXT, currentUrl.value)
                 type = "text/plain"
             }
 
             val shareIntent = Intent.createChooser(sendIntent, null)
             startActivity(shareIntent)
         },
-        MenuOption("默认打开", Icons.Filled.OpenInBrowser) { uriHandler.openUri(currentUrl) },
+        MenuOption("默认打开", Icons.Filled.OpenInBrowser) { uriHandler.openUri(currentUrl.value) },
         MenuOption(
             "深色模式",
             Icons.Filled.DarkMode,
             state = MenuOptionState.Disabled
         ) { /* 点击事件 */ },
-        MenuOption("刷新", Icons.Filled.Refresh) { thisWebView?.reload() },
+        MenuOption("刷新", Icons.Filled.Refresh) { thisWebView.value?.reload() },
         MenuOption("退出", Icons.Filled.Close) { onDismiss.invoke() },
     )
 
@@ -436,191 +441,7 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
                     .padding(padding)
                     .fillMaxSize()
             ) {
-                // 使用AndroidView嵌入WebView
-                AndroidView(modifier = Modifier.fillMaxSize(), factory = {
-                    WebView(it).apply {
-                        this.webViewClient = object : WebViewClient() {
-                            override fun shouldOverrideUrlLoading(
-                                view: WebView?,
-                                request: WebResourceRequest?
-                            ): Boolean {
-                                if (view == null || request == null) {
-                                    return super.shouldOverrideUrlLoading(view, request)
-                                }
-                                val headers = request.requestHeaders
-                                if (headers.isNullOrEmpty()) {
-                                    Log.w("WebViewClient", "Request headers isNullOrEmpty")
-                                } else {
-                                    Log.d("WebViewClient", "Request headers: $headers")
-                                }
-                                return handleUrlLoading(activity, request)
-                            }
-
-                            override fun onPageFinished(view: WebView, url: String) {
-                                Log.d(TAG, "onPageFinished -> $url")
-                                super.onPageFinished(view, url)
-                                canGoBack = view.canGoBack()
-                                canGoForward = view.canGoForward()
-                                applySystemThemeToWebView(activity, view)
-                                injectLocalJS(view)
-                            }
-
-                            override fun onPageStarted(
-                                view: WebView,
-                                url: String,
-                                favicon: Bitmap?
-                            ) {
-                                Log.d(TAG, "onPageStarted -> $url")
-                                super.onPageStarted(view, url, favicon)
-                                currentUrl = url
-                            }
-
-                            override fun onLoadResource(view: WebView?, url: String?) {
-                                Log.d(TAG, "onLoadResource -> $url")
-                                super.onLoadResource(view, url)
-                            }
-
-                            override fun onScaleChanged(
-                                view: WebView?,
-                                oldScale: Float,
-                                newScale: Float
-                            ) {
-                                Log.d(TAG, "onScaleChanged ->")
-                                super.onScaleChanged(view, oldScale, newScale)
-                            }
-
-                            override fun onReceivedError(
-                                view: WebView?,
-                                request: WebResourceRequest?,
-                                error: WebResourceError?
-                            ) {
-                                Log.d(TAG, "onReceivedError -> $error")
-                                super.onReceivedError(view, request, error)
-                            }
-                        }
-                        this.webChromeClient = object : WebChromeClient() {
-                            override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
-                                consoleMessage?.let { it1 ->
-                                    Log.d(
-                                        "$TAG [WebChromeClient] ", "onConsoleMessage -> " +
-                                                U_DEBUG.prettyConsoleMessage(
-                                                    it1
-                                                )
-                                    )
-                                }
-                                return true // 屏蔽默认日志输出避免刷屏
-                            }
-
-                            override fun onJsAlert(
-                                view: WebView,
-                                url: String?,
-                                message: String?,
-                                result: JsResult?
-                            ): Boolean {
-                                val date = Date()
-                                val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA)
-                                val formattedDate = sdf.format(date)
-
-                                AlertDialog.Builder(activity)
-                                    .setTitle("[WebChromeClient] onJsAlert from WebView")
-                                    .setMessage(
-                                        """
-        
-        --------------------------------------------
-        $message
-        --------------------------------------------
-        
-        * ${view.title}
-        * $formattedDate
-        """.trimIndent()
-                                    )
-                                    .setPositiveButton("OK") { dialog: DialogInterface?, which: Int -> result!!.confirm() }
-                                    .setCancelable(false)
-                                    .show()
-                                return true // 已处理
-                            }
-
-                            override fun onJsConfirm(
-                                view: WebView?,
-                                url: String?,
-                                message: String?,
-                                result: JsResult?
-                            ): Boolean {
-                                return super.onJsConfirm(view, url, message, result)
-                            }
-
-                            override fun onJsPrompt(
-                                view: WebView?,
-                                url: String?,
-                                message: String?,
-                                defaultValue: String?,
-                                result: JsPromptResult?
-                            ): Boolean {
-                                return super.onJsPrompt(view, url, message, defaultValue, result)
-                            }
-
-                            override fun onPermissionRequest(request: PermissionRequest?) {
-                                super.onPermissionRequest(request)
-                            }
-
-                            override fun onPermissionRequestCanceled(request: PermissionRequest?) {
-                                super.onPermissionRequestCanceled(request)
-                            }
-
-                            override fun onShowFileChooser(
-                                webView: WebView?,
-                                filePathCallback: ValueCallback<Array<Uri>>?,
-                                fileChooserParams: FileChooserParams?
-                            ): Boolean {
-                                return super.onShowFileChooser(
-                                    webView,
-                                    filePathCallback,
-                                    fileChooserParams
-                                )
-                            }
-                        }
-                        thisWebView = this
-                        CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-                        val ws = this.settings
-                        ws.javaScriptEnabled = true
-                        ws.domStorageEnabled = true
-                        ws.cacheMode = WebSettings.LOAD_NO_CACHE
-                        ws.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-                        ws.textZoom = 100
-                        ws.useWideViewPort = true
-                        ws.loadWithOverviewMode = true
-                        ws.userAgentString = S_WebView.UA_edge_android
-                    }
-                }, update = {
-                    Log.d(TAG, "update -> $originUrl")
-                    when {
-                        originUrl == "action?=Logout" -> {
-                            // 隐藏处理过程
-                            CookieManager.getInstance().apply {
-                                removeAllCookies { success ->
-                                    if (success) {
-                                        thisWebView?.clearCache(true)
-                                        PopTip.show("<(￣︶￣)↗[success]")
-                                    } else {
-                                        PopTip.show(" ￣へ￣ [failed]")
-                                    }
-                                }
-                            }
-                            return@AndroidView
-                        }
-
-                        originUrl.startsWith("wtloginmqq:") -> {
-                            activity.askIntentForSUS(originUrl)
-                            return@AndroidView
-                        }
-
-                        else -> {
-                            currentUrl = originUrl
-                            it.loadUrl(originUrl)
-                        }
-                    }
-
-                })
+                WebViewPage(activity, originUrl, thisWebView, currentUrl, canGoBack, canGoForward)
             }
 
         },
@@ -642,7 +463,10 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = { thisWebView?.goBack() }, enabled = canGoBack) {
+                    IconButton(
+                        onClick = { thisWebView.value?.goBack() },
+                        enabled = canGoBack.value
+                    ) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
                     IconButton(onClick = { expanded.value = !expanded.value }) {
@@ -651,13 +475,214 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
                             contentDescription = "More"
                         ) else Icon(Icons.Filled.MoreHoriz, contentDescription = "More")
                     }
-                    IconButton(onClick = { thisWebView?.goForward() }, enabled = canGoForward) {
+                    IconButton(
+                        onClick = { thisWebView.value?.goForward() },
+                        enabled = canGoForward.value
+                    ) {
                         Icon(Icons.Filled.ArrowForward, contentDescription = "Forward")
                     }
                 }
             }
         }
     )
+}
+
+@SuppressLint("SetJavaScriptEnabled")
+@Composable
+private fun WebViewPage(
+    activity: Activity,
+    originUrl: String,
+    thisWebView: MutableState<WebView?>,
+    currentUrl: MutableState<String>,
+    canGoBack: MutableState<Boolean>,
+    canGoForward: MutableState<Boolean>
+) {
+    val TAG = "WebViewPage"
+    // 使用AndroidView嵌入WebView
+    AndroidView(modifier = Modifier.fillMaxSize(), factory = {
+        WebView(it).apply {
+            this.webViewClient = object : WebViewClient() {
+                override fun shouldOverrideUrlLoading(
+                    view: WebView?,
+                    request: WebResourceRequest?
+                ): Boolean {
+                    if (view == null || request == null) {
+                        return super.shouldOverrideUrlLoading(view, request)
+                    }
+                    val headers = request.requestHeaders
+                    if (headers.isNullOrEmpty()) {
+                        Log.w("WebViewClient", "Request headers isNullOrEmpty")
+                    } else {
+                        Log.d("WebViewClient", "Request headers: $headers")
+                    }
+                    return handleUrlLoading(activity, request)
+                }
+
+                override fun onPageFinished(view: WebView, url: String) {
+                    Log.d(TAG, "onPageFinished -> $url")
+                    super.onPageFinished(view, url)
+                    canGoBack.value = view.canGoBack()
+                    canGoForward.value = view.canGoForward()
+                    applySystemThemeToWebView(activity, view)
+                    injectLocalJS(view)
+                }
+
+                override fun onPageStarted(
+                    view: WebView,
+                    url: String,
+                    favicon: Bitmap?
+                ) {
+                    Log.d(TAG, "onPageStarted -> $url")
+                    super.onPageStarted(view, url, favicon)
+                    currentUrl.value = url
+                }
+
+                override fun onLoadResource(view: WebView?, url: String?) {
+                    Log.d(TAG, "onLoadResource -> $url")
+                    super.onLoadResource(view, url)
+                }
+
+                override fun onScaleChanged(
+                    view: WebView?,
+                    oldScale: Float,
+                    newScale: Float
+                ) {
+                    Log.d(TAG, "onScaleChanged ->")
+                    super.onScaleChanged(view, oldScale, newScale)
+                }
+
+                override fun onReceivedError(
+                    view: WebView?,
+                    request: WebResourceRequest?,
+                    error: WebResourceError?
+                ) {
+                    Log.d(TAG, "onReceivedError -> $error")
+                    super.onReceivedError(view, request, error)
+                }
+            }
+            this.webChromeClient = object : WebChromeClient() {
+                override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
+                    consoleMessage?.let { it1 ->
+                        Log.d(
+                            "$TAG [WebChromeClient] ", "onConsoleMessage -> " +
+                                    U_DEBUG.prettyConsoleMessage(
+                                        it1
+                                    )
+                        )
+                    }
+                    return true // 屏蔽默认日志输出避免刷屏
+                }
+
+                override fun onJsAlert(
+                    view: WebView,
+                    url: String?,
+                    message: String?,
+                    result: JsResult?
+                ): Boolean {
+                    val date = Date()
+                    val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA)
+                    val formattedDate = sdf.format(date)
+
+                    AlertDialog.Builder(activity)
+                        .setTitle("[WebChromeClient] onJsAlert from WebView")
+                        .setMessage(
+                            """
+        
+        --------------------------------------------
+        $message
+        --------------------------------------------
+        
+        * ${view.title}
+        * $formattedDate
+        """.trimIndent()
+                        )
+                        .setPositiveButton("OK") { dialog: DialogInterface?, which: Int -> result!!.confirm() }
+                        .setCancelable(false)
+                        .show()
+                    return true // 已处理
+                }
+
+                override fun onJsConfirm(
+                    view: WebView?,
+                    url: String?,
+                    message: String?,
+                    result: JsResult?
+                ): Boolean {
+                    return super.onJsConfirm(view, url, message, result)
+                }
+
+                override fun onJsPrompt(
+                    view: WebView?,
+                    url: String?,
+                    message: String?,
+                    defaultValue: String?,
+                    result: JsPromptResult?
+                ): Boolean {
+                    return super.onJsPrompt(view, url, message, defaultValue, result)
+                }
+
+                override fun onPermissionRequest(request: PermissionRequest?) {
+                    super.onPermissionRequest(request)
+                }
+
+                override fun onPermissionRequestCanceled(request: PermissionRequest?) {
+                    super.onPermissionRequestCanceled(request)
+                }
+
+                override fun onShowFileChooser(
+                    webView: WebView?,
+                    filePathCallback: ValueCallback<Array<Uri>>?,
+                    fileChooserParams: FileChooserParams?
+                ): Boolean {
+                    return super.onShowFileChooser(
+                        webView,
+                        filePathCallback,
+                        fileChooserParams
+                    )
+                }
+            }
+            thisWebView.value = this
+            CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+            val ws = this.settings
+            ws.javaScriptEnabled = true
+            ws.domStorageEnabled = true
+            ws.cacheMode = WebSettings.LOAD_NO_CACHE
+            ws.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            ws.textZoom = 100
+            ws.useWideViewPort = true
+            ws.loadWithOverviewMode = false // 设置 WebView 是否以概览模式加载页面，即按宽度缩小内容以适应屏幕。设为 true 实测发现 github 等页面会有个不美观的抽搐过程
+            ws.userAgentString = S_WebView.UA_edge_android
+        }
+    }, update = {
+        Log.d(TAG, "update -> $originUrl")
+        when {
+            originUrl == "action?=Logout" -> {
+                // 隐藏处理过程
+                CookieManager.getInstance().apply {
+                    removeAllCookies { success ->
+                        if (success) {
+                            thisWebView.value?.clearCache(true)
+                            PopTip.show("<(￣︶￣)↗[success]")
+                        } else {
+                            PopTip.show(" ￣へ￣ [failed]")
+                        }
+                    }
+                }
+                return@AndroidView
+            }
+
+            originUrl.startsWith("wtloginmqq:") -> {
+                activity.askIntentForSUS(originUrl)
+                return@AndroidView
+            }
+
+            else -> {
+                currentUrl.value = originUrl
+                it.loadUrl(originUrl)
+            }
+        }
+
+    })
 }
 
 @OptIn(DelicateCoroutinesApi::class)

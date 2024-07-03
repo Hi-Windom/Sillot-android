@@ -42,8 +42,9 @@ fun SelectableHtmlText(html: String, modifier: Modifier = Modifier) {
                 // 设置MovementMethod以使链接可点击，需放在后面
                 // 尝试过自定义处理逻辑，结果替换个链接都费劲
                 movementMethod = LinkMovementMethod.getInstance()
-                // 设置全局字体大小
-                textSize = 17f
+                textSize = 17f // 设置全局字体大小
+                // setTextColor() // 设置字体颜色
+                // setLinkTextColor() // 设置链接颜色
             }
         },
         update = { textView ->

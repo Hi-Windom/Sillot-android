@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import androidx.core.app.ActivityCompat
+import com.blankj.utilcode.util.ActivityUtils.startActivity
 import com.kongzue.dialogx.dialogs.PopNotification
 
 object U_Uri {
@@ -25,6 +26,19 @@ object U_Uri {
         } catch (e: Exception) {
             Log.e(TAG, e.toString())
             false
+        }
+    }
+
+
+    fun openUrl(url: String, noBrowser: Boolean = false) {
+        val i = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        if (noBrowser) {
+            i.addFlags(Intent.FLAG_ACTIVITY_REQUIRE_NON_BROWSER)
+        }
+        try {
+            startActivity(i)
+        } catch (e: Exception) {
+            PopNotification.show(e.message, e.stackTrace.toString()).noAutoDismiss()
         }
     }
 }

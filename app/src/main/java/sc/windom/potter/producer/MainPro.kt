@@ -93,6 +93,7 @@ import sc.windom.sofill.U
 import sc.windom.sofill.Us.Toast
 import sc.windom.sofill.Us.U_DEBUG.srcPath
 import sc.windom.sofill.Us.U_FileUtils.workspaceParentDir
+import sc.windom.sofill.Us.U_Uri
 import sc.windom.sofill.android.webview.WebPoolsPro
 import sc.windom.sofill.android.webview.WebPoolsPro.Companion.instance
 import sc.windom.sofill.api.MyRetrofit.createRetrofit
@@ -1177,7 +1178,7 @@ class MainPro : ComponentActivity() {
 
         fun MagnetBTNonClick1() {
             in2_intent?.data?.let {
-                U.openUrl(it.toString(), true)
+                U_Uri.openUrl(it.toString(), true)
             }
         }
         if (inspectionMode || showAudioButton) {
