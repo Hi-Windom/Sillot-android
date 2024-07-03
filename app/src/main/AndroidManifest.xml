@@ -397,6 +397,7 @@
             android:name="org.b3log.ld246.HomeActivity"
             android:icon="@drawable/icon"
             android:label="@string/activity_name_ld246Home"
+                android:launchMode="singleInstancePerTask"
             android:autoRemoveFromRecents="false"
             android:configChanges="orientation|screenSize"
             android:screenOrientation="portrait"

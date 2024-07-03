@@ -130,7 +130,9 @@ import sc.windom.sofill.pioneer.getSavedValue
 import sc.windom.sofill.pioneer.rememberSaveableMMKV
 import sc.windom.sofill.pioneer.saveValue
 
-
+/**
+ * 设计目标：android:launchMode="singleInstancePerTask"
+ */
 class HomeActivity : ComponentActivity() {
     private val TAG = "Home.kt"
     private val srcPath = srcPath(TAG)
@@ -156,25 +158,22 @@ class HomeActivity : ComponentActivity() {
     private var retrofit: Retrofit? = null
     private var apiService: ApiServiceNotification? = null
 
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        BuglyLog.i(TAG, "onNewIntent() invoked")
+        intoWorks(intent)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        thisActivity = this
-        val intent = intent
-        val uri = intent.data
         BuglyLog.i(TAG, "onCreate() invoked")
-        val scheme = uri?.scheme
-        val host = uri?.host
-        BuglyLog.d(TAG, "scheme: $scheme, host:$host")
         // 设置沉浸式通知栏
         window.setDecorFitsSystemWindows(false)
         window.decorView.setOnApplyWindowInsetsListener { _, insets ->
             insets
         }
-        setContent {
-            CascadeMaterialTheme {
-                UI(intent)
-            }
-        }
+        thisActivity = this
+
         viewmodel = NotificationsViewModel()
         // 创建Retrofit实例
         retrofit = createRetrofit("https://${S.HOST_ld246}/")
@@ -214,6 +213,20 @@ class HomeActivity : ComponentActivity() {
             }
         })
 
+        intoWorks(intent)
+
+    }
+
+    private fun intoWorks(intent: Intent?) {
+        val uri = intent?.data
+        val scheme = uri?.scheme
+        val host = uri?.host
+        BuglyLog.d(TAG, "scheme: $scheme, host:$host")
+        setContent {
+            CascadeMaterialTheme {
+                UI(intent)
+            }
+        }
         if (uri != null) {
             if (
                 S_Uri.isUriMatched(uri, S_Uri.case_ld246_1)
