@@ -2,16 +2,20 @@ package sc.windom.sofill.compose
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.DownloadManager
+import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Environment
 import android.util.Log
 import android.webkit.ConsoleMessage
 import android.webkit.CookieManager
 import android.webkit.JsPromptResult
 import android.webkit.JsResult
 import android.webkit.PermissionRequest
+import android.webkit.URLUtil
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
@@ -22,70 +26,239 @@ import android.webkit.WebViewClient
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Cookie
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.DesktopWindows
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material.icons.filled.TravelExplore
 import androidx.compose.material.icons.filled.Webhook
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.zIndex
 import androidx.core.app.ActivityCompat
 import com.kongzue.dialogx.dialogs.PopTip
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_DEBUG
-import sc.windom.sofill.android.webview.WebPoolsPro
 import sc.windom.sofill.android.webview.applySystemThemeToWebView
-import sc.windom.sofill.pioneer.getSavedValue
+import java.net.HttpURLConnection
+import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+sealed class MenuOptionState {
+    object Disabled : MenuOptionState()
+    object Default : MenuOptionState()
+    object Active : MenuOptionState()
+}
+
+data class MenuOption(
+    val title: String,
+    val icon: ImageVector,
+    val iconInActive: ImageVector = icon,
+    val titleInActive: String = title,
+    val state: MenuOptionState = MenuOptionState.Default,
+    val canToggle: Boolean = false, // 表示选项是否可以在 Default 和 Active 之间切换
+    val closeMenuAfterClick: Boolean = true, // 点击后是否收起菜单
+    val onClick: () -> Unit,
+)
+
+@Composable
+fun Menu(options: List<MenuOption>, columnCount: Int, openBottomSheet: MutableState<Boolean>) {
+    // 一行 n 列
+    options.chunked(columnCount).forEach { rowOptions ->
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp, bottom = 8.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly // 均匀分布菜单项
+        ) {
+            rowOptions.forEach { option ->
+                val tint = when (option.state) {
+                    MenuOptionState.Disabled -> Color.Gray
+                    MenuOptionState.Default -> Color.Black
+                    MenuOptionState.Active -> Color.Blue
+                }
+                val isActive = if (option.canToggle) {
+                    rememberSaveable { mutableStateOf(option.state == MenuOptionState.Active) }
+                } else {
+                    // 对于不可切换的选项，直接使用其初始状态
+                    remember { mutableStateOf(option.state == MenuOptionState.Active) }
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(enabled = tint != Color.Gray) {
+                            if (option.canToggle) {
+                                // 只有可切换的选项会在点击时切换状态
+                                isActive.value = !isActive.value
+                            }
+                            if (option.closeMenuAfterClick) {
+                                openBottomSheet.value = false
+                            }
+                            option.onClick()
+                        }
+                        .weight(1f), // 均分宽度
+                    horizontalAlignment = Alignment.CenterHorizontally // 居中图标和文本
+                ) {
+                    Icon(
+                        if (option.canToggle && isActive.value) option.iconInActive else option.icon,
+                        contentDescription = null,
+                        tint = if (option.canToggle && isActive.value) Color.Blue else tint,
+                        modifier = Modifier.size(34.dp)
+                    )
+                    Text(
+                        text = if (option.canToggle && isActive.value) option.titleInActive else option.title,
+                        color = if (option.canToggle && isActive.value) Color.Blue else tint,
+                        fontSize = 12.sp
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 参考了 https://www.composables.com/material3/modalbottomsheet
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MaterialBottomMenu(
+    openBottomSheet: MutableState<Boolean>,
+    sheetContent: @Composable () -> Unit
+) {
+    var skipPartiallyExpanded by rememberSaveable { mutableStateOf(false) }
+    val bottomSheetState =
+        rememberModalBottomSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
+
+    // Sheet content
+    if (openBottomSheet.value) {
+        ModalBottomSheet(
+            onDismissRequest = { openBottomSheet.value = false },
+            sheetState = bottomSheetState
+        ) {
+            Column {
+                sheetContent()
+                HorizontalDivider(modifier = Modifier
+                    .height(6.dp), thickness = 0.dp, color = Color.Transparent)
+            }
+        }
+    }
+}
+
+
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Unit) {
     val TAG = "FullScreenWebView"
-//    val Lcc = LocalContext.current
-    var thisWebView: WebView? = WebPoolsPro.instance?.createWebView(activity, "FullScreenWebView")
+    var thisWebView: WebView? = null
     var canGoBack by rememberSaveable { mutableStateOf(false) }
     var canGoForward by rememberSaveable { mutableStateOf(false) }
     val openBrowserSettingsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { /* Handle the result if needed */ }
+    val menuOptions = listOf(
+        MenuOption("关于", Icons.Filled.Info, state = MenuOptionState.Disabled){ /* 点击事件 */ },
+        MenuOption("设置", Icons.Filled.Settings, state = MenuOptionState.Disabled){ /* 点击事件 */ },
+        MenuOption("设为默认", Icons.Filled.Webhook) {
+            val intent = Intent(android.provider.Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)
+            openBrowserSettingsLauncher.launch(intent)
+        },
+        MenuOption("清除 Cookie", Icons.Filled.Cookie) {
+            CookieManager.getInstance().apply {
+                removeAllCookies { success ->
+                    if (success) {
+                        thisWebView?.clearCache(true)
+                        PopTip.show("<(￣︶￣)↗[success]")
+                        thisWebView?.reload()
+                    } else {
+                        PopTip.show(" ￣へ￣ [failed]")
+                    }
+                }
+            }
+        },
+        MenuOption("桌面版网页", Icons.Filled.DesktopWindows, canToggle = true,
+            iconInActive = Icons.Filled.PhoneAndroid,
+            titleInActive = "移动端网页") { /* 点击事件 */ },
+        MenuOption("前往", Icons.Filled.TravelExplore, state = MenuOptionState.Disabled) { /* 点击事件 */ },
+        MenuOption("翻译", Icons.Filled.Translate, state = MenuOptionState.Disabled) { /* 点击事件 */ },
+        MenuOption("分享", Icons.Filled.Share, state = MenuOptionState.Disabled) { /* 点击事件 */ },
+        MenuOption("深色模式", Icons.Filled.DarkMode, state = MenuOptionState.Disabled) { /* 点击事件 */ },
+        MenuOption("刷新", Icons.Filled.Refresh) { thisWebView?.reload() },
+        MenuOption("退出", Icons.Filled.Close) { onDismiss.invoke() },
+    )
+    var expanded = rememberSaveable { mutableStateOf(false) }
+
 
     DisposableEffect(Unit) {
-        // 在 Composition 销毁时始终回收 thisWebView
-        thisWebView?.let { WebPoolsPro.instance?.recycle(it, "FullScreenWebView") }
+        // 在 Composition 销毁时
         onDispose { }
     }
 
+    // 菜单面板
+    MaterialBottomMenu(expanded) { Menu(menuOptions, 5, expanded) }
+
     Scaffold(
+        modifier = Modifier.imePadding(), // 布局适配软键盘，一般来说不需要嵌套声明
         content = { padding ->
-            Box(modifier = Modifier.padding(padding)) {
+            Box(modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()) {
                 // 使用AndroidView嵌入WebView
                 AndroidView(factory = {
-                    val webViewToUse = thisWebView ?: WebView(activity)
-                    webViewToUse.apply {
+                    WebView(it).apply {
                         this.webViewClient = object : WebViewClient() {
                             override fun shouldOverrideUrlLoading(
                                 view: WebView?,
@@ -94,9 +267,7 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
                                 if (view == null || request == null) {
                                     return super.shouldOverrideUrlLoading(view, request)
                                 }
-                                val url = request.url.toString()
-                                Log.d(TAG, "shouldOverrideUrlLoading -> $url")
-                                return handleUrlLoading(activity, url)
+                                return handleUrlLoading(activity, request)
                             }
                             override fun onPageFinished(view: WebView, url: String) {
                                 Log.d(TAG, "onPageFinished -> $url")
@@ -114,7 +285,6 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
                             ) {
                                 Log.d(TAG, "onPageStarted -> $url")
                                 super.onPageStarted(view, url, favicon)
-                                applySystemThemeToWebView(activity, view)
                             }
 
                             override fun onLoadResource(view: WebView?, url: String?) {
@@ -136,7 +306,7 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
                                 request: WebResourceRequest?,
                                 error: WebResourceError?
                             ) {
-                                Log.d(TAG, "onReceivedError ->")
+                                Log.d(TAG, "onReceivedError -> $error")
                                 super.onReceivedError(view, request, error)
                             }
                         }
@@ -263,13 +433,18 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
 
                 })
             }
+
         },
         bottomBar = {
             BottomAppBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+                tonalElevation = 58.dp,
+                contentPadding = PaddingValues(2.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(0.dp)
-                    .height(35.dp)
+                    .height(36.dp)
+                    .zIndex(999f)
             ) {
                 Row(
                     modifier = Modifier
@@ -281,37 +456,11 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
                     IconButton(onClick = { thisWebView?.goBack() }, enabled = canGoBack) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
+                    IconButton(onClick = { expanded.value = !expanded.value }) {
+                        if(expanded.value) Icon(Icons.Filled.MoreVert, contentDescription = "More") else Icon(Icons.Filled.MoreHoriz, contentDescription = "More")
+                    }
                     IconButton(onClick = { thisWebView?.goForward() }, enabled = canGoForward) {
                         Icon(Icons.Filled.ArrowForward, contentDescription = "Forward")
-                    }
-                    IconButton(onClick = { thisWebView?.reload() }) {
-                        Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
-                    }
-                    IconButton(onClick = onDismiss) {
-                        Icon(Icons.Filled.Close, contentDescription = "Close")
-                    }
-                    IconButton(
-                        onClick = {
-                            val intent = Intent(android.provider.Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)
-                            openBrowserSettingsLauncher.launch(intent)
-                        }
-                    ) {
-                        Icon(Icons.Filled.Webhook, contentDescription = "跳转到默认浏览器设置界面")
-                    }
-                    IconButton(onClick = {
-                        CookieManager.getInstance().apply {
-                            removeAllCookies { success ->
-                                if (success) {
-                                    thisWebView?.clearCache(true)
-                                    PopTip.show("<(￣︶￣)↗[success]")
-                                    thisWebView?.reload()
-                                } else {
-                                    PopTip.show(" ￣へ￣ [failed]")
-                                }
-                            }
-                        }
-                    }) {
-                        Icon(Icons.Filled.Cookie, contentDescription = "清除 Cookie")
                     }
                 }
             }
@@ -319,16 +468,46 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
     )
 }
 
-private fun handleUrlLoading(activity: Activity, url: String): Boolean {
+@OptIn(DelicateCoroutinesApi::class)
+private fun handleUrlLoading(activity: Activity, request: WebResourceRequest): Boolean {
     val TAG = "handleUrlLoading"
+    val url = request.url.toString()
     val _url = U.replaceScheme_deepDecode(url, "googlechrome://", "slld246://")
     val real_url = U.replaceEncodeScheme(url, "googlechrome://", "slld246://")
-    Log.d(TAG, "$_url -> $real_url")
+    Log.d(TAG, "[handleUrlLoading] isForMainFrame:${request.isForMainFrame} $_url -> $real_url")
+    // 在IO线程尝试下载，不阻塞
+    GlobalScope.launch(Dispatchers.IO) {
+        // 发送HEAD请求以获取Content-Type
+        var connection: HttpURLConnection? = null
+        try {
+            connection = URL(url).openConnection() as HttpURLConnection
+            connection.requestMethod = "HEAD"
+            connection.connect()
 
+            val contentType = connection.contentType
+            if (contentType != null && contentType.startsWith("application/")) {
+                // 如果Content-Type指示它是一个应用程序文件（例如zip, pdf等），则下载文件
+                val downloadRequest = DownloadManager.Request(Uri.parse(url))
+                downloadRequest.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
+                downloadRequest.setTitle(URLUtil.guessFileName(url, null, null))
+                downloadRequest.setDescription("Downloading file...")
+                downloadRequest.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                downloadRequest.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, URLUtil.guessFileName(url, null, null))
+
+                val downloadManager = activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+                downloadManager.enqueue(downloadRequest)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error while checking Content-Type: ", e)
+        } finally {
+            connection?.disconnect()
+        }
+    }
     return if (_url.startsWith("mqq://") || _url.startsWith("wtloginmqq://") || _url.startsWith(
             "sinaweibo://"
         )
     ) {
+        Log.d(TAG, "try to startActivityForResult by $_url")
         try {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(real_url))
             ActivityCompat.startActivityForResult(activity, intent, 1, null)

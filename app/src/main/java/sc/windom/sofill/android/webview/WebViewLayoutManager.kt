@@ -61,6 +61,7 @@ import splitties.systemservices.inputMethodManager
  * @sample WebViewLayoutManager.assistActivity
  * @author https://ld246.com/member/soltus, GLM-4
  * @see [applySystemThemeToWebView]
+ * @see <p>Compose 中使用 Modifier.imePadding() 即可，无需托管此处</p>
  * @property delayResetLayoutWhenImeShow 收窄布局延时执行时间。键盘弹起到最后高度需要一个过程，因此收窄布局应当延时执行（不包括小窗和多窗口模式），延时多久没有标准，推荐赋值为 120-186
  * @property JSonImeShow 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
  * @property JSonImeHide 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）

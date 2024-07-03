@@ -4,6 +4,7 @@ import android.app.Activity
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowInsetsController
 import android.webkit.WebView
 import sc.windom.sofill.U.isLightColor
@@ -27,7 +28,7 @@ fun applySystemThemeToWebView(
 ) {
     Handler(Looper.getMainLooper()).postDelayed({
         val statusBarBelowColor = activity.setStatusBarColorFromBelowStatusBar(webView)
-        webView.rootView.setBackgroundColor(statusBarBelowColor)
+        statusBarBelowColor?.let { webView.rootView.setBackgroundColor(it) }
     }, 0) // 延时只有调试的时候需要
 }
 
@@ -40,27 +41,30 @@ private fun Activity.setStatusBarIconColorAccordingToColor(color: Int) {
     )
 }
 
-private fun Activity.setStatusBarColorFromBelowStatusBar(view: View): Int {
+private fun Activity.setStatusBarColorFromBelowStatusBar(view: View): Int? {
     // 获取状态栏下方的颜色
     val statusBarBelowColor = getDominantColorFromBelowStatusBar(view)
     // 设置状态栏颜色
-    window.statusBarColor = statusBarBelowColor
+    if (statusBarBelowColor != null) {
+        window.statusBarColor = statusBarBelowColor
+    }
     // 根据状态栏颜色调整图标颜色（深色或浅色）
-    setStatusBarIconColorAccordingToColor(statusBarBelowColor)
+    statusBarBelowColor?.let { setStatusBarIconColorAccordingToColor(it) }
     return statusBarBelowColor
 }
 
-private fun getDominantColorFromBelowStatusBar(view: View): Int {
-    // 获取状态栏高度
-    val statusBarHeight = view.statusBarHeight
+private fun getDominantColorFromBelowStatusBar(view: View): Int? {
+    // 获取状态栏高度，如果view或其rootView为null，则返回null
+    val statusBarHeight = view.rootView?.statusBarHeight ?: return null
 
-    // 获取状态栏下方的视图
-    val statusBarBelowView = view.rootView.findViewById<View>(android.R.id.content)
+    // 获取状态栏下方的视图，如果获取失败，则返回null
+    val decorView = view.rootView as? ViewGroup ?: return null
+    val statusBarBelowView = decorView.findViewById<View>(android.R.id.content) ?: return null
 
     // 获取状态栏下方视图的位图
     statusBarBelowView.isDrawingCacheEnabled = true
     statusBarBelowView.buildDrawingCache(true)
-    val bitmap = statusBarBelowView.drawingCache
+    val bitmap = statusBarBelowView.drawingCache ?: return null
 
     // 获取状态栏下方的颜色
     val dominantColor = bitmap.getPixel(0, statusBarHeight)

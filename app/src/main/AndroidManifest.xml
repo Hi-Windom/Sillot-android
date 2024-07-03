@@ -141,6 +141,11 @@
         <!-- 指定能够打开的链接类型 -->
         <intent>
             <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="slld246" />
+        </intent>
+        <!-- 指定能够打开的链接类型 -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
             <data android:scheme="mqq" />
         </intent>
         <!-- 指定能够打开的链接类型 -->
@@ -428,6 +433,14 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data android:scheme="mqq" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="slld246" />
             </intent-filter>
             <!-- shortcutId | android:name 不能重复-->
             <meta-data
