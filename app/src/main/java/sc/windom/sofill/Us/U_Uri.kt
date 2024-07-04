@@ -16,7 +16,7 @@ object U_Uri {
      * @return 返回请求是否成功，不含结果。结果在 Activity 查收
      */
     fun Activity.askIntentForSUS(_url: String, real_url: String = _url): Boolean {
-        val TAG = "handleUrlLoading"
+        val TAG = "askIntentForSUS"
         Log.d(TAG, "try to startActivityForResult by $_url")
         PopNotification.show("处理授权回调注意事项", "必须先将汐洛设置为默认浏览器（获得授权后即可恢复默认浏览器）。").noAutoDismiss()
         return try {

@@ -8,6 +8,7 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
+import android.net.http.SslError
 import android.os.Environment
 import android.os.Parcelable
 import android.util.Log
@@ -16,10 +17,12 @@ import android.webkit.CookieManager
 import android.webkit.JsPromptResult
 import android.webkit.JsResult
 import android.webkit.PermissionRequest
+import android.webkit.SslErrorHandler
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -38,6 +41,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
@@ -57,6 +61,8 @@ import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.TravelExplore
 import androidx.compose.material.icons.filled.Webhook
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -65,8 +71,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -82,6 +91,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -112,7 +122,9 @@ import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.roundToInt
 
+private val thisWebView: MutableState<WebView?> = mutableStateOf(null)
 
 @Parcelize
 sealed class MenuOptionState : Parcelable {
@@ -170,6 +182,16 @@ fun SettingScreen() {
         key = "WebViewContainer@switchState_使用系统自带下载器下载文件",
         defaultValue = false
     )
+    var sliderState_webViewTextZoom = rememberSaveableMMKV(
+        mmkv = MMKV.defaultMMKV(),
+        key = "WebViewContainer@sliderState_webViewTextZoom",
+        defaultValue = 100
+    )
+    val stepValue_webViewTextZoom = 5 // 步长
+    val minValue_webViewTextZoom = 50
+    val maxValue_webViewTextZoom = 150
+    val stepSize_webViewTextZoom =
+        (maxValue_webViewTextZoom - minValue_webViewTextZoom) / stepValue_webViewTextZoom // 分为多少块
 
     Column(modifier = Modifier.padding(start = 6.dp, end = 6.dp, top = 3.dp, bottom = 3.dp)) {
         Text(text = "设置", style = MaterialTheme.typography.headlineMedium)
@@ -189,6 +211,33 @@ fun SettingScreen() {
         } else {
             Text("通过分享链接的方式，用户可以选择对应的处理程序")
         }
+
+        // 滑块组件
+        Text(text = "WebView缩放比例", fontSize = 16.sp)
+        Slider(
+            value = sliderState_webViewTextZoom.value.toFloat(),
+            onValueChange = {
+                // 将滑块的值四舍五入到最接近的步长
+                val roundedValue =
+                    (it / stepValue_webViewTextZoom).roundToInt() * stepValue_webViewTextZoom
+                // 仅当值在范围内时才更新状态
+                if (roundedValue in minValue_webViewTextZoom..maxValue_webViewTextZoom) {
+                    sliderState_webViewTextZoom.value = roundedValue
+                }
+            },
+            valueRange = minValue_webViewTextZoom.toFloat()..maxValue_webViewTextZoom.toFloat(),
+            onValueChangeFinished = {
+                thisWebView.value?.settings?.let {
+                    it.textZoom = sliderState_webViewTextZoom.value
+                }
+            },
+            steps = stepSize_webViewTextZoom,
+            colors = SliderDefaults.colors(
+                thumbColor = MaterialTheme.colorScheme.primary,
+                activeTrackColor = MaterialTheme.colorScheme.primary
+            )
+        )
+        Text(text = "当前缩放比例：${sliderState_webViewTextZoom.value}%")
     }
 }
 
@@ -292,21 +341,32 @@ fun Menu(
 /**
  * 参考了 https://www.composables.com/material3/modalbottomsheet
  * @param openBottomSheet 控制是否渲染
+ * @param fullHeight 是否全高展示
+ * @param noRounded 是否不使用圆角，默认与 `fullHeight` 一致
  * @param sheetContent 内容
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MaterialBottomMenu(
     openBottomSheet: MutableState<Boolean>,
+    fullHeight: Boolean = false,
+    noRounded: Boolean = fullHeight,
     sheetContent: @Composable () -> Unit
 ) {
     val scope = rememberCoroutineScope()
-    val skipPartiallyExpanded by rememberSaveable { mutableStateOf(false) }
+    val skipPartiallyExpanded by rememberSaveable { mutableStateOf(fullHeight) }  // 全高展示则必须跳过
     val bottomSheetState =
         rememberModalBottomSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
     // Sheet content
     if (openBottomSheet.value) {
         ModalBottomSheet(
+            modifier = if (fullHeight) Modifier
+                .zIndex(999f)
+                .fillMaxSize() else Modifier.zIndex(999f),
+            shape = if (noRounded) RectangleShape else RoundedCornerShape(
+                topStart = 22.dp,
+                topEnd = 22.dp
+            ),
             onDismissRequest = {
                 scope
                     .launch { bottomSheetState.hide() }
@@ -329,17 +389,65 @@ fun MaterialBottomMenu(
     }
 }
 
+@Composable
+fun GoToOption(
+    ourl: String,
+    onNavigate: (String) -> Unit // 定义一个回调函数，用于处理导航事件
+) {
+    var url by remember { mutableStateOf(ourl) } // 用于存储用户输入的 URL
+    val keyboardController = LocalSoftwareKeyboardController.current // 用于控制键盘
+
+    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text("换行将被忽略，无需担心", modifier = Modifier.padding(6.dp))
+        TextField(
+            value = url,
+            onValueChange = { newValue: String ->
+                url = newValue
+            },
+            singleLine = false,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(6.dp)
+                .weight(1f) // 使用 weight 来占满剩余空间
+        )
+        Button(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(6.dp),
+            onClick = {
+                keyboardController?.hide()
+                onNavigate(url)
+            }
+        ) {
+            Text("前往")
+        }
+        Button(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(6.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondary,
+            ),
+            onClick = {
+                url = ""
+            }
+        ) {
+            Text("清除")
+        }
+    }
+}
 
 @Composable
 fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Unit) {
     val TAG = "FullScreenWebView"
-    val thisWebView: MutableState<WebView?> = rememberSaveable { mutableStateOf(null) }
     val uriHandler = LocalUriHandler.current
+    val gotoUrl = rememberSaveable { mutableStateOf(originUrl) }
     val currentUrl = rememberSaveable { mutableStateOf("") }
     val canGoBack = rememberSaveable { mutableStateOf(false) }
     val canGoForward = rememberSaveable { mutableStateOf(false) }
     val expanded = rememberSaveable { mutableStateOf(false) } // 控制菜单面板
     val showSettings = rememberSaveable { mutableStateOf(false) } // 控制设置面板
+    val showGoToOption = rememberSaveable { mutableStateOf(false) } // 控制 GOTO 前往
     val openBrowserSettingsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { /* Handle the result if needed */ }
@@ -388,8 +496,9 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
         MenuOption(
             "前往",
             Icons.Filled.TravelExplore,
-            state = MenuOptionState.Disabled
-        ) { /* 点击事件 */ },
+        ) {
+            showGoToOption.value = true
+        },
         MenuOption(
             "翻译",
             Icons.Filled.Translate,
@@ -433,6 +542,15 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
     // 设置面板
     SettingBottomSheet(showSettings)
 
+    // GOTO面板
+    MaterialBottomMenu(showGoToOption, true) {
+        GoToOption(currentUrl.value) { it1 ->
+            Log.w(TAG, "goto -> $it1")
+            gotoUrl.value = it1
+            showGoToOption.value = false
+        }
+    }
+
     Scaffold(
         modifier = Modifier.imePadding(), // 布局适配软键盘，一般来说不需要嵌套声明
         content = { padding ->
@@ -441,7 +559,7 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
                     .padding(padding)
                     .fillMaxSize()
             ) {
-                WebViewPage(activity, originUrl, thisWebView, currentUrl, canGoBack, canGoForward)
+                WebViewPage(activity, gotoUrl, currentUrl, canGoBack, canGoForward)
             }
 
         },
@@ -491,16 +609,36 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
 @Composable
 private fun WebViewPage(
     activity: Activity,
-    originUrl: String,
-    thisWebView: MutableState<WebView?>,
+    gotoUrl: MutableState<String>,
     currentUrl: MutableState<String>,
     canGoBack: MutableState<Boolean>,
     canGoForward: MutableState<Boolean>
 ) {
     val TAG = "WebViewPage"
+    val mmkv = MMKV.defaultMMKV()
+    val sliderState_webViewTextZoom =
+        mmkv.getSavedValue("WebViewContainer@sliderState_webViewTextZoom", 100)
     // 使用AndroidView嵌入WebView
     AndroidView(modifier = Modifier.fillMaxSize(), factory = {
         WebView(it).apply {
+            thisWebView.value = this
+            val cm = CookieManager.getInstance()
+            cm.setAcceptCookie(true)
+            cm.setAcceptThirdPartyCookies(this, true)
+            val ws = this.settings
+            ws.javaScriptEnabled = true
+            ws.allowUniversalAccessFromFileURLs = true
+            ws.allowFileAccessFromFileURLs = true
+            ws.domStorageEnabled = true
+            ws.allowFileAccess = true
+            ws.allowContentAccess = true
+            ws.cacheMode = WebSettings.LOAD_NO_CACHE
+            ws.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW // 允许Http和Https混合
+            ws.textZoom = sliderState_webViewTextZoom
+            ws.useWideViewPort = true
+            ws.loadWithOverviewMode =
+                false // 设置 WebView 是否以概览模式加载页面，即按宽度缩小内容以适应屏幕。设为 true 实测发现 github 等页面会有个不美观的抽搐过程
+            ws.userAgentString = S_WebView.UA_edge_android
             this.webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(
                     view: WebView?,
@@ -556,8 +694,41 @@ private fun WebViewPage(
                     request: WebResourceRequest?,
                     error: WebResourceError?
                 ) {
-                    Log.d(TAG, "onReceivedError -> $error")
+                    Log.e(TAG, "onReceivedError -> $error")
                     super.onReceivedError(view, request, error)
+                }
+
+                override fun onReceivedSslError(
+                    view: WebView?,
+                    handler: SslErrorHandler?,
+                    error: SslError?
+                ) {
+                    error?.let {
+                        val msg = when (error.getPrimaryError()) {
+                            SslError.SSL_DATE_INVALID -> "证书日期无效"
+                            SslError.SSL_EXPIRED -> "证书已过期。"
+                            SslError.SSL_IDMISMATCH -> "主机名不匹配。"
+                            SslError.SSL_INVALID -> "发生一般错误"
+                            SslError.SSL_NOTYETVALID -> "证书尚未生效。"
+                            SslError.SSL_UNTRUSTED -> "证书颁发机构不受信任。" // 可能是自定义证书
+                            else -> "SSL证书错误,错误码：" + error.getPrimaryError()
+                        }
+                        Log.w(TAG, "onReceivedSslError -> $msg")
+                        if (error.getPrimaryError() != SslError.SSL_UNTRUSTED) {
+                            super.onReceivedSslError(view, handler, error)
+                        }
+                    }
+                }
+
+                override fun onReceivedHttpError(
+                    view: WebView?,
+                    request: WebResourceRequest?,
+                    errorResponse: WebResourceResponse?
+                ) {
+                    errorResponse?.let {
+                        Log.w(TAG, errorResponse.toString())
+                    }
+                    super.onReceivedHttpError(view, request, errorResponse)
                 }
             }
             this.webChromeClient = object : WebChromeClient() {
@@ -622,7 +793,9 @@ private fun WebViewPage(
                 }
 
                 override fun onPermissionRequest(request: PermissionRequest?) {
+                    Log.d(TAG, "onPermissionRequest -> ${request?.resources}")
                     super.onPermissionRequest(request)
+                    request?.grant(request.resources)
                 }
 
                 override fun onPermissionRequestCanceled(request: PermissionRequest?) {
@@ -641,22 +814,11 @@ private fun WebViewPage(
                     )
                 }
             }
-            thisWebView.value = this
-            CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-            val ws = this.settings
-            ws.javaScriptEnabled = true
-            ws.domStorageEnabled = true
-            ws.cacheMode = WebSettings.LOAD_NO_CACHE
-            ws.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-            ws.textZoom = 100
-            ws.useWideViewPort = true
-            ws.loadWithOverviewMode = false // 设置 WebView 是否以概览模式加载页面，即按宽度缩小内容以适应屏幕。设为 true 实测发现 github 等页面会有个不美观的抽搐过程
-            ws.userAgentString = S_WebView.UA_edge_android
         }
     }, update = {
-        Log.d(TAG, "update -> $originUrl")
+        Log.d(TAG, "update -> ${gotoUrl.value}")
         when {
-            originUrl == "action?=Logout" -> {
+            gotoUrl.value == "action?=Logout" -> {
                 // 隐藏处理过程
                 CookieManager.getInstance().apply {
                     removeAllCookies { success ->
@@ -671,14 +833,14 @@ private fun WebViewPage(
                 return@AndroidView
             }
 
-            originUrl.startsWith("wtloginmqq:") -> {
-                activity.askIntentForSUS(originUrl)
+            gotoUrl.value.startsWith("wtloginmqq:") -> {
+                activity.askIntentForSUS(gotoUrl.value)
                 return@AndroidView
             }
 
             else -> {
-                currentUrl.value = originUrl
-                it.loadUrl(originUrl)
+                currentUrl.value = gotoUrl.value
+                it.loadUrl(gotoUrl.value)
             }
         }
 
@@ -791,12 +953,16 @@ private fun handleUrlLoading(activity: Activity, request: WebResourceRequest): B
 
 private fun injectLocalJS(view: WebView) {
     // 读取本地 JavaScript 文件并注入到当前加载的页面中
-    val js = "var script = document.createElement('script'); " +
-            "script.type = 'text/javascript'; " +
-            "script.src = 'https://unpkg.com/vconsole@latest/dist/vconsole.min.js'; " +
-            "document.head.appendChild(script); " +
-            "script.onload = function() { " +
-            "  var vConsole = new window.VConsole();vConsole.showSwitch(); " +
-            "};"
+    val js = """
+        var script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = 'https://unpkg.com/vconsole@latest/dist/vconsole.min.js';
+        document.head.appendChild(script);
+        script.onload = function() {
+            var vConsole = new window.VConsole();
+            vConsole.showSwitch();
+        };
+"""
+
     view.evaluateJavascript(js, null)
 }
