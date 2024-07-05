@@ -18,6 +18,7 @@ import android.webkit.JsPromptResult
 import android.webkit.JsResult
 import android.webkit.PermissionRequest
 import android.webkit.SslErrorHandler
+import android.webkit.URLUtil
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
@@ -703,8 +704,7 @@ private fun handleUrlLoading(activity: Activity, request: WebResourceRequest): B
                     if (contentDisposition != null && contentDisposition.contains("filename=")) {
                         contentDisposition.substringAfter("filename=").replace("\"", "")
                     } else {
-//                        URLUtil.guessFileName(url, null, contentType)
-                        "未命名"
+                        URLUtil.guessFileName(url, null, contentType)
                     }
                 Log.d(TAG, "$contentDisposition, $contentType, $fileName")
                 if (contentType != null && isCommonSupportDownloadMIMEType(contentType, fileName)) {
