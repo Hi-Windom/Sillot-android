@@ -4,7 +4,7 @@ buildscript {
         siyuanVersionCode = 235
         siyuanVersionName = "3.0.15"
     }
-    def  kotlin_v = '1.9.23'  // 需要对齐 Compose Compiler  版本  REF https://developer.android.com/jetpack/androidx/releases/compose-kotlin?hl=zh-cn
+    def  kotlin_v = '2.0.0'  // 2.0+ 不需要手动对齐 Compose Compiler 版本  REF https://developer.android.com/jetpack/androidx/releases/compose-kotlin?hl=zh-cn
     // kotlin_v 设为 1.9+ 会报错 Inconsistent JVM-target compatibility detected for tasks 'compileDebugJavaWithJavac' (17) and 'kaptGenerateStubsDebugKotlin' (1.8).
     ext {
         kotlin_version = kotlin_v
@@ -28,9 +28,13 @@ buildscript {
         // in the individual module build.gradle files
     }
 }
+// 确保版本一致性，在 module 级别无需声明版本
 plugins {
-    id 'io.realm.kotlin' version '1.11.0' apply false
-    id "com.google.devtools.ksp" version("1.9.23-1.0.19") apply false
+    id "io.sentry.android.gradle" version "3.5.0" apply false
+    id 'io.realm.kotlin' version '2.0.0' apply false // 需要适配 kotlin 版本
+    id "com.google.devtools.ksp" version("2.0.0-1.0.22") apply false  // 使用 ksp 而不是 kapt ； 需要手动对齐 kotlin 版本
+    id "org.jetbrains.kotlin.plugin.compose" version "$kotlin_version" apply false // https://developer.android.com/develop/ui/compose/compiler?hl=zh-cn
+    id 'org.jetbrains.kotlin.plugin.serialization' version "$kotlin_version" apply false
 }
 
 tasks.register('clean', Delete) {

@@ -996,9 +996,7 @@ class MainPro : ComponentActivity() {
                             )?.toUri()
                             uri_to_dir = _uri
                             onCopyFileToFolderByDocumentTree()
-                        } ?: {
-                            BuglyLog.e(TAG, "无法获取 sharedFileUri")
-                        }
+                        } ?: BuglyLog.e(TAG, "无法获取 sharedFileUri")
                     }
                 }
             }

@@ -5,11 +5,11 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id "io.sentry.android.gradle" version "3.5.0"
+    id "io.sentry.android.gradle"
     id 'io.realm.kotlin'
-//    id 'kotlin-kapt'
-    id("com.google.devtools.ksp") // 使用 ksp 而不是 kapt
-    id 'org.jetbrains.kotlin.plugin.serialization' version '1.9.22'
+    id "org.jetbrains.kotlin.plugin.compose"
+    id "com.google.devtools.ksp"
+    id 'org.jetbrains.kotlin.plugin.serialization'
     id 'kotlin-parcelize' // https://developer.android.com/kotlin/parcelize
 }
 
@@ -32,9 +32,9 @@ android {
         compose true
         buildConfig true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.11" // 需要对齐 kotlin 版本  REF https://developer.android.com/jetpack/androidx/releases/compose-kotlin?hl=zh-cn
-    }
+//    composeOptions {
+//        kotlinCompilerExtensionVersion = "1.5.11" // kotlin2.0后不再需要手动对齐版本  REF https://developer.android.com/jetpack/androidx/releases/compose-kotlin?hl=zh-cn
+//    }
 
 
     defaultConfig {
