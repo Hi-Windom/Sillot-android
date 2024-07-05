@@ -111,6 +111,7 @@ import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_DEBUG
 import sc.windom.sofill.Us.U_FileUtils.isCommonSupportDownloadMIMEType
 import sc.windom.sofill.Us.U_Uri.askIntentForSUS
+import sc.windom.sofill.Us.injectVConsole
 import sc.windom.sofill.android.webview.applySystemThemeToWebView
 import sc.windom.sofill.compose.theme.activeColor
 import sc.windom.sofill.compose.theme.defaultColor
@@ -664,7 +665,7 @@ private fun WebViewPage(
                     canGoBack.value = view.canGoBack()
                     canGoForward.value = view.canGoForward()
                     applySystemThemeToWebView(activity, view)
-                    injectLocalJS(view)
+                    view.injectVConsole()
                 }
 
                 override fun onPageStarted(
@@ -951,20 +952,4 @@ private fun handleUrlLoading(activity: Activity, request: WebResourceRequest): B
 
         false
     }
-}
-
-private fun injectLocalJS(view: WebView) {
-    // 读取本地 JavaScript 文件并注入到当前加载的页面中
-    val js = """
-        var script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.src = 'https://unpkg.com/vconsole@latest/dist/vconsole.min.js';
-        document.head.appendChild(script);
-        script.onload = function() {
-            var vConsole = new window.VConsole();
-            vConsole.showSwitch();
-        };
-"""
-
-    view.evaluateJavascript(js, null)
 }
