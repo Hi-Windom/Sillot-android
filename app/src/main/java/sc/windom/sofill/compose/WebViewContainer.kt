@@ -1,7 +1,16 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/6 上午7:12
+ * updated: 2024/7/6 上午7:12
+ */
+
 package sc.windom.sofill.compose
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.AlertDialog
 import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
@@ -13,6 +22,7 @@ import android.webkit.CookieManager
 import android.webkit.URLUtil
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
+import android.webkit.WebView.FindListener
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -27,11 +37,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBackIos
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ArrowForwardIos
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Cookie
 import androidx.compose.material.icons.filled.DesktopWindows
 import androidx.compose.material.icons.filled.History
@@ -40,6 +55,7 @@ import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
@@ -55,13 +71,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -95,7 +108,6 @@ import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.RawValue
 import sc.windom.sofill.Ss.S_Webview
 import sc.windom.sofill.U
-import sc.windom.sofill.Us.U_FileUtils.isCommonSupportDownloadMIMEType
 import sc.windom.sofill.Us.U_Uri.askIntentForSUS
 import sc.windom.sofill.Us.applyDefault
 import sc.windom.sofill.Us.fixQQAppLaunchButton
@@ -107,10 +119,6 @@ import sc.windom.sofill.compose.theme.activeColor
 import sc.windom.sofill.compose.theme.defaultColor
 import sc.windom.sofill.compose.theme.disabledColor
 import sc.windom.sofill.pioneer.getSavedValue
-import sc.windom.sofill.pioneer.rememberSaveableMMKV
-import java.net.HttpURLConnection
-import java.net.URL
-import kotlin.math.roundToInt
 
 private val thisWebView: MutableState<WebView?> = mutableStateOf(null)
 
@@ -157,136 +165,8 @@ fun SettingBottomSheet(showSettings: MutableState<Boolean>) {
             },
             sheetState = bottomSheetState
         ) {
-            SettingScreen()
+            SettingScreen(thisWebView)
         }
-    }
-}
-
-@Composable
-fun SettingScreen() {
-    val selectedOption_搜索引擎 = rememberSaveableMMKV(
-        mmkv = MMKV.defaultMMKV(),
-        key = "WebViewContainer@selectedOption_搜索引擎",
-        defaultValue = S_Webview.searchEngines.keys.first()
-    )
-    val selectedOption_搜索引擎值 = rememberSaveableMMKV(
-        mmkv = MMKV.defaultMMKV(),
-        key = "WebViewContainer@selectedOption_搜索引擎值",
-        defaultValue = S_Webview.searchEngines.values.first()
-    )
-    val switchState_使用系统自带下载器下载文件 = rememberSaveableMMKV(
-        mmkv = MMKV.defaultMMKV(),
-        key = "WebViewContainer@switchState_使用系统自带下载器下载文件",
-        defaultValue = false
-    )
-    var sliderState_webViewTextZoom = rememberSaveableMMKV(
-        mmkv = MMKV.defaultMMKV(),
-        key = "WebViewContainer@sliderState_webViewTextZoom",
-        defaultValue = 100
-    )
-    val stepValue_webViewTextZoom = 5 // 步长
-    val minValue_webViewTextZoom = 50
-    val maxValue_webViewTextZoom = 150
-    val stepSize_webViewTextZoom =
-        (maxValue_webViewTextZoom - minValue_webViewTextZoom) / stepValue_webViewTextZoom // 分为多少块
-
-    Column(modifier = Modifier.padding(start = 6.dp, end = 6.dp, top = 3.dp, bottom = 3.dp)) {
-        Text(text = "设置", style = MaterialTheme.typography.headlineMedium)
-
-        // 单选按钮组
-        SettingRadioButton(
-            title = "搜索引擎",
-            options = S_Webview.searchEngines,
-            onValueChanged = { k, v ->
-                selectedOption_搜索引擎.value = k
-                selectedOption_搜索引擎值.value = v
-            }
-        )
-
-        // Switch组件
-        SettingSwitch("使用系统自带下载器下载文件", switchState_使用系统自带下载器下载文件)
-        // 根据switchState的变化来执行操作
-        if (switchState_使用系统自带下载器下载文件.value) {
-            Text("使用系统自带下载器，下载自动开始，用户可在通知栏查看下载进度")
-        } else {
-            Text("通过分享链接的方式，用户可以选择对应的处理程序")
-        }
-
-        // 滑块组件
-        Text(text = "WebView缩放比例", fontSize = 16.sp)
-        Slider(
-            value = sliderState_webViewTextZoom.value.toFloat(),
-            onValueChange = {
-                // 将滑块的值四舍五入到最接近的步长
-                val roundedValue =
-                    (it / stepValue_webViewTextZoom).roundToInt() * stepValue_webViewTextZoom
-                // 仅当值在范围内时才更新状态
-                if (roundedValue in minValue_webViewTextZoom..maxValue_webViewTextZoom) {
-                    sliderState_webViewTextZoom.value = roundedValue
-                }
-            },
-            valueRange = minValue_webViewTextZoom.toFloat()..maxValue_webViewTextZoom.toFloat(),
-            onValueChangeFinished = {
-                thisWebView.value?.settings?.let {
-                    it.textZoom = sliderState_webViewTextZoom.value
-                }
-            },
-            steps = stepSize_webViewTextZoom,
-            colors = SliderDefaults.colors(
-                thumbColor = MaterialTheme.colorScheme.primary,
-                activeTrackColor = MaterialTheme.colorScheme.primary
-            )
-        )
-        Text(text = "当前缩放比例：${sliderState_webViewTextZoom.value}%")
-    }
-}
-
-@Composable
-fun SettingRadioButton(title: String, options: Map<String, String>, onValueChanged: (key: String, value: String) -> Unit) {
-    var selectedOption by remember { mutableStateOf(options.keys.first()) }
-
-    Column {
-        Text(title)
-        options.forEach { (optionName, _) ->
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                RadioButton(
-                    selected = selectedOption == optionName,
-                    onClick = {
-                        selectedOption = optionName
-                        onValueChanged(
-                            optionName,
-                            options[optionName] ?: options.values.first()
-                        )
-                    }
-                )
-                Text(text = optionName)
-            }
-        }
-    }
-}
-
-@Composable
-fun SettingSwitch(
-    title: String,
-    state: MutableState<Boolean>,
-    onValueChanged: ((Boolean) -> Unit)? = null
-) {
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Start
-    ) {
-        Text(title)
-        HorizontalDivider(
-            modifier = Modifier
-                .weight(1f), thickness = 0.dp, color = Color.Transparent
-        )
-        Switch(
-            checked = state.value,
-            onCheckedChange = { state.value = it; onValueChanged?.invoke(it) }
-        )
     }
 }
 
@@ -398,19 +278,27 @@ fun MaterialBottomMenu(
 @Composable
 fun GoToOption(
     ourl: String,
-    onNavigate: (String) -> Unit // 定义一个回调函数，用于处理导航事件
+    onSearchInWebpage: (String) -> Unit, // 处理网页内搜索事件
+    onNavigate: (String) -> Unit, // 处理导航事件
 ) {
     var url by remember { mutableStateOf(ourl) } // 用于存储用户输入的 URL
     var surl by remember { mutableStateOf(ourl) } // 用于存储搜索的 URL
     val keyboardController = LocalSoftwareKeyboardController.current // 用于控制键盘
-    val SE = MMKV.defaultMMKV().getSavedValue("WebViewContainer@selectedOption_搜索引擎", S_Webview.searchEngines.values.first())
-    val SEV = MMKV.defaultMMKV().getSavedValue("WebViewContainer@selectedOption_搜索引擎值", S_Webview.searchEngines.values.first())
+    val SE = MMKV.defaultMMKV().getSavedValue(
+        "WebViewContainer@selectedOption_搜索引擎",
+        S_Webview.searchEngines.keys.first()
+    )
+    val SEV = S_Webview.searchEngines[SE]
 
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         Text("换行将被忽略，无需担心", modifier = Modifier.padding(6.dp))
         Text("当前搜索引擎为$SE，可在设置中更改", modifier = Modifier.padding(6.dp))
+        HorizontalDivider(
+            modifier = Modifier.height(10.dp), thickness = 0.dp, color = Color.Transparent
+        )
         TextField(
             value = url,
+            placeholder = { Text("搜索或键入 Web 地址") },
             onValueChange = { newValue: String ->
                 url = newValue
                 surl = "https://$SEV$url"
@@ -418,13 +306,15 @@ fun GoToOption(
             singleLine = false,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(6.dp)
+                .padding(12.dp, 6.dp)
+                .minimumInteractiveComponentSize() // 布局意外时确保可以输入
+                .wrapContentHeight() // 匹配内容高度
                 .weight(1f) // 使用 weight 来占满剩余空间
         )
         Button(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(6.dp),
+                .padding(12.dp, 3.dp),
             onClick = {
                 keyboardController?.hide()
                 onNavigate(url)
@@ -435,7 +325,7 @@ fun GoToOption(
         Button(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(6.dp),
+                .padding(12.dp, 3.dp),
             onClick = {
                 keyboardController?.hide()
                 onNavigate(surl)
@@ -446,7 +336,18 @@ fun GoToOption(
         Button(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(6.dp),
+                .padding(12.dp, 3.dp),
+            onClick = {
+                keyboardController?.hide()
+                onSearchInWebpage(url)
+            }
+        ) {
+            Text("网页内搜索")
+        }
+        Button(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp, 3.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.secondary,
             ),
@@ -456,6 +357,10 @@ fun GoToOption(
         ) {
             Text("清除")
         }
+        HorizontalDivider(
+            modifier = Modifier
+                .height(6.dp), thickness = 0.dp, color = Color.Transparent
+        )
     }
 }
 
@@ -470,6 +375,7 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
     val expanded = rememberSaveable { mutableStateOf(false) } // 控制菜单面板
     val showSettings = rememberSaveable { mutableStateOf(false) } // 控制设置面板
     val showGoToOption = rememberSaveable { mutableStateOf(false) } // 控制 GOTO 前往
+    val inSearchInWebpage = rememberSaveable { mutableStateOf(false) } // 是否处于页面搜索
     val openBrowserSettingsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { /* Handle the result if needed */ }
@@ -546,7 +452,7 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
             state = MenuOptionState.Disabled
         ) { /* 点击事件 */ },
         MenuOption("刷新", Icons.Filled.Refresh) { thisWebView.value?.reload() },
-        MenuOption("退出", Icons.Filled.Close) { onDismiss.invoke() },
+        MenuOption("退出", Icons.Filled.PowerSettingsNew) { onDismiss.invoke() },
     )
 
 
@@ -569,11 +475,16 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
 
     // GOTO面板
     MaterialBottomMenu(showGoToOption, true) {
-        GoToOption(currentUrl.value) { it1 ->
+        GoToOption(currentUrl.value, onNavigate = { it1 ->
             Log.w(TAG, "goto -> $it1")
             gotoUrl.value = it1
             showGoToOption.value = false
-        }
+        }, onSearchInWebpage = { it1 ->
+            Log.w(TAG, "findAllAsync -> $it1")
+            thisWebView.value?.findAllAsync(it1)
+            showGoToOption.value = false
+            inSearchInWebpage.value = true
+        })
     }
 
     Scaffold(
@@ -612,17 +523,54 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
                     ) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
+                    IconButton(
+                        onClick = { thisWebView.value?.goForward() },
+                        enabled = canGoForward.value
+                    ) {
+                        Icon(Icons.Filled.ArrowForward, contentDescription = "Forward")
+                    }
                     IconButton(onClick = { expanded.value = !expanded.value }) {
                         if (expanded.value) Icon(
                             Icons.Filled.MoreVert,
                             contentDescription = "More"
                         ) else Icon(Icons.Filled.MoreHoriz, contentDescription = "More")
                     }
-                    IconButton(
-                        onClick = { thisWebView.value?.goForward() },
-                        enabled = canGoForward.value
-                    ) {
-                        Icon(Icons.Filled.ArrowForward, contentDescription = "Forward")
+                    if (inSearchInWebpage.value) {
+                        IconButton(
+                            onClick = {
+                                thisWebView.value?.clearMatches()
+                                inSearchInWebpage.value = false
+                            }
+                        ) {
+                            Icon(Icons.Filled.Clear, contentDescription = "退出页面搜索")
+                        }
+                        IconButton(
+                            onClick = { thisWebView.value?.findNext(true) }
+                        ) {
+                            Icon(
+                                Icons.Filled.ArrowBackIos,
+                                contentDescription = "上一个（页面搜索结果）"
+                            )
+                        }
+                        IconButton(
+                            onClick = { thisWebView.value?.findNext(true) }
+                        ) {
+                            Icon(
+                                Icons.Filled.ArrowForwardIos,
+                                contentDescription = "上一个（页面搜索结果）"
+                            )
+                        }
+                    } else {
+                        IconButton(
+                            onClick = { thisWebView.value?.evaluateJavascript("window.scrollTo(0, 0)") { } }
+                        ) {
+                            Icon(Icons.Filled.ArrowUpward, contentDescription = "页面顶部")
+                        }
+                        IconButton(
+                            onClick = { thisWebView.value?.evaluateJavascript("window.scrollTo(0, document.body.scrollHeight)") { } }
+                        ) {
+                            Icon(Icons.Filled.ArrowDownward, contentDescription = "页面底部")
+                        }
                     }
                 }
             }
@@ -653,9 +601,34 @@ private fun WebViewPage(
             val ws = this.settings
             ws.applyDefault(sliderState_webViewTextZoom)
             this.webViewClient = thisWebViewClient(
-                activity, currentUrl, canGoBack, canGoForward, ::handleUrlLoading, ::handlePageFinished
+                activity,
+                currentUrl,
+                canGoBack,
+                canGoForward,
+                ::handleUrlLoading,
+                ::handlePageFinished
             )
             this.webChromeClient = thisWebChromeClient(activity)
+            this.setDownloadListener { url, userAgent, contentDisposition, mimeType, contentLength ->
+                activity.startDownload(url, userAgent, contentDisposition, mimeType)
+            }
+            this.setFindListener(object : FindListener {
+                override fun onFindResultReceived(
+                    activeMatchOrdinal: Int,
+                    numberOfMatches: Int,
+                    isDoneCounting: Boolean
+                ) {
+                    if (isDoneCounting) {
+                        val thisNo = activeMatchOrdinal + 1
+                        Log.d(TAG, "numberOfMatches: $numberOfMatches, activeMatchOrdinal: $thisNo")
+                        if (numberOfMatches > 0) {
+                            PopTip.show("$thisNo / $numberOfMatches")
+                        } else {
+                            PopTip.show("未共找到匹配项")
+                        }
+                    }
+                }
+            })
         }
     }, update = {
         Log.w(TAG, "update -> ${gotoUrl.value}")
@@ -690,9 +663,10 @@ private fun WebViewPage(
     })
 }
 
+
 private fun handlePageFinished(activity: Activity, view: WebView, url: String) {
     applySystemThemeToWebView(activity, view)
-    if(url.startsWith("https://xui.ptlogin2.qq.com/")) {
+    if (url.startsWith("https://xui.ptlogin2.qq.com/")) {
         view.fixQQAppLaunchButton()
     }
     view.injectVConsole()
@@ -716,88 +690,155 @@ private fun handleUrlLoading(activity: Activity, request: WebResourceRequest): B
     ) {
         activity.askIntentForSUS(_url, real_url)
     } else {
+        // WebView.setDownloadListener 是更好的方案，这里保留历史代码，后续版本清理
         // 在IO线程尝试下载，不阻塞
-        GlobalScope.launch(Dispatchers.IO) {
-            if (request.isRedirect) {
-                return@launch // GitHub Assets 请求重定向导致重复下载问题
-            }
-            // 发送HEAD请求以获取Content-Type
-            var connection: HttpURLConnection? = null
-            try {
-                connection = URL(url).openConnection() as HttpURLConnection
-                connection.requestMethod = "HEAD"
-                connection.connect()
-                val contentType = connection.contentType
-
-                // 获取服务器提供的文件名
-                val contentDisposition = connection.getHeaderField("Content-Disposition")
-                val fileName =
-                    if (contentDisposition != null && contentDisposition.contains("filename=")) {
-                        contentDisposition.substringAfter("filename=").replace("\"", "")
-                    } else {
-                        URLUtil.guessFileName(url, null, contentType)
-                    }
-                Log.d(TAG, "$contentDisposition, $contentType, $fileName")
-                if (contentType != null && isCommonSupportDownloadMIMEType(contentType, fileName)) {
-                    val mmkv = MMKV.defaultMMKV()
-                    val switchState_使用系统自带下载器下载文件 = mmkv.getSavedValue(
-                        "WebViewContainer@switchState_使用系统自带下载器下载文件",
-                        false
-                    )
-
-
-                    if (switchState_使用系统自带下载器下载文件) {
-                        // 创建下载请求
-                        val downloadRequest = DownloadManager.Request(Uri.parse(url))
-                        downloadRequest.apply {
-                            setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
-                            setTitle(fileName)
-                            setDescription("Downloading file...")
-                            setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                            setDestinationInExternalPublicDir(
-                                Environment.DIRECTORY_DOWNLOADS,
-                                fileName
-                            )
-                            setAllowedOverMetered(true)
-                            setAllowedOverRoaming(true)
-                            setMimeType(contentType)
-                            addRequestHeader("User-Agent", S_Webview.UA_edge_android)
-                        }
-                        val downloadManager =
-                            activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-                        // 设置唯一的请求标识符
-                        val requestId = url.hashCode().toLong()
-                        // 尝试查询是否已经存在相同的下载任务
-                        val cursor =
-                            downloadManager.query(DownloadManager.Query().setFilterById(requestId))
-                        if (cursor.moveToFirst()) {
-                            // 如果已经存在相同的下载任务，则不重新下载
-                            PopTip.show("文件已在下载队列中")
-                        } else {
-                            // 如果不存在相同的下载任务，则添加到下载队列
-                            downloadManager.enqueue(downloadRequest)
-                            PopTip.show("开始下载文件")
-                        }
-                    } else {
-                        val sendIntent: Intent = Intent().apply {
-                            action = Intent.ACTION_SEND
-                            putExtra(Intent.EXTRA_TEXT, url)
-                            type = "text/plain"
-                        }
-
-                        val shareIntent = Intent.createChooser(sendIntent, null)
-                        startActivity(shareIntent)
-                    }
-
-
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error while checking Content-Type: ", e)
-            } finally {
-                connection?.disconnect()
-            }
-        }
+//        GlobalScope.launch(Dispatchers.IO) {
+//            if (request.isRedirect) {
+//                return@launch // GitHub Assets 请求重定向导致重复下载问题
+//            }
+//            // 发送HEAD请求以获取Content-Type
+//            var connection: HttpURLConnection? = null
+//            try {
+//                connection = URL(url).openConnection() as HttpURLConnection
+//                connection.requestMethod = "HEAD"
+//                connection.connect()
+//                val contentType = connection.contentType
+//
+//                // 获取服务器提供的文件名
+//                val contentDisposition = connection.getHeaderField("Content-Disposition")
+//                val fileName =
+//                    if (contentDisposition != null && contentDisposition.contains("filename=")) {
+//                        contentDisposition.substringAfter("filename=").replace("\"", "")
+//                    } else {
+//                        URLUtil.guessFileName(url, null, contentType)
+//                    }
+//                Log.d(TAG, "$contentDisposition, $contentType, $fileName")
+//                if (contentType != null && isCommonSupportDownloadMIMEType(contentType, fileName)) {
+//                    val mmkv = MMKV.defaultMMKV()
+//                    val switchState_使用系统自带下载器下载文件 = mmkv.getSavedValue(
+//                        "WebViewContainer@switchState_使用系统自带下载器下载文件",
+//                        false
+//                    )
+//
+//
+//                    if (switchState_使用系统自带下载器下载文件) {
+//                        // 创建下载请求
+//                        val downloadRequest = DownloadManager.Request(Uri.parse(url))
+//                        downloadRequest.apply {
+//                            setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
+//                            setTitle(fileName)
+//                            setDescription("Downloading file...")
+//                            setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+//                            setDestinationInExternalPublicDir(
+//                                Environment.DIRECTORY_DOWNLOADS,
+//                                fileName
+//                            )
+//                            setAllowedOverMetered(true)
+//                            setAllowedOverRoaming(true)
+//                            setMimeType(contentType)
+//                            addRequestHeader("User-Agent", S_Webview.UA_edge_android)
+//                        }
+//                        val downloadManager =
+//                            activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+//                        // 设置唯一的请求标识符
+//                        val requestId = url.hashCode().toLong()
+//                        // 尝试查询是否已经存在相同的下载任务
+//                        val cursor =
+//                            downloadManager.query(DownloadManager.Query().setFilterById(requestId))
+//                        if (cursor.moveToFirst()) {
+//                            // 如果已经存在相同的下载任务，则不重新下载
+//                            PopTip.show("文件已在下载队列中")
+//                        } else {
+//                            // 如果不存在相同的下载任务，则添加到下载队列
+//                            downloadManager.enqueue(downloadRequest)
+//                            PopTip.show("开始下载文件")
+//                        }
+//                    } else {
+//                        val sendIntent: Intent = Intent().apply {
+//                            action = Intent.ACTION_SEND
+//                            putExtra(Intent.EXTRA_TEXT, url)
+//                            type = "text/plain"
+//                        }
+//
+//                        val shareIntent = Intent.createChooser(sendIntent, null)
+//                        startActivity(shareIntent)
+//                    }
+//
+//
+//                }
+//            } catch (e: Exception) {
+//                Log.e(TAG, "Error while checking Content-Type: ", e)
+//            } finally {
+//                connection?.disconnect()
+//            }
+//        }
 
         false
     }
+}
+
+@OptIn(DelicateCoroutinesApi::class)
+private fun Activity.startDownload(
+    url: String,
+    userAgent: String,
+    contentDisposition: String,
+    mimeType: String
+) {
+    val TAG = "startDownload"
+    val activity = this
+    val fileName = URLUtil.guessFileName(url, null, mimeType)
+    // 显示一个对话框，询问用户是否想要下载文件
+    AlertDialog.Builder(activity)
+        .setTitle("可下载文件 $fileName")
+        .setMessage("您希望如何处理？点击空白处放弃处理并关闭对话框。下载链接：$url")
+        .setPositiveButton("直接下载") { _, _ ->
+            // 在IO线程尝试下载，不阻塞
+            GlobalScope.launch(Dispatchers.IO) {
+                try {
+                    // 创建下载请求
+                    val downloadRequest = DownloadManager.Request(Uri.parse(url))
+                    downloadRequest.apply {
+                        setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
+                        setTitle(fileName)
+                        setDescription("Downloading file...")
+                        setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                        setDestinationInExternalPublicDir(
+                            Environment.DIRECTORY_DOWNLOADS,
+                            fileName
+                        )
+                        setAllowedOverMetered(true)
+                        setAllowedOverRoaming(true)
+                        setMimeType(mimeType)
+                        addRequestHeader("User-Agent", S_Webview.UA_edge_android)
+                    }
+                    val downloadManager =
+                        activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+                    // 设置唯一的请求标识符
+                    val requestId = url.hashCode().toLong()
+                    // 尝试查询是否已经存在相同的下载任务
+                    val cursor =
+                        downloadManager.query(DownloadManager.Query().setFilterById(requestId))
+                    if (cursor.moveToFirst()) {
+                        // 如果已经存在相同的下载任务，则不重新下载
+                        PopTip.show("文件已在下载队列中")
+                    } else {
+                        // 如果不存在相同的下载任务，则添加到下载队列
+                        downloadManager.enqueue(downloadRequest)
+                        PopTip.show("开始下载文件")
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error: ", e)
+                }
+            }
+        }
+        .setNegativeButton("分享下载链接") { _, _ ->
+            val sendIntent: Intent = Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_TEXT, url)
+                type = "text/plain"
+            }
+            val shareIntent = Intent.createChooser(sendIntent, null)
+            startActivity(shareIntent)
+        }
+        .show()
 }
