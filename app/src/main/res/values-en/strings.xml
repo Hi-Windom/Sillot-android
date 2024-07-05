@@ -1,8 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-<!--  在 build.gradle 里动态定义了  <string name="app_name">汐洛</string>-->
     <string name="activity_name_SillotHome">汐洛</string>
     <string name="activity_name_Sithw">司华</string>
-    <string name="activity_name_Boot">汐洛绞架</string>
+    <string name="activity_name_Boot">Sillot Gibbet</string>
     <string name="activity_name_USB_AUDIO_EXCLUSIVE">汐洛音乐播放器</string>
     <string name="activity_name_ld246Home">汐洛链滴社区客户端</string>
     <string name="shortcut_long_label_1">启动->汐洛</string>
