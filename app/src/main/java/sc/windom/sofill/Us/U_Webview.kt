@@ -165,7 +165,8 @@ fun thisWebViewClient(
     currentUrl: MutableState<String>,
     canGoBack: MutableState<Boolean>,
     canGoForward: MutableState<Boolean>,
-    handleUrlLoading: ((activity: Activity, request: WebResourceRequest) -> Boolean)? = null
+    handleUrlLoading: ((activity: Activity, request: WebResourceRequest) -> Boolean)? = null,
+    handlePageFinished: ((activity: Activity, view: WebView, url: String) -> Unit)? = null
 ): WebViewClient {
     val TAG = "thisWebViewClient"
     return object : WebViewClient() {
@@ -190,11 +191,7 @@ fun thisWebViewClient(
             super.onPageFinished(view, url)
             canGoBack.value = view.canGoBack()
             canGoForward.value = view.canGoForward()
-            applySystemThemeToWebView(activity, view)
-            if(url.startsWith("https://xui.ptlogin2.qq.com/")) {
-                view.fixQQAppLaunchButton()
-            }
-            view.injectVConsole()
+            handlePageFinished?.invoke(activity, view, url)
         }
 
         override fun onPageStarted(

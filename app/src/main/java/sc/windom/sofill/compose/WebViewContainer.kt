@@ -4,32 +4,17 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.DownloadManager
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
-import android.graphics.Bitmap
 import android.net.Uri
-import android.net.http.SslError
 import android.os.Environment
 import android.os.Parcelable
 import android.util.Log
-import android.webkit.ConsoleMessage
 import android.webkit.CookieManager
-import android.webkit.JsPromptResult
-import android.webkit.JsResult
-import android.webkit.PermissionRequest
-import android.webkit.SslErrorHandler
 import android.webkit.URLUtil
-import android.webkit.ValueCallback
-import android.webkit.WebChromeClient
-import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
-import android.webkit.WebSettings
 import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -110,10 +95,10 @@ import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.RawValue
 import sc.windom.sofill.Ss.S_WebView
 import sc.windom.sofill.U
-import sc.windom.sofill.Us.U_DEBUG
 import sc.windom.sofill.Us.U_FileUtils.isCommonSupportDownloadMIMEType
 import sc.windom.sofill.Us.U_Uri.askIntentForSUS
 import sc.windom.sofill.Us.applyDefault
+import sc.windom.sofill.Us.fixQQAppLaunchButton
 import sc.windom.sofill.Us.injectVConsole
 import sc.windom.sofill.Us.thisWebChromeClient
 import sc.windom.sofill.Us.thisWebViewClient
@@ -125,9 +110,6 @@ import sc.windom.sofill.pioneer.getSavedValue
 import sc.windom.sofill.pioneer.rememberSaveableMMKV
 import java.net.HttpURLConnection
 import java.net.URL
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import kotlin.math.roundToInt
 
 private val thisWebView: MutableState<WebView?> = mutableStateOf(null)
@@ -637,7 +619,7 @@ private fun WebViewPage(
             val ws = this.settings
             ws.applyDefault(sliderState_webViewTextZoom)
             this.webViewClient = thisWebViewClient(
-                activity, currentUrl, canGoBack, canGoForward, ::handleUrlLoading
+                activity, currentUrl, canGoBack, canGoForward, ::handleUrlLoading, ::handlePageFinished
             )
             this.webChromeClient = thisWebChromeClient(activity)
         }
@@ -672,6 +654,14 @@ private fun WebViewPage(
         }
         gotoUrl.value = null // 避免重组副作用
     })
+}
+
+private fun handlePageFinished(activity: Activity, view: WebView, url: String) {
+    applySystemThemeToWebView(activity, view)
+    if(url.startsWith("https://xui.ptlogin2.qq.com/")) {
+        view.fixQQAppLaunchButton()
+    }
+    view.injectVConsole()
 }
 
 @OptIn(DelicateCoroutinesApi::class)
