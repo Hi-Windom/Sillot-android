@@ -33,8 +33,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Cookie
-import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DesktopWindows
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.MoreVert
@@ -507,8 +507,8 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
         },
         MenuOption("默认打开", Icons.Filled.OpenInBrowser) { uriHandler.openUri(currentUrl.value) },
         MenuOption(
-            "深色模式",
-            Icons.Filled.DarkMode,
+            "历史记录",
+            Icons.Filled.History,
             state = MenuOptionState.Disabled
         ) { /* 点击事件 */ },
         MenuOption("刷新", Icons.Filled.Refresh) { thisWebView.value?.reload() },
