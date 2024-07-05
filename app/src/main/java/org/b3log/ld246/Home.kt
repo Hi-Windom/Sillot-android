@@ -398,7 +398,6 @@ class HomeActivity : ComponentActivity() {
         if (!FullScreenWebView_url.value.isNullOrBlank() && showFullScreenWebView.value) {
             FullScreenWebView(thisActivity, FullScreenWebView_url.value!!) {
                 showFullScreenWebView.value = false
-                FullScreenWebView_url.value = null
             }
         } else {
             Scaffold(

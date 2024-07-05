@@ -446,7 +446,7 @@ fun GoToOption(
 fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Unit) {
     val TAG = "FullScreenWebView"
     val uriHandler = LocalUriHandler.current
-    val gotoUrl = rememberSaveable { mutableStateOf(originUrl) }
+    val gotoUrl: MutableState<String?> = rememberSaveable { mutableStateOf(originUrl) }
     val currentUrl = rememberSaveable { mutableStateOf("") }
     val canGoBack = rememberSaveable { mutableStateOf(false) }
     val canGoForward = rememberSaveable { mutableStateOf(false) }
@@ -614,7 +614,7 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
 @Composable
 private fun WebViewPage(
     activity: Activity,
-    gotoUrl: MutableState<String>,
+    gotoUrl: MutableState<String?>,
     currentUrl: MutableState<String>,
     canGoBack: MutableState<Boolean>,
     canGoForward: MutableState<Boolean>
@@ -632,38 +632,41 @@ private fun WebViewPage(
             cm.setAcceptThirdPartyCookies(this, true)
             val ws = this.settings
             ws.applyDefault(sliderState_webViewTextZoom)
-            this.webViewClient = thisWebViewClient(activity, currentUrl, canGoBack, canGoForward, ::handleUrlLoading)
+            this.webViewClient = thisWebViewClient(
+                activity, currentUrl, canGoBack, canGoForward, ::handleUrlLoading
+            )
             this.webChromeClient = thisWebChromeClient(activity)
         }
     }, update = {
-        Log.d(TAG, "update -> ${gotoUrl.value}")
-        when {
-            gotoUrl.value == "action?=Logout" -> {
-                // 隐藏处理过程
-                CookieManager.getInstance().apply {
-                    removeAllCookies { success ->
-                        if (success) {
-                            thisWebView.value?.clearCache(true)
-                            PopTip.show("<(￣︶￣)↗[success]")
-                        } else {
-                            PopTip.show(" ￣へ￣ [failed]")
+        Log.w(TAG, "update -> ${gotoUrl.value}")
+        gotoUrl.value?.let { it1 ->
+            when {
+                it1 == "action?=Logout" -> {
+                    // 隐藏处理过程
+                    CookieManager.getInstance().apply {
+                        removeAllCookies { success ->
+                            if (success) {
+                                thisWebView.value?.clearCache(true)
+                                PopTip.show("<(￣︶￣)↗[success]")
+                            } else {
+                                PopTip.show(" ￣へ￣ [failed]")
+                            }
                         }
                     }
+                    return@AndroidView
                 }
-                return@AndroidView
-            }
 
-            gotoUrl.value.startsWith("wtloginmqq:") -> {
-                activity.askIntentForSUS(gotoUrl.value)
-                return@AndroidView
-            }
+                it1.startsWith("wtloginmqq:") -> {
+                    activity.askIntentForSUS(it1)
+                    return@AndroidView
+                }
 
-            else -> {
-                currentUrl.value = gotoUrl.value
-                it.loadUrl(gotoUrl.value)
+                else -> {
+                    it.loadUrl(it1)
+                }
             }
         }
-
+        gotoUrl.value = null // 避免重组副作用
     })
 }
 
