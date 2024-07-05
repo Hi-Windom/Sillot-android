@@ -43,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -248,7 +249,8 @@ class ManageSpaceActivity : AppCompatActivity() {
 private fun UI(intent: Intent?, TAG: String) {
     val uri = intent?.data
     val Lcc = LocalContext.current
-    val activityName = Lcc.getString(R.string.activity_name_ManageSpaceActivity) // 在 Compose 中，使用 LocalContext.current.getString 代替 resources.getString() 方法来获取字符串资源
+     // val activityName = Lcc.getString(Lcc.resources.getIdentifier("", "string", Lcc.packageName)) // 在 Compose 中，使用 LocalContext.current.getString 代替 resources.getString() 方法来获取字符串资源
+    val activityName = stringResource(R.string.activity_name_ManageSpaceActivity)
     val isMenuVisible = rememberSaveable { mutableStateOf(false) }
     val filesList = rememberSaveable { mutableStateOf<List<File>>(emptyList()) }
     val selectedFiles = rememberSaveable { mutableSetOf<String>() }
