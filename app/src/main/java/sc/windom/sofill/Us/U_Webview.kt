@@ -23,8 +23,7 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.runtime.MutableState
-import sc.windom.sofill.Ss.S_WebView
-import sc.windom.sofill.android.webview.applySystemThemeToWebView
+import sc.windom.sofill.Ss.S_Webview
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -55,7 +54,7 @@ fun WebView.fixQQAppLaunchButton(resultCallback: ValueCallback<String?>? = null)
 }
 
 @SuppressLint("SetJavaScriptEnabled")
-fun WebSettings.applyDefault(webViewTextZoom: Int = 100, ua: String = S_WebView.UA_edge_android) {
+fun WebSettings.applyDefault(webViewTextZoom: Int = 100, ua: String = S_Webview.UA_edge_android) {
     apply {
         javaScriptEnabled = true
         allowUniversalAccessFromFileURLs = true

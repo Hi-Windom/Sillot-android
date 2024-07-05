@@ -11,7 +11,7 @@ import sc.windom.sofill.Ss.S_Events
 import sc.windom.sofill.Ss.S_Intent
 import sc.windom.sofill.Ss.S_REQUEST_CODE
 import sc.windom.sofill.Ss.S_Uri
-import sc.windom.sofill.Ss.S_WebView
+import sc.windom.sofill.Ss.S_Webview
 import sc.windom.sofill.Ss.S_packageName
 
 object S {
@@ -78,7 +78,7 @@ object S {
     val AppQueryIDs = S_packageName
 
     @JvmStatic
-    val WEBVIEW = S_WebView
+    val WEBVIEW = S_Webview
 
     @JvmStatic
     val URI = S_Uri

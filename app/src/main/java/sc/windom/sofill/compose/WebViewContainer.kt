@@ -93,7 +93,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.RawValue
-import sc.windom.sofill.Ss.S_WebView
+import sc.windom.sofill.Ss.S_Webview
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_FileUtils.isCommonSupportDownloadMIMEType
 import sc.windom.sofill.Us.U_Uri.askIntentForSUS
@@ -164,7 +164,16 @@ fun SettingBottomSheet(showSettings: MutableState<Boolean>) {
 
 @Composable
 fun SettingScreen() {
-    var selectedOption by remember { mutableStateOf("") }
+    val selectedOption_搜索引擎 = rememberSaveableMMKV(
+        mmkv = MMKV.defaultMMKV(),
+        key = "WebViewContainer@selectedOption_搜索引擎",
+        defaultValue = S_Webview.searchEngines.keys.first()
+    )
+    val selectedOption_搜索引擎值 = rememberSaveableMMKV(
+        mmkv = MMKV.defaultMMKV(),
+        key = "WebViewContainer@selectedOption_搜索引擎值",
+        defaultValue = S_Webview.searchEngines.values.first()
+    )
     val switchState_使用系统自带下载器下载文件 = rememberSaveableMMKV(
         mmkv = MMKV.defaultMMKV(),
         key = "WebViewContainer@switchState_使用系统自带下载器下载文件",
@@ -186,9 +195,12 @@ fun SettingScreen() {
 
         // 单选按钮组
         SettingRadioButton(
-            title = "选择一个单选按钮",
-            options = listOf("单选1", "单选2", "单选3"),
-            onValueChanged = { selectedOption = it }
+            title = "搜索引擎",
+            options = S_Webview.searchEngines,
+            onValueChanged = { k, v ->
+                selectedOption_搜索引擎.value = k
+                selectedOption_搜索引擎值.value = v
+            }
         )
 
         // Switch组件
@@ -230,20 +242,26 @@ fun SettingScreen() {
 }
 
 @Composable
-fun SettingRadioButton(title: String, options: List<String>, onValueChanged: (String) -> Unit) {
-    var selectedOption by remember { mutableStateOf(options.first()) }
+fun SettingRadioButton(title: String, options: Map<String, String>, onValueChanged: (key: String, value: String) -> Unit) {
+    var selectedOption by remember { mutableStateOf(options.keys.first()) }
 
     Column {
         Text(title)
-        options.forEach { option ->
+        options.forEach { (optionName, _) ->
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 RadioButton(
-                    selected = selectedOption == option,
-                    onClick = { selectedOption = option; onValueChanged(option) }
+                    selected = selectedOption == optionName,
+                    onClick = {
+                        selectedOption = optionName
+                        onValueChanged(
+                            optionName,
+                            options[optionName] ?: options.values.first()
+                        )
+                    }
                 )
-                Text(text = option)
+                Text(text = optionName)
             }
         }
     }
@@ -383,14 +401,19 @@ fun GoToOption(
     onNavigate: (String) -> Unit // 定义一个回调函数，用于处理导航事件
 ) {
     var url by remember { mutableStateOf(ourl) } // 用于存储用户输入的 URL
+    var surl by remember { mutableStateOf(ourl) } // 用于存储搜索的 URL
     val keyboardController = LocalSoftwareKeyboardController.current // 用于控制键盘
+    val SE = MMKV.defaultMMKV().getSavedValue("WebViewContainer@selectedOption_搜索引擎", S_Webview.searchEngines.values.first())
+    val SEV = MMKV.defaultMMKV().getSavedValue("WebViewContainer@selectedOption_搜索引擎值", S_Webview.searchEngines.values.first())
 
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         Text("换行将被忽略，无需担心", modifier = Modifier.padding(6.dp))
+        Text("当前搜索引擎为$SE，可在设置中更改", modifier = Modifier.padding(6.dp))
         TextField(
             value = url,
             onValueChange = { newValue: String ->
                 url = newValue
+                surl = "https://$SEV$url"
             },
             singleLine = false,
             modifier = Modifier
@@ -408,6 +431,17 @@ fun GoToOption(
             }
         ) {
             Text("前往")
+        }
+        Button(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(6.dp),
+            onClick = {
+                keyboardController?.hide()
+                onNavigate(surl)
+            }
+        ) {
+            Text("搜索")
         }
         Button(
             modifier = Modifier
@@ -474,18 +508,18 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
             thisWebView.value?.settings?.apply {
                 if (userAgentString.contains("Mobile")) {
                     // 设置为桌面版用户代理
-                    userAgentString = S_WebView.UA_win10
+                    userAgentString = S_Webview.UA_win10
                     PopTip.show("已切换到桌面版网页")
                 } else {
                     // 设置为移动端用户代理
-                    userAgentString = S_WebView.UA_edge_android
+                    userAgentString = S_Webview.UA_edge_android
                     PopTip.show("已切换到移动端网页")
                 }
             }
             thisWebView.value?.reload()
         },
         MenuOption(
-            "前往",
+            "前往/搜索",
             Icons.Filled.TravelExplore,
         ) {
             showGoToOption.value = true
@@ -727,7 +761,7 @@ private fun handleUrlLoading(activity: Activity, request: WebResourceRequest): B
                             setAllowedOverMetered(true)
                             setAllowedOverRoaming(true)
                             setMimeType(contentType)
-                            addRequestHeader("User-Agent", S_WebView.UA_edge_android)
+                            addRequestHeader("User-Agent", S_Webview.UA_edge_android)
                         }
                         val downloadManager =
                             activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
