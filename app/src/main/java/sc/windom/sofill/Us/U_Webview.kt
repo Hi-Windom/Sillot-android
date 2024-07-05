@@ -34,7 +34,7 @@ object U_Webview {
 
 fun WebView.injectVConsole(resultCallback: ValueCallback<String?>? = null) {
     val js = """
-        var script = document.createElement('script');
+        let script = document.createElement('script');
         script.type = 'text/javascript';
         script.src = 'https://unpkg.com/vconsole@latest/dist/vconsole.min.js';
         document.head.appendChild(script);
@@ -42,6 +42,14 @@ fun WebView.injectVConsole(resultCallback: ValueCallback<String?>? = null) {
             var vConsole = new window.VConsole();
             vConsole.showSwitch();
         };
+"""
+    this.evaluateJavascript(js, resultCallback)
+}
+
+fun WebView.fixQQAppLaunchButton(resultCallback: ValueCallback<String?>? = null) {
+    val js = """
+        let e = document.querySelector("#onekey");
+        if (e) { e.style.position = "relative"; }
 """
     this.evaluateJavascript(js, resultCallback)
 }
@@ -183,6 +191,9 @@ fun thisWebViewClient(
             canGoBack.value = view.canGoBack()
             canGoForward.value = view.canGoForward()
             applySystemThemeToWebView(activity, view)
+            if(url.startsWith("https://xui.ptlogin2.qq.com/")) {
+                view.fixQQAppLaunchButton()
+            }
             view.injectVConsole()
         }
 
