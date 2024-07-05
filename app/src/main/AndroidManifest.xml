@@ -278,12 +278,12 @@
 
         <activity
                 android:name="sc.windom.potter.producer.MainPro"
-                android:label="Sillot MainPro"
+                android:label="@string/activity_name_MainPro"
                 android:screenOrientation="fullSensor"
                 android:supportsPictureInPicture="true"
                 android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
                 android:exported="true"
-                android:launchMode="singleTask"
+                android:launchMode="singleInstancePerTask"
                 tools:ignore="DiscouragedApi">
             <!-- ref https://blog.csdn.net/qq_36009027/article/details/94627156 -->
             <!--在其他应用打开-->
@@ -713,7 +713,7 @@
         <!--    将"清除数据"项变为"管理空间"，自定义数据清除    https://github.com/Hi-Windom/Sillot-android/issues/49-->
         <activity
                 android:name="sc.windom.potter.ManageSpaceActivity"
-                android:label="@string/ManageSpaceActivity"
+                android:label="@string/activity_name_ManageSpaceActivity"
                 android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
                 android:exported="true" />
 

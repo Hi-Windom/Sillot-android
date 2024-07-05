@@ -132,6 +132,14 @@ class MainPro : ComponentActivity() {
     private var in2_intent: Intent? = null
     private var webView: WebView? = null
     private var created = mutableStateOf(false)
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        BuglyLog.d(TAG, "outState: $outState")
+        if (outState.isEmpty) return // avoid crash
+        super.onSaveInstanceState(outState)
+        // 可添加额外需要保存可序列化的数据
+    }
+
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         BuglyLog.i(TAG, "onNewIntent() invoked. @ $intent")
@@ -170,7 +178,10 @@ class MainPro : ComponentActivity() {
             val binder = service as BootService.LocalBinder
             bootService = binder.getService()
             serviceBound = true
-            App.bootService = bootService!!
+            bootService?.let {
+                App.bootService = it
+                it.stopKernelOnDestroy = false
+            }
             // 服务绑定后，执行依赖于bootService的代码
             performActionWithService()
         }

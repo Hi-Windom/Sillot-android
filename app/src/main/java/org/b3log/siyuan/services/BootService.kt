@@ -66,6 +66,7 @@ class BootService : Service() {
     var webViewVer: String? = null
     var userAgent: String? = null
     var kernelStarted = false
+    var stopKernelOnDestroy = true
     private lateinit var mHandlerThread: HandlerThread
     private lateinit var mHandler: Handler
     private var webViewKey: String? = null
@@ -92,7 +93,7 @@ class BootService : Service() {
         BuglyLog.i(TAG, "onDestroy() invoked")
         webView?.let { webViewKey?.let { it1 -> WebPoolsPro.instance?.recycle(it, it1) } }
         server?.stop()
-        Mobile.stopKernel()
+        if(stopKernelOnDestroy) Mobile.stopKernel() else server?.stop()
     }
 
     private val binder = LocalBinder()

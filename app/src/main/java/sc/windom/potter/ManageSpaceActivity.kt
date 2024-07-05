@@ -51,6 +51,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import org.b3log.siyuan.R
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_DEBUG.srcPath
@@ -247,6 +248,7 @@ class ManageSpaceActivity : AppCompatActivity() {
 private fun UI(intent: Intent?, TAG: String) {
     val uri = intent?.data
     val Lcc = LocalContext.current
+    val activityName = Lcc.getString(R.string.activity_name_ManageSpaceActivity) // 在 Compose 中，使用 LocalContext.current.getString 代替 resources.getString() 方法来获取字符串资源
     val isMenuVisible = rememberSaveable { mutableStateOf(false) }
     val filesList = rememberSaveable { mutableStateOf<List<File>>(emptyList()) }
     val selectedFiles = rememberSaveable { mutableSetOf<String>() }
@@ -284,7 +286,7 @@ private fun UI(intent: Intent?, TAG: String) {
 
     Scaffold(
         topBar = {
-            CommonTopAppBar("汐洛存储清理助手", TAG, uri, isMenuVisible) {
+            CommonTopAppBar(activityName, TAG, uri, isMenuVisible) {
                 // 将Context对象安全地转换为Activity
                 if (Lcc is Activity) {
                     Lcc.finish() // 结束活动
