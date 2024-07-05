@@ -1,17 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-feature android:name="android.hardware.telephony" android:required="false" />
-    <uses-feature android:name="android.hardware.nfc" android:required="false" />
-    <uses-feature android:name="android.hardware.location" android:required="false" />
-    <uses-feature android:name="android.hardware.location.network" android:required="false" />
-    <uses-feature android:name="android.hardware.bluetooth" android:required="false" />
-    <uses-feature android:name="android.hardware.wifi" android:required="false" />
-    <uses-feature android:name="android.software.picture_in_picture" android:required="false" />
-    <uses-feature android:name="android.software.webview" android:required="true" />
+    <uses-feature
+            android:name="android.hardware.telephony"
+            android:required="false" />
+    <uses-feature
+            android:name="android.hardware.nfc"
+            android:required="false" />
+    <uses-feature
+            android:name="android.hardware.location"
+            android:required="false" />
+    <uses-feature
+            android:name="android.hardware.location.network"
+            android:required="false" />
+    <uses-feature
+            android:name="android.hardware.bluetooth"
+            android:required="false" />
+    <uses-feature
+            android:name="android.hardware.wifi"
+            android:required="false" />
+    <uses-feature
+            android:name="android.software.picture_in_picture"
+            android:required="false" />
+    <uses-feature
+            android:name="android.software.webview"
+            android:required="true" />
     <uses-feature android:name="android.hardware.usb.host" />
+
     <queries>
         <!-- 查询 MIUI 的特定包 -->
         <package android:name="com.miui.gallery" />
@@ -92,8 +108,8 @@
     <uses-permission android:name="android.permission.READ_CALENDAR" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.REQUEST_COMPANION_RUN_IN_BACKGROUND"/>
-    <uses-permission android:name="android.permission.REQUEST_COMPANION_USE_DATA_IN_BACKGROUND"/>
+    <uses-permission android:name="android.permission.REQUEST_COMPANION_RUN_IN_BACKGROUND" />
+    <uses-permission android:name="android.permission.REQUEST_COMPANION_USE_DATA_IN_BACKGROUND" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.REQUEST_PASSWORD_COMPLEXITY" />
@@ -102,31 +118,42 @@
     <uses-permission android:name="android.permission.WRITE_CALENDAR" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.MANAGE_DOCUMENTS"
-        tools:ignore="ProtectedPermissions" />
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
-        tools:ignore="ScopedStorage" />
+    <uses-permission
+            android:name="android.permission.MANAGE_DOCUMENTS"
+            tools:ignore="ProtectedPermissions" />
+    <uses-permission
+            android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+            tools:ignore="ScopedStorage" />
     <!-- Required only if your app targets Android 13. -->
     <!-- Declare one or more the following permissions only if your app needs
     to access data that's protected by them. -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" android:minSdkVersion="33"/>
-    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" android:minSdkVersion="33"/>
-    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" android:minSdkVersion="33"/>
+    <uses-permission
+            android:name="android.permission.READ_MEDIA_IMAGES"
+            android:minSdkVersion="33" />
+    <uses-permission
+            android:name="android.permission.READ_MEDIA_AUDIO"
+            android:minSdkVersion="33" />
+    <uses-permission
+            android:name="android.permission.READ_MEDIA_VIDEO"
+            android:minSdkVersion="33" />
     <!-- Required to maintain app compatibility. -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
+    <uses-permission
+            android:name="android.permission.READ_EXTERNAL_STORAGE"
+            android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" android:minSdkVersion="33"/> <!-- https://developer.android.google.cn/guide/topics/ui/notifiers/notification-permission?hl=zh-cn -->
+    <uses-permission
+            android:name="android.permission.POST_NOTIFICATIONS"
+            android:minSdkVersion="33" /> <!-- https://developer.android.google.cn/guide/topics/ui/notifiers/notification-permission?hl=zh-cn -->
 
     <!-- 支持拍照 Support taking photos for inserting on Android https://github.com/siyuan-note/siyuan/issues/10479 -->
     <uses-feature
-        android:name="android.hardware.camera"
-        android:required="false" />
+            android:name="android.hardware.camera"
+            android:required="false" />
 
     <!-- 拍摄照片和视频 -->
     <uses-permission android:name="android.permission.CAMERA" />
 
-<!--    https://developer.android.com/training/package-visibility/use-cases?hl=zh-cn -->
+    <!--    https://developer.android.com/training/package-visibility/use-cases?hl=zh-cn -->
     <queries>
         <!-- 指定能够打开的链接类型 -->
         <intent>
@@ -196,55 +223,69 @@
     <!--    https://developer.android.com/guide/topics/manifest/application-element?hl=zh-cn-->
     <!-- ignore @string/app_name error -->
     <application
-        android:name=".App"
-        android:appCategory="social"
-        android:isGame="false"
-        android:debuggable="true"
-        android:manageSpaceActivity="sc.windom.potter.ManageSpaceActivity"
-        android:allowTaskReparenting="true"
-        android:backupInForeground="false"
-        android:resizeableActivity="true"
-        android:hardwareAccelerated="true"
-        android:largeHeap="true"
-        android:hasFragileUserData="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:persistent="true"
-        android:roundIcon="@mipmap/ic_launcher"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.SiYuan"
-        android:localeConfig="@xml/locales_config"
-        android:usesCleartextTraffic="true"
-        tools:targetApi="tiramisu"
-        android:enableOnBackInvokedCallback="true"
-        android:requestLegacyExternalStorage="true"
-        tools:ignore="HardcodedDebugMode">
+            android:name=".App"
+            android:appCategory="social"
+            android:isGame="false"
+            android:debuggable="true"
+            android:manageSpaceActivity="sc.windom.potter.ManageSpaceActivity"
+            android:allowTaskReparenting="true"
+            android:backupInForeground="false"
+            android:resizeableActivity="true"
+            android:hardwareAccelerated="true"
+            android:largeHeap="true"
+            android:hasFragileUserData="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:persistent="true"
+            android:roundIcon="@mipmap/ic_launcher"
+            android:supportsRtl="true"
+            android:theme="@style/Theme.SiYuan"
+            android:localeConfig="@xml/locales_config"
+            android:usesCleartextTraffic="true"
+            tools:targetApi="tiramisu"
+            android:enableOnBackInvokedCallback="true"
+            android:requestLegacyExternalStorage="true"
+            tools:ignore="HardcodedDebugMode">
         <!-- Required: set your sentry.io project identifier (DSN) -->
-        <meta-data android:name="io.sentry.dsn" android:value="https://d84d2390d8f44288a5db4178466beb0d@o4504894929829888.ingest.sentry.io/4504994288435200" />
+        <meta-data
+                android:name="io.sentry.dsn"
+                android:value="https://d84d2390d8f44288a5db4178466beb0d@o4504894929829888.ingest.sentry.io/4504994288435200" />
 
         <!-- enable automatic breadcrumbs for user interactions (clicks, swipes, scrolls) -->
-        <meta-data android:name="io.sentry.traces.user-interaction.enable" android:value="true" />
+        <meta-data
+                android:name="io.sentry.traces.user-interaction.enable"
+                android:value="true" />
         <!-- enable screenshot for crashes -->
-        <meta-data android:name="io.sentry.attach-screenshot" android:value="true" />
+        <meta-data
+                android:name="io.sentry.attach-screenshot"
+                android:value="true" />
         <!-- enable view hierarchy for crashes -->
-        <meta-data android:name="io.sentry.attach-view-hierarchy" android:value="true" />
+        <meta-data
+                android:name="io.sentry.attach-view-hierarchy"
+                android:value="true" />
 
         <!-- enable the performance API by setting a sample-rate, adjust in production env -->
-        <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
+        <meta-data
+                android:name="io.sentry.traces.sample-rate"
+                android:value="1.0" />
         <!-- enable profiling when starting transactions, adjust in production env -->
-        <meta-data android:name="io.sentry.traces.profiling.sample-rate" android:value="1.0" />
-        <meta-data android:name="io.sentry.anr.enable" android:value="true" />
+        <meta-data
+                android:name="io.sentry.traces.profiling.sample-rate"
+                android:value="1.0" />
+        <meta-data
+                android:name="io.sentry.anr.enable"
+                android:value="true" />
 
         <activity
-            android:name="sc.windom.potter.producer.MainPro"
-            android:label="Sillot MainPro"
-            android:screenOrientation="fullSensor"
-            android:supportsPictureInPicture="true"
-            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"
-            android:exported="true"
-            android:launchMode="singleTask"
-            tools:ignore="DiscouragedApi">
-<!-- ref https://blog.csdn.net/qq_36009027/article/details/94627156 -->
+                android:name="sc.windom.potter.producer.MainPro"
+                android:label="Sillot MainPro"
+                android:screenOrientation="fullSensor"
+                android:supportsPictureInPicture="true"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:exported="true"
+                android:launchMode="singleTask"
+                tools:ignore="DiscouragedApi">
+            <!-- ref https://blog.csdn.net/qq_36009027/article/details/94627156 -->
             <!--在其他应用打开-->
             <intent-filter android:label="汐洛通用处理助手">
                 <!--必须设置-->
@@ -253,24 +294,24 @@
                 <!--需要被网页拉起必须设置-->
                 <category android:name="android.intent.category.BROWSABLE" />
                 <!--必须小写，包括scheme、host、port、path-->
-                <data android:scheme="file"/>
-                <data android:scheme="content"/>
-                <data android:host="*"/>
-                <data android:pathPattern=".*"/>
+                <data android:scheme="file" />
+                <data android:scheme="content" />
+                <data android:host="*" />
+                <data android:pathPattern=".*" />
                 <data android:mimeType="*/*" />
             </intent-filter>
             <!--分享/发送-->
             <intent-filter android:label="汐洛分享助手">
-<!--                android.intent.action.SENDTO: 这个动作通常用于发送消息到指定的目标。它通常与mailto:或smsto:等URI方案结合使用，用于发送电子邮件或短信。
-当使用SENDTO动作时，意图通常会包含一个URI，这个URI指定了消息应该被发送到的地址。-->
-                <action android:name="android.intent.action.SEND"/>
-                <action android:name="android.intent.action.SEND_MULTIPLE"/>
-<!--                android.intent.action.SEND: 这个动作用于发送数据。它通常用于分享文本、图片或其他类型的数据。当使用SEND动作时，意图通常会包含要发送的数据
-（通过extra中的Intent.EXTRA_TEXT、Intent.EXTRA_STREAM等字段），但不指定特定的目标地址。系统会显示一个对话框，让用户选择使用哪个应用来发送数据。-->
-                <action android:name="android.intent.action.SENDTO"/>
+                <!--                android.intent.action.SENDTO: 这个动作通常用于发送消息到指定的目标。它通常与mailto:或smsto:等URI方案结合使用，用于发送电子邮件或短信。
+                当使用SENDTO动作时，意图通常会包含一个URI，这个URI指定了消息应该被发送到的地址。-->
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <!--                android.intent.action.SEND: 这个动作用于发送数据。它通常用于分享文本、图片或其他类型的数据。当使用SEND动作时，意图通常会包含要发送的数据
+                （通过extra中的Intent.EXTRA_TEXT、Intent.EXTRA_STREAM等字段），但不指定特定的目标地址。系统会显示一个对话框，让用户选择使用哪个应用来发送数据。-->
+                <action android:name="android.intent.action.SENDTO" />
                 <action android:name="android.intent.action.PROCESS_TEXT" />
                 <!--必须设置-->
-                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.DEFAULT" />
                 <!--需要被网页拉起必须设置-->
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:mimeType="*/*" />
@@ -281,20 +322,21 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <!--需要被网页拉起必须设置-->
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="magnet"/>
-                <data android:scheme="http"/>
-                <data android:scheme="https"/>
-<!--      设置这个会导致失效          <data android:host="*"/>-->
+
+                <data android:scheme="magnet" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <!--      设置这个会导致失效          <data android:host="*"/>-->
             </intent-filter>
 
         </activity>
 
         <receiver
-            android:name=".jpush.JReceiver"
-            android:enabled="true"
-            android:exported="true"
-            android:permission="TODO"
-            tools:ignore="ExportedReceiver">
+                android:name=".jpush.JReceiver"
+                android:enabled="true"
+                android:exported="true"
+                android:permission="TODO"
+                tools:ignore="ExportedReceiver">
             <intent-filter>
                 <action android:name="cn.jpush.android.intent.RECEIVE_MESSAGE" />
                 <action android:name="cn.jpush.android.intent.REGISTRATION" />
@@ -308,10 +350,12 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name=".permission.Battery"
-            android:exported="true"
-            android:autoRemoveFromRecents="true"
-            android:launchMode="singleInstance">
+        <activity
+                android:name=".permission.Battery"
+                android:exported="true"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:autoRemoveFromRecents="true"
+                android:launchMode="singleInstance">
             <intent-filter>
                 <action android:name="${applicationId}.intent.permission.Battery" />
 
@@ -319,10 +363,12 @@
                 <category android:name="${applicationId}" />
             </intent-filter>
         </activity>
-        <activity android:name=".permission.Overlay"
-            android:exported="true"
-            android:autoRemoveFromRecents="true"
-            android:launchMode="singleInstance">
+        <activity
+                android:name=".permission.Overlay"
+                android:exported="true"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:autoRemoveFromRecents="true"
+                android:launchMode="singleInstance">
             <intent-filter>
                 <action android:name="${applicationId}.intent.permission.Overlay" />
 
@@ -331,12 +377,13 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".videoPlayer.SimplePlayer"
-            android:exported="true"
-            android:hardwareAccelerated="true"
-            android:supportsPictureInPicture="true"
-            android:taskAffinity=".sillot.task.background"
-            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize">
+        <activity
+                android:name=".videoPlayer.SimplePlayer"
+                android:exported="true"
+                android:hardwareAccelerated="true"
+                android:supportsPictureInPicture="true"
+                android:taskAffinity=".sillot.task.background"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize">
             <intent-filter>
                 <action android:name="${applicationId}.intent.videoPlayer.SimplePlayer" />
 
@@ -345,67 +392,67 @@
             </intent-filter>
         </activity>
 
-<!--        REF https://juejin.cn/post/7026669198537392165-->
-<!--        “亲和性”表示 Activity 倾向于属于哪个任务。默认情况下，同一应用中的所有 Activity 彼此具有亲和性。因此，在默认情况下，同一应用中的所有 Activity 都倾向于位于同一任务。-->
-<!--        android:taskAffinity 分别设置了两个活动的任务亲和性，这样它们就会属于不同的任务。当用户点击桌面上的图标时，系统会检查该活动是否属于正在后台运行的任务，如果不是，则会创建一个新的任务来启动该活动。-->
+        <!--        REF https://juejin.cn/post/7026669198537392165-->
+        <!--        “亲和性”表示 Activity 倾向于属于哪个任务。默认情况下，同一应用中的所有 Activity 彼此具有亲和性。因此，在默认情况下，同一应用中的所有 Activity 都倾向于位于同一任务。-->
+        <!--        android:taskAffinity 分别设置了两个活动的任务亲和性，这样它们就会属于不同的任务。当用户点击桌面上的图标时，系统会检查该活动是否属于正在后台运行的任务，如果不是，则会创建一个新的任务来启动该活动。-->
 
-<!--        <activity android:name=".USB_AUDIO_EXCLUSIVE"-->
-<!--            android:icon="@drawable/icon"-->
-<!--            android:label="@string/activity_name_USB_AUDIO_EXCLUSIVE"-->
-<!--            android:exported="true"-->
-<!--            android:supportsPictureInPicture="true"-->
-<!--            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"-->
-<!--            android:autoRemoveFromRecents="false"-->
-<!--            android:taskAffinity=".sillot.task.USB_AUDIO_EXCLUSIVE"-->
-<!--            android:launchMode="singleInstance">-->
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.MAIN" />-->
+        <!--        <activity android:name=".USB_AUDIO_EXCLUSIVE"-->
+        <!--            android:icon="@drawable/icon"-->
+        <!--            android:label="@string/activity_name_USB_AUDIO_EXCLUSIVE"-->
+        <!--            android:exported="true"-->
+        <!--            android:supportsPictureInPicture="true"-->
+        <!--            android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"-->
+        <!--            android:autoRemoveFromRecents="false"-->
+        <!--            android:taskAffinity=".sillot.task.USB_AUDIO_EXCLUSIVE"-->
+        <!--            android:launchMode="singleInstance">-->
+        <!--            <intent-filter>-->
+        <!--                <action android:name="android.intent.action.MAIN" />-->
 
-<!--                <category android:name="android.intent.category.LAUNCHER" />-->
-<!--            </intent-filter>-->
-<!--            &lt;!&ndash; shortcutId 不能重复&ndash;&gt;-->
-<!--            <meta-data-->
-<!--                android:name="android.app.shortcuts"-->
-<!--                android:resource="@xml/shortcuts_3" />-->
-<!--        </activity>-->
-<!--        <service-->
-<!--            android:name=".MusicService"-->
-<!--            android:foregroundServiceType="mediaPlayback"-->
-<!--            android:enabled="true"-->
-<!--            android:exported="false">-->
-<!--        </service>-->
-<!--        <receiver-->
-<!--            android:name=".USBDeviceReceiver"-->
-<!--            android:enabled="true"-->
-<!--            android:exported="true">-->
-<!--            <intent-filter>-->
-<!--                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />-->
-<!--                <action android:name="android.hardware.usb.action.USB_DEVICE_DETACHED" />-->
-<!--            </intent-filter>-->
-<!--        </receiver>-->
-<!--        <service-->
-<!--            android:name=".NotificationAccessService"-->
-<!--            android:label="通知辅助功能服务"-->
-<!--            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"-->
-<!--            android:exported="true">-->
-<!--            <intent-filter>-->
-<!--                <action android:name="android.service.notification.NotificationListenerService" />-->
-<!--            </intent-filter>-->
-<!--        </service>-->
+        <!--                <category android:name="android.intent.category.LAUNCHER" />-->
+        <!--            </intent-filter>-->
+        <!--            &lt;!&ndash; shortcutId 不能重复&ndash;&gt;-->
+        <!--            <meta-data-->
+        <!--                android:name="android.app.shortcuts"-->
+        <!--                android:resource="@xml/shortcuts_3" />-->
+        <!--        </activity>-->
+        <!--        <service-->
+        <!--            android:name=".MusicService"-->
+        <!--            android:foregroundServiceType="mediaPlayback"-->
+        <!--            android:enabled="true"-->
+        <!--            android:exported="false">-->
+        <!--        </service>-->
+        <!--        <receiver-->
+        <!--            android:name=".USBDeviceReceiver"-->
+        <!--            android:enabled="true"-->
+        <!--            android:exported="true">-->
+        <!--            <intent-filter>-->
+        <!--                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />-->
+        <!--                <action android:name="android.hardware.usb.action.USB_DEVICE_DETACHED" />-->
+        <!--            </intent-filter>-->
+        <!--        </receiver>-->
+        <!--        <service-->
+        <!--            android:name=".NotificationAccessService"-->
+        <!--            android:label="通知辅助功能服务"-->
+        <!--            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"-->
+        <!--            android:exported="true">-->
+        <!--            <intent-filter>-->
+        <!--                <action android:name="android.service.notification.NotificationListenerService" />-->
+        <!--            </intent-filter>-->
+        <!--        </service>-->
         <!--        汐洛链滴社区客户端主入口-->
         <activity
-            android:name="org.b3log.ld246.HomeActivity"
-            android:icon="@drawable/icon"
-            android:label="@string/activity_name_ld246Home"
+                android:name="org.b3log.ld246.HomeActivity"
+                android:icon="@drawable/icon"
+                android:label="@string/activity_name_ld246Home"
                 android:launchMode="singleInstancePerTask"
-            android:autoRemoveFromRecents="false"
-            android:configChanges="orientation|screenSize"
-            android:screenOrientation="portrait"
-            android:exported="true"
-            android:hardwareAccelerated="true"
-            android:noHistory="false"
-            android:taskAffinity=".sillot.ld246.task"
-            android:theme="@style/Theme.SiYuan.Boot">
+                android:autoRemoveFromRecents="false"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:screenOrientation="portrait"
+                android:exported="true"
+                android:hardwareAccelerated="true"
+                android:noHistory="false"
+                android:taskAffinity=".sillot.ld246.task"
+                android:theme="@style/Theme.SiYuan.Boot">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -446,8 +493,10 @@
             <!-- QQ授权回调，目前无效 -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data
                         android:scheme="https"
                         android:host="ssl.ptlogin2.qq.com" />
@@ -455,81 +504,81 @@
 
             <!-- shortcutId | android:name 不能重复-->
             <meta-data
-                android:name="android.app.shortcuts_ld246"
-                android:resource="@xml/shortcuts_ld246" />
+                    android:name="android.app.shortcuts_ld246"
+                    android:resource="@xml/shortcuts_ld246" />
         </activity>
-<!--        &lt;!&ndash;        汐洛主入口&ndash;&gt;-->
-<!--        <activity-->
-<!--            android:name=".SillotHomeActivity"-->
-<!--            android:icon="@drawable/icon"-->
-<!--            android:label="@string/activity_name_SillotHome"-->
-<!--            android:autoRemoveFromRecents="false"-->
-<!--            android:configChanges="orientation|screenSize"-->
-<!--            android:exported="true"-->
-<!--            android:hardwareAccelerated="true"-->
-<!--            android:noHistory="false"-->
-<!--            android:taskAffinity=".sillot.task"-->
-<!--            android:theme="@style/Theme.SiYuan.Boot">-->
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.MAIN" />-->
+        <!--        &lt;!&ndash;        汐洛主入口&ndash;&gt;-->
+        <!--        <activity-->
+        <!--            android:name=".SillotHomeActivity"-->
+        <!--            android:icon="@drawable/icon"-->
+        <!--            android:label="@string/activity_name_SillotHome"-->
+        <!--            android:autoRemoveFromRecents="false"-->
+        <!--            android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"-->
+        <!--            android:exported="true"-->
+        <!--            android:hardwareAccelerated="true"-->
+        <!--            android:noHistory="false"-->
+        <!--            android:taskAffinity=".sillot.task"-->
+        <!--            android:theme="@style/Theme.SiYuan.Boot">-->
+        <!--            <intent-filter>-->
+        <!--                <action android:name="android.intent.action.MAIN" />-->
 
-<!--                <category android:name="android.intent.category.LAUNCHER" />-->
-<!--            </intent-filter>-->
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.VIEW" />-->
-<!--                <category android:name="android.intent.category.DEFAULT" />-->
-<!--                <category android:name="android.intent.category.BROWSABLE" />-->
+        <!--                <category android:name="android.intent.category.LAUNCHER" />-->
+        <!--            </intent-filter>-->
+        <!--            <intent-filter>-->
+        <!--                <action android:name="android.intent.action.VIEW" />-->
+        <!--                <category android:name="android.intent.category.DEFAULT" />-->
+        <!--                <category android:name="android.intent.category.BROWSABLE" />-->
 
-<!--                <data android:scheme="sillot" />-->
-<!--                <data android:scheme="sisi" />-->
-<!--            </intent-filter>-->
-<!--            &lt;!&ndash; shortcutId | android:name 不能重复&ndash;&gt;-->
-<!--            <meta-data-->
-<!--                android:name="android.app.shortcuts"-->
-<!--                android:resource="@xml/shortcuts_1" />-->
-<!--        </activity>-->
-<!--        &lt;!&ndash;   司华入口&ndash;&gt;-->
-<!--        <activity-->
-<!--            android:name=".sillot.ui.MainActivity"-->
-<!--            android:icon="@drawable/icon"-->
-<!--            android:label="@string/activity_name_Sithw"-->
-<!--            android:autoRemoveFromRecents="false"-->
-<!--            android:configChanges="orientation|screenSize"-->
-<!--            android:exported="true"-->
-<!--            android:hardwareAccelerated="true"-->
-<!--            android:noHistory="false"-->
-<!--            android:taskAffinity=".sillot.sithw.task"-->
-<!--            android:theme="@style/Theme.SiYuan.Boot">-->
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.MAIN" />-->
+        <!--                <data android:scheme="sillot" />-->
+        <!--                <data android:scheme="sisi" />-->
+        <!--            </intent-filter>-->
+        <!--            &lt;!&ndash; shortcutId | android:name 不能重复&ndash;&gt;-->
+        <!--            <meta-data-->
+        <!--                android:name="android.app.shortcuts"-->
+        <!--                android:resource="@xml/shortcuts_1" />-->
+        <!--        </activity>-->
+        <!--        &lt;!&ndash;   司华入口&ndash;&gt;-->
+        <!--        <activity-->
+        <!--            android:name=".sillot.ui.MainActivity"-->
+        <!--            android:icon="@drawable/icon"-->
+        <!--            android:label="@string/activity_name_Sithw"-->
+        <!--            android:autoRemoveFromRecents="false"-->
+        <!--            android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"-->
+        <!--            android:exported="true"-->
+        <!--            android:hardwareAccelerated="true"-->
+        <!--            android:noHistory="false"-->
+        <!--            android:taskAffinity=".sillot.sithw.task"-->
+        <!--            android:theme="@style/Theme.SiYuan.Boot">-->
+        <!--            <intent-filter>-->
+        <!--                <action android:name="android.intent.action.MAIN" />-->
 
-<!--                <category android:name="android.intent.category.LAUNCHER" />-->
-<!--            </intent-filter>-->
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.VIEW" />-->
-<!--                <category android:name="android.intent.category.DEFAULT" />-->
-<!--                <category android:name="android.intent.category.BROWSABLE" />-->
+        <!--                <category android:name="android.intent.category.LAUNCHER" />-->
+        <!--            </intent-filter>-->
+        <!--            <intent-filter>-->
+        <!--                <action android:name="android.intent.action.VIEW" />-->
+        <!--                <category android:name="android.intent.category.DEFAULT" />-->
+        <!--                <category android:name="android.intent.category.BROWSABLE" />-->
 
-<!--                <data android:scheme="sithw" />-->
-<!--            </intent-filter>-->
-<!--            &lt;!&ndash; shortcutId | android:name 不能重复&ndash;&gt;-->
-<!--            <meta-data-->
-<!--                android:name="android.app.shortcuts"-->
-<!--                android:resource="@xml/shortcuts_2" />-->
-<!--        </activity>-->
+        <!--                <data android:scheme="sithw" />-->
+        <!--            </intent-filter>-->
+        <!--            &lt;!&ndash; shortcutId | android:name 不能重复&ndash;&gt;-->
+        <!--            <meta-data-->
+        <!--                android:name="android.app.shortcuts"-->
+        <!--                android:resource="@xml/shortcuts_2" />-->
+        <!--        </activity>-->
 
-<!--        思源笔记入口-->
+        <!--        思源笔记入口-->
         <activity
-            android:name=".BootActivity"
-            android:icon="@drawable/icon_siyuan"
-            android:label="@string/activity_name_Boot"
-            android:autoRemoveFromRecents="true"
-            android:configChanges="orientation|screenSize"
-            android:exported="true"
-            android:hardwareAccelerated="true"
-            android:noHistory="true"
-            android:taskAffinity=".siyuan.task"
-            android:theme="@style/Theme.SiYuan.Boot">
+                android:name=".BootActivity"
+                android:icon="@drawable/icon_siyuan"
+                android:label="@string/activity_name_Boot"
+                android:autoRemoveFromRecents="true"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:exported="true"
+                android:hardwareAccelerated="true"
+                android:noHistory="true"
+                android:taskAffinity=".siyuan.task"
+                android:theme="@style/Theme.SiYuan.Boot">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -545,33 +594,33 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MainActivity"
-            android:autoRemoveFromRecents="false"
-            android:configChanges="keyboard|keyboardHidden|screenLayout|uiMode|orientation|screenSize|smallestScreenSize"
-            android:hardwareAccelerated="true"
-            android:taskAffinity=".siyuan.task"
-            android:windowSoftInputMode="stateHidden|adjustResize" >
-         <!-- android:windowSoftInputMode="adjustResize"
-            是为了解决软键盘遮挡 https://github.com/siyuan-note/siyuan-android/pull/7
+                android:name=".MainActivity"
+                android:autoRemoveFromRecents="false"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:hardwareAccelerated="true"
+                android:taskAffinity=".siyuan.task"
+                android:windowSoftInputMode="stateHidden|adjustResize">
+            <!-- android:windowSoftInputMode="adjustResize"
+               是为了解决软键盘遮挡 https://github.com/siyuan-note/siyuan-android/pull/7
 
-                不要添加 android:launchMode="singleInstance" 否则无法从相册中选择上传
-                Supports inserting pictures from photo gallery on the Android
-                https://github.com/siyuan-note/siyuan/issues/9455
-            -->
+                   不要添加 android:launchMode="singleInstance" 否则无法从相册中选择上传
+                   Supports inserting pictures from photo gallery on the Android
+                   https://github.com/siyuan-note/siyuan/issues/9455
+               -->
         </activity>
         <activity
-            android:name=".AgentWebActivity"
-            android:autoRemoveFromRecents="false"
-            android:configChanges="keyboard|keyboardHidden|screenLayout|uiMode|orientation|screenSize|smallestScreenSize"
-            android:hardwareAccelerated="true"
-            android:taskAffinity=".sillot.task.webview"
-            android:windowSoftInputMode="adjustResize" >
-        </activity>
+                android:name=".AgentWebActivity"
+                android:autoRemoveFromRecents="false"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:hardwareAccelerated="true"
+                android:taskAffinity=".sillot.task.webview"
+                android:windowSoftInputMode="adjustResize"/>
         <activity
-            android:name="cn.jpush.android.ui.PopWinActivity"
-            android:exported="true"
-            android:theme="@style/MyDialogStyle"
-            tools:node="replace">
+                android:name="cn.jpush.android.ui.PopWinActivity"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:exported="true"
+                android:theme="@style/MyDialogStyle"
+                tools:node="replace">
             <intent-filter>
                 <category android:name="android.intent.category.DEFAULT" />
 
@@ -581,11 +630,11 @@
             </intent-filter>
         </activity> <!-- 若您的业务中有使用极光富媒体功能，需要把此 Activity 的 exported 修改成 true 覆盖 mavenCentral 上的组件。 -->
         <activity
-            android:name="cn.jpush.android.ui.PushActivity"
-            android:configChanges="orientation|keyboardHidden"
-            android:exported="true"
-            android:theme="@android:style/Theme.NoTitleBar"
-            tools:node="replace">
+                android:name="cn.jpush.android.ui.PushActivity"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:exported="true"
+                android:theme="@android:style/Theme.NoTitleBar"
+                tools:node="replace">
             <intent-filter>
                 <action android:name="cn.jpush.android.ui.PushActivity" />
 
@@ -595,8 +644,9 @@
         </activity>
         <!-- 点击通知时，要打开的 activity -->
         <activity
-            android:name=".jpush.OpenClickActivity"
-            android:exported="true">
+                android:name=".jpush.OpenClickActivity"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -604,65 +654,68 @@
             </intent-filter>
         </activity>
         <service
-            android:name=".jpush.UserService"
-            android:process=":pushcore"
-            android:exported="true">
+                android:name=".jpush.UserService"
+                android:process=":pushcore"
+                android:exported="true">
             <intent-filter>
                 <action android:name="cn.jiguang.user.service.action" />
             </intent-filter>
         </service>
         <!-- For test only JPush 测试的主程序-->
         <activity
-            android:name=".jpush.PushActivity"
-            android:exported="false"/>
+                android:name=".jpush.PushActivity"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:exported="false" />
         <!-- Since JCore2.0.0 Required SDK核心功能 -->
         <!-- 可配置android:process参数将Service放在其他进程中；android:enabled属性不能是false -->
         <!-- 这个是自定义Service，要继承极光JCommonService，可以在更多手机平台上使得推送通道保持的更稳定 -->
         <service
-            android:name=".jpush.XService"
-            android:enabled="true"
-            android:exported="false"
-            android:process=":pushcore">
+                android:name=".jpush.XService"
+                android:enabled="true"
+                android:exported="false"
+                android:process=":pushcore">
             <intent-filter>
                 <action android:name="cn.jiguang.user.service.action" />
             </intent-filter>
         </service>
         <!-- 以 Android 14 为目标平台，则必须指定适当的前台服务类型  -->
-        <service android:name=".services.FloatingWindowService" android:foregroundServiceType="dataSync|location">
+        <service
+                android:name=".services.FloatingWindowService"
+                android:foregroundServiceType="dataSync|location">
             <property
-                android:name="android.app.PROPERTY_DATA_SYNC_FGS_SUBTYPE"
-                android:value="hosting" />
+                    android:name="android.app.PROPERTY_DATA_SYNC_FGS_SUBTYPE"
+                    android:value="hosting" />
         </service>
 
         <service
-            android:name=".services.BootService"
-            android:foregroundServiceType="dataSync|location"
-            android:enabled="true"
-            android:exported="true"
-            android:permission="TODO" />
+                android:name=".services.BootService"
+                android:foregroundServiceType="dataSync|location"
+                android:enabled="true"
+                android:exported="true"
+                android:permission="TODO" />
 
         <!-- Support opening assets through other apps on the Android https://github.com/siyuan-note/siyuan/issues/10657 -->
         <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}"
-            android:grantUriPermissions="true"
-            tools:replace="android:authorities">
+                android:name="androidx.core.content.FileProvider"
+                android:authorities="${applicationId}"
+                android:grantUriPermissions="true"
+                tools:replace="android:authorities">
             <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/provider_paths" />
+                    android:name="android.support.FILE_PROVIDER_PATHS"
+                    android:resource="@xml/provider_paths" />
         </provider>
 
         <!-- 多渠道打包配置 -->
-<!--        <meta-data-->
-<!--            android:name="CHANNEL"-->
-<!--            android:value="${CHANNEL}" />-->
+        <!--        <meta-data-->
+        <!--            android:name="CHANNEL"-->
+        <!--            android:value="${CHANNEL}" />-->
 
-<!--    将"清除数据"项变为"管理空间"，自定义数据清除    https://github.com/Hi-Windom/Sillot-android/issues/49-->
+        <!--    将"清除数据"项变为"管理空间"，自定义数据清除    https://github.com/Hi-Windom/Sillot-android/issues/49-->
         <activity
-            android:name="sc.windom.potter.ManageSpaceActivity"
-            android:label="@string/ManageSpaceActivity"
-            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"
-            android:exported="true" />
+                android:name="sc.windom.potter.ManageSpaceActivity"
+                android:label="@string/ManageSpaceActivity"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:exported="true" />
 
     </application>
 
