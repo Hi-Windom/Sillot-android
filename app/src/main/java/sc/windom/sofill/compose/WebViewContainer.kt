@@ -80,6 +80,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -456,6 +457,9 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
     val openBrowserSettingsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { /* Handle the result if needed */ }
+    LaunchedEffect(originUrl) {
+        gotoUrl.value = originUrl
+    }
     val menuOptions = listOf(
         MenuOption("关于", Icons.Filled.Info, state = MenuOptionState.Disabled) { /* 点击事件 */ },
         MenuOption(

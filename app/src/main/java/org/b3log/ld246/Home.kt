@@ -389,6 +389,7 @@ class HomeActivity : ComponentActivity() {
 
         LaunchedEffect(FullScreenWebView_url.value) {
             if (!FullScreenWebView_url.value.isNullOrBlank()) {
+                BuglyLog.d(TAG, "new FullScreenWebView_url -> ${FullScreenWebView_url.value}")
                 showFullScreenWebView.value = true
             }
         }
