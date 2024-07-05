@@ -1124,7 +1124,7 @@ class MainPro : ComponentActivity() {
                                 true // 点击菜单后不会自动关闭
                             }
                             .setOkButton("确定", OnMenuButtonClickListener { menu, view ->
-                                BuglyLog.e(TAG, "${selectMenuText}")
+                                // BuglyLog.e(TAG, "${selectMenuText}")
 
                                 workspaceAssetsDir =
                                     "${thisActivity.workspaceParentDir()}/${selectMenuText}/data/assets"
