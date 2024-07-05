@@ -626,19 +626,21 @@ private fun WebViewPage(
             cm.setAcceptCookie(true)
             cm.setAcceptThirdPartyCookies(this, true)
             val ws = this.settings
-            ws.javaScriptEnabled = true
-            ws.allowUniversalAccessFromFileURLs = true
-            ws.allowFileAccessFromFileURLs = true
-            ws.domStorageEnabled = true
-            ws.allowFileAccess = true
-            ws.allowContentAccess = true
-            ws.cacheMode = WebSettings.LOAD_NO_CACHE
-            ws.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW // 允许Http和Https混合
-            ws.textZoom = sliderState_webViewTextZoom
-            ws.useWideViewPort = true
-            ws.loadWithOverviewMode =
-                false // 设置 WebView 是否以概览模式加载页面，即按宽度缩小内容以适应屏幕。设为 true 实测发现 github 等页面会有个不美观的抽搐过程
-            ws.userAgentString = S_WebView.UA_edge_android
+            ws.apply {
+                javaScriptEnabled = true
+                allowUniversalAccessFromFileURLs = true
+                allowFileAccessFromFileURLs = true
+                domStorageEnabled = true
+                allowFileAccess = true
+                allowContentAccess = true
+                cacheMode = WebSettings.LOAD_NO_CACHE
+                mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW // 允许Http和Https混合
+                textZoom = sliderState_webViewTextZoom
+                useWideViewPort = true
+                loadWithOverviewMode =
+                    false // 设置 WebView 是否以概览模式加载页面，即按宽度缩小内容以适应屏幕。设为 true 实测发现 github 等页面会有个不美观的抽搐过程
+                userAgentString = S_WebView.UA_edge_android
+            }
             this.webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(
                     view: WebView?,
