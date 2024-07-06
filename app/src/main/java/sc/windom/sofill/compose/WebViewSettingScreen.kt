@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/6 上午7:20
- * updated: 2024/7/6 上午7:20
+ * lastModified: 2024/7/6 下午8:57
+ * updated: 2024/7/6 下午8:57
  */
 
 package sc.windom.sofill.compose
@@ -77,7 +77,7 @@ fun SettingScreen(thisWebView: MutableState<WebView?>) {
         if (switchState_使用系统自带下载器下载文件.value) {
             Text("使用系统自带下载器，用户可在通知栏查看下载进度。不同系统表现不一致。")
         } else {
-            Text("使用汐洛下载器，功能更加强大，不同系统表现一致。如果出现问题请切换回系统自带下载器。")
+            Text("使用汐洛下载器，功能更加强大，不同系统表现一致，稳定性较差。如果出现问题请切换回系统自带下载器。")
         }
 
         // 滑块组件

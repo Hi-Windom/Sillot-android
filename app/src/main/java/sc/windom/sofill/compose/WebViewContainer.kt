@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/6 下午7:31
- * updated: 2024/7/6 下午7:31
+ * lastModified: 2024/7/6 下午10:09
+ * updated: 2024/7/6 下午10:09
  */
 
 package sc.windom.sofill.compose
@@ -26,6 +26,7 @@ import android.webkit.WebView
 import android.webkit.WebView.FindListener
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -66,6 +67,7 @@ import androidx.compose.material.icons.filled.Webhook
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -82,6 +84,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -91,6 +94,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalUriHandler
@@ -105,7 +109,6 @@ import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.dialogs.PopTip
 import com.kongzue.dialogx.dialogs.TipDialog
 import com.kongzue.dialogx.dialogs.WaitDialog
-import com.kongzue.dialogx.interfaces.OnBackPressedListener
 import com.kongzue.dialogx.interfaces.OnBackgroundMaskClickListener
 import com.tencent.mmkv.MMKV
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -610,6 +613,20 @@ private fun WebViewPage(
             )
         )
     ) // 文件下载器
+    val showDownloaderPage: MutableState<Boolean> = rememberSaveable { mutableStateOf(false) }
+    val progressFloat: MutableState<Float> = rememberSaveable { mutableFloatStateOf(0f) }
+    val speedText: MutableState<String> = rememberSaveable { mutableStateOf("") }
+    val sizeText: MutableState<String> = rememberSaveable { mutableStateOf("") }
+    val timeText: MutableState<String> = rememberSaveable { mutableStateOf("") }
+    if (showDownloaderPage.value) {
+        DownloaderPage(
+            showDownloaderPage,
+            progressFloat,
+            speedText,
+            sizeText,
+            timeText,
+        )
+    }
     // 使用AndroidView嵌入WebView
     AndroidView(modifier = Modifier.fillMaxSize(), factory = {
         WebView(it).apply {
@@ -634,9 +651,26 @@ private fun WebViewPage(
                     false
                 )
                 if (switchState_使用系统自带下载器下载文件) {
-                    activity.startDownload(url, mimeType)
+                    activity.startDownload(
+                        url,
+                        mimeType,
+                        contentLength,
+                        contentDisposition,
+                        userAgent
+                    )
                 } else {
-                    activity.startDownload(url, mimeType, downloader)
+                    activity.startDownload2(
+                        url,
+                        mimeType,
+                        contentLength,
+                        contentDisposition,
+                        downloader,
+                        showDownloaderPage,
+                        progressFloat,
+                    speedText,
+                    sizeText,
+                    timeText,
+                    )
                 }
             }
             this.setFindListener(object : FindListener {
@@ -721,11 +755,103 @@ private fun handleUrlLoading(activity: Activity, request: WebResourceRequest): B
     }
 }
 
+/**
+ *
+ *     // TODO: 路径选择器
+ *     // TODO: 配置项：随机文件名
+ *     // TODO: 下载完成后打开
+ *     // TODO: 下载历史记录
+ */
+@Composable
+fun DownloaderPage(
+    showDownloaderPage: MutableState<Boolean>,
+    progressFloat: MutableState<Float>,
+    speedText: MutableState<String>,
+    sizeText: MutableState<String>,
+    timeText: MutableState<String>,
+) {
+    val clearSize = (0 <= progressFloat.value && progressFloat.value <= 100) // 只需要判断一次
+    Column(
+        modifier = Modifier
+            .fillMaxSize().zIndex(999f)
+            .background(MaterialTheme.colorScheme.surface),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier.padding(16.dp)
+                .fillMaxWidth().weight(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            if (clearSize) {
+                CircularProgressIndicator(
+                    // 设置进度值，范围从0.0到1.0
+                    progress = {
+                        progressFloat.value
+                    },
+                    // 设置大小
+                    modifier = Modifier.fillMaxSize(),
+                    // 设置进度条颜色
+                    color = MaterialTheme.colorScheme.primary,
+                    // 设置轨道颜色，即进度条的背景色
+                    trackColor = MaterialTheme.colorScheme.outline,
+                    // 设置进度条两端的形状
+                    strokeCap = StrokeCap.Round,
+                    strokeWidth = 12.dp,
+                )
+            } else {
+                CircularProgressIndicator(
+                    // 设置大小
+                    modifier = Modifier.fillMaxSize(),
+                    // 设置进度条颜色
+                    color = MaterialTheme.colorScheme.primary,
+                    // 设置轨道颜色，即进度条的背景色
+                    trackColor = MaterialTheme.colorScheme.outline,
+                    // 设置进度条两端的形状
+                    strokeCap = StrokeCap.Round,
+                    strokeWidth = 12.dp,
+                )
+            }
+        }
+        if (progressFloat.value == 1f) {
+            Button(
+                enabled = false,
+                modifier = Modifier.fillMaxWidth().padding(10.dp, 18.dp),
+                onClick =  {
+                    // TODO
+                }) {
+                Text("打开文件")
+            }
+        } else {
+            Text(if (clearSize) "正在下载 ${progressFloat.value * 100}%\n" else "正在下载")
+            Text("下载速率 ${speedText.value}")
+            Text("预计占用 ${sizeText.value}")
+            Text("预计等待 ${timeText.value}")
+        }
+        Button(
+            modifier = Modifier.fillMaxWidth().padding(10.dp, 18.dp),
+            onClick =  {
+            showDownloaderPage.value = false
+        }) {
+            Text("关闭")
+        }
+    }
+}
+
+/**
+ * 使用汐洛下载器
+ */
 @OptIn(DelicateCoroutinesApi::class)
-private fun Activity.startDownload(
+private fun Activity.startDownload2(
     url: String,
     mimeType: String,
-    downloader: MutableState<Ketch>? = null
+    contentLength: Long,
+    contentDisposition: String?,
+    downloader: MutableState<Ketch>,
+    showDownloaderPage: MutableState<Boolean>,
+    progressFloat: MutableState<Float>,
+    speedText: MutableState<String>,
+    sizeText: MutableState<String>,
+    timeText: MutableState<String>,
 ) {
     val TAG = "startDownload"
     val activity = this
@@ -733,96 +859,128 @@ private fun Activity.startDownload(
     // 显示一个对话框，询问用户是否想要下载文件
     AlertDialog.Builder(activity)
         .setTitle("可下载文件 $fileName")
-        .setMessage("您希望如何处理？点击空白处放弃处理并关闭对话框。下载链接：$url")
+        .setMessage(
+            "您希望如何处理？点击空白处放弃处理并关闭对话框。\n\n链接：$url \n" +
+                    "描述：$contentDisposition \n大小：${getTotalLengthText(contentLength)} \n类型：$mimeType"
+        )
         .setPositiveButton("直接下载") { _, _ ->
             // 在IO线程尝试下载，不阻塞
             GlobalScope.launch(Dispatchers.IO) {
                 try {
-                    downloader?.let {
-                        var fileSize: Long = 0
-                        var request: com.ketch.Request? = null
-                        request = it.value.download(url,
-                            fileName = fileName,
-                            path = activity.filesDir.absolutePath, // 其他路径需要权限，TODO: 使用系统自带路径选择器
-                            onQueue = {
-                                Log.d(TAG, "onQueue")
-                            },
-                            onStart = { length ->
-                                Log.d(TAG, "onStart")
+                    var fileSize: Long = contentLength
+                    var request: com.ketch.Request? = null
+                    request = downloader.value.download(url,
+                        // fileName = fileName,
+                        path = activity.filesDir.absolutePath, // 其他路径需要权限，TODO: 使用系统自带路径选择器
+                        onQueue = {
+                            Log.d(TAG, "onQueue")
+                        },
+                        onStart = { length ->
+                            Log.d(TAG, "onStart -> fileSize: $length")
+                            if (length > 0) {
                                 fileSize = length
-                                WaitDialog.show("开始下载 $fileName")
-                            },
-                            onProgress = { progress, speedInBytePerMs ->
-                                val p = (progress / 100f).toFloat()
-                                Log.d(TAG, "onProgress: $p $progress $fileSize")
-                                WaitDialog.show(
-                                    "正在下载，预计占用 ${getTotalLengthText(fileSize)}\n" +
-                                            "下载速率 ${getSpeedText(speedInBytePerMs)} " +
-                                            "预计等待 ${
-                                                getTimeLeftText(
-                                                    speedInBytePerMs, progress, fileSize
-                                                )
-                                            } ", p
-                                ).setCancelable(true)
-                                    .setOnBackgroundMaskClickListener(object :
-                                        OnBackgroundMaskClickListener<WaitDialog> {
-                                        override fun onClick(
-                                            dialog: WaitDialog?,
-                                            view: View?
-                                        ): Boolean {
-                                            request?.let { it1 -> it.value.cancel(it1.id) }
-                                            return true // 自动关闭等待/提示对话框。
-                                        }
-                                    })
-                            },
-                            onSuccess = {
-                                Log.d(TAG, "onSuccess")
-                                TipDialog.show("下载完成", WaitDialog.TYPE.SUCCESS)
-                            },
-                            onFailure = { error ->
-                                Log.d(TAG, "onFailure -> $error")
-                                WaitDialog.dismiss()
-                                PopNotification.show("下载失败，建议在设置中切换为系统下载器", error)
-                                    .noAutoDismiss()
-                            },
-                            onCancel = {
-                                Log.d(TAG, "onCancel")
-                                WaitDialog.dismiss()
-                                TipDialog.show("下载取消", WaitDialog.TYPE.WARNING)
                             }
-                        )
-                        request.run { }
-                    } ?: {
-                        val downloadRequest = DownloadManager.Request(Uri.parse(url))
-                        downloadRequest.apply {
-                            setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
-                            setTitle(fileName)
-                            setDescription("Downloading file...")
-                            setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                            setDestinationInExternalPublicDir(
-                                Environment.DIRECTORY_DOWNLOADS,
-                                fileName
+                            showDownloaderPage.value = true
+                        },
+                        // TODO: WaitDialog 不稳定，后面使用 DownloaderPage 替换
+                        onProgress = { progress, speedInBytePerMs ->
+                            val clearSize = (0 <= progress && progress <= 100)
+                            val p: Float =
+                                if (clearSize) (progress / 100f).toFloat() else -1f
+                            progressFloat.value = p
+                            speedText.value = getSpeedText(speedInBytePerMs)
+                            sizeText.value = getTotalLengthText(fileSize)
+                            timeText.value = getTimeLeftText(
+                                speedInBytePerMs, progress, fileSize
                             )
-                            setAllowedOverMetered(true)
-                            setAllowedOverRoaming(true)
-                            setMimeType(mimeType)
-                            addRequestHeader("User-Agent", S_Webview.UA_edge_android)
+                            Log.d(TAG, "onProgress: $p $progress $fileSize")
+                        },
+                        onSuccess = {
+                            Log.d(TAG, "onSuccess")
+                            progressFloat.value = 1f
+                        },
+                        onFailure = { error ->
+                            Log.d(TAG, "onFailure -> $error")
+                            PopNotification.show("下载失败，建议在设置中切换为系统下载器", error)
+                                .noAutoDismiss()
+                        },
+                        onCancel = {
+                            Log.d(TAG, "onCancel")
+                            TipDialog.show("下载取消", WaitDialog.TYPE.WARNING)
                         }
-                        val downloadManager =
-                            activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-                        // 设置唯一的请求标识符
-                        val requestId = url.hashCode().toLong()
-                        // 尝试查询是否已经存在相同的下载任务
-                        val cursor =
-                            downloadManager.query(DownloadManager.Query().setFilterById(requestId))
-                        if (cursor.moveToFirst()) {
-                            // 如果已经存在相同的下载任务，则不重新下载
-                            PopTip.show("文件已在下载队列中")
-                        } else {
-                            // 如果不存在相同的下载任务，则添加到下载队列
-                            downloadManager.enqueue(downloadRequest)
-                            PopTip.show("开始下载文件")
-                        }
+                    )
+                    request.run { }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error: ", e)
+                }
+            }
+        }
+        .setNegativeButton("分享下载链接") { _, _ ->
+            val sendIntent: Intent = Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_TEXT, url)
+                type = "text/plain"
+            }
+            val shareIntent = Intent.createChooser(sendIntent, null)
+            startActivity(shareIntent)
+        }
+        .show()
+}
+
+/**
+ * 使用系统下载器
+ */
+@OptIn(DelicateCoroutinesApi::class)
+private fun Activity.startDownload(
+    url: String,
+    mimeType: String,
+    contentLength: Long,
+    contentDisposition: String?,
+    userAgent: String?,
+) {
+    val TAG = "startDownload"
+    val activity = this
+    val fileName = URLUtil.guessFileName(url, null, mimeType)
+    // 显示一个对话框，询问用户是否想要下载文件
+    AlertDialog.Builder(activity)
+        .setTitle("可下载文件 $fileName")
+        .setMessage(
+            "您希望如何处理？点击空白处放弃处理并关闭对话框。\n\n链接：$url \n" +
+                    "描述：$contentDisposition \n大小：${getTotalLengthText(contentLength)} \n类型：$mimeType"
+        )
+        .setPositiveButton("直接下载") { _, _ ->
+            // 在IO线程尝试下载，不阻塞
+            GlobalScope.launch(Dispatchers.IO) {
+                try {
+                    val downloadRequest = DownloadManager.Request(Uri.parse(url))
+                    downloadRequest.apply {
+                        setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
+                        setTitle(fileName)
+                        setDescription(contentDisposition)
+                        setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                        setDestinationInExternalPublicDir(
+                            Environment.DIRECTORY_DOWNLOADS,
+                            fileName
+                        )
+                        setAllowedOverMetered(true)
+                        setAllowedOverRoaming(true)
+                        setMimeType(mimeType)
+                        addRequestHeader("User-Agent", userAgent)
+                    }
+                    val downloadManager =
+                        activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+                    // 设置唯一的请求标识符
+                    val requestId = url.hashCode().toLong()
+                    // 尝试查询是否已经存在相同的下载任务
+                    val cursor =
+                        downloadManager.query(DownloadManager.Query().setFilterById(requestId))
+                    if (cursor.moveToFirst()) {
+                        // 如果已经存在相同的下载任务，则不重新下载
+                        PopTip.show("文件已在下载队列中")
+                    } else {
+                        // 如果不存在相同的下载任务，则添加到下载队列
+                        downloadManager.enqueue(downloadRequest)
+                        PopTip.show("开始下载文件")
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error: ", e)
@@ -844,7 +1002,11 @@ private fun Activity.startDownload(
 /**
  * https://github.com/khushpanchal/Ketch/blob/master/app/src/main/java/com/khush/sample/Util.kt
  */
-private fun getTimeLeftText(speedInBPerMs: Float, progressPercent: Int, lengthInBytes: Long): String {
+private fun getTimeLeftText(
+    speedInBPerMs: Float,
+    progressPercent: Int,
+    lengthInBytes: Long
+): String {
     val speedInBPerSecond = speedInBPerMs * 1000
     val bytesLeft = (lengthInBytes * (100 - progressPercent) / 100).toFloat()
 
@@ -853,6 +1015,7 @@ private fun getTimeLeftText(speedInBPerMs: Float, progressPercent: Int, lengthIn
     val hoursLeft = minutesLeft / 60
 
     return when {
+        secondsLeft <= 0 -> "不确定的"
         secondsLeft < 60 -> "%.0f s".format(secondsLeft)
         minutesLeft < 3 -> "%.0f mins %.0f s".format(minutesLeft, secondsLeft % 60)
         minutesLeft < 60 -> "%.0f mins".format(minutesLeft)
@@ -890,5 +1053,5 @@ private fun getTotalLengthText(lengthInBytes: Long): String {
         unitIndex++
     }
 
-    return "%.2f %s".format(value, units[unitIndex])
+    return if (value > 0) "%.2f %s".format(value, units[unitIndex]) else "不确定的"
 }
