@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/7 上午2:43
+ * updated: 2024/7/7 上午2:43
+ */
+
 @file:Suppress("CompositionLocalNaming", "CompositionLocalNaming")
 
 package sc.windom.potter.producer
@@ -52,6 +60,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -856,7 +865,7 @@ class MainPro : ComponentActivity() {
         val isLandscape =
             LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
 
-        var progressValue by rememberSaveable { mutableStateOf(0) }
+        var progressValue by rememberSaveable { mutableIntStateOf(0) }
         var isButton3OnClickRunning by rememberSaveable { mutableStateOf(false) }
         var isButton4OnClickRunning by rememberSaveable { mutableStateOf(false) }
         var workspaceAssetsDir by rememberSaveable { mutableStateOf("${thisActivity.workspaceParentDir()}/sillot/data/assets") }
@@ -876,9 +885,8 @@ class MainPro : ComponentActivity() {
             showAudioButton = mimeType.value.startsWith("audio/")
             showVideoButton = mimeType.value.startsWith("video/")
             showApkButton =
-                mimeType.value == "application/vnd.android.package-archive" || mimeType.value == "application/apk_1" || (mimeType.value == "application/octet-stream" && fileName.value.endsWith(
-                    ".apk.1"
-                ))
+                mimeType.value == "application/vnd.android.package-archive" || mimeType.value == "application/apk_1" ||
+                        (mimeType.value == "application/octet-stream" && fileName.value.endsWith(".apk.1"))
             if (in2_intent?.data != null) {
                 when (in2_intent?.data?.scheme) {
                     "magnet" -> showMagnetButton = true

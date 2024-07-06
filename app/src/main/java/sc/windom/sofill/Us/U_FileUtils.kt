@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/7 上午2:55
+ * updated: 2024/7/7 上午2:55
+ */
+
 package sc.windom.sofill.Us
 
 import android.annotation.SuppressLint
@@ -22,6 +30,7 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.FolderZip
 import androidx.compose.material.icons.filled.Html
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.InstallDesktop
 import androidx.compose.material.icons.filled.Javascript
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.MusicNote
@@ -620,11 +629,12 @@ object U_FileUtils {
             fileType == "PowerPoint演示文稿" -> Icons.Default.Tab
             fileType == "压缩文件" -> Icons.Default.FolderZip
             fileType == "EPUB" -> Icons.Default.Book
+            fileType == "安卓程序" -> Icons.Default.Android
+            fileType.endsWith("桌面程序") -> Icons.Default.InstallDesktop
             fileType.endsWith("视频") -> Icons.Default.Movie
             fileType.endsWith("音频") -> Icons.Default.MusicNote
             fileType.endsWith("文本") -> Icons.Default.Description
             fileType.endsWith("图像") -> Icons.Default.Image
-            fileType.endsWith("程序") -> Icons.Default.Android
             fileType.endsWith("音频") -> Icons.Default.MusicNote
             else -> Icons.Default.QuestionMark // 默认图标
         }
@@ -724,7 +734,10 @@ object U_FileUtils {
 
             mimeType.startsWith("application/") -> {
                 when (mimeType) {
-                    "application/vnd.android.package-archive" -> "程序"
+                    "application/apk_1" -> "安卓程序"
+                    "application/vnd.android.package-archive" -> "安卓程序"
+                    "application/x-msdownload" -> "Windows可执行桌面程序"
+                    "application/vnd.ms-msi" -> "Windows可安装桌面程序"
                     "application/pdf" -> "PDF"
                     "application/zip" -> "压缩文件"
                     "application/epub+zip" -> "EPUB"
