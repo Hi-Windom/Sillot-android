@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/7 上午2:55
- * updated: 2024/7/7 上午2:55
+ * lastModified: 2024/7/7 上午3:51
+ * updated: 2024/7/7 上午3:51
  */
 
 package sc.windom.sofill.Us
@@ -737,6 +737,7 @@ object U_FileUtils {
                     "application/apk_1" -> "安卓程序"
                     "application/vnd.android.package-archive" -> "安卓程序"
                     "application/x-msdownload" -> "Windows可执行桌面程序"
+                    "application/x-msdos-program" -> "Windows可执行桌面程序"
                     "application/vnd.ms-msi" -> "Windows可安装桌面程序"
                     "application/pdf" -> "PDF"
                     "application/zip" -> "压缩文件"

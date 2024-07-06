@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/6 下午10:09
- * updated: 2024/7/6 下午10:09
+ * lastModified: 2024/7/7 上午4:10
+ * updated: 2024/7/7 上午4:10
  */
 
 package sc.windom.sofill.compose
@@ -18,7 +18,6 @@ import android.net.Uri
 import android.os.Environment
 import android.os.Parcelable
 import android.util.Log
-import android.view.View
 import android.webkit.CookieManager
 import android.webkit.URLUtil
 import android.webkit.WebResourceRequest
@@ -96,12 +95,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
+import androidx.core.content.FileProvider
 import com.blankj.utilcode.util.ActivityUtils.startActivity
 import com.ketch.DownloadConfig
 import com.ketch.Ketch
@@ -109,7 +110,6 @@ import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.dialogs.PopTip
 import com.kongzue.dialogx.dialogs.TipDialog
 import com.kongzue.dialogx.dialogs.WaitDialog
-import com.kongzue.dialogx.interfaces.OnBackgroundMaskClickListener
 import com.tencent.mmkv.MMKV
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -117,6 +117,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.RawValue
+import sc.windom.potter.producer.MainPro
 import sc.windom.sofill.Ss.S_Webview
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_Uri.askIntentForSUS
@@ -130,6 +131,8 @@ import sc.windom.sofill.compose.theme.activeColor
 import sc.windom.sofill.compose.theme.defaultColor
 import sc.windom.sofill.compose.theme.disabledColor
 import sc.windom.sofill.pioneer.getSavedValue
+import java.io.File
+import kotlin.math.roundToInt
 
 private val thisWebView: MutableState<WebView?> = mutableStateOf(null)
 
@@ -613,6 +616,7 @@ private fun WebViewPage(
             )
         )
     ) // 文件下载器
+    val filePath: MutableState<String> = rememberSaveable { mutableStateOf("") } // 下载的文件完整路径
     val showDownloaderPage: MutableState<Boolean> = rememberSaveable { mutableStateOf(false) }
     val progressFloat: MutableState<Float> = rememberSaveable { mutableFloatStateOf(0f) }
     val speedText: MutableState<String> = rememberSaveable { mutableStateOf("") }
@@ -625,6 +629,7 @@ private fun WebViewPage(
             speedText,
             sizeText,
             timeText,
+            filePath,
         )
     }
     // 使用AndroidView嵌入WebView
@@ -667,9 +672,10 @@ private fun WebViewPage(
                         downloader,
                         showDownloaderPage,
                         progressFloat,
-                    speedText,
-                    sizeText,
-                    timeText,
+                        speedText,
+                        sizeText,
+                        timeText,
+                        filePath,
                     )
                 }
             }
@@ -759,7 +765,7 @@ private fun handleUrlLoading(activity: Activity, request: WebResourceRequest): B
  *
  *     // TODO: 路径选择器
  *     // TODO: 配置项：随机文件名
- *     // TODO: 下载完成后打开
+ *     // TODO: 下载已存在文件提醒
  *     // TODO: 下载历史记录
  */
 @Composable
@@ -769,17 +775,22 @@ fun DownloaderPage(
     speedText: MutableState<String>,
     sizeText: MutableState<String>,
     timeText: MutableState<String>,
+    filePath: MutableState<String>,
 ) {
+    val Lcc = LocalContext.current
     val clearSize = (0 <= progressFloat.value && progressFloat.value <= 100) // 只需要判断一次
     Column(
         modifier = Modifier
-            .fillMaxSize().zIndex(999f)
+            .fillMaxSize()
+            .zIndex(999f)
             .background(MaterialTheme.colorScheme.surface),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
-            modifier = Modifier.padding(16.dp)
-                .fillMaxWidth().weight(1f),
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
+                .weight(1f),
             contentAlignment = Alignment.Center
         ) {
             if (clearSize) {
@@ -812,26 +823,39 @@ fun DownloaderPage(
                 )
             }
         }
+        Text(if (clearSize) "下载进度 ${
+            progressFloat.value.roundToInt()
+        }%\n" else "正在下载")
+        Text("下载路径 ${filePath.value}", modifier = Modifier.padding(20.dp, 2.dp))
         if (progressFloat.value == 1f) {
             Button(
-                enabled = false,
-                modifier = Modifier.fillMaxWidth().padding(10.dp, 18.dp),
-                onClick =  {
-                    // TODO
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp, 18.dp),
+                onClick = {
+                    val file = File(filePath.value)
+                    val fileUri: Uri = FileProvider.getUriForFile(Lcc, Lcc.applicationContext.packageName, file)
+                    Intent(Lcc, MainPro::class.java).let {
+                        it.data = fileUri
+                        it.flags = Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                        it.action = Intent.ACTION_VIEW
+                        startActivity(it)
+                    }
                 }) {
                 Text("打开文件")
             }
         } else {
-            Text(if (clearSize) "正在下载 ${progressFloat.value * 100}%\n" else "正在下载")
             Text("下载速率 ${speedText.value}")
             Text("预计占用 ${sizeText.value}")
             Text("预计等待 ${timeText.value}")
         }
         Button(
-            modifier = Modifier.fillMaxWidth().padding(10.dp, 18.dp),
-            onClick =  {
-            showDownloaderPage.value = false
-        }) {
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp, 18.dp),
+            onClick = {
+                showDownloaderPage.value = false
+            }) {
             Text("关闭")
         }
     }
@@ -852,10 +876,13 @@ private fun Activity.startDownload2(
     speedText: MutableState<String>,
     sizeText: MutableState<String>,
     timeText: MutableState<String>,
+    filePath: MutableState<String>,
 ) {
     val TAG = "startDownload"
     val activity = this
     val fileName = URLUtil.guessFileName(url, null, mimeType)
+    val fileDir = activity.filesDir.absolutePath // 其他路径需要权限，TODO: 使用系统自带路径选择器
+    filePath.value = "${fileDir}/$fileName"
     // 显示一个对话框，询问用户是否想要下载文件
     AlertDialog.Builder(activity)
         .setTitle("可下载文件 $fileName")
@@ -870,8 +897,8 @@ private fun Activity.startDownload2(
                     var fileSize: Long = contentLength
                     var request: com.ketch.Request? = null
                     request = downloader.value.download(url,
-                        // fileName = fileName,
-                        path = activity.filesDir.absolutePath, // 其他路径需要权限，TODO: 使用系统自带路径选择器
+                        fileName = fileName,
+                        path = fileDir,
                         onQueue = {
                             Log.d(TAG, "onQueue")
                         },
@@ -882,7 +909,6 @@ private fun Activity.startDownload2(
                             }
                             showDownloaderPage.value = true
                         },
-                        // TODO: WaitDialog 不稳定，后面使用 DownloaderPage 替换
                         onProgress = { progress, speedInBytePerMs ->
                             val clearSize = (0 <= progress && progress <= 100)
                             val p: Float =
