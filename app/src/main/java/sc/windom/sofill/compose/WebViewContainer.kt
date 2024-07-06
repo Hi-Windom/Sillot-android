@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/6 上午7:12
- * updated: 2024/7/6 上午7:12
+ * lastModified: 2024/7/6 下午7:31
+ * updated: 2024/7/6 下午7:31
  */
 
 package sc.windom.sofill.compose
@@ -18,6 +18,7 @@ import android.net.Uri
 import android.os.Environment
 import android.os.Parcelable
 import android.util.Log
+import android.view.View
 import android.webkit.CookieManager
 import android.webkit.URLUtil
 import android.webkit.WebResourceRequest
@@ -98,7 +99,14 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import com.blankj.utilcode.util.ActivityUtils.startActivity
+import com.ketch.DownloadConfig
+import com.ketch.Ketch
+import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.dialogs.PopTip
+import com.kongzue.dialogx.dialogs.TipDialog
+import com.kongzue.dialogx.dialogs.WaitDialog
+import com.kongzue.dialogx.interfaces.OnBackPressedListener
+import com.kongzue.dialogx.interfaces.OnBackgroundMaskClickListener
 import com.tencent.mmkv.MMKV
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -364,6 +372,9 @@ fun GoToOption(
     }
 }
 
+/**
+ * 入口函数
+ */
 @Composable
 fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Unit) {
     val TAG = "FullScreenWebView"
@@ -578,7 +589,7 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
     )
 }
 
-@SuppressLint("SetJavaScriptEnabled")
+@SuppressLint("SetJavaScriptEnabled", "UnrememberedMutableState")
 @Composable
 private fun WebViewPage(
     activity: Activity,
@@ -591,6 +602,14 @@ private fun WebViewPage(
     val mmkv = MMKV.defaultMMKV()
     val sliderState_webViewTextZoom =
         mmkv.getSavedValue("WebViewContainer@sliderState_webViewTextZoom", 100)
+    val downloader: MutableState<Ketch> = mutableStateOf(
+        Ketch.init(
+            activity, downloadConfig = DownloadConfig(
+                connectTimeOutInMs = 30000L, //Default: 10000L
+                readTimeOutInMs = 30000L //Default: 10000L
+            )
+        )
+    ) // 文件下载器
     // 使用AndroidView嵌入WebView
     AndroidView(modifier = Modifier.fillMaxSize(), factory = {
         WebView(it).apply {
@@ -610,7 +629,15 @@ private fun WebViewPage(
             )
             this.webChromeClient = thisWebChromeClient(activity)
             this.setDownloadListener { url, userAgent, contentDisposition, mimeType, contentLength ->
-                activity.startDownload(url, userAgent, contentDisposition, mimeType)
+                val switchState_使用系统自带下载器下载文件 = mmkv.getSavedValue(
+                    "WebViewContainer@switchState_使用系统自带下载器下载文件",
+                    false
+                )
+                if (switchState_使用系统自带下载器下载文件) {
+                    activity.startDownload(url, mimeType)
+                } else {
+                    activity.startDownload(url, mimeType, downloader)
+                }
             }
             this.setFindListener(object : FindListener {
                 override fun onFindResultReceived(
@@ -690,89 +717,6 @@ private fun handleUrlLoading(activity: Activity, request: WebResourceRequest): B
     ) {
         activity.askIntentForSUS(_url, real_url)
     } else {
-        // WebView.setDownloadListener 是更好的方案，这里保留历史代码，后续版本清理
-        // 在IO线程尝试下载，不阻塞
-//        GlobalScope.launch(Dispatchers.IO) {
-//            if (request.isRedirect) {
-//                return@launch // GitHub Assets 请求重定向导致重复下载问题
-//            }
-//            // 发送HEAD请求以获取Content-Type
-//            var connection: HttpURLConnection? = null
-//            try {
-//                connection = URL(url).openConnection() as HttpURLConnection
-//                connection.requestMethod = "HEAD"
-//                connection.connect()
-//                val contentType = connection.contentType
-//
-//                // 获取服务器提供的文件名
-//                val contentDisposition = connection.getHeaderField("Content-Disposition")
-//                val fileName =
-//                    if (contentDisposition != null && contentDisposition.contains("filename=")) {
-//                        contentDisposition.substringAfter("filename=").replace("\"", "")
-//                    } else {
-//                        URLUtil.guessFileName(url, null, contentType)
-//                    }
-//                Log.d(TAG, "$contentDisposition, $contentType, $fileName")
-//                if (contentType != null && isCommonSupportDownloadMIMEType(contentType, fileName)) {
-//                    val mmkv = MMKV.defaultMMKV()
-//                    val switchState_使用系统自带下载器下载文件 = mmkv.getSavedValue(
-//                        "WebViewContainer@switchState_使用系统自带下载器下载文件",
-//                        false
-//                    )
-//
-//
-//                    if (switchState_使用系统自带下载器下载文件) {
-//                        // 创建下载请求
-//                        val downloadRequest = DownloadManager.Request(Uri.parse(url))
-//                        downloadRequest.apply {
-//                            setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
-//                            setTitle(fileName)
-//                            setDescription("Downloading file...")
-//                            setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-//                            setDestinationInExternalPublicDir(
-//                                Environment.DIRECTORY_DOWNLOADS,
-//                                fileName
-//                            )
-//                            setAllowedOverMetered(true)
-//                            setAllowedOverRoaming(true)
-//                            setMimeType(contentType)
-//                            addRequestHeader("User-Agent", S_Webview.UA_edge_android)
-//                        }
-//                        val downloadManager =
-//                            activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-//                        // 设置唯一的请求标识符
-//                        val requestId = url.hashCode().toLong()
-//                        // 尝试查询是否已经存在相同的下载任务
-//                        val cursor =
-//                            downloadManager.query(DownloadManager.Query().setFilterById(requestId))
-//                        if (cursor.moveToFirst()) {
-//                            // 如果已经存在相同的下载任务，则不重新下载
-//                            PopTip.show("文件已在下载队列中")
-//                        } else {
-//                            // 如果不存在相同的下载任务，则添加到下载队列
-//                            downloadManager.enqueue(downloadRequest)
-//                            PopTip.show("开始下载文件")
-//                        }
-//                    } else {
-//                        val sendIntent: Intent = Intent().apply {
-//                            action = Intent.ACTION_SEND
-//                            putExtra(Intent.EXTRA_TEXT, url)
-//                            type = "text/plain"
-//                        }
-//
-//                        val shareIntent = Intent.createChooser(sendIntent, null)
-//                        startActivity(shareIntent)
-//                    }
-//
-//
-//                }
-//            } catch (e: Exception) {
-//                Log.e(TAG, "Error while checking Content-Type: ", e)
-//            } finally {
-//                connection?.disconnect()
-//            }
-//        }
-
         false
     }
 }
@@ -780,9 +724,8 @@ private fun handleUrlLoading(activity: Activity, request: WebResourceRequest): B
 @OptIn(DelicateCoroutinesApi::class)
 private fun Activity.startDownload(
     url: String,
-    userAgent: String,
-    contentDisposition: String,
-    mimeType: String
+    mimeType: String,
+    downloader: MutableState<Ketch>? = null
 ) {
     val TAG = "startDownload"
     val activity = this
@@ -795,36 +738,91 @@ private fun Activity.startDownload(
             // 在IO线程尝试下载，不阻塞
             GlobalScope.launch(Dispatchers.IO) {
                 try {
-                    // 创建下载请求
-                    val downloadRequest = DownloadManager.Request(Uri.parse(url))
-                    downloadRequest.apply {
-                        setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
-                        setTitle(fileName)
-                        setDescription("Downloading file...")
-                        setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                        setDestinationInExternalPublicDir(
-                            Environment.DIRECTORY_DOWNLOADS,
-                            fileName
+                    downloader?.let {
+                        var fileSize: Long = 0
+                        var request: com.ketch.Request? = null
+                        request = it.value.download(url,
+                            fileName = fileName,
+                            path = activity.filesDir.absolutePath, // 其他路径需要权限，TODO: 使用系统自带路径选择器
+                            onQueue = {
+                                Log.d(TAG, "onQueue")
+                            },
+                            onStart = { length ->
+                                Log.d(TAG, "onStart")
+                                fileSize = length
+                                WaitDialog.show("开始下载 $fileName")
+                            },
+                            onProgress = { progress, speedInBytePerMs ->
+                                val p = (progress / 100f).toFloat()
+                                Log.d(TAG, "onProgress: $p $progress $fileSize")
+                                WaitDialog.show(
+                                    "正在下载，预计占用 ${getTotalLengthText(fileSize)}\n" +
+                                            "下载速率 ${getSpeedText(speedInBytePerMs)} " +
+                                            "预计等待 ${
+                                                getTimeLeftText(
+                                                    speedInBytePerMs, progress, fileSize
+                                                )
+                                            } ", p
+                                ).setCancelable(true)
+                                    .setOnBackgroundMaskClickListener(object :
+                                        OnBackgroundMaskClickListener<WaitDialog> {
+                                        override fun onClick(
+                                            dialog: WaitDialog?,
+                                            view: View?
+                                        ): Boolean {
+                                            request?.let { it1 -> it.value.cancel(it1.id) }
+                                            return true // 自动关闭等待/提示对话框。
+                                        }
+                                    })
+                            },
+                            onSuccess = {
+                                Log.d(TAG, "onSuccess")
+                                TipDialog.show("下载完成", WaitDialog.TYPE.SUCCESS)
+                            },
+                            onFailure = { error ->
+                                Log.d(TAG, "onFailure -> $error")
+                                WaitDialog.dismiss()
+                                PopNotification.show("下载失败，建议在设置中切换为系统下载器", error)
+                                    .noAutoDismiss()
+                            },
+                            onCancel = {
+                                Log.d(TAG, "onCancel")
+                                WaitDialog.dismiss()
+                                TipDialog.show("下载取消", WaitDialog.TYPE.WARNING)
+                            }
                         )
-                        setAllowedOverMetered(true)
-                        setAllowedOverRoaming(true)
-                        setMimeType(mimeType)
-                        addRequestHeader("User-Agent", S_Webview.UA_edge_android)
-                    }
-                    val downloadManager =
-                        activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-                    // 设置唯一的请求标识符
-                    val requestId = url.hashCode().toLong()
-                    // 尝试查询是否已经存在相同的下载任务
-                    val cursor =
-                        downloadManager.query(DownloadManager.Query().setFilterById(requestId))
-                    if (cursor.moveToFirst()) {
-                        // 如果已经存在相同的下载任务，则不重新下载
-                        PopTip.show("文件已在下载队列中")
-                    } else {
-                        // 如果不存在相同的下载任务，则添加到下载队列
-                        downloadManager.enqueue(downloadRequest)
-                        PopTip.show("开始下载文件")
+                        request.run { }
+                    } ?: {
+                        val downloadRequest = DownloadManager.Request(Uri.parse(url))
+                        downloadRequest.apply {
+                            setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
+                            setTitle(fileName)
+                            setDescription("Downloading file...")
+                            setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                            setDestinationInExternalPublicDir(
+                                Environment.DIRECTORY_DOWNLOADS,
+                                fileName
+                            )
+                            setAllowedOverMetered(true)
+                            setAllowedOverRoaming(true)
+                            setMimeType(mimeType)
+                            addRequestHeader("User-Agent", S_Webview.UA_edge_android)
+                        }
+                        val downloadManager =
+                            activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+                        // 设置唯一的请求标识符
+                        val requestId = url.hashCode().toLong()
+                        // 尝试查询是否已经存在相同的下载任务
+                        val cursor =
+                            downloadManager.query(DownloadManager.Query().setFilterById(requestId))
+                        if (cursor.moveToFirst()) {
+                            // 如果已经存在相同的下载任务，则不重新下载
+                            PopTip.show("文件已在下载队列中")
+                        } else {
+                            // 如果不存在相同的下载任务，则添加到下载队列
+                            downloadManager.enqueue(downloadRequest)
+                            PopTip.show("开始下载文件")
+                        }
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error: ", e)
@@ -841,4 +839,56 @@ private fun Activity.startDownload(
             startActivity(shareIntent)
         }
         .show()
+}
+
+/**
+ * https://github.com/khushpanchal/Ketch/blob/master/app/src/main/java/com/khush/sample/Util.kt
+ */
+private fun getTimeLeftText(speedInBPerMs: Float, progressPercent: Int, lengthInBytes: Long): String {
+    val speedInBPerSecond = speedInBPerMs * 1000
+    val bytesLeft = (lengthInBytes * (100 - progressPercent) / 100).toFloat()
+
+    val secondsLeft = bytesLeft / speedInBPerSecond
+    val minutesLeft = secondsLeft / 60
+    val hoursLeft = minutesLeft / 60
+
+    return when {
+        secondsLeft < 60 -> "%.0f s".format(secondsLeft)
+        minutesLeft < 3 -> "%.0f mins %.0f s".format(minutesLeft, secondsLeft % 60)
+        minutesLeft < 60 -> "%.0f mins".format(minutesLeft)
+        minutesLeft < 300 -> "%.0f hrs and %.0f mins".format(hoursLeft, minutesLeft % 60)
+        else -> "%.0f hrs".format(hoursLeft)
+    }
+}
+
+/**
+ * https://github.com/khushpanchal/Ketch/blob/master/app/src/main/java/com/khush/sample/Util.kt
+ */
+private fun getSpeedText(speedInBPerMs: Float): String {
+    var value = speedInBPerMs * 1000
+    val units = arrayOf("b/s", "kb/s", "mb/s", "gb/s")
+    var unitIndex = 0
+
+    while (value >= 500 && unitIndex < units.size - 1) {
+        value /= 1024
+        unitIndex++
+    }
+
+    return "%.2f %s".format(value, units[unitIndex])
+}
+
+/**
+ * https://github.com/khushpanchal/Ketch/blob/master/app/src/main/java/com/khush/sample/Util.kt
+ */
+private fun getTotalLengthText(lengthInBytes: Long): String {
+    var value = lengthInBytes.toFloat()
+    val units = arrayOf("b", "kb", "mb", "gb")
+    var unitIndex = 0
+
+    while (value >= 500 && unitIndex < units.size - 1) {
+        value /= 1024
+        unitIndex++
+    }
+
+    return "%.2f %s".format(value, units[unitIndex])
 }

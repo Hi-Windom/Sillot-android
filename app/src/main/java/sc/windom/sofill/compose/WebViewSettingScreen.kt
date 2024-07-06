@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/6 上午7:20
+ * updated: 2024/7/6 上午7:20
+ */
+
 package sc.windom.sofill.compose
 
 import android.webkit.WebView
@@ -64,12 +72,12 @@ fun SettingScreen(thisWebView: MutableState<WebView?>) {
         )
 
         // Switch组件
-        SettingSwitch("使用系统自带下载器下载文件", switchState_使用系统自带下载器下载文件)
+        SettingSwitch("使用系统自带下载器下载文件", switchState_使用系统自带下载器下载文件) // TODO
         // 根据switchState的变化来执行操作
         if (switchState_使用系统自带下载器下载文件.value) {
-            Text("使用系统自带下载器，下载自动开始，用户可在通知栏查看下载进度")
+            Text("使用系统自带下载器，用户可在通知栏查看下载进度。不同系统表现不一致。")
         } else {
-            Text("通过分享链接的方式，用户可以选择对应的处理程序")
+            Text("使用汐洛下载器，功能更加强大，不同系统表现一致。如果出现问题请切换回系统自带下载器。")
         }
 
         // 滑块组件

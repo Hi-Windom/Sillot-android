@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+  ~ Copyright (c) 2024.
+  ~
+  ~ lastModified: 2024/7/6 下午3:41
+  ~ updated: 2024/7/6 下午3:41
+  -->
+
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools">
 
@@ -608,13 +616,6 @@
                    https://github.com/siyuan-note/siyuan/issues/9455
                -->
         </activity>
-        <activity
-                android:name=".AgentWebActivity"
-                android:autoRemoveFromRecents="false"
-                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
-                android:hardwareAccelerated="true"
-                android:taskAffinity=".sillot.task.webview"
-                android:windowSoftInputMode="adjustResize"/>
         <activity
                 android:name="cn.jpush.android.ui.PopWinActivity"
                 android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
