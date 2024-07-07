@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午5:19
- * updated: 2024/7/8 上午5:19
+ * lastModified: 2024/7/8 上午5:26
+ * updated: 2024/7/8 上午5:26
  */
 
 package sc.windom.sofill.compose
@@ -804,7 +804,7 @@ fun DownloaderPage(
             }
         }
         Text(if (clearSize) "下载进度 ${
-            progressFloat.value.roundToInt()
+            (progressFloat.value * 100).roundToInt()
         }%\n" else "正在下载")
         Text("下载路径 ${filePath.value}", modifier = Modifier.padding(20.dp, 2.dp))
         if (progressFloat.value == 1f) {
