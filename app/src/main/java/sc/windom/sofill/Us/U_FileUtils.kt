@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/7 上午3:51
- * updated: 2024/7/7 上午3:51
+ * lastModified: 2024/7/7 下午6:42
+ * updated: 2024/7/7 下午6:42
  */
 
 package sc.windom.sofill.Us
@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import org.b3log.siyuan.sillot.util.FileUtil
+import sc.windom.sofill.Ss.S_File
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -617,19 +618,19 @@ object U_FileUtils {
     fun getIconForFileType(fileType: String): ImageVector {
         return when {
             // 自定义的MIME类型::开始
-            fileType == "磁力链接" -> Icons.Default.AddLink
+            fileType == S_File.TypeNameBySuffix_magnet -> Icons.Default.AddLink
             // 自定义的MIME类型::结束
             fileType == "其他文本" -> Icons.Default.TextFields
             fileType == "HTML" -> Icons.Default.Html
             fileType == "CSS" -> Icons.Default.Css
             fileType == "JavaScript" -> Icons.Default.Javascript
             fileType == "PDF" -> Icons.Default.PictureAsPdf
-            fileType == "Word文档" -> Icons.Default.Badge
-            fileType == "Excel表格" -> Icons.Default.TableChart
-            fileType == "PowerPoint演示文稿" -> Icons.Default.Tab
+            fileType == S_File.TypeNameBySuffix_word -> Icons.Default.Badge
+            fileType == S_File.TypeNameBySuffix_excel -> Icons.Default.TableChart
+            fileType == S_File.TypeNameBySuffix_ppt -> Icons.Default.Tab
             fileType == "压缩文件" -> Icons.Default.FolderZip
             fileType == "EPUB" -> Icons.Default.Book
-            fileType == "安卓程序" -> Icons.Default.Android
+            fileType == S_File.TypeNameBySuffix_apk -> Icons.Default.Android
             fileType.endsWith("桌面程序") -> Icons.Default.InstallDesktop
             fileType.endsWith("视频") -> Icons.Default.Movie
             fileType.endsWith("音频") -> Icons.Default.MusicNote
@@ -671,12 +672,12 @@ object U_FileUtils {
     fun getFileMIMEType(mimeType: String, fileName: String = ""): String {
         when {
             fileName.endsWith(".apk.1") -> {
-                return "程序"
+                return S_File.TypeNameBySuffix_apk
             }
         }
         return when {
             // 自定义的MIME类型::开始
-            mimeType == "application/x-magnet" -> "磁力链接"
+            mimeType == "application/x-magnet" -> S_File.TypeNameBySuffix_magnet
             // 自定义的MIME类型::结束
 
             mimeType.startsWith("video/") -> {
@@ -734,20 +735,20 @@ object U_FileUtils {
 
             mimeType.startsWith("application/") -> {
                 when (mimeType) {
-                    "application/apk_1" -> "安卓程序"
-                    "application/vnd.android.package-archive" -> "安卓程序"
+                    "application/apk_1" -> S_File.TypeNameBySuffix_apk
+                    "application/vnd.android.package-archive" -> S_File.TypeNameBySuffix_apk
                     "application/x-msdownload" -> "Windows可执行桌面程序"
                     "application/x-msdos-program" -> "Windows可执行桌面程序"
                     "application/vnd.ms-msi" -> "Windows可安装桌面程序"
                     "application/pdf" -> "PDF"
                     "application/zip" -> "压缩文件"
                     "application/epub+zip" -> "EPUB"
-                    "application/msword" -> "Word文档"
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> "Word文档"
-                    "application/vnd.ms-excel" -> "Excel表格"
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" -> "Excel表格"
-                    "application/vnd.ms-powerpoint" -> "PowerPoint演示文稿"
-                    "application/vnd.openxmlformats-officedocument.presentationml.presentation" -> "PowerPoint演示文稿"
+                    "application/msword" -> S_File.TypeNameBySuffix_word
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> S_File.TypeNameBySuffix_word
+                    "application/vnd.ms-excel" -> S_File.TypeNameBySuffix_excel
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" -> S_File.TypeNameBySuffix_excel
+                    "application/vnd.ms-powerpoint" -> S_File.TypeNameBySuffix_ppt
+                    "application/vnd.openxmlformats-officedocument.presentationml.presentation" -> S_File.TypeNameBySuffix_ppt
                     else -> mimeType
                 }
             }

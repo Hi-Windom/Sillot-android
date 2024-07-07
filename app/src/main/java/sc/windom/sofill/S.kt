@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/7 下午6:35
+ * updated: 2024/7/7 下午6:35
+ */
+
 @file:Suppress("CompositionLocalNaming", "CompositionLocalNaming")
 package sc.windom.sofill
 
@@ -8,6 +16,7 @@ import sc.windom.sofill.Ss.S_ColorStringHex
 import sc.windom.sofill.Ss.S_Compose
 import sc.windom.sofill.Ss.S_DEBUG
 import sc.windom.sofill.Ss.S_Events
+import sc.windom.sofill.Ss.S_File
 import sc.windom.sofill.Ss.S_Intent
 import sc.windom.sofill.Ss.S_REQUEST_CODE
 import sc.windom.sofill.Ss.S_Uri
@@ -82,5 +91,8 @@ object S {
 
     @JvmStatic
     val URI = S_Uri
+
+    @JvmStatic
+    val FILE = S_File
 
 }
