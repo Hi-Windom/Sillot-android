@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/7 下午10:31
+ * updated: 2024/7/7 下午10:31
+ */
+
 package sc.windom.sofill.pioneer
 
 import android.content.Context
@@ -6,9 +14,15 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.core.content.edit
 import com.tencent.mmkv.MMKV
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.serialization.serializer
 import sc.windom.sofill.S
 
 /**
@@ -63,6 +77,87 @@ inline fun <reified T : Any> rememberSaveableMMKV(
     }
 
     return state
+}
+
+/**
+ * 创建一个支持序列化 @Serializable 的状态，并使用 MMKV 库进行状态的保存和恢复。当值发生变化时自动保存，无需用户额外 LaunchedEffect 和 DisposableEffect
+ * 由于rememberSaveable不支持复杂的数据类型。此函数使用remember而不是rememberSaveable来创建状态。
+ * TODO: 支持 @Parcelize ( fun rememberParcelizeMMKV）
+ *
+ * @param mmkv MMKV 实例，用于状态的保存和恢复。
+ * @param key 在 MMKV 中用于标识状态的键。
+ * @param defaultValue 状态的默认值，当从 MMKV 中恢复状态时，如果找不到对应的键，则返回此默认值。
+ * @param onLaunchEffect 在 LaunchedEffect 中运行的可选回调函数。第一个参数与传参key一致，第二个参数与返回值一致。
+ * @return 返回一个 MutableState<T> 对象，其中 T 是状态的实际类型。
+ */
+@Composable
+inline fun <reified T : Any> rememberSerializableMMKV(
+    mmkv: MMKV,
+    key: String,
+    defaultValue: T,
+    noinline onLaunchEffect: ((key: String, it: MutableState<T>) -> Unit)? = null
+): MutableState<T> {
+    val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true } // 创建Json实例，可以根据需要配置
+    val serializer = serializer<T>() // 获取T类型的序列化器
+
+    // 从MMKV中恢复状态，如果不存在，则使用默认值
+    val restoredValue = mmkv.getString(key, null)?.let { json.decodeFromString(serializer, it) } ?: defaultValue
+
+    // 创建可持久化的状态
+    val state = remember { mutableStateOf(restoredValue) }
+
+    // 当状态发生变化时，保存到MMKV
+    LaunchedEffect(state.value) {
+        mmkv.encode(key, json.encodeToString(serializer, state.value))
+        onLaunchEffect?.invoke(key, state)
+    }
+
+    // 在配置更改时，从MMKV恢复状态
+    DisposableEffect(key) {
+        onDispose {
+            state.value = mmkv.getString(key, null)?.let { json.decodeFromString(serializer, it) } ?: defaultValue
+        }
+    }
+
+    return state
+}
+
+
+/**
+ * 创建一个支持序列化 @Serializable 的 Flow 状态，并使用 MMKV 库进行状态的保存和恢复。当值发生变化时自动保存。配合 ViewModel 使用
+ * @param mmkv MMKV 实例，用于状态的保存和恢复。
+ * @param key 在 MMKV 中用于标识状态的键。
+ * @param defaultValue 状态的默认值，当从 MMKV 中恢复状态时，如果找不到对应的键，则返回此默认值。
+ * @param onInit 初始化后需要做什么，提供一个可空的 savedValue ，从MMKV中恢复。应当只进行数据操作，不要直接操作UI
+ * @return 返回一个 MutableStateFlow<T?> 对象，其中 T 是状态的实际类型。
+ */
+inline fun <reified T : Any> savableStateFlowMMKV(
+    mmkv: MMKV,
+    key: String,
+    defaultValue: T?,
+    noinline onInit: ((savedValue: T?) -> Unit)? = null
+): MutableStateFlow<T?> {
+    val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+    val serializer = serializer<T>()
+
+    // 从MMKV中恢复状态，如果不存在，则使用默认值
+    val _saved = mmkv.getString(key, null)?.let { json.decodeFromString(serializer, it) }
+    val _stateFlow = _saved?.let { MutableStateFlow(it) } ?: MutableStateFlow(defaultValue)
+    // 使用类型转换来消除 CapturedType
+    val stateFlow: MutableStateFlow<T?> = _stateFlow as MutableStateFlow<T?>
+
+    CoroutineScope(Dispatchers.IO).launch { // Use GlobalScope.launch if you want the coroutine to be lifecycle-aware
+        onInit?.invoke(_saved)
+        // 当状态发生变化时，保存到MMKV
+        stateFlow.collect { value ->
+            // Serialize and save only the value, not the StateFlow itself
+            value?.let {
+                mmkv.encode(key, json.encodeToString(serializer(), value))
+            }
+        }
+    }
+
+    return stateFlow
 }
 
 /**

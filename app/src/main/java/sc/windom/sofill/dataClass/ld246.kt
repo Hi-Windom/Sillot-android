@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/7 下午5:06
- * updated: 2024/7/7 下午5:06
+ * lastModified: 2024/7/7 下午9:24
+ * updated: 2024/7/7 下午9:24
  */
 
 package sc.windom.sofill.dataClass
@@ -33,13 +33,13 @@ data class ld246_Response_Data(
 )
 @Serializable
 data class ld246_Response_Data_Notification(
-    val dataId: String,
+    val dataId: String? = null,
     val authorName: String? = null,
     val authorAvatarURL: String? = null,
-    val dataType: Int,
-    val hasRead: Boolean,
+    val dataType: Int? = null,
+    val hasRead: Boolean? = null,
     val title: String? = null,
-    val content: String,
+    val content: String? = null,
 )
 @Serializable
 data class Pagination(
