@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午5:41
- * updated: 2024/7/8 上午5:41
+ * lastModified: 2024/7/8 上午6:17
+ * updated: 2024/7/8 上午6:17
  */
 
 import org.jetbrains.kotlin.gradle.dsl.jvm.JvmTargetValidationMode
@@ -74,10 +74,10 @@ android {
                 outputFileName = "Sillot-v${versionSillot}_${genDate()}_syv${siyuanVersionName}.apk"
             }
             else if (versionType.equalsIgnoreCase("canary")) {
-                outputFileName = "Sillot[canary]-v${versionSillot}_${genDate()}_syv${siyuanVersionName}.apk"
+                outputFileName = "Sillot.canary-v${versionSillot}_syv${siyuanVersionName}.apk"
             }
             else if (versionType.equalsIgnoreCase("dev")) {
-                outputFileName = "Sillot[dev]-v${versionSillot}_${genDate()}_syv${siyuanVersionName}.apk"
+                outputFileName = "Sillot.dev-v${versionSillot}_syv${siyuanVersionName}.apk"
             }
             else {
                 outputFileName = "Sillot.apk"
