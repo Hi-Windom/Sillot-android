@@ -1,9 +1,16 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/7 下午5:23
+ * updated: 2024/7/7 下午5:23
+ */
+
 package org.b3log.ld246
 
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.text.Spannable
 import android.text.method.LinkMovementMethod
@@ -17,20 +24,15 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.Album
 import androidx.compose.material.icons.twotone.Article
@@ -73,12 +75,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
@@ -94,8 +93,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import coil.size.Scale
-import coil.size.Size
 import com.kongzue.dialogx.dialogs.InputDialog
 import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.dialogs.PopTip
@@ -114,6 +111,7 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import sc.windom.sofill.S
 import sc.windom.sofill.Ss.S_Uri
+import sc.windom.sofill.Ss.S_Webview
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_DEBUG.srcPath
 import sc.windom.sofill.Us.U_Uri
@@ -141,7 +139,6 @@ class HomeActivity : ComponentActivity() {
     private val srcPath = srcPath(TAG)
     private lateinit var thisActivity: Activity
     private var mmkv: MMKV = MMKV.defaultMMKV()
-    val ua = "Sillot-anroid/0.35"
     private var exitTime: Long = 0
     private var openUrlExternal: Boolean =
         mmkv.getSavedValue("${S.AppQueryIDs.汐洛}_@openUrlExternal", false) // 全局同步配置
@@ -258,7 +255,7 @@ class HomeActivity : ComponentActivity() {
         userPageData: MutableState<ld246_User>,
         pullToRefreshState: PullToRefreshState?
     ) {
-        val caller = apiService?.apiV2UserGet(token, ua)
+        val caller = apiService?.apiV2UserGet(token, S_Webview.UA_edge_android)
         caller?.enqueue(object : Callback<ld246_Response> {
             override fun onResponse(
                 p0: Call<ld246_Response>,
@@ -448,7 +445,7 @@ class HomeActivity : ComponentActivity() {
                                     }
                                 }
                             } else {
-                                UserPage(userPageData.value)
+                                UserPage(userPageData.value, ::_openURL)
                             }
                         } else {
                             notificationsState?.let { it1 -> NotificationsScreen(it1) }
@@ -667,177 +664,6 @@ class HomeActivity : ComponentActivity() {
         }
     }
 
-
-    @Composable
-    private fun UserPage(user: ld246_User) {
-        val Lcc = LocalContext.current
-        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            // 高斯模糊背景
-            AsyncImage(
-                model = user.userCardBImgURL,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 120.dp)
-                    .blur(radius = 20.dp) // 这里添加高斯模糊效果
-            )
-            // 这里可以放置其他内容，它们将显示在背景图片之上
-
-            Column(
-                modifier = Modifier
-                    .padding(6.dp),
-            ) {
-                // 用户头像和基本信息
-                Row(
-                    modifier = Modifier
-                        .padding(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .clickable {
-                                if (user.userName?.isNotBlank() == true) {
-                                    Lcc.startActivity(
-                                        Intent(
-                                            Intent.ACTION_VIEW,
-                                            Uri.parse("https://${S.HOST_ld246}/member/${user.userName}")
-                                        )
-                                    )
-                                }
-                            }, contentAlignment = Alignment.Center
-                    ) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(user.userAvatarURL)
-                                .size(Size(300, 300))
-                                .scale(Scale.FILL)
-                                .build(),
-                            contentDescription = "User Avatar",
-                            modifier = Modifier
-                                .size(150.dp)
-                                .clip(CircleShape), // 使用圆形裁剪
-                        )
-                    }
-                    Spacer(
-                        modifier = Modifier
-                            .width(16.dp)
-                            .fillMaxWidth()
-                    )
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Column {
-                            user.userName?.let {
-                                Text(
-                                    text = "$it (${user.userNickname})",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 24.sp
-                                )
-                            }
-                            user.userIntro?.let {
-                                Text(
-                                    text = it,
-                                    fontSize = 16.sp
-                                )
-                            }
-                        }
-                    }
-                }
-
-                Spacer(
-                    modifier = Modifier
-                        .height(16.dp)
-                        .fillMaxWidth()
-                )
-                UserProfileScreen(user)
-            }
-        }
-    }
-
-    @Composable
-    private fun UserProfileScreen(user: ld246_User) {
-        // 两列布局
-        Row {
-            // 左侧列
-            Column(modifier = Modifier.weight(1f)) {
-                user.userNo?.let {
-                    ProfileInfoItem(
-                        "编号",
-                        it
-                    ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}") }
-                }
-                user.userArticleCount?.let {
-                    ProfileInfoItem(
-                        "帖子",
-                        it
-                    ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}/articles") }
-                }
-                user.userCommentCount?.let {
-                    ProfileInfoItem(
-                        "回帖",
-                        it
-                    ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}/comments") }
-                }
-                user.userComment2Count?.let {
-                    ProfileInfoItem(
-                        "评论",
-                        it
-                    ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}/comment2s") }
-                }
-            }
-            // 右侧列
-            Column(modifier = Modifier.weight(1f)) {
-                user.userPoint?.let {
-                    ProfileInfoItem(
-                        "积分",
-                        it
-                    ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}/points") }
-                }
-                user.userGeneralRank?.let {
-                    ProfileInfoItem(
-                        "综合贡献点",
-                        it
-                    ) { _openURL("https://${S.HOST_ld246}/top/general") }
-                }
-                user.userCurrentCheckinStreak?.let {
-                    ProfileInfoItem(
-                        "最近连签",
-                        it
-                    ) { _openURL("https://${S.HOST_ld246}/activity/checkin") }
-                }
-                user.userLongestCheckinStreak?.let {
-                    ProfileInfoItem(
-                        "最长连签",
-                        it
-                    ) { _openURL("https://${S.HOST_ld246}/activity/checkin") }
-                }
-            }
-        }
-    }
-
-
-    @Composable
-    private fun ProfileInfoItem(title: String, value: Any, onClick: () -> Unit) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .height(38.dp)
-                .clickable(onClick = onClick)
-        ) {
-            Text(
-                text = title,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = value.toString(),
-                fontStyle = FontStyle.Italic,
-                fontSize = 18.sp
-            )
-        }
-    }
-
-
     @Composable
     private fun NotificationsScreen(n: State<List<Any>?>) {
         // 观察LiveData并更新状态
@@ -983,12 +809,12 @@ class HomeActivity : ComponentActivity() {
         ) {
             viewModelScope.launch {
                 val calls = mutableListOf<Call<ld246_Response>>()
-                calls.add(apiService.apiV2NotificationsCommentedGet(1, token.value, ua))
-                calls.add(apiService.apiV2NotificationsComment2edGet(1, token.value, ua))
-                calls.add(apiService.apiV2NotificationsReplyGet(1, token.value, ua))
-                calls.add(apiService.apiV2NotificationsAtGet(1, token.value, ua))
-                calls.add(apiService.apiV2NotificationsFollowingGet(1, token.value, ua))
-                calls.add(apiService.apiV2NotificationsPointGet(1, token.value, ua))
+                calls.add(apiService.apiV2NotificationsCommentedGet(1, token.value, S_Webview.UA_edge_android))
+                calls.add(apiService.apiV2NotificationsComment2edGet(1, token.value, S_Webview.UA_edge_android))
+                calls.add(apiService.apiV2NotificationsReplyGet(1, token.value, S_Webview.UA_edge_android))
+                calls.add(apiService.apiV2NotificationsAtGet(1, token.value, S_Webview.UA_edge_android))
+                calls.add(apiService.apiV2NotificationsFollowingGet(1, token.value, S_Webview.UA_edge_android))
+                calls.add(apiService.apiV2NotificationsPointGet(1, token.value, S_Webview.UA_edge_android))
                 calls.forEach { caller ->
 //                    delay(100) // 避免接口请求频繁
                     caller.enqueue(object : Callback<ld246_Response> {
@@ -1064,12 +890,12 @@ class HomeActivity : ComponentActivity() {
                     } else if (pullToRefreshState != null && pullToRefreshState.isRefreshing) {
                         // 执行当前tab的请求
                         val caller: Call<ld246_Response> = when (currentTab.value) {
-                            "回帖" -> apiService.apiV2NotificationsCommentedGet(1, token.value, ua)
-                            "评论" -> apiService.apiV2NotificationsComment2edGet(1, token.value, ua)
-                            "回复" -> apiService.apiV2NotificationsReplyGet(1, token.value, ua)
-                            "提及" -> apiService.apiV2NotificationsAtGet(1, token.value, ua)
-                            "关注" -> apiService.apiV2NotificationsFollowingGet(1, token.value, ua)
-                            "积分" -> apiService.apiV2NotificationsPointGet(1, token.value, ua)
+                            "回帖" -> apiService.apiV2NotificationsCommentedGet(1, token.value, S_Webview.UA_edge_android)
+                            "评论" -> apiService.apiV2NotificationsComment2edGet(1, token.value, S_Webview.UA_edge_android)
+                            "回复" -> apiService.apiV2NotificationsReplyGet(1, token.value, S_Webview.UA_edge_android)
+                            "提及" -> apiService.apiV2NotificationsAtGet(1, token.value, S_Webview.UA_edge_android)
+                            "关注" -> apiService.apiV2NotificationsFollowingGet(1, token.value, S_Webview.UA_edge_android)
+                            "积分" -> apiService.apiV2NotificationsPointGet(1, token.value, S_Webview.UA_edge_android)
                             else -> null
                         } ?: return@launch
                         caller.enqueue(object : Callback<ld246_Response> {
