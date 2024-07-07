@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/7 下午7:16
- * updated: 2024/7/7 下午7:16
+ * lastModified: 2024/7/8 上午4:07
+ * updated: 2024/7/8 上午4:07
  */
 
 @file:Suppress("CompositionLocalNaming", "CompositionLocalNaming")
@@ -33,6 +33,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -45,17 +46,25 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.LastPage
+import androidx.compose.material.icons.automirrored.filled.NavigateBefore
+import androidx.compose.material.icons.automirrored.filled.NavigateNext
+import androidx.compose.material.icons.filled.FirstPage
 import androidx.compose.material.icons.twotone.Token
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -70,11 +79,13 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.zIndex
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.kongzue.dialogx.dialogs.BottomMenu
@@ -105,6 +116,7 @@ import sc.windom.sofill.compose.ApkButtons
 import sc.windom.sofill.compose.AudioButtons
 import sc.windom.sofill.compose.LockScreenOrientation
 import sc.windom.sofill.compose.MagnetButtons
+import sc.windom.sofill.compose.MultiIndexNavigationBottomBar
 import sc.windom.sofill.compose.SelectableHtmlText
 import sc.windom.sofill.compose.SelectableText
 import sc.windom.sofill.compose.VideoButtons
@@ -290,6 +302,15 @@ class MainPro : ComponentActivity() {
         val fileType: MutableState<String> = rememberSaveable {
             mutableStateOf("")
         }
+        val fileUris: MutableState<List<Uri?>> = rememberSaveable { mutableStateOf(emptyList()) }
+        val fileUri: MutableState<Uri?> = rememberSaveable { mutableStateOf(null) }
+        // 创建可记住的状态来保持当前选中的文件索引
+        var currentIndex = rememberSaveable { mutableIntStateOf(1) }
+        val maxIndex = rememberSaveable { mutableIntStateOf(1) }
+
+        // 根据当前索引计算上一个和下一个索引
+        val previousIndex = if (currentIndex.intValue > 1) currentIndex.intValue - 1 else 1
+        val nextIndex = if (currentIndex.intValue < maxIndex.intValue) currentIndex.intValue + 1 else maxIndex.intValue
         val isLandscape =
             LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
 
@@ -300,7 +321,7 @@ class MainPro : ComponentActivity() {
         }
 
         LaunchedEffect(key1 = in2_intent) {
-            head_title = if (in2_intent?.action == Intent.ACTION_SEND) {
+            head_title = if (in2_intent?.action == Intent.ACTION_SEND || in2_intent?.action == Intent.ACTION_SEND_MULTIPLE) {
                 "汐洛受赏中转站"
             } else if (in2_intent?.data != null && fileSize.value.isNotEmpty() && mimeType.value.isNotEmpty()) {
                 "汐洛文件中转站"
@@ -322,7 +343,7 @@ class MainPro : ComponentActivity() {
 
                     // 处理分享的文件
                     in2_intent?.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)?.let { sharedFileUri ->
-                        // 处理文件，获取文件名、大小和MIME类型
+                        fileUri.value = sharedFileUri
                         fileName.value =
                             U.FileUtils.getFileName(thisActivity, sharedFileUri).toString()
                         fileSize.value = U.FileUtils.getFileSize(thisActivity, sharedFileUri)
@@ -333,9 +354,19 @@ class MainPro : ComponentActivity() {
                     }
                 }
 
+                Intent.ACTION_SEND_MULTIPLE -> {
+                    // 处理多个分享的文件
+                    val sharedFileUris = in2_intent?.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
+                    sharedFileUris?.let { uris ->
+                        maxIndex.intValue = uris.size
+                        fileUris.value = uris
+                    }
+                }
+
                 else -> {
                     // 处理其他类型的 intent
                     in2_intent?.data?.let {
+                        fileUri.value = it
                         fileName.value = U.FileUtils.getFileName(
                             thisActivity, it
                         ).toString()
@@ -357,7 +388,33 @@ class MainPro : ComponentActivity() {
 
             BuglyLog.w(TAG, "mimeType: ${mimeType.value}, fileType: ${fileType.value}")
         }
+
+        // 注意这个顺序在后面
+        LaunchedEffect(currentIndex.intValue) {
+            if (fileUris.value.isEmpty()) return@LaunchedEffect
+            fileUris.value[currentIndex.intValue - 1]?.let {
+                fileUri.value = it
+                fileName.value = U.FileUtils.getFileName(thisActivity, it).toString()
+                fileSize.value = U.FileUtils.getFileSize(thisActivity, it)
+                mimeType.value = U.FileUtils.getMimeType(thisActivity, it).toString()
+                fileType.value = U.FileUtils.getFileMIMEType(mimeType.value, fileName.value)
+                    ?: U.FileUtils.getFileMIMEType(mimeType.value)
+
+                BuglyLog.w(TAG, "$fileName $fileSize $mimeType $fileType")
+            }
+        }
+
         Scaffold(
+            bottomBar = {
+                MultiIndexNavigationBottomBar(
+                    currentIndex,
+                    maxIndex,
+                    onPrevious = { currentIndex.intValue = previousIndex },
+                    onNext = { currentIndex.intValue = nextIndex },
+                    onFirst = { currentIndex.intValue = 1 },
+                    onLast = { currentIndex.intValue = maxIndex.intValue }
+                )
+            },
             topBar = {
                 CommonTopAppBar(
                     head_title,
@@ -434,7 +491,10 @@ class MainPro : ComponentActivity() {
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 InfoPart(
-                                    fileType = fileType, fileName = fileName, fileSize = fileSize
+                                    fileUri = fileUri,
+                                    fileType = fileType,
+                                    fileName = fileName,
+                                    fileSize = fileSize
                                 )
                             }
                             Spacer(modifier = Modifier.width(16.dp))
@@ -448,7 +508,9 @@ class MainPro : ComponentActivity() {
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 BtnPart(
-                                    mimeType = mimeType, fileName = fileName
+                                    fileUri = fileUri,
+                                    mimeType = mimeType,
+                                    fileName = fileName
                                 )
                             }
                         }
@@ -464,10 +526,15 @@ class MainPro : ComponentActivity() {
                         item {
                             Spacer(modifier = Modifier.height(16.dp))
                             InfoPart(
-                                fileType = fileType, fileName = fileName, fileSize = fileSize
+                                fileUri = fileUri,
+                                fileType = fileType,
+                                fileName = fileName,
+                                fileSize = fileSize
                             )
                             BtnPart(
-                                mimeType = mimeType, fileName = fileName
+                                fileUri = fileUri,
+                                mimeType = mimeType,
+                                fileName = fileName
                             )
                         }
                     }
@@ -606,6 +673,7 @@ class MainPro : ComponentActivity() {
 
     @Composable
     fun InfoPart(
+        fileUri: MutableState<Uri?>,
         fileType: MutableState<String>,
         fileName: MutableState<String>,
         fileSize: MutableState<String>
@@ -623,15 +691,9 @@ class MainPro : ComponentActivity() {
         LaunchedEffect(key1 = fileName.value, key2 = fileType.value) {
             if (fileType.value.endsWith("图像")) {
                 try {
-                    // 检查是否是 ACTION_SEND 并获取额外的文件 Uri
-                    val sharedFileUri = if (in2_intent?.action == Intent.ACTION_SEND) {
-                        in2_intent?.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
-                    } else {
-                        in2_intent?.data
-                    }
 
                     // 如果有文件 Uri，尝试加载缩略图
-                    bitmap = sharedFileUri?.let { uri ->
+                    bitmap = fileUri.value?.let { uri ->
                         thisActivity.contentResolver.loadThumbnail(
                             uri, Size(
                                 if (isLandscape) Thumbnail_Height else Thumbnail_Height_IMG,
@@ -696,7 +758,11 @@ class MainPro : ComponentActivity() {
 
     @SuppressLint("Range")
     @Composable
-    fun BtnPart(mimeType: MutableState<String>, fileName: MutableState<String>) {
+    fun BtnPart(
+        fileUri: MutableState<Uri?>,
+        mimeType: MutableState<String>,
+        fileName: MutableState<String>
+    ) {
         val TAG = "${this.TAG}/BtnPart"
         val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
         val coroutineScope = rememberCoroutineScope()
@@ -720,13 +786,7 @@ class MainPro : ComponentActivity() {
 
 
         LaunchedEffect(key1 = fileName.value, key2 = mimeType.value) {
-            // 检查是否是 ACTION_SEND 并获取额外的文件 Uri
-            val sharedFileUri = if (in2_intent?.action == Intent.ACTION_SEND) {
-                in2_intent?.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
-            } else {
-                in2_intent?.data
-            }
-            showSaveButton = sharedFileUri != null
+            showSaveButton = fileUri.value != null
             showAudioButton = mimeType.value.startsWith("audio/")
             showVideoButton = mimeType.value.startsWith("video/")
             showApkButton =
