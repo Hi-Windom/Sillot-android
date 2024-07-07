@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/7 下午7:13
- * updated: 2024/7/7 下午7:13
+ * lastModified: 2024/7/7 下午7:16
+ * updated: 2024/7/7 下午7:16
  */
 
 @file:Suppress("CompositionLocalNaming", "CompositionLocalNaming")
@@ -242,7 +242,7 @@ class MainPro : ComponentActivity() {
         created.value = true
         setContent {
             CascadeMaterialTheme {
-                MyUI()
+                MainProUI()
             }
         }
 
@@ -268,7 +268,7 @@ class MainPro : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
     @Composable
-    fun MyUI() {
+    fun MainProUI() {
         val inspectionMode = LocalInspectionMode.current // 获取当前是否处于预览模式// 获取窗口尺寸
         val coroutineScope = rememberCoroutineScope()
         val targetIntent = rememberSaveable { mutableStateOf(in2_intent) }
@@ -1066,7 +1066,7 @@ class MainPro : ComponentActivity() {
             S.C.Thumbnail_Height provides 250,
             S.C.Button_Width providesDefault 300,
         ) {
-            MyUI()
+            MainProUI()
         }
     }
 
