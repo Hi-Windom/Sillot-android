@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/8 上午5:23
+ * updated: 2024/7/8 上午5:23
+ */
+
 package sc.windom.sofill
 
 import android.annotation.SuppressLint
@@ -447,29 +455,6 @@ object U {
         startActivity(intent)
     }
 
-    fun installApk(activity: Activity, apkFile: File) {
-        val installIntent: Intent
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            // Android N及以上版本需要使用FileProvider安装APK
-            val apkUri = FileProvider.getUriForFile(
-                activity,
-                "${activity.packageName}.fileprovider",
-                apkFile
-            )
-            installIntent = Intent(Intent.ACTION_INSTALL_PACKAGE)
-            installIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            installIntent.setData(apkUri)
-        } else {
-            // Android N以下版本直接使用文件路径
-            val apkUri = Uri.fromFile(apkFile)
-            installIntent = Intent(Intent.ACTION_VIEW)
-            installIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            installIntent.setDataAndType(apkUri, "application/vnd.android.package-archive")
-        }
-
-        activity.startActivity(installIntent)
-    }
-
     /**
      * 安装 apk 文件，需要申请权限。不申请权限安装请使用 installApk2
      */
@@ -478,30 +463,22 @@ object U {
             val installIntent: Intent
 
             // 检查是否已有安装未知来源应用的权限
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val packageManager = activity.packageManager
-                val hasInstallPermission = packageManager.canRequestPackageInstalls()
-                if (!hasInstallPermission) {
-                    Toast.Show(activity, "请先授予汐洛安装未知应用权限")
-                    // 启动授权 activity
-                    val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
-                    activity.startActivityForResult(
-                        intent,
-                        S.REQUEST_CODE.REQUEST_CODE_INSTALL_PERMISSION
-                    )
-                    return
-                }
+            val packageManager = activity.packageManager
+            val hasInstallPermission = packageManager.canRequestPackageInstalls()
+            if (!hasInstallPermission) {
+                Toast.Show(activity, "请先授予汐洛安装未知应用权限")
+                // 启动授权 activity
+                val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
+                activity.startActivityForResult(
+                    intent,
+                    S.REQUEST_CODE.REQUEST_CODE_INSTALL_PERMISSION
+                )
+                return
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                // Android N及以上版本需要额外权限
-                installIntent = Intent(Intent.ACTION_INSTALL_PACKAGE) // 忽略已弃用，神金搞那么复杂
-                installIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            // Android N及以上版本需要额外权限
+            installIntent = Intent(Intent.ACTION_INSTALL_PACKAGE) // 忽略已弃用，神金搞那么复杂
+            installIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 //                installIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION) // 安装应用不需要写权限，如果是另一个应用的私有文件会导致无法安装
-            } else {
-                // Android N以下版本
-                installIntent = Intent(Intent.ACTION_VIEW)
-                installIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
 
             installIntent.setDataAndType(apkUri, "application/vnd.android.package-archive")
             activity.startActivity(installIntent)

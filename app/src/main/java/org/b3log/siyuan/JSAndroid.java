@@ -1,19 +1,9 @@
 /*
- * SiYuan - 源于思考，饮水思源
- * Copyright (c) 2020-present, b3log.org
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2020-2024.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * lastModified: 2024/7/8 上午5:13
+ * updated: 2024/7/8 上午5:13
  */
 package org.b3log.siyuan;
 
@@ -592,7 +582,7 @@ public final class JSAndroid {
                     url = "http://127.0.0.1:58131/" + url;
                 } else {
                     BuglyLog.d("if (url.startsWith(\"assets/\"))", asset.getAbsolutePath());
-                    final Uri uri = FileProvider.getUriForFile(activity.getApplicationContext(), BuildConfig.APPLICATION_ID, asset);
+                    final Uri uri = FileProvider.getUriForFile(activity.getApplicationContext(), BuildConfig.PROVIDER_AUTHORITIES, asset);
                     final String type = Mobile.getMimeTypeByExt(asset.getAbsolutePath());
                     Intent intent = new ShareCompat.IntentBuilder(activity.getApplicationContext())
                             .setStream(uri)
@@ -620,8 +610,8 @@ public final class JSAndroid {
                 if (!asset.exists()) {
                     BuglyLog.e("File Not Found", "File does not exist: " + asset.getAbsolutePath());
                 } else {
-                    BuglyLog.d("if (url.endsWith(\".zip\") && url.startsWith(\"/export/\"))", asset.getAbsolutePath());
-                    Uri uri = FileProvider.getUriForFile(activity.getApplicationContext(), BuildConfig.APPLICATION_ID, asset);
+                    BuglyLog.d("open by intent", asset.getAbsolutePath());
+                    Uri uri = FileProvider.getUriForFile(activity.getApplicationContext(), BuildConfig.PROVIDER_AUTHORITIES, asset);
                     final String type = Mobile.getMimeTypeByExt(asset.getAbsolutePath());
                     Intent intent = new ShareCompat.IntentBuilder(activity.getApplicationContext())
                             .setStream(uri)

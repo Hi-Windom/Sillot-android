@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午3:26
- * updated: 2024/7/8 上午3:26
+ * lastModified: 2024/7/8 上午5:19
+ * updated: 2024/7/8 上午5:19
  */
 
 package sc.windom.sofill.compose
@@ -113,6 +113,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.b3log.siyuan.BuildConfig
 import sc.windom.potter.producer.MainPro
 import sc.windom.sofill.Ss.S_Webview
 import sc.windom.sofill.U
@@ -813,7 +814,7 @@ fun DownloaderPage(
                     .padding(10.dp, 18.dp),
                 onClick = {
                     val file = File(filePath.value)
-                    val fileUri: Uri = FileProvider.getUriForFile(Lcc, Lcc.applicationContext.packageName, file)
+                    val fileUri: Uri = FileProvider.getUriForFile(Lcc, BuildConfig.PROVIDER_AUTHORITIES, file)
                     Intent(Lcc, MainPro::class.java).let {
                         it.data = fileUri
                         it.flags = Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION

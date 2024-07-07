@@ -2,15 +2,15 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午2:43
- * updated: 2024/7/8 上午2:43
+ * lastModified: 2024/7/8 上午4:37
+ * updated: 2024/7/8 上午4:37
  */
 import groovy.json.JsonSlurper
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     ext {
         siyuanVersionCode = 235
-        siyuanVersionName = "3.0.15"
+        siyuanVersionName = "3.1.0"
     }
     def  kotlin_v = '2.0.0'  // 2.0+ 不需要手动对齐 Compose Compiler 版本  REF https://developer.android.com/jetpack/androidx/releases/compose-kotlin?hl=zh-cn
     // kotlin_v 设为 1.9+ 会报错 Inconsistent JVM-target compatibility detected for tasks 'compileDebugJavaWithJavac' (17) and 'kaptGenerateStubsDebugKotlin' (1.8).

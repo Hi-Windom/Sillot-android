@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午2:03
- * updated: 2024/7/8 上午2:03
+ * lastModified: 2024/7/8 上午5:07
+ * updated: 2024/7/8 上午5:07
  */
 
 import org.jetbrains.kotlin.gradle.dsl.jvm.JvmTargetValidationMode
@@ -72,20 +72,57 @@ android {
             def versionType = variant.buildType.name
             if (versionType.equalsIgnoreCase("release")) {
                 outputFileName = "Sillot-v${versionSillot}_${genDate()}_syv${siyuanVersionName}.apk"
-            } else {
+            }
+            else if (versionType.equalsIgnoreCase("canary")) {
+                outputFileName = "Sillot[canary]-v${versionSillot}_${genDate()}_syv${siyuanVersionName}.apk"
+            }
+            else if (versionType.equalsIgnoreCase("dev")) {
+                outputFileName = "Sillot[dev]-v${versionSillot}_${genDate()}_syv${siyuanVersionName}.apk"
+            }
+            else {
                 outputFileName = "Sillot.apk"
             }
             output.outputFileName = outputFileName
         }
     }
 
+    // 目前 action 相当于正式版
     buildTypes {
         action { // 防止第三方库debug模式导致action失败
 //            applicationIdSuffix ".debug"
             resValue "string","app_name","汐洛公测版"
             manifestPlaceholders = [
-                    provider_name : "sc.windom.sillot.app.provider.debug",  // 暂时用不上
+                    provider_authorities : "sc.windom.sillot.app.provider",
             ]
+            buildConfigField "String", "PROVIDER_AUTHORITIES", "\"sc.windom.sillot.app.provider\""
+            jniDebuggable false
+            renderscriptDebuggable true
+            minifyEnabled true  // R8代码缩减功能
+            shrinkResources true
+            matchingFallbacks = ['release'] // 第三方库处理
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro' // 混淆规则
+        }
+        canary { // 每日构建
+            versionNameSuffix ".canary.${vC}${genDateTime()}" // 避免覆盖安装失败
+            resValue "string","app_name","汐洛探索版"
+            manifestPlaceholders = [
+                    provider_authorities : "sc.windom.sillot.app.provider.canary",
+            ]
+            buildConfigField "String", "PROVIDER_AUTHORITIES", "\"sc.windom.sillot.app.provider.canary\""
+            jniDebuggable false
+            renderscriptDebuggable true
+            minifyEnabled true  // R8代码缩减功能
+            shrinkResources true
+            matchingFallbacks = ['release'] // 第三方库处理
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro' // 混淆规则
+        }
+        dev {
+            versionNameSuffix ".dev.${vC}${genDateTime()}" // 避免覆盖安装失败
+            resValue "string","app_name","汐洛内测版"
+            manifestPlaceholders = [
+                    provider_authorities : "sc.windom.sillot.app.provider.dev",
+            ]
+            buildConfigField "String", "PROVIDER_AUTHORITIES", "\"sc.windom.sillot.app.provider.dev\""
             jniDebuggable false
             renderscriptDebuggable true
             minifyEnabled true  // R8代码缩减功能
@@ -94,8 +131,12 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro' // 混淆规则
         }
         debug {
-            versionNameSuffix ".${vC}${genDateTime()}" // versionCode 一样也可以更新
-            resValue "string","app_name","汐洛内测版"
+            versionNameSuffix ".debug.${vC}${genDateTime()}" // 避免覆盖安装失败
+            resValue "string","app_name","汐洛内部调试版"
+            manifestPlaceholders = [
+                    provider_authorities : "sc.windom.sillot.app.provider.debug",
+            ]
+            buildConfigField "String", "PROVIDER_AUTHORITIES", "\"sc.windom.sillot.app.provider.debug\""
         }
         release {
             minifyEnabled true
@@ -103,8 +144,9 @@ android {
             versionNameSuffix ".${vC}"
             resValue "string","app_name","汐洛"
             manifestPlaceholders = [
-                    provider_name : "sc.windom.sillot.app.provider.release",  // 暂时用不上
+                    provider_authorities : "sc.windom.sillot.app.provider.release",
             ]
+            buildConfigField "String", "PROVIDER_AUTHORITIES", "\"sc.windom.sillot.app.provider.release\""
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
