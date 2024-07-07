@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/7 下午7:03
- * updated: 2024/7/7 下午7:03
+ * lastModified: 2024/7/8 上午2:03
+ * updated: 2024/7/8 上午2:03
  */
 
 import org.jetbrains.kotlin.gradle.dsl.jvm.JvmTargetValidationMode
@@ -50,7 +50,7 @@ android {
         minSdk 31 // android 12
         targetSdkVersion 34 // android 14
         versionCode vC
-        versionName versionSillot // 思源版本同步
+        versionName versionSillot // Sillot 版本同步
 
         ndk {
             //只接入对应 cpu 类型的 .so 库。
@@ -82,7 +82,6 @@ android {
     buildTypes {
         action { // 防止第三方库debug模式导致action失败
 //            applicationIdSuffix ".debug"
-            versionNameSuffix ".${vC}${genDateTime()}" // versionCode 一样也可以更新
             resValue "string","app_name","汐洛公测版"
             manifestPlaceholders = [
                     provider_name : "sc.windom.sillot.app.provider.debug",  // 暂时用不上
