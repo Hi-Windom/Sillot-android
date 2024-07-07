@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/7 上午4:10
- * updated: 2024/7/7 上午4:10
+ * lastModified: 2024/7/8 上午3:26
+ * updated: 2024/7/8 上午3:26
  */
 
 package sc.windom.sofill.compose
@@ -16,7 +16,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Environment
-import android.os.Parcelable
 import android.util.Log
 import android.webkit.CookieManager
 import android.webkit.URLUtil
@@ -94,7 +93,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalUriHandler
@@ -115,8 +113,6 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.parcelize.Parcelize
-import kotlinx.parcelize.RawValue
 import sc.windom.potter.producer.MainPro
 import sc.windom.sofill.Ss.S_Webview
 import sc.windom.sofill.U
@@ -130,31 +126,14 @@ import sc.windom.sofill.android.webview.applySystemThemeToWebView
 import sc.windom.sofill.compose.theme.activeColor
 import sc.windom.sofill.compose.theme.defaultColor
 import sc.windom.sofill.compose.theme.disabledColor
+import sc.windom.sofill.dataClass.MenuOption
+import sc.windom.sofill.dataClass.MenuOptionState
 import sc.windom.sofill.pioneer.getSavedValue
 import java.io.File
 import kotlin.math.roundToInt
 
 private val thisWebView: MutableState<WebView?> = mutableStateOf(null)
 
-@Parcelize
-sealed class MenuOptionState : Parcelable {
-    data object Disabled : MenuOptionState()
-    data object Default : MenuOptionState()
-    data object Active : MenuOptionState()
-}
-
-@Parcelize
-data class MenuOption(
-    val title: String,
-    val icon: @RawValue ImageVector,
-    val iconInActive: @RawValue ImageVector = icon,
-    val titleInActive: String = title,
-    val state: MenuOptionState = MenuOptionState.Default,
-    val isActive: @RawValue MutableState<Boolean> = mutableStateOf(state == MenuOptionState.Active),
-    val canToggle: Boolean = false, // 表示选项是否可以在 Default 和 Active 之间切换
-    val closeMenuAfterClick: Boolean = state != MenuOptionState.Disabled, // 点击后是否关闭菜单（需要重新渲染）, 默认值为非禁用则为 true
-    val onClick: () -> Unit,
-) : Parcelable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
