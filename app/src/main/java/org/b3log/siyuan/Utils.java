@@ -1,40 +1,22 @@
 /*
- * SiYuan - 源于思考，饮水思源
- * Copyright (c) 2020-present, b3log.org
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2020-2024.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * lastModified: 2024/7/8 上午5:43
+ * updated: 2024/7/8 上午5:43
  */
 package org.b3log.siyuan;
-
-import static android.content.Context.POWER_SERVICE;
-
-import static androidx.core.app.ActivityCompat.startActivityForResult;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
-import android.os.Build;
-import android.os.PowerManager;
 import android.text.TextUtils;
 
 import com.blankj.utilcode.util.StringUtils;
 import com.blankj.utilcode.util.TimeUtils;
-import com.kongzue.dialogx.dialogs.PopTip;
 import com.tencent.bugly.crashreport.BuglyLog;
 
 import org.apache.commons.io.FileUtils;
@@ -55,6 +37,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import mobile.Mobile;
+import sc.windom.namespace.SillotMatrix.BuildConfig;
 
 /**
  * 工具类.

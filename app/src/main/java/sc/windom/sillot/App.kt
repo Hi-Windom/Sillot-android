@@ -1,4 +1,12 @@
-package org.b3log.siyuan
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/8 上午5:50
+ * updated: 2024/7/8 上午5:50
+ */
+
+package sc.windom.sillot
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -9,6 +17,7 @@ import android.os.Bundle
 import android.os.Looper
 import android.os.Process
 import cn.jpush.android.api.JPushInterface
+import com.blankj.utilcode.util.Utils
 import com.kongzue.dialogx.DialogX
 import com.kongzue.dialogx.style.MIUIStyle
 import com.kongzue.dialogx.util.views.ActivityScreenShotImageView
@@ -17,7 +26,6 @@ import com.microsoft.clarity.ClarityConfig
 import com.microsoft.clarity.models.LogLevel
 import com.tencent.bugly.crashreport.BuglyLog
 import com.tencent.bugly.crashreport.CrashReport
-import com.tencent.bugly.crashreport.CrashReport.CrashHandleCallback
 import com.tencent.bugly.crashreport.CrashReport.UserStrategy
 import com.tencent.mmkv.MMKV
 import io.realm.kotlin.Realm
@@ -30,8 +38,16 @@ import org.b3log.siyuan.services.BootService
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_Phone.setPreferredDisplayMode
+import java.lang.StringBuilder
 import java.net.InetAddress
 import java.net.UnknownHostException
+import java.util.LinkedHashMap
+import kotlin.also
+import kotlin.collections.set
+import kotlin.jvm.javaClass
+import kotlin.let
+import kotlin.text.toByteArray
+import kotlin.toString
 
 
 // 定义RealmConfiguration，通常在应用启动时初始化
@@ -85,7 +101,7 @@ class App : Application() {
         BuglyLog.w(TAG, "new one")
         super.onCreate()
         var refCount = 0
-        com.blankj.utilcode.util.Utils.init(this)
+        Utils.init(this)
         JPushInterface.setDebugMode(true)
         JPushInterface.init(this)
         MMKV.initialize(this)
@@ -296,7 +312,7 @@ class App : Application() {
         val processName = U.DEBUG.getProcessName(Process.myPid())
         // 设置是否为上报进程
         strategy.setUploadProcess(processName == null || processName == packageName)
-        strategy.setCrashHandleCallback(object : CrashHandleCallback() {
+        strategy.setCrashHandleCallback(object : CrashReport.CrashHandleCallback() {
             override fun onCrashHandleStart(
                 crashType: Int, errorType: String,
                 errorMessage: String, errorStack: String
@@ -319,7 +335,8 @@ class App : Application() {
         })
         CrashReport.initCrashReport(this, S.initCrashReportID, true, strategy) // 初始化 bugly
         BuglyLog.setCache(3 * 1024) // 大于阈值会持久化至文件
-        val configClarity = ClarityConfig(projectId = S.DEBUG.Clarity_projectId, logLevel = LogLevel.Warning)
+        val configClarity =
+            ClarityConfig(projectId = S.DEBUG.Clarity_projectId, logLevel = LogLevel.Warning)
         Clarity.initialize(this, configClarity) // 初始化 Clarity
     }
 

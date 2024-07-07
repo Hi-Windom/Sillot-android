@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/8 上午5:41
+ * updated: 2024/7/8 上午5:41
+ */
+
 package org.b3log.siyuan.sillot.ui.nav.config
 
 import android.content.Intent
@@ -29,12 +37,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import org.b3log.siyuan.R
+import sc.windom.namespace.SillotMatrix.R
 import org.b3log.siyuan.sillot.model.alist.AList
 import org.b3log.siyuan.sillot.ui.widgets.DenseOutlinedField
 import org.b3log.siyuan.sillot.util.AndroidUtils.performLongPress
 import org.b3log.siyuan.sillot.util.ClipboardUtils
-import org.b3log.siyuan.BuildConfig
+import sc.windom.namespace.SillotMatrix.BuildConfig
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)

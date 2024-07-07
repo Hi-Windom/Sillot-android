@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/8 上午5:39
+ * updated: 2024/7/8 上午5:39
+ */
+
 package sc.windom.potter
 
 import android.annotation.SuppressLint
@@ -52,7 +60,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import org.b3log.siyuan.R
+import sc.windom.namespace.SillotMatrix.R
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_DEBUG.srcPath

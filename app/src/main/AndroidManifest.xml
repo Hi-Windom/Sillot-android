@@ -3,8 +3,8 @@
   ~ Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
   ~ Copyright (c) 2024.
   ~
-  ~ lastModified: 2024/7/8 上午5:03
-  ~ updated: 2024/7/8 上午5:03
+  ~ lastModified: 2024/7/8 上午6:06
+  ~ updated: 2024/7/8 上午6:06
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -231,7 +231,7 @@
     <!--    https://developer.android.com/guide/topics/manifest/application-element?hl=zh-cn-->
     <!-- ignore @string/app_name error -->
     <application
-            android:name=".App"
+            android:name="sc.windom.sillot.App"
             android:appCategory="social"
             android:isGame="false"
             android:debuggable="true"
@@ -340,7 +340,7 @@
         </activity>
 
         <receiver
-                android:name=".jpush.JReceiver"
+                android:name="sc.windom.siow.jpush.JReceiver"
                 android:enabled="true"
                 android:exported="true"
                 android:permission="TODO"
@@ -359,7 +359,7 @@
         </receiver>
 
         <activity
-                android:name=".permission.Battery"
+                android:name="sc.windom.sofill.permission.Battery"
                 android:exported="true"
                 android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
                 android:autoRemoveFromRecents="true"
@@ -372,7 +372,7 @@
             </intent-filter>
         </activity>
         <activity
-                android:name=".permission.Overlay"
+                android:name="sc.windom.sofill.permission.Overlay"
                 android:exported="true"
                 android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
                 android:autoRemoveFromRecents="true"
@@ -386,7 +386,7 @@
         </activity>
 
         <activity
-                android:name=".videoPlayer.SimplePlayer"
+                android:name="sc.windom.potter.videoPlayer.SimplePlayer"
                 android:exported="true"
                 android:hardwareAccelerated="true"
                 android:supportsPictureInPicture="true"
@@ -577,7 +577,7 @@
 
         <!--        思源笔记入口-->
         <activity
-                android:name=".BootActivity"
+                android:name="org.b3log.siyuan.BootActivity"
                 android:icon="@drawable/icon_siyuan"
                 android:label="@string/activity_name_Boot"
                 android:autoRemoveFromRecents="true"
@@ -602,7 +602,7 @@
             </intent-filter>
         </activity>
         <activity
-                android:name=".MainActivity"
+                android:name="org.b3log.siyuan.MainActivity"
                 android:autoRemoveFromRecents="false"
                 android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
                 android:hardwareAccelerated="true"
@@ -645,7 +645,7 @@
         </activity>
         <!-- 点击通知时，要打开的 activity -->
         <activity
-                android:name=".jpush.OpenClickActivity"
+                android:name="sc.windom.siow.jpush.OpenClickActivity"
                 android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
                 android:exported="true">
             <intent-filter>
@@ -655,7 +655,7 @@
             </intent-filter>
         </activity>
         <service
-                android:name=".jpush.UserService"
+                android:name="sc.windom.siow.jpush.UserService"
                 android:process=":pushcore"
                 android:exported="true">
             <intent-filter>
@@ -664,14 +664,14 @@
         </service>
         <!-- For test only JPush 测试的主程序-->
         <activity
-                android:name=".jpush.PushActivity"
+                android:name="sc.windom.siow.jpush.PushActivity"
                 android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
                 android:exported="false" />
         <!-- Since JCore2.0.0 Required SDK核心功能 -->
         <!-- 可配置android:process参数将Service放在其他进程中；android:enabled属性不能是false -->
         <!-- 这个是自定义Service，要继承极光JCommonService，可以在更多手机平台上使得推送通道保持的更稳定 -->
         <service
-                android:name=".jpush.XService"
+                android:name="sc.windom.siow.jpush.XService"
                 android:enabled="true"
                 android:exported="false"
                 android:process=":pushcore">
@@ -681,7 +681,7 @@
         </service>
         <!-- 以 Android 14 为目标平台，则必须指定适当的前台服务类型  -->
         <service
-                android:name=".services.FloatingWindowService"
+                android:name="org.b3log.siyuan.services.FloatingWindowService"
                 android:foregroundServiceType="dataSync|location">
             <property
                     android:name="android.app.PROPERTY_DATA_SYNC_FGS_SUBTYPE"
@@ -689,7 +689,7 @@
         </service>
 
         <service
-                android:name=".services.BootService"
+                android:name="org.b3log.siyuan.services.BootService"
                 android:foregroundServiceType="dataSync|location"
                 android:enabled="true"
                 android:exported="true"

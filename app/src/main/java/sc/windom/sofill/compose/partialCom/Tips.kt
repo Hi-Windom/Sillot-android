@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/8 上午5:50
+ * updated: 2024/7/8 上午5:50
+ */
+
 package sc.windom.sofill.compose.partialCom
 
 import android.content.Intent
@@ -23,7 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import org.b3log.siyuan.App.Companion.application
+import sc.windom.sillot.App.Companion.application
 import sc.windom.sofill.S
 import sc.windom.sofill.compose.NetworkViewModel
 

@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/8 上午5:50
+ * updated: 2024/7/8 上午5:50
+ */
+
 package org.b3log.siyuan.sillot.service
 
 import android.annotation.SuppressLint
@@ -15,7 +23,7 @@ import android.os.IBinder
 import android.os.PowerManager
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import org.b3log.siyuan.R
+import sc.windom.namespace.SillotMatrix.R
 import org.b3log.siyuan.sillot.model.alist.AList
 import org.b3log.siyuan.sillot.ui.MainActivity
 import org.b3log.siyuan.sillot.ui.theme.androidColor
@@ -25,7 +33,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import org.b3log.siyuan.app
+import sc.windom.sillot.app
 import splitties.systemservices.powerManager
 
 class AListService : Service() {

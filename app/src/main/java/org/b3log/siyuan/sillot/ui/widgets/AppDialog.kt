@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/8 上午5:39
+ * updated: 2024/7/8 上午5:39
+ */
+
 package org.b3log.siyuan.sillot.ui.widgets
 
 import androidx.compose.foundation.layout.Arrangement
@@ -31,7 +39,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
-import org.b3log.siyuan.R
+import sc.windom.namespace.SillotMatrix.R
 import kotlin.math.max
 
 @Preview

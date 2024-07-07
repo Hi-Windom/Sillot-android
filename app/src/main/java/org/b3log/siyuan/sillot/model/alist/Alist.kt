@@ -1,17 +1,22 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/8 上午5:50
+ * updated: 2024/7/8 上午5:50
+ */
+
 package org.b3log.siyuan.sillot.model.alist
 
 import android.annotation.SuppressLint
 import android.util.Log
-import org.b3log.siyuan.R
-import org.b3log.siyuan.app
+import sc.windom.sillot.app
 import org.b3log.siyuan.sillot.service.AListService
 import org.b3log.siyuan.sillot.util.FileUtils.readAllText
-import org.b3log.siyuan.sillot.util.StringUtils.removeAnsiCodes
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
 import kotlin.coroutines.coroutineContext

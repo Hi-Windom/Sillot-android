@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/8 上午5:39
+ * updated: 2024/7/8 上午5:39
+ */
+
 package org.b3log.siyuan.services
 
 import android.Manifest
@@ -36,7 +44,7 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.ObservableEmitter
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
-import org.b3log.siyuan.R
+import sc.windom.namespace.SillotMatrix.R
 import org.b3log.siyuan.WifiStateReceiver
 import sc.windom.sofill.S
 import sc.windom.sofill.U

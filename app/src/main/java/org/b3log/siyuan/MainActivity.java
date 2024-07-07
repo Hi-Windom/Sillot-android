@@ -1,19 +1,9 @@
  /*
- * SiYuan - 源于思考，饮水思源
- * Copyright (c) 2020-present, b3log.org
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2020-2024.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * lastModified: 2024/7/8 上午5:50
+ * updated: 2024/7/8 上午5:50
  */
 package org.b3log.siyuan;
 
@@ -39,6 +29,7 @@ package org.b3log.siyuan;
  import android.view.View;
  import android.view.ViewGroup;
 
+ import sc.windom.sillot.App;
  import sc.windom.sofill.Us.U_DEBUG;
  import sc.windom.sofill.Us.U_Layout;
  import sc.windom.sofill.Us.U_Permission;
@@ -113,6 +104,7 @@ package org.b3log.siyuan;
  import mobile.Mobile;
  import sc.windom.sofill.U;
  import sc.windom.sofill.S;
+ import sc.windom.namespace.SillotMatrix.R;
 
  /**
  * 主程序.

@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/8 上午5:39
+ * updated: 2024/7/8 上午5:39
+ */
+
 package sc.windom.gibbet
 
 import androidx.appcompat.app.AppCompatActivity
@@ -20,7 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.b3log.siyuan.R
+import sc.windom.namespace.SillotMatrix.R
 
 /**
  * 汐洛绞架，暂时与思源汐洛版共存，逐步迁移过来

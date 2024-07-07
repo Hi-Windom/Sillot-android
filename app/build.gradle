@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午5:07
- * updated: 2024/7/8 上午5:07
+ * lastModified: 2024/7/8 上午5:41
+ * updated: 2024/7/8 上午5:41
  */
 
 import org.jetbrains.kotlin.gradle.dsl.jvm.JvmTargetValidationMode
@@ -31,7 +31,7 @@ tasks.withType(KotlinJvmCompile.class).configureEach {
     jvmTargetValidationMode = JvmTargetValidationMode.ERROR
 }
 android {
-    namespace 'org.b3log.siyuan' // 这里不要修改
+    namespace 'sc.windom.namespace.SillotMatrix' // namespace 主要用于内部资源管理和避免冲突，比如 R 类 和 BuildConfig
     compileSdk 34
 //    buildToolsVersion '33.0.2' // @Deprecated
 
@@ -46,7 +46,7 @@ android {
 
 
     defaultConfig {
-        applicationId "sc.windom.sillot"
+        applicationId "sc.windom.sillot" // applicationId 是应用程序在设备上的唯一标识符，决定了应用程序的安装位置和包名。
         minSdk 31 // android 12
         targetSdkVersion 34 // android 14
         versionCode vC

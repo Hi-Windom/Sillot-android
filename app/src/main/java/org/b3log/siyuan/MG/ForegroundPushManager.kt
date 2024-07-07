@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/8 上午5:35
+ * updated: 2024/7/8 上午5:35
+ */
+
 package org.b3log.siyuan.MG
 
 import android.annotation.SuppressLint
@@ -11,7 +19,7 @@ import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import sc.windom.sofill.S
-import org.b3log.siyuan.R
+import sc.windom.namespace.SillotMatrix.R
 
 
 /**

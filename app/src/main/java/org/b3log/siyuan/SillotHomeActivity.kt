@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/8 上午5:50
+ * updated: 2024/7/8 上午5:50
+ */
+
 package org.b3log.siyuan
 
 import android.os.Bundle
@@ -14,6 +22,8 @@ import com.tencent.bugly.crashreport.BuglyLog
 import org.b3log.siyuan.json.testmoshi
 import org.b3log.siyuan.realm.TestRealm
 import sc.windom.sofill.android.HWs
+import sc.windom.namespace.SillotMatrix.R
+import sc.windom.sillot.App
 
 
 class SillotHomeActivity : AppCompatActivity() {

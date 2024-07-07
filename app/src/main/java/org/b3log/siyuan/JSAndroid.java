@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/7/8 上午5:13
- * updated: 2024/7/8 上午5:13
+ * lastModified: 2024/7/8 上午5:50
+ * updated: 2024/7/8 上午5:50
  */
 package org.b3log.siyuan;
 
@@ -51,6 +51,7 @@ import com.kongzue.dialogx.util.TextInfo;
 import com.tencent.bugly.crashreport.BuglyLog;
 import com.tencent.bugly.crashreport.CrashReport;
 
+import sc.windom.sillot.App;
 import sc.windom.sofill.android.BiometricHelper;
 
 import java.io.File;
@@ -68,6 +69,7 @@ import sc.windom.sofill.U;
 import sc.windom.sofill.Us.U_Permission;
 import sc.windom.sofill.Us.U_Phone;
 import sc.windom.sofill.android.permission.Ps;
+import sc.windom.namespace.SillotMatrix.BuildConfig;
 
 /**
  * JavaScript 接口.

@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/8 上午5:39
+ * updated: 2024/7/8 上午5:39
+ */
+
 package org.b3log.siyuan.services
 
 import android.app.Notification
@@ -25,7 +33,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.b3log.siyuan.R
+import sc.windom.namespace.SillotMatrix.R
 import sc.windom.sofill.S
 import java.io.IOException
 import androidx.media.app.NotificationCompat as MediaNotificationCompat

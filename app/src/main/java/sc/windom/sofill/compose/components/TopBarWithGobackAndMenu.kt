@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午4:21
- * updated: 2024/7/8 上午4:21
+ * lastModified: 2024/7/8 上午5:39
+ * updated: 2024/7/8 上午5:39
  */
 
 package sc.windom.sofill.compose.components
@@ -54,7 +54,7 @@ import androidx.core.content.ContextCompat
 import com.tencent.mmkv.MMKV
 import me.saket.cascade.CascadeDropdownMenu
 import me.saket.cascade.rememberCascadeState
-import org.b3log.siyuan.R
+import sc.windom.namespace.SillotMatrix.R
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 import sc.windom.sofill.U.disableScreenshot

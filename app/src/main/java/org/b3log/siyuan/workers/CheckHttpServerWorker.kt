@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/8 上午5:50
+ * updated: 2024/7/8 上午5:50
+ */
+
 package org.b3log.siyuan.workers
 
 import android.content.Context
@@ -5,7 +13,7 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.tencent.bugly.crashreport.BuglyLog
 import mobile.Mobile
-import org.b3log.siyuan.App
+import sc.windom.sillot.App
 
 class CheckHttpServerWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
     private val TAG = "workers/CheckHttpServerWorker.kt"

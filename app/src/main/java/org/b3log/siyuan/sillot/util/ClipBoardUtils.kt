@@ -1,10 +1,18 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/8 上午5:50
+ * updated: 2024/7/8 上午5:50
+ */
+
 package org.b3log.siyuan.sillot.util
 
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.ClipboardManager.OnPrimaryClipChangedListener
 import android.content.Context
-import org.b3log.siyuan.app
+import sc.windom.sillot.app
 
 
 /**

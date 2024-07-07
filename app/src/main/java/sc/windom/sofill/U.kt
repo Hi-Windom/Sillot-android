@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午5:23
- * updated: 2024/7/8 上午5:23
+ * lastModified: 2024/7/8 上午5:48
+ * updated: 2024/7/8 上午5:48
  */
 
 package sc.windom.sofill
@@ -34,14 +34,13 @@ import android.view.Window
 import android.view.WindowManager
 import android.webkit.WebSettings
 import android.webkit.WebView
-import androidx.core.content.FileProvider
 import com.blankj.utilcode.util.ActivityUtils.startActivity
 import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.dialogs.PopTip
 import com.tencent.mmkv.MMKV
 import org.b3log.siyuan.MainActivity
 import org.b3log.siyuan.Utils
-import org.b3log.siyuan.videoPlayer.SimplePlayer
+import sc.windom.potter.videoPlayer.SimplePlayer
 import sc.windom.sofill.Us.Toast
 import sc.windom.sofill.Us.U_DEBUG
 import sc.windom.sofill.Us.U_DOSC

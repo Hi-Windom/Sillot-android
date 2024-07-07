@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/8 上午5:50
+ * updated: 2024/7/8 上午5:50
+ */
+
 package org.b3log.siyuan.services
 
 import android.Manifest
@@ -39,12 +47,12 @@ import mobile.Mobile
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.filefilter.DirectoryFileFilter
 import org.apache.commons.io.filefilter.TrueFileFilter
-import org.b3log.siyuan.App
 import org.b3log.siyuan.Utils
 import org.b3log.siyuan.workers.CheckHttpServerWorker
 import org.b3log.siyuan.workers.SyncDataWorker
 import org.json.JSONArray
 import org.json.JSONObject
+import sc.windom.sillot.App
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_Thread.runOnUiThread
