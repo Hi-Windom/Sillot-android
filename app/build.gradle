@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/6 下午3:32
- * updated: 2024/7/6 下午3:32
+ * lastModified: 2024/7/7 下午7:03
+ * updated: 2024/7/7 下午7:03
  */
 
 import org.jetbrains.kotlin.gradle.dsl.jvm.JvmTargetValidationMode
@@ -390,7 +390,7 @@ dependencies {
 
     implementation "com.louiscad.splitties:splitties-systemservices:3.0.0"
 
-    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3"
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1"
 
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
 
