@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/8 上午4:18
+ * updated: 2024/7/8 上午4:18
+ */
+
 package sc.windom.sofill.Ss
 
 import androidx.compose.runtime.compositionLocalOf
@@ -33,7 +41,7 @@ object S_Compose {
     val btnText2 = compositionLocalOf { "复制到剪贴板" }
     val btnText3 = compositionLocalOf { "保存到指定文件夹" }
     val btnText4 = compositionLocalOf { "存入工作空间级资源目录" }
-    val btnText5 = compositionLocalOf { "保存至汐洛绞架" }
+    val btnText5 = compositionLocalOf { "保存至汐洛绞架（TOKEN）" }
     val btnText6 = compositionLocalOf { "保存至汐洛绞架（免密）" }
     val btnTextOpenByThirdParty = compositionLocalOf { "第三方打开" }
     val btnTextAudio1 = compositionLocalOf { "播放（旧）" }

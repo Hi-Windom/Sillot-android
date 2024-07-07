@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午4:07
- * updated: 2024/7/8 上午4:07
+ * lastModified: 2024/7/8 上午4:21
+ * updated: 2024/7/8 上午4:21
  */
 
 @file:Suppress("CompositionLocalNaming", "CompositionLocalNaming")
@@ -419,7 +419,7 @@ class MainPro : ComponentActivity() {
                 CommonTopAppBar(
                     head_title,
                     srcPath,
-                    in2_intent?.data,
+                    fileUri.value,
                     isMenuVisible,
                     additionalMenuItem = {
                         AddDropdownMenu(token, onDismiss = {

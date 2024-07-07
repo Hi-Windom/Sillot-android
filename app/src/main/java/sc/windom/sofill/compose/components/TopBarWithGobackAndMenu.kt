@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/8 上午4:21
+ * updated: 2024/7/8 上午4:21
+ */
+
 package sc.windom.sofill.compose.components
 
 import android.app.Activity
