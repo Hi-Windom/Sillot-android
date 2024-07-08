@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/7 下午10:31
- * updated: 2024/7/7 下午10:31
+ * lastModified: 2024/7/8 下午12:06
+ * updated: 2024/7/8 下午12:06
  */
 
 package org.b3log.ld246
@@ -413,7 +413,7 @@ class HomeActivity : ComponentActivity() {
                     NetworkAware()
                     Box(modifier = Modifier.fillMaxSize()) {
                         if (currentTab.value == "用户") {
-                            if (userPageData.value.userName?.isBlank() == true) {
+                            if (userPageData.value.userName.isNullOrBlank() == true) {
                                 Box(
                                     modifier = Modifier.fillMaxSize(),
                                     contentAlignment = Alignment.Center
