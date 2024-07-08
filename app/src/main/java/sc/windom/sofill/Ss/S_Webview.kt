@@ -2,11 +2,13 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午9:47
- * updated: 2024/7/8 上午9:47
+ * lastModified: 2024/7/8 上午11:59
+ * updated: 2024/7/8 上午11:59
  */
 
 package sc.windom.sofill.Ss
+
+import java.util.Date
 
 object S_Webview {
     val UA_edge_android = "Mozilla/5.0 (Linux; Android 12; K) " +
@@ -23,4 +25,42 @@ object S_Webview {
         "DuckDuckGo（需要科学上网）" to "duckduckgo.com/?q=",
 //  需要登录      "Yandex" to "yandex.ee/?q=",
     )
+
+    @JvmStatic
+    fun jsCode_gibbetBiometricAuth(accessAuthCode: String, captcha: String): String  {
+        return """
+                                    fetch('/api/system/loginAuth', {
+                                                method: 'POST',
+                                                body: JSON.stringify({
+                                                    authCode: '"""+accessAuthCode+"',"+"""
+                                                        captcha: '"""+captcha+"',"+"""
+                                                    }),
+                                                }).then((response) => {
+                                                    return response.json()
+                                                }).then((response) => {
+                                                    if (0 === response.code) {
+                                                        const url = new URL(window.location)
+                                                        window.location.href = url.searchParams.get("to") || "/"
+                                                        return
+                                                    }
+                                                    const inputElement = document.getElementById('authCode')
+                                                    const captchaElement = document.getElementById('captcha')
+                                                    if (response.code === 1) {
+                                                        captchaElement.previousElementSibling.src = `/api/system/getCaptcha?v=${Date().getTime()}`
+                                                        captchaElement.parentElement.style.display = 'block'
+                                                    } else {
+                                                        captchaElement.parentElement.style.display = 'none'
+                                                        captchaElement.previousElementSibling.src = ''
+                                                    }
+                                                    document.querySelector('#message').classList.add('b3-snackbar--show')
+                                                    document.querySelector('#message').firstElementChild.textContent = response.msg
+                                                    inputElement.value = ''
+                                                    captchaElement.value = ''
+                                                    inputElement.focus()
+                                                    setTimeout(() => {
+                                                        document.querySelector('#message').classList.remove('b3-snackbar--show')
+                                                        document.querySelector('#message').firstElementChild.textContent = ''
+                                                    }, 6000)
+                                                })"""
+    }
 }

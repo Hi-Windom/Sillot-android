@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/7/8 上午11:33
- * updated: 2024/7/8 上午11:33
+ * lastModified: 2024/7/8 上午11:59
+ * updated: 2024/7/8 上午11:59
  */
 package org.b3log.siyuan;
 
@@ -11,7 +11,9 @@ import static androidx.core.app.ActivityCompat.startActivityForResult;
 import static com.blankj.utilcode.util.ActivityUtils.startActivity;
 import static com.blankj.utilcode.util.ViewUtils.runOnUiThread;
 
+import static sc.windom.sofill.Ss.S_Webview.jsCode_gibbetBiometricAuth;
 import static sc.windom.sofill.Us.U_Phone.toggleFullScreen;
+import static sc.windom.sofill.android.BiometricKt.newBiometricPrompt;
 import static sc.windom.sofill.android.webview.WebViewThemeKt.applySystemThemeToWebView;
 
 import android.content.ClipData;
@@ -35,6 +37,7 @@ import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.widget.LinearLayout;
 
+import androidx.annotation.NonNull;
 import androidx.biometric.BiometricManager;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.ShareCompat;
@@ -67,6 +70,7 @@ import sc.windom.sofill.S;
 import sc.windom.sofill.U;
 import sc.windom.sofill.Us.U_Permission;
 import sc.windom.sofill.Us.U_Phone;
+import sc.windom.sofill.android.BiometricCallback;
 import sc.windom.sofill.android.permission.Ps;
 import sc.windom.namespace.SillotMatrix.BuildConfig;
 import sc.windom.sofill.compose.WebViewActivity;
@@ -315,7 +319,7 @@ public final class JSAndroid {
         mainHandler.post(() -> {
         // 在 MainActivity 中调用 showBiometricPrompt 方法
         try {
-            BiometricHelper.showBiometricPrompt(activity, "指纹解锁", "", "取消", new BiometricHelper.BiometricCallback() {
+            newBiometricPrompt(activity, "指纹解锁", "", "取消", new BiometricCallback() {
                 @Override
                 public void onAuthenticationSuccess() {
                     // 认证成功的处理逻辑
@@ -326,41 +330,7 @@ public final class JSAndroid {
                     }
                     TipDialog.show("Success!", WaitDialog.TYPE.SUCCESS, 200);
                     // 在这里调用 WebView 方法
-                    String jsCode =
-                            """
-                                    fetch('/api/system/loginAuth', {
-                                                method: 'POST',
-                                                body: JSON.stringify({
-                                                    authCode: '"""+accessAuthCode+"',"+"""
-                                                        captcha: '"""+captcha+"',"+"""
-                                                    }),
-                                                }).then((response) => {
-                                                    return response.json()
-                                                }).then((response) => {
-                                                    if (0 === response.code) {
-                                                        const url = new URL(window.location)
-                                                        window.location.href = url.searchParams.get("to") || "/"
-                                                        return
-                                                    }
-                                                    const inputElement = document.getElementById('authCode')
-                                                    const captchaElement = document.getElementById('captcha')
-                                                    if (response.code === 1) {
-                                                        captchaElement.previousElementSibling.src = `/api/system/getCaptcha?v=${new Date().getTime()}`
-                                                        captchaElement.parentElement.style.display = 'block'
-                                                    } else {
-                                                        captchaElement.parentElement.style.display = 'none'
-                                                        captchaElement.previousElementSibling.src = ''
-                                                    }
-                                                    document.querySelector('#message').classList.add('b3-snackbar--show')
-                                                    document.querySelector('#message').firstElementChild.textContent = response.msg
-                                                    inputElement.value = ''
-                                                    captchaElement.value = ''
-                                                    inputElement.focus()
-                                                    setTimeout(() => {
-                                                        document.querySelector('#message').classList.remove('b3-snackbar--show')
-                                                        document.querySelector('#message').firstElementChild.textContent = ''
-                                                    }, 6000)
-                                                })""";
+                    String jsCode = jsCode_gibbetBiometricAuth(accessAuthCode, captcha);
                     BuglyLog.d("evaluateJavascript", jsCode);
                     activity.webView.evaluateJavascript(jsCode, null);
                     activity.mmkv.putString("AppCheckInState","unlockScreen");
@@ -373,7 +343,7 @@ public final class JSAndroid {
                 }
 
                 @Override
-                public void onAuthenticationError(CharSequence errString) {
+                public void onAuthenticationError(@NonNull CharSequence errString) {
                     // 认证错误的处理逻辑（一般是用户点击了取消）
 
                     BiometricManager biometricManager = BiometricManager.from(activity);
