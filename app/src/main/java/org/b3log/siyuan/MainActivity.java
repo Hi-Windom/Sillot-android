@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/7/8 上午5:50
- * updated: 2024/7/8 上午5:50
+ * lastModified: 2024/7/8 下午12:03
+ * updated: 2024/7/8 下午12:03
  */
 package org.b3log.siyuan;
 
@@ -81,7 +81,7 @@ package org.b3log.siyuan;
  import sc.windom.sofill.android.HWs;
 
  import org.b3log.siyuan.services.BootService;
- import org.b3log.siyuan.workers.SyncDataWorker;
+ import sc.windom.gibbet.workers.SyncDataWorker;
  import org.greenrobot.eventbus.EventBus;
  import org.greenrobot.eventbus.Subscribe;
  import org.greenrobot.eventbus.ThreadMode;

@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午5:50
- * updated: 2024/7/8 上午5:50
+ * lastModified: 2024/7/8 下午12:03
+ * updated: 2024/7/8 下午12:03
  */
 
 package org.b3log.siyuan.services
@@ -48,8 +48,8 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.io.filefilter.DirectoryFileFilter
 import org.apache.commons.io.filefilter.TrueFileFilter
 import org.b3log.siyuan.Utils
-import org.b3log.siyuan.workers.CheckHttpServerWorker
-import org.b3log.siyuan.workers.SyncDataWorker
+import sc.windom.gibbet.workers.CheckHttpServerWorker
+import sc.windom.gibbet.workers.SyncDataWorker
 import org.json.JSONArray
 import org.json.JSONObject
 import sc.windom.sillot.App
