@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/7/8 上午11:59
- * updated: 2024/7/8 上午11:59
+ * lastModified: 2024/7/9 上午12:27
+ * updated: 2024/7/9 上午12:27
  */
 package org.b3log.siyuan;
 
@@ -63,6 +63,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.concurrent.FutureTask;
 
 import mobile.Mobile;
@@ -70,6 +71,7 @@ import sc.windom.sofill.S;
 import sc.windom.sofill.U;
 import sc.windom.sofill.Us.U_Permission;
 import sc.windom.sofill.Us.U_Phone;
+import sc.windom.sofill.Us.U_Uri;
 import sc.windom.sofill.android.BiometricCallback;
 import sc.windom.sofill.android.permission.Ps;
 import sc.windom.namespace.SillotMatrix.BuildConfig;
@@ -286,16 +288,6 @@ public final class JSAndroid {
             }
         } else {
             // 处理无权限的情况，例如提醒用户或者直接返回
-        }
-    }
-
-    @JavascriptInterface
-    public void openURLuseDefaultApp(final String url) {
-        Uri uri = Uri.parse(url);
-        if (uri.getScheme().toLowerCase().startsWith("http")) {
-            final Intent i = new Intent(Intent.ACTION_VIEW, uri);
-            startActivity(i); // https://developer.android.google.cn/training/app-links/verify-android-applinks?hl=zh-cn
-            // 从 Android 12 开始，经过验证的链接现在会自动在相应的应用中打开，以获得更简化、更快速的用户体验。谷歌还更改了未经Android应用链接验证或用户手动批准的链接的默认处理方式。谷歌表示，Android 12将始终在默认浏览器中打开此类未经验证的链接，而不是向您显示应用程序选择对话框。
         }
     }
 
@@ -605,19 +597,25 @@ public final class JSAndroid {
         }
         BuglyLog.d("openExternal final url ", url);
 
-        final Uri uri = Uri.parse(url);
-        Intent webIntent = new Intent(activity, WebViewActivity.class);
-        webIntent.setData(uri); // 将URI数据传递给HomeActivity
-        webIntent.addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK
-                | Intent.FLAG_ACTIVITY_NEW_DOCUMENT
-                | Intent.FLAG_ACTIVITY_MULTIPLE_TASK
-        );
-        webIntent.addFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
-        startActivity(webIntent);
-//        final Intent browserIntent = new Intent(Intent.ACTION_VIEW, uri);
-//        activity.startActivity(browserIntent); // https://developer.android.google.cn/training/app-links/verify-android-applinks?hl=zh-cn
-        // 从 Android 12 开始，经过验证的链接现在会自动在相应的应用中打开，以获得更简化、更快速的用户体验。谷歌还更改了未经Android应用链接验证或用户手动批准的链接的默认处理方式。谷歌表示，Android 12将始终在默认浏览器中打开此类未经验证的链接，而不是向您显示应用程序选择对话框。
+        final boolean openURLUseDefaultApp = activity.mmkv.getBoolean("Gibbet@openURLUseDefaultApp", false);
+        if (openURLUseDefaultApp) {
+            U_Uri.openURLUseDefaultApp(url);
+        } else {
+            U_Uri.openURLUseSB(activity, url);
+        }
+    }
+
+    @JavascriptInterface
+    public void openURLuseDefaultApp(final String url) {
+        BuglyLog.d(TAG, "openURLuseDefaultApp() invoked");
+        U_Uri.openURLUseDefaultApp(url);
+    }
+
+
+    @JavascriptInterface
+    public void openURLUseSB(final String url) {
+        BuglyLog.d(TAG, "openURLUseSB() invoked");
+        U_Uri.openURLUseSB(activity, url);
     }
 
     @JavascriptInterface
