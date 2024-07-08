@@ -2,13 +2,14 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/7 下午10:31
- * updated: 2024/7/7 下午10:31
+ * lastModified: 2024/7/8 下午8:13
+ * updated: 2024/7/8 下午8:13
  */
 
 package sc.windom.sofill.pioneer
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -130,6 +131,7 @@ inline fun <reified T : Any> rememberSerializableMMKV(
  * @param defaultValue 状态的默认值，当从 MMKV 中恢复状态时，如果找不到对应的键，则返回此默认值。
  * @param onInit 初始化后需要做什么，提供一个可空的 savedValue ，从MMKV中恢复。应当只进行数据操作，不要直接操作UI
  * @return 返回一个 MutableStateFlow<T?> 对象，其中 T 是状态的实际类型。
+ * @suppress T 不能为可变类型，例如 MutableMap 。在 Kotlin 中，MutableMap 是一个可变的映射，而 Map 是一个不可变的映射。如果源必须是 MutableMap ，可以转换为 Map 传递
  */
 inline fun <reified T : Any> savableStateFlowMMKV(
     mmkv: MMKV,
@@ -152,6 +154,7 @@ inline fun <reified T : Any> savableStateFlowMMKV(
         stateFlow.collect { value ->
             // Serialize and save only the value, not the StateFlow itself
             value?.let {
+                Log.d("savableStateFlowMMKV", "value.hashCode ${value.hashCode()}")
                 mmkv.encode(key, json.encodeToString(serializer(), value))
             }
         }

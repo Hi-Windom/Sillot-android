@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 下午12:06
- * updated: 2024/7/8 下午12:06
+ * lastModified: 2024/7/8 下午11:33
+ * updated: 2024/7/8 下午11:33
  */
 
 package org.b3log.ld246
@@ -315,7 +315,7 @@ class HomeActivity : ComponentActivity() {
         val isMenuVisible = rememberSaveable { mutableStateOf(false) }
         val userPageData = rememberSerializableMMKV(mmkv, "${srcPath}_@userPageData", ld246_User())
         val showFullScreenWebView = rememberSaveable { mutableStateOf(false) }
-        viewmodel = NotificationsViewModel(currentTab)
+        viewmodel = NotificationsViewModel(currentTab, pullToRefreshState)
 
         DisposableEffect(viewmodel) {
             onDispose {
@@ -326,8 +326,9 @@ class HomeActivity : ComponentActivity() {
         val notificationsState = viewmodel.notificationsState.collectAsState(
             // initial = listOf() // 由于使用了 savableStateFlowMMKV ，这里不提供初始值
         )
-        if (pullToRefreshState.isRefreshing) {
-            LaunchedEffect(true) {
+
+        LaunchedEffect(pullToRefreshState.isRefreshing) {
+            if (pullToRefreshState.isRefreshing) {
                 apiService?.let {
                     if (currentTab.value == "用户") {
                         token.value?.let { it1 ->
@@ -338,7 +339,7 @@ class HomeActivity : ComponentActivity() {
                             )
                         } ?: { PopNotification.show("token 异常") }
                     } else {
-                        viewmodel.fetchNotificationV2(pullToRefreshState, it, token)
+                        viewmodel.fetchNotificationV2(it, token)
                     }
                 }
             }
@@ -348,24 +349,7 @@ class HomeActivity : ComponentActivity() {
             snapshotFlow { currentTab.value } // 创建一个Flow，它在每次currentTab.value变化时发出（启动时也会执行一次）.snapshotFlow 与其他 Flow 的主要区别在于它是如何检测状态变化的。snapshotFlow 使用 Compose 的状态对象（如 State、MutableState 等）来检测变化，并且它是通过 Compose 的重组机制来实现的。这意味着 snapshotFlow 只在 Compose 的重组过程中检测状态变化，而不是在每次状态值发生变化时。
                 .conflate() // 当新值到来时，如果上一个值还没被处理，就忽略它
                 .collectLatest { // collectLatest会取消当前正在进行的操作，并开始新的操作
-                    // pullToRefreshState.startRefresh() 之所以要在这里重复代码是因为：用户体验更好
-                    apiService?.let {
-                        if (currentTab.value == "用户") {
-                            token.value?.let { it1 ->
-                                updateUserPage(
-                                    it1,
-                                    userPageData,
-                                    pullToRefreshState
-                                )
-                            } ?: { PopNotification.show("token 异常") }
-                        } else {
-                            viewmodel.fetchNotificationV2(
-                                pullToRefreshState,
-                                it,
-                                token
-                            )
-                        }
-                    }
+                    pullToRefreshState.startRefresh()
                 }
 
         }
@@ -776,25 +760,33 @@ class HomeActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("StaticFieldLeak")
-    private inner class NotificationsViewModel(_currentTab: MutableState<String>) : ViewModel() {
+    private inner class NotificationsViewModel(
+        _currentTab: MutableState<String>,
+        _pullToRefreshState: PullToRefreshState
+    ) : ViewModel() {
         val TAG = "NotificationsViewModel"
         val currentTab = _currentTab
+        val pullToRefreshState = _pullToRefreshState
         private val _notificationsState = savableStateFlowMMKV(
             mmkv,
             "${srcPath}@NotificationsViewModel",
-            map
+            map.toMap()
         ) {
-            it?.let { map = it }
+            it?.let { map = it.toMutableMap() }
         }
-        val notificationsState: StateFlow<MutableMap<String, List<ld246_Response_Data_Notification>?>?> =
+        val notificationsState: StateFlow<Map<String, List<ld246_Response_Data_Notification>?>?> =
             _notificationsState
+
+        init {
+            BuglyLog.d(TAG, "currentTab ${currentTab.value}")
+        }
 
 
         @OptIn(ExperimentalMaterial3Api::class)
         fun fetchAllNotifications(
             apiService: ApiServiceNotification,
-            pullToRefreshState: PullToRefreshState?,
             token: MutableState<String?>
         ) {
             viewModelScope.launch {
@@ -877,8 +869,8 @@ class HomeActivity : ComponentActivity() {
                                 handle_ld246_Response(response)
                             }
                             viewModelScope.launch {
-                                _notificationsState.emit(map)
-                                pullToRefreshState?.endRefresh()
+                                _notificationsState.emit(map.toMap())
+                                pullToRefreshState.endRefresh()
                             }
                         }
 
@@ -887,7 +879,7 @@ class HomeActivity : ComponentActivity() {
                             PopNotification.show(call.toString(), t.toString())
                                 .noAutoDismiss()
                             viewModelScope.launch {
-                                pullToRefreshState?.endRefresh()
+                                pullToRefreshState.endRefresh()
                             }
                         }
                     })
@@ -897,21 +889,19 @@ class HomeActivity : ComponentActivity() {
 
         @OptIn(ExperimentalMaterial3Api::class)
         fun fetchNotificationV2(
-            pullToRefreshState: PullToRefreshState?,
             apiService: ApiServiceNotification,
             token: MutableState<String?>
         ) {
             job = viewModelScope.launch {
                 try {
-                    if (map.values.all { it.isNullOrEmpty() }) {
+                    if (map.values.any { it.isNullOrEmpty() }) {
                         apiService.let {
                             viewmodel.fetchAllNotifications(
                                 it,
-                                pullToRefreshState,
                                 token
                             )
                         }
-                    } else if (pullToRefreshState != null && pullToRefreshState.isRefreshing) {
+                    } else if (pullToRefreshState.isRefreshing) {
                         // 执行当前tab的请求
                         val caller: Call<ld246_Response> = when (currentTab.value) {
                             "回帖" -> apiService.apiV2NotificationsCommentedGet(
@@ -981,7 +971,7 @@ class HomeActivity : ComponentActivity() {
                                     }
                                 }
                                 viewModelScope.launch {
-                                    _notificationsState.emit(map)
+                                    _notificationsState.emit(map.toMap())
                                     pullToRefreshState.endRefresh()
                                 }
                                 handle_ld246_Response(response)
@@ -999,7 +989,7 @@ class HomeActivity : ComponentActivity() {
                     } else {
                         // 不请求只更新显示TAB对于数据，一般是点击TAB的时候
                         viewModelScope.launch {
-                            _notificationsState.emit(map)
+                            _notificationsState.emit(map.toMap())
                         }
                     }
                 } catch (e: Exception) {
