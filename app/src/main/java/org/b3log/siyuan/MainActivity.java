@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/7/8 下午12:03
- * updated: 2024/7/8 下午12:03
+ * lastModified: 2024/7/8 下午5:34
+ * updated: 2024/7/8 下午5:34
  */
 package org.b3log.siyuan;
 
@@ -849,7 +849,6 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     public void exit() {
         runOnUiThread(() -> {
             setSillotGibbetCheckInState();
-            finish();
             finishAndRemoveTask();
 //            System.exit(0);
         });
@@ -879,7 +878,11 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         // 从任务列表中移除，禁止放在 onDestroy
         finishAndRemoveTask(); //  这个方法用于结束当前活动，并从任务栈中移除整个任务。这意味着，当前活动所在的任务中所有的活动都会被结束，并且任务本身也会被移除。如果这个任务是最顶层的任务，那么用户将返回到主屏幕。
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK
+                        | Intent.FLAG_ACTIVITY_NEW_DOCUMENT
+                        | Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+        );
         startActivity(intent);
        android.os.Process.killProcess(android.os.Process.myPid()); // 暂时无法解决杀死其他任务栈的冲突，不加这句无法重启内核
     }
