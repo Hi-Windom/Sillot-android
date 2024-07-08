@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午5:50
- * updated: 2024/7/8 上午5:50
+ * lastModified: 2024/7/8 下午11:48
+ * updated: 2024/7/8 下午11:48
  */
 
 @file:Suppress("CompositionLocalNaming", "CompositionLocalNaming")
@@ -90,7 +90,7 @@ import kotlinx.coroutines.withContext
 import mobile.Mobile
 import org.b3log.ld246.HomeActivity
 import sc.windom.namespace.SillotMatrix.R
-import org.b3log.siyuan.services.BootService
+import sc.windom.gibbet.services.BootService
 import sc.windom.sillot.App
 import sc.windom.sofill.S
 import sc.windom.sofill.Ss.S_Uri

@@ -3,8 +3,8 @@
   ~ Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
   ~ Copyright (c) 2024.
   ~
-  ~ lastModified: 2024/7/8 下午5:15
-  ~ updated: 2024/7/8 下午5:15
+  ~ lastModified: 2024/7/8 下午11:48
+  ~ updated: 2024/7/8 下午11:48
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -709,7 +709,7 @@
         </service>
         <!-- 以 Android 14 为目标平台，则必须指定适当的前台服务类型  -->
         <service
-                android:name="org.b3log.siyuan.services.FloatingWindowService"
+                android:name="sc.windom.gibbet.services.FloatingWindowService"
                 android:foregroundServiceType="dataSync|location">
             <property
                     android:name="android.app.PROPERTY_DATA_SYNC_FGS_SUBTYPE"
@@ -717,7 +717,7 @@
         </service>
 
         <service
-                android:name="org.b3log.siyuan.services.BootService"
+                android:name="sc.windom.gibbet.services.BootService"
                 android:foregroundServiceType="dataSync|location"
                 android:enabled="true"
                 android:exported="true"

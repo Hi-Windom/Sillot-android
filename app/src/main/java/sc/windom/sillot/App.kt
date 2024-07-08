@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午11:38
- * updated: 2024/7/8 上午11:38
+ * lastModified: 2024/7/8 下午11:48
+ * updated: 2024/7/8 下午11:48
  */
 
 package sc.windom.sillot
@@ -34,7 +34,7 @@ import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.annotations.Ignore
 import io.realm.kotlin.types.annotations.PrimaryKey
 import sc.windom.gibbet.MG.ForegroundPushManager
-import org.b3log.siyuan.services.BootService
+import sc.windom.gibbet.services.BootService
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_Phone.setPreferredDisplayMode

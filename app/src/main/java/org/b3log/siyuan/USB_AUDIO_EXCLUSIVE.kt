@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/8 下午11:48
+ * updated: 2024/7/8 下午11:48
+ */
+
 package org.b3log.siyuan
 
 import android.annotation.SuppressLint
@@ -70,7 +78,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
 import com.tencent.bugly.crashreport.BuglyLog
 import kotlinx.coroutines.launch
-import org.b3log.siyuan.services.MusicService
+import sc.windom.gibbet.services.MusicService
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 

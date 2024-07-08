@@ -2,11 +2,11 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 下午12:03
- * updated: 2024/7/8 下午12:03
+ * lastModified: 2024/7/8 下午11:48
+ * updated: 2024/7/8 下午11:48
  */
 
-package org.b3log.siyuan.services
+package sc.windom.gibbet.services
 
 import android.Manifest
 import android.app.Activity
