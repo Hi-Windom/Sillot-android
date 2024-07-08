@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+  ~ Copyright (c) 2024.
+  ~
+  ~ lastModified: 2024/7/8 上午9:21
+  ~ updated: 2024/7/8 上午9:21
+  -->
+
 <resources>
     <string name="activity_name_SillotHome">汐洛</string>
     <string name="activity_name_Sithw">司华</string>
@@ -7,6 +15,7 @@
     <string name="activity_name_ld246Home">汐洛链滴社区客户端</string>
     <string name="activity_name_MainPro">Sillot MainPro</string>
     <string name="activity_name_ManageSpaceActivity">Sillot Storage Cleaning Assistant</string>
+    <string name="activity_name_WebViewActivity">Sillot Browser</string>
     <string name="shortcut_long_label_1">启动->汐洛</string>
     <string name="shortcut_short_label_1">启动汐洛</string>
     <string name="shortcut_long_label_ld246_dailycheck">链滴每日签到</string>

@@ -1,3 +1,11 @@
+<!--
+  ~ Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+  ~ Copyright (c) 2024.
+  ~
+  ~ lastModified: 2024/7/8 上午9:21
+  ~ updated: 2024/7/8 上午9:21
+  -->
+
 <resources>
 <!--  在 build.gradle 里动态定义了  <string name="app_name">汐洛</string>-->
     <string name="activity_name_SillotHome">汐洛</string>
@@ -7,6 +15,7 @@
     <string name="activity_name_ld246Home">汐洛链滴社区客户端</string>
     <string name="activity_name_MainPro">汐洛通用处理助手</string>
     <string name="activity_name_ManageSpaceActivity">汐洛存储清理助手</string>
+    <string name="activity_name_WebViewActivity">汐洛浏览器</string>
     <string name="shortcut_long_label_1">启动->汐洛</string>
     <string name="shortcut_short_label_1">启动汐洛</string>
     <string name="shortcut_long_label_ld246_dailycheck">链滴每日签到</string>

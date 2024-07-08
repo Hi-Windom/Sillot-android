@@ -3,8 +3,8 @@
   ~ Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
   ~ Copyright (c) 2024.
   ~
-  ~ lastModified: 2024/7/8 上午6:06
-  ~ updated: 2024/7/8 上午6:06
+  ~ lastModified: 2024/7/8 上午9:23
+  ~ updated: 2024/7/8 上午9:23
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -332,6 +332,28 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data android:scheme="magnet" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <!--      设置这个会导致失效          <data android:host="*"/>-->
+            </intent-filter>
+
+        </activity>
+
+        <activity
+                android:name="sc.windom.sofill.compose.WebViewActivity"
+                android:label="@string/activity_name_WebViewActivity"
+                android:screenOrientation="fullSensor"
+                android:supportsPictureInPicture="true"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:exported="true"
+                android:launchMode="singleInstancePerTask"
+                tools:ignore="DiscouragedApi">
+            <intent-filter android:label="汐洛浏览器">
+                <!--必须设置-->
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <!--需要被网页拉起必须设置-->
+                <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="http" />
                 <data android:scheme="https" />
                 <!--      设置这个会导致失效          <data android:host="*"/>-->
