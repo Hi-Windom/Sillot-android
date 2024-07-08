@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/8 下午12:07
+ * updated: 2024/7/8 下午12:07
+ */
+
 package sc.windom.sofill.Us
 
 import android.os.Handler
@@ -7,8 +15,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
 import com.kongzue.dialogx.dialogs.TipDialog
 import com.kongzue.dialogx.dialogs.WaitDialog
-import sc.windom.sofill.android.BiometricHelper
-import sc.windom.sofill.android.BiometricHelper.BiometricCallback
+import sc.windom.sofill.android.BiometricCallback
+import sc.windom.sofill.android.newBiometricPrompt
 
 object U_Safe {
     private val TAG = "sc.windom.sofill.Us.U_Safe"
@@ -24,7 +32,7 @@ object U_Safe {
         mainHandler.post {
             // 在 MainActivity 中调用 showBiometricPrompt 方法
             try {
-                BiometricHelper.showBiometricPrompt(
+                newBiometricPrompt(
                     activity,
                     "指纹解锁",
                     "",
