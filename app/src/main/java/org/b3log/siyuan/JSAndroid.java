@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/7/8 上午9:36
- * updated: 2024/7/8 上午9:36
+ * lastModified: 2024/7/8 上午11:33
+ * updated: 2024/7/8 上午11:33
  */
 package org.b3log.siyuan;
 
@@ -52,7 +52,6 @@ import com.tencent.bugly.crashreport.BuglyLog;
 import com.tencent.bugly.crashreport.CrashReport;
 
 import sc.windom.sillot.App;
-import sc.windom.sofill.android.BiometricHelper;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -639,6 +638,12 @@ public final class JSAndroid {
         final Uri uri = Uri.parse(url);
         Intent webIntent = new Intent(activity, WebViewActivity.class);
         webIntent.setData(uri); // 将URI数据传递给HomeActivity
+        webIntent.addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_NEW_DOCUMENT
+                | Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+        );
+        webIntent.addFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
         startActivity(webIntent);
 //        final Intent browserIntent = new Intent(Intent.ACTION_VIEW, uri);
 //        activity.startActivity(browserIntent); // https://developer.android.google.cn/training/app-links/verify-android-applinks?hl=zh-cn

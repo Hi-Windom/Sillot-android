@@ -3,8 +3,8 @@
   ~ Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
   ~ Copyright (c) 2024.
   ~
-  ~ lastModified: 2024/7/8 上午9:23
-  ~ updated: 2024/7/8 上午9:23
+  ~ lastModified: 2024/7/8 上午9:51
+  ~ updated: 2024/7/8 上午9:51
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -286,6 +286,7 @@
 
         <activity
                 android:name="sc.windom.potter.producer.MainPro"
+                android:taskAffinity="sc.windom.potter.producer.MainPro.task"
                 android:label="@string/activity_name_MainPro"
                 android:screenOrientation="fullSensor"
                 android:supportsPictureInPicture="true"
@@ -341,6 +342,7 @@
 
         <activity
                 android:name="sc.windom.sofill.compose.WebViewActivity"
+                android:taskAffinity="sc.windom.potter.producer.WebViewActivity.task"
                 android:label="@string/activity_name_WebViewActivity"
                 android:screenOrientation="fullSensor"
                 android:supportsPictureInPicture="true"
