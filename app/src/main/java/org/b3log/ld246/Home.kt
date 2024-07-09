@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/9 下午6:32
- * updated: 2024/7/9 下午6:32
+ * lastModified: 2024/7/9 下午7:19
+ * updated: 2024/7/9 下午7:19
  */
 
 package org.b3log.ld246
@@ -293,18 +293,23 @@ class HomeActivity : ComponentActivity() {
                 // 并且它是通过 Compose 的重组机制来实现的。这意味着 snapshotFlow 只在 Compose 的重组过程中检测状态变化，而不是在每次状态值发生变化时。
                 .conflate() // 当新值到来时，如果上一个值还没被处理，就忽略它
                 .collectLatest { // collectLatest会取消当前正在进行的操作，并开始新的操作
-                    BuglyLog.d(TAG, "666")
+                    BuglyLog.d(TAG, "collectLatest currentTab.value: ${currentTab.value}")
                     pullToRefreshState.startRefresh()
-                    if (pullToRefreshState.isRefreshing) {
-                        if (currentTab.value == "用户") {
-                            viewmodel.updateUserPage()
-                        } else {
-                            viewmodel.fetchNotificationV2()
-                        }
-                    }
                 }
-
         }
+        LaunchedEffect(pullToRefreshState.isRefreshing) {
+            // pullToRefreshState 无法用 snapshotFlow 直接捕获
+            val isRefreshing = pullToRefreshState.isRefreshing
+            BuglyLog.d(TAG, "collectLatest pullToRefreshState.isRefreshing: $isRefreshing")
+            if (isRefreshing) {
+                if (currentTab.value == "用户") {
+                    viewmodel.updateUserPage()
+                } else {
+                    viewmodel.fetchNotificationV2()
+                }
+            }
+        }
+
 
         LaunchedEffect(FullScreenWebView_url.value) {
             if (!FullScreenWebView_url.value.isNullOrBlank()) {
