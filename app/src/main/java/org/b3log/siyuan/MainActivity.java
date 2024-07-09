@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/7/8 下午11:48
- * updated: 2024/7/8 下午11:48
+ * lastModified: 2024/7/9 下午10:00
+ * updated: 2024/7/9 下午10:00
  */
 package org.b3log.siyuan;
 
@@ -131,6 +131,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
     }
     private long exitTime;
     public MMKV mmkv;
+    public MMKV mmkvJS;
     public ActivityResultLauncher<String[]> requestPermissionLauncher;
     public int requestPermissionAll_works = 0;
 
@@ -296,6 +297,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
         U_Layout.applyStatusBarConfigurationV2(this, false); // 可以伸到状态栏和导航栏的位置（沉浸式）
         bindBootService();
         mmkv = MMKV.defaultMMKV();
+        mmkvJS = MMKV.mmkvWithID("GibbetJS");
         // 注册 EventBus
         EventBus.getDefault().register(this);
         // 获取OnBackPressedDispatcher

@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/7/9 上午12:27
- * updated: 2024/7/9 上午12:27
+ * lastModified: 2024/7/9 下午10:23
+ * updated: 2024/7/9 下午10:23
  */
 package org.b3log.siyuan;
 
@@ -63,7 +63,6 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.concurrent.FutureTask;
 
 import mobile.Mobile;
@@ -75,7 +74,6 @@ import sc.windom.sofill.Us.U_Uri;
 import sc.windom.sofill.android.BiometricCallback;
 import sc.windom.sofill.android.permission.Ps;
 import sc.windom.namespace.SillotMatrix.BuildConfig;
-import sc.windom.sofill.compose.WebViewActivity;
 
 /**
  * JavaScript 接口.
@@ -86,7 +84,7 @@ import sc.windom.sofill.compose.WebViewActivity;
  * @since 1.0.0
  */
 public final class JSAndroid {
-    private MainActivity activity;
+    private final MainActivity activity;
     private final String TAG = "JSAndroid.java";
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     public JSAndroid(final MainActivity activity) {
@@ -292,16 +290,25 @@ public final class JSAndroid {
     }
 
     @JavascriptInterface
-    public void setMMKV(final String key, final String value) {
-        BuglyLog.d(TAG, "setMMKV() invoked");
-        activity.mmkv.encode(key, value);
+    public void setKV(final String key, final String value) {
+        BuglyLog.d(TAG, "setKV() invoked");
+        activity.mmkvJS.encode(key, value);
     }
 
     @JavascriptInterface
-    public String getMMKV(final String key) {
-        BuglyLog.d(TAG, "getMMKV() invoked");
-        // 出于安全考虑禁止实现
-        return "";
+    public String getKV(final String key) {
+        BuglyLog.d(TAG, "getKV() invoked");
+        return activity.mmkvJS.getString(key, null);
+    }
+
+    @JavascriptInterface
+    public Boolean getKVBoolean(final String key) {
+        BuglyLog.d(TAG, "getKVBoolean() invoked");
+        if (activity.mmkvJS.containsKey(key)) {
+            return activity.mmkvJS.getBoolean(key, false);
+        } else {
+            return null;
+        }
     }
 
     @JavascriptInterface
