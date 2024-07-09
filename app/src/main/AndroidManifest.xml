@@ -3,8 +3,8 @@
   ~ Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
   ~ Copyright (c) 2024.
   ~
-  ~ lastModified: 2024/7/8 下午11:48
-  ~ updated: 2024/7/8 下午11:48
+  ~ lastModified: 2024/7/9 下午7:29
+  ~ updated: 2024/7/9 下午7:29
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -292,7 +292,7 @@
                 android:label="@string/activity_name_MainPro"
                 android:screenOrientation="fullSensor"
                 android:supportsPictureInPicture="true"
-                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
                 android:exported="true"
                 android:launchMode="singleInstancePerTask"
                 tools:ignore="DiscouragedApi">
@@ -348,7 +348,7 @@
                 android:label="@string/activity_name_WebViewActivity"
                 android:screenOrientation="fullSensor"
                 android:supportsPictureInPicture="true"
-                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
                 android:exported="true"
                 android:launchMode="singleInstancePerTask"
                 tools:ignore="DiscouragedApi">
@@ -387,7 +387,7 @@
         <activity
                 android:name="sc.windom.sofill.permission.Battery"
                 android:exported="true"
-                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
                 android:autoRemoveFromRecents="true"
                 android:launchMode="singleInstance">
             <intent-filter>
@@ -400,7 +400,7 @@
         <activity
                 android:name="sc.windom.sofill.permission.Overlay"
                 android:exported="true"
-                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
                 android:autoRemoveFromRecents="true"
                 android:launchMode="singleInstance">
             <intent-filter>
@@ -417,7 +417,7 @@
                 android:hardwareAccelerated="true"
                 android:supportsPictureInPicture="true"
                 android:taskAffinity=".sillot.task.background"
-                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize">
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode">
             <intent-filter>
                 <action android:name="${applicationId}.intent.videoPlayer.SimplePlayer" />
 
@@ -435,7 +435,7 @@
         <!--            android:label="@string/activity_name_USB_AUDIO_EXCLUSIVE"-->
         <!--            android:exported="true"-->
         <!--            android:supportsPictureInPicture="true"-->
-        <!--            android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"-->
+        <!--            android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"-->
         <!--            android:autoRemoveFromRecents="false"-->
         <!--            android:taskAffinity=".sillot.task.USB_AUDIO_EXCLUSIVE"-->
         <!--            android:launchMode="singleInstance">-->
@@ -481,7 +481,7 @@
                 android:icon="@drawable/icon"
                 android:label="@string/activity_name_ld246Home"
                 android:autoRemoveFromRecents="false"
-                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
                 android:screenOrientation="portrait"
                 android:exported="true"
                 android:hardwareAccelerated="true"
@@ -547,7 +547,7 @@
         <!--            android:icon="@drawable/icon"-->
         <!--            android:label="@string/activity_name_SillotHome"-->
         <!--            android:autoRemoveFromRecents="false"-->
-        <!--            android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"-->
+        <!--            android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"-->
         <!--            android:exported="true"-->
         <!--            android:hardwareAccelerated="true"-->
         <!--            android:noHistory="false"-->
@@ -577,7 +577,7 @@
         <!--            android:icon="@drawable/icon"-->
         <!--            android:label="@string/activity_name_Sithw"-->
         <!--            android:autoRemoveFromRecents="false"-->
-        <!--            android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"-->
+        <!--            android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"-->
         <!--            android:exported="true"-->
         <!--            android:hardwareAccelerated="true"-->
         <!--            android:noHistory="false"-->
@@ -607,7 +607,7 @@
                 android:icon="@drawable/icon_siyuan"
                 android:label="@string/activity_name_Boot"
                 android:autoRemoveFromRecents="true"
-                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
                 android:exported="true"
                 android:hardwareAccelerated="true"
                 android:noHistory="true"
@@ -631,7 +631,7 @@
         <activity
                 android:name="org.b3log.siyuan.MainActivity"
                 android:autoRemoveFromRecents="false"
-                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
                 android:hardwareAccelerated="true"
                 android:taskAffinity="org.b3log.siyuan.MainActivity"
                 android:launchMode="singleInstancePerTask"
@@ -646,7 +646,7 @@
         </activity>
         <activity
                 android:name="cn.jpush.android.ui.PopWinActivity"
-                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
                 android:exported="true"
                 android:theme="@style/MyDialogStyle"
                 tools:node="replace">
@@ -660,7 +660,7 @@
         </activity> <!-- 若您的业务中有使用极光富媒体功能，需要把此 Activity 的 exported 修改成 true 覆盖 mavenCentral 上的组件。 -->
         <activity
                 android:name="cn.jpush.android.ui.PushActivity"
-                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
                 android:exported="true"
                 android:theme="@android:style/Theme.NoTitleBar"
                 tools:node="replace">
@@ -674,7 +674,7 @@
         <!-- 点击通知时，要打开的 activity -->
         <activity
                 android:name="sc.windom.siow.jpush.OpenClickActivity"
-                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
                 android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -693,7 +693,7 @@
         <!-- For test only JPush 测试的主程序-->
         <activity
                 android:name="sc.windom.siow.jpush.PushActivity"
-                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
                 android:exported="false" />
         <!-- Since JCore2.0.0 Required SDK核心功能 -->
         <!-- 可配置android:process参数将Service放在其他进程中；android:enabled属性不能是false -->
@@ -743,7 +743,7 @@
         <activity
                 android:name="sc.windom.potter.ManageSpaceActivity"
                 android:label="@string/activity_name_ManageSpaceActivity"
-                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
                 android:exported="true" />
 
     </application>

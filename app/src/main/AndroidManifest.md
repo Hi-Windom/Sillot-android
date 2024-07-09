@@ -37,7 +37,7 @@ singleInstancePerTask允许在同一设备上存在多个实例，只要它们�
 * `navigation` - 系统导航方式变化，例如使用方向键导航。
 * **`screenLayout` - 屏幕布局方向发生变化。**
 * `fontScale` - 全局字体大小发生变化。
-* `uiMode` - UI模式发生变化，例如从正常模式变为汽车模式。
+* **`uiMode` - UI模式发生变化，例如深色模式切换。**
 * **`orientation` - 设备方向发生变化，例如从纵向变为横向。**
 * **`screenSize` - 屏幕尺寸发生变化，这不会在Android 3.2之前的版本中触发，因为在那之前这个概念不存在。**
 * **`smallestScreenSize` - 最小屏幕尺寸发生变化，这用于区分正常屏幕和超大屏幕设备。**
@@ -58,6 +58,6 @@ singleInstancePerTask允许在同一设备上存在多个实例，只要它们�
 
 ```xml
 <activity>
-  android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize"
+  android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
 </activity>
 ```
