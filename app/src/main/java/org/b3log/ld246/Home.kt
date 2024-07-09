@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 下午11:33
- * updated: 2024/7/8 下午11:33
+ * lastModified: 2024/7/9 下午6:32
+ * updated: 2024/7/9 下午6:32
  */
 
 package org.b3log.ld246
@@ -69,6 +69,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -154,7 +155,6 @@ class HomeActivity : ComponentActivity() {
     }
     var map: MutableMap<String, List<ld246_Response_Data_Notification>?> = mapEmpty
     private var job: Job? = null
-    private lateinit var viewmodel: NotificationsViewModel
     private var retrofit: Retrofit? = null
     private var apiService: ApiServiceNotification? = null
     private var FullScreenWebView_url: MutableState<String?> = mutableStateOf(null)
@@ -247,53 +247,6 @@ class HomeActivity : ComponentActivity() {
         }
     }
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    private fun updateUserPage(
-        token: String,
-        userPageData: MutableState<ld246_User>,
-        pullToRefreshState: PullToRefreshState?
-    ) {
-        val caller = apiService?.apiV2UserGet(token, S_Webview.UA_edge_android)
-        caller?.enqueue(object : Callback<ld246_Response> {
-            override fun onResponse(
-                p0: Call<ld246_Response>,
-                response: Response<ld246_Response>
-            ) {
-                if (response.isSuccessful && response.body() != null) {
-                    response.body()?.data?.user?.let { userPageData.value = it }
-                }
-                pullToRefreshState?.endRefresh()
-                handle_ld246_Response(response)
-            }
-
-            override fun onFailure(p0: Call<ld246_Response>, p1: Throwable) {
-                //
-                pullToRefreshState?.endRefresh()
-            }
-        })
-    }
-
-
-    private fun handle_ld246_Response(response: Response<ld246_Response>) {
-        val message = "Error Response: ${response.message()}"
-        when (response.code()) {
-            200 ->
-                PopTip.show("<(￣︶￣)↗[${response.code()}]")
-
-            401 -> PopNotification.show(
-                message,
-                "TOKEN为空或者错误，请在右上角设置 TOKEN 后下拉刷新"
-            ).noAutoDismiss()
-
-            403 -> PopNotification.show(message, "权限不足").noAutoDismiss()
-            else -> PopNotification.show(
-                " ￣へ￣ [${response.code()}]",
-                response.toString()
-            )
-                .noAutoDismiss()
-        }
-    }
-
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
     @Composable
@@ -315,41 +268,40 @@ class HomeActivity : ComponentActivity() {
         val isMenuVisible = rememberSaveable { mutableStateOf(false) }
         val userPageData = rememberSerializableMMKV(mmkv, "${srcPath}_@userPageData", ld246_User())
         val showFullScreenWebView = rememberSaveable { mutableStateOf(false) }
-        viewmodel = NotificationsViewModel(currentTab, pullToRefreshState)
-
+        val viewmodel = remember {
+            NotificationsViewModel(
+                token,
+                currentTab,
+                pullToRefreshState,
+                userPageData,
+                apiService
+            )
+        }
+        val notificationsState = viewmodel.notificationsState.collectAsState(
+            // initial = listOf() // 由于使用了 savableStateFlowMMKV ，这里不提供初始值
+        )
         DisposableEffect(viewmodel) {
             onDispose {
                 // 在这里释放资源
                 job?.cancel()
             }
         }
-        val notificationsState = viewmodel.notificationsState.collectAsState(
-            // initial = listOf() // 由于使用了 savableStateFlowMMKV ，这里不提供初始值
-        )
-
-        LaunchedEffect(pullToRefreshState.isRefreshing) {
-            if (pullToRefreshState.isRefreshing) {
-                apiService?.let {
-                    if (currentTab.value == "用户") {
-                        token.value?.let { it1 ->
-                            updateUserPage(
-                                it1,
-                                userPageData,
-                                pullToRefreshState
-                            )
-                        } ?: { PopNotification.show("token 异常") }
-                    } else {
-                        viewmodel.fetchNotificationV2(it, token)
-                    }
-                }
-            }
-        }
 
         LaunchedEffect(Unit) {
-            snapshotFlow { currentTab.value } // 创建一个Flow，它在每次currentTab.value变化时发出（启动时也会执行一次）.snapshotFlow 与其他 Flow 的主要区别在于它是如何检测状态变化的。snapshotFlow 使用 Compose 的状态对象（如 State、MutableState 等）来检测变化，并且它是通过 Compose 的重组机制来实现的。这意味着 snapshotFlow 只在 Compose 的重组过程中检测状态变化，而不是在每次状态值发生变化时。
+            snapshotFlow { currentTab.value } // 创建一个Flow，它在每次currentTab.value变化时发出（启动时也会执行一次）.
+                // snapshotFlow 与其他 Flow 的主要区别在于它是如何检测状态变化的。snapshotFlow 使用 Compose 的状态对象（如 State、MutableState 等）来检测变化，
+                // 并且它是通过 Compose 的重组机制来实现的。这意味着 snapshotFlow 只在 Compose 的重组过程中检测状态变化，而不是在每次状态值发生变化时。
                 .conflate() // 当新值到来时，如果上一个值还没被处理，就忽略它
                 .collectLatest { // collectLatest会取消当前正在进行的操作，并开始新的操作
+                    BuglyLog.d(TAG, "666")
                     pullToRefreshState.startRefresh()
+                    if (pullToRefreshState.isRefreshing) {
+                        if (currentTab.value == "用户") {
+                            viewmodel.updateUserPage()
+                        } else {
+                            viewmodel.fetchNotificationV2()
+                        }
+                    }
                 }
 
         }
@@ -763,12 +715,18 @@ class HomeActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("StaticFieldLeak")
     private inner class NotificationsViewModel(
+        _token: MutableState<String?>,
         _currentTab: MutableState<String>,
-        _pullToRefreshState: PullToRefreshState
+        _pullToRefreshState: PullToRefreshState,
+        _userPageData: MutableState<ld246_User>,
+        _apiService: ApiServiceNotification?,
     ) : ViewModel() {
         val TAG = "NotificationsViewModel"
+        val token = _token
         val currentTab = _currentTab
         val pullToRefreshState = _pullToRefreshState
+        val userPageData = _userPageData
+        val apiService = _apiService
         private val _notificationsState = savableStateFlowMMKV(
             mmkv,
             "${srcPath}@NotificationsViewModel",
@@ -780,59 +738,119 @@ class HomeActivity : ComponentActivity() {
             _notificationsState
 
         init {
-            BuglyLog.d(TAG, "currentTab ${currentTab.value}")
+            BuglyLog.d(
+                TAG,
+                "init with currentTab ${currentTab.value} (if you see this log when swith tab , check the viewmodel binding way)"
+            )
+            if (apiService == null) {
+                PopNotification.show("初始化异常", "apiService is null")
+            }
+            pullToRefreshState.startRefresh()
+        }
+
+        private fun _onError(call: Call<ld246_Response>, t: Throwable) {
+            // 处理异常
+            PopNotification.show(call.toString(), t.toString())
+                .noAutoDismiss()
+            viewModelScope.launch {
+                pullToRefreshState.endRefresh()
+            }
+        }
+
+
+        private fun handle_ld246_Response(response: Response<ld246_Response>) {
+            viewModelScope.launch {
+                pullToRefreshState.endRefresh()
+            }
+            val message = "Error Response: ${response.message()}"
+            when (response.code()) {
+                200 ->
+                    PopTip.show("<(￣︶￣)↗[${response.code()}]")
+
+                401 -> PopNotification.show(
+                    message,
+                    "TOKEN为空或者错误，请在右上角设置 TOKEN 后下拉刷新"
+                ).noAutoDismiss()
+
+                403 -> PopNotification.show(message, "权限不足").noAutoDismiss()
+                else -> PopNotification.show(
+                    " ￣へ￣ [${response.code()}]",
+                    response.toString()
+                )
+                    .noAutoDismiss()
+            }
+        }
+
+        @OptIn(ExperimentalMaterial3Api::class)
+        fun updateUserPage() {
+            BuglyLog.d(TAG, "updateUserPage -> old userPageData: ${userPageData.value}")
+            val caller = apiService?.apiV2UserGet(token.value, S_Webview.UA_edge_android)
+            caller?.enqueue(object : Callback<ld246_Response> {
+                override fun onResponse(
+                    p0: Call<ld246_Response>,
+                    response: Response<ld246_Response>
+                ) {
+                    if (response.isSuccessful && response.body() != null) {
+                        response.body()?.data?.user?.let { userPageData.value = it }
+                    }
+                    handle_ld246_Response(response)
+                }
+
+                override fun onFailure(p0: Call<ld246_Response>, p1: Throwable) {
+                    _onError(p0, p1)
+                }
+            })
         }
 
 
         @OptIn(ExperimentalMaterial3Api::class)
-        fun fetchAllNotifications(
-            apiService: ApiServiceNotification,
-            token: MutableState<String?>
-        ) {
+        fun fetchAllNotifications() {
             viewModelScope.launch {
                 val calls = mutableListOf<Call<ld246_Response>>()
-                calls.add(
-                    apiService.apiV2NotificationsCommentedGet(
-                        1,
-                        token.value,
-                        S_Webview.UA_edge_android
+                apiService?.let {
+                    calls.add(
+                        it.apiV2NotificationsCommentedGet(
+                            1,
+                            token.value,
+                            S_Webview.UA_edge_android
+                        )
                     )
-                )
-                calls.add(
-                    apiService.apiV2NotificationsComment2edGet(
-                        1,
-                        token.value,
-                        S_Webview.UA_edge_android
+                    calls.add(
+                        it.apiV2NotificationsComment2edGet(
+                            1,
+                            token.value,
+                            S_Webview.UA_edge_android
+                        )
                     )
-                )
-                calls.add(
-                    apiService.apiV2NotificationsReplyGet(
-                        1,
-                        token.value,
-                        S_Webview.UA_edge_android
+                    calls.add(
+                        it.apiV2NotificationsReplyGet(
+                            1,
+                            token.value,
+                            S_Webview.UA_edge_android
+                        )
                     )
-                )
-                calls.add(
-                    apiService.apiV2NotificationsAtGet(
-                        1,
-                        token.value,
-                        S_Webview.UA_edge_android
+                    calls.add(
+                        it.apiV2NotificationsAtGet(
+                            1,
+                            token.value,
+                            S_Webview.UA_edge_android
+                        )
                     )
-                )
-                calls.add(
-                    apiService.apiV2NotificationsFollowingGet(
-                        1,
-                        token.value,
-                        S_Webview.UA_edge_android
+                    calls.add(
+                        it.apiV2NotificationsFollowingGet(
+                            1,
+                            token.value,
+                            S_Webview.UA_edge_android
+                        )
                     )
-                )
-                calls.add(
-                    apiService.apiV2NotificationsPointGet(
-                        1,
-                        token.value,
-                        S_Webview.UA_edge_android
+                    calls.add(
+                        it.apiV2NotificationsPointGet(
+                            1,
+                            token.value,
+                            S_Webview.UA_edge_android
+                        )
                     )
-                )
+                }
                 calls.forEach { caller ->
 //                    delay(100) // 避免接口请求频繁
                     caller.enqueue(object : Callback<ld246_Response> {
@@ -875,12 +893,7 @@ class HomeActivity : ComponentActivity() {
                         }
 
                         override fun onFailure(call: Call<ld246_Response>, t: Throwable) {
-                            // 处理异常
-                            PopNotification.show(call.toString(), t.toString())
-                                .noAutoDismiss()
-                            viewModelScope.launch {
-                                pullToRefreshState.endRefresh()
-                            }
+                            _onError(caller, t)
                         }
                     })
                 }
@@ -888,53 +901,45 @@ class HomeActivity : ComponentActivity() {
         }
 
         @OptIn(ExperimentalMaterial3Api::class)
-        fun fetchNotificationV2(
-            apiService: ApiServiceNotification,
-            token: MutableState<String?>
-        ) {
+        fun fetchNotificationV2() {
             job = viewModelScope.launch {
                 try {
                     if (map.values.any { it.isNullOrEmpty() }) {
-                        apiService.let {
-                            viewmodel.fetchAllNotifications(
-                                it,
-                                token
-                            )
-                        }
+                        fetchAllNotifications()
                     } else if (pullToRefreshState.isRefreshing) {
                         // 执行当前tab的请求
                         val caller: Call<ld246_Response> = when (currentTab.value) {
-                            "回帖" -> apiService.apiV2NotificationsCommentedGet(
+                            "回帖" -> apiService?.apiV2NotificationsCommentedGet(
                                 1,
                                 token.value,
                                 S_Webview.UA_edge_android
                             )
 
-                            "评论" -> apiService.apiV2NotificationsComment2edGet(
+                            "评论" -> apiService?.apiV2NotificationsComment2edGet(
                                 1,
                                 token.value,
                                 S_Webview.UA_edge_android
                             )
 
-                            "回复" -> apiService.apiV2NotificationsReplyGet(
+                            "回复" -> apiService?.apiV2NotificationsReplyGet(
                                 1,
                                 token.value,
                                 S_Webview.UA_edge_android
                             )
 
-                            "提及" -> apiService.apiV2NotificationsAtGet(
+                            "提及" -> apiService?.apiV2NotificationsAtGet(
                                 1,
                                 token.value,
                                 S_Webview.UA_edge_android
                             )
 
-                            "关注" -> apiService.apiV2NotificationsFollowingGet(
+                            "关注" -> apiService?.apiV2NotificationsFollowingGet(
                                 1,
                                 token.value,
                                 S_Webview.UA_edge_android
                             )
 
-                            "积分" -> apiService.apiV2NotificationsPointGet(
+                            "积分" -> apiService?.apiV2NotificationsPointGet(
                                 1,
                                 token.value,
                                 S_Webview.UA_edge_android
@@ -972,24 +977,19 @@ class HomeActivity : ComponentActivity() {
                                 }
                                 viewModelScope.launch {
                                     _notificationsState.emit(map.toMap())
-                                    pullToRefreshState.endRefresh()
+                                    handle_ld246_Response(response)
                                 }
-                                handle_ld246_Response(response)
                             }
 
                             override fun onFailure(call: Call<ld246_Response>, t: Throwable) {
-                                // 处理异常
-                                PopNotification.show(call.toString(), t.toString())
-                                    .noAutoDismiss()
-                                viewModelScope.launch {
-                                    pullToRefreshState.endRefresh()
-                                }
+                                _onError(caller, t)
                             }
                         })
                     } else {
                         // 不请求只更新显示TAB对于数据，一般是点击TAB的时候
                         viewModelScope.launch {
                             _notificationsState.emit(map.toMap())
+                            pullToRefreshState.endRefresh()
                         }
                     }
                 } catch (e: Exception) {
