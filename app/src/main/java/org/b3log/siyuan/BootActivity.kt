@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/7/8 下午5:19
- * updated: 2024/7/8 下午5:19
+ * lastModified: 2024/7/10 下午9:01
+ * updated: 2024/7/10 下午9:02
  */
 package org.b3log.siyuan
 
@@ -18,7 +18,7 @@ import android.os.Message
 import android.text.Html
 import android.text.method.ScrollingMovementMethod
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
 import com.tencent.bugly.crashreport.BuglyLog
 import org.apache.commons.io.FileUtils
 import sc.windom.sofill.U
@@ -32,7 +32,7 @@ import java.io.File
  * @version 1.1.0.4, Feb 13, 2024
  * @since 1.0.0
  */
-class BootActivity : AppCompatActivity() {
+class BootActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         BuglyLog.i("boot", "create boot activity")
         super.onCreate(savedInstanceState)

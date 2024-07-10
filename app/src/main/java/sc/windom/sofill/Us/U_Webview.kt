@@ -1,8 +1,15 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/10 下午9:36
+ * updated: 2024/7/10 下午9:36
+ */
+
 package sc.windom.sofill.Us
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.DialogInterface
 import android.graphics.Bitmap
 import android.net.Uri
@@ -23,6 +30,7 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.runtime.MutableState
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import sc.windom.sofill.Ss.S_Webview
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -93,26 +101,7 @@ fun thisWebChromeClient(activity: Activity): WebChromeClient {
             message: String?,
             result: JsResult?
         ): Boolean {
-            val date = Date()
-            val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA)
-            val formattedDate = sdf.format(date)
-
-            AlertDialog.Builder(activity)
-                .setTitle("[WebChromeClient] onJsAlert from WebView")
-                .setMessage(
-                    """
-        
-        --------------------------------------------
-        $message
-        --------------------------------------------
-        
-        * ${view.title}
-        * $formattedDate
-        """.trimIndent()
-                )
-                .setPositiveButton("OK") { dialog: DialogInterface?, which: Int -> result!!.confirm() }
-                .setCancelable(false)
-                .show()
+            activity.showJSAlert(view, url, message, result)
             return true // 已处理
         }
 
@@ -259,4 +248,34 @@ fun thisWebViewClient(
             super.onReceivedHttpError(view, request, errorResponse)
         }
     }
+}
+
+@JvmStatic
+fun Activity.showJSAlert(
+    view: WebView,
+    url: String?,
+    message: String?,
+    result: JsResult?
+) {
+    val date = Date()
+    val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA)
+    val formattedDate = sdf.format(date)
+
+    MaterialAlertDialogBuilder(this)
+        .setTitle("[WebChromeClient] onJsAlert from WebView")
+        .setMessage(
+            """
+        
+        -------------------------------
+        $message
+        -------------------------------
+        
+        * ${view.title}
+        * $formattedDate
+        * $url
+        """.trimIndent()
+        )
+        .setPositiveButton("OK") { dialog: DialogInterface?, which: Int -> result!!.confirm() }
+        .setCancelable(false)
+        .show()
 }

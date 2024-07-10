@@ -2,12 +2,13 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/7/9 下午10:00
- * updated: 2024/7/9 下午10:00
+ * lastModified: 2024/7/10 下午9:34
+ * updated: 2024/7/10 下午9:34
  */
 package org.b3log.siyuan;
 
  import static org.b3log.siyuan.MainActivityHelperKt.onDragInsertIntoWebView;
+ import static sc.windom.sofill.Us.U_WebviewKt.showJSAlert;
  import static sc.windom.sofill.android.webview.WebViewThemeKt.applySystemThemeToWebView;
 
  import android.annotation.SuppressLint;
@@ -55,13 +56,12 @@ package org.b3log.siyuan;
  import android.widget.ProgressBar;
  import android.widget.TextView;
 
+ import androidx.activity.ComponentActivity;
  import androidx.activity.OnBackPressedCallback;
  import androidx.activity.OnBackPressedDispatcher;
  import androidx.activity.result.ActivityResultLauncher;
  import androidx.activity.result.contract.ActivityResultContracts;
  import androidx.annotation.NonNull;
- import androidx.appcompat.app.AlertDialog;
- import androidx.appcompat.app.AppCompatActivity;
  import androidx.core.app.ActivityCompat;
  import androidx.core.content.ContextCompat;
  import androidx.work.Constraints;
@@ -93,9 +93,6 @@ package org.b3log.siyuan;
  import java.io.OutputStream;
  import java.io.UnsupportedEncodingException;
  import java.net.URLEncoder;
- import java.text.SimpleDateFormat;
- import java.util.Date;
- import java.util.Locale;
  import java.util.Map;
  import java.util.Objects;
  import java.util.UUID;
@@ -113,7 +110,7 @@ package org.b3log.siyuan;
  * @version 1.1.0.3, Apr 24, 2024
  * @since 1.0.0
  */
-public class MainActivity extends AppCompatActivity implements com.blankj.utilcode.util.Utils.OnAppStatusChangedListener {
+public class MainActivity extends ComponentActivity implements com.blankj.utilcode.util.Utils.OnAppStatusChangedListener {
     private final String TAG = "MainActivity-SiYuan";
     private Activity thisActivity;
     public WebView webView;
@@ -141,8 +138,8 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
       * TODO: <a href="https://ld246.com/article/1711543259805">部分安卓平板上无法正常使用 ESC 键</a>
       * @param event The key event.
       *
-      * @return
       */
+    @SuppressLint("RestrictedApi")
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         if (event.getAction() == KeyEvent.ACTION_DOWN) {
@@ -469,16 +466,7 @@ public class MainActivity extends AppCompatActivity implements com.blankj.utilco
                  */
             @Override
             public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
-                Date date = new Date();
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA);
-                String formattedDate = sdf.format(date);
-
-                new AlertDialog.Builder(MainActivity.this)
-                        .setTitle("[WebChromeClient] onJsAlert from WebView")
-                        .setMessage("\n--------------------------------------------\n" + message + "\n--------------------------------------------\n\n* " + view.getTitle() + "\n* " + formattedDate)
-                        .setPositiveButton("OK", (dialog, which) -> result.confirm())
-                        .setCancelable(false)
-                        .show();
+                showJSAlert(MainActivity.this, view, url, message, result);
                 return true;
             }
 

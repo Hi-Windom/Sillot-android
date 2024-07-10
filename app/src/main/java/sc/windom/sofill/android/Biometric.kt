@@ -2,12 +2,13 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午11:52
- * updated: 2024/7/8 上午11:52
+ * lastModified: 2024/7/10 下午9:07
+ * updated: 2024/7/10 下午9:07
  */
 
 package sc.windom.sofill.android
 
+import android.app.Activity
 import android.os.Handler
 import androidx.biometric.BiometricPrompt
 import androidx.fragment.app.FragmentActivity
@@ -18,7 +19,7 @@ import java.util.concurrent.TimeUnit
 
 @JvmStatic
 fun newBiometricPrompt(
-    activity: FragmentActivity,
+    activity: Activity,
     title: String?,
     subtitle: String?,
     negativeButtonText: String?,
@@ -36,7 +37,7 @@ fun newBiometricPrompt(
         .setNegativeButtonText(negativeButtonText ?: "Cancel")
         .build()
 
-    val biometricPrompt = BiometricPrompt(activity, executorBiometric, object : BiometricPrompt.AuthenticationCallback() {
+    val biometricPrompt = BiometricPrompt(activity as FragmentActivity, executorBiometric, object : BiometricPrompt.AuthenticationCallback() {
         override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
             super.onAuthenticationError(errorCode, errString)
             callback.onAuthenticationError(errString)
