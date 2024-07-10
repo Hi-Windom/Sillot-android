@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午5:39
- * updated: 2024/7/8 上午5:39
+ * lastModified: 2024/7/11 上午12:50
+ * updated: 2024/7/11 上午12:50
  */
 
 package sc.windom.potter
@@ -63,8 +63,8 @@ import kotlinx.coroutines.withContext
 import sc.windom.namespace.SillotMatrix.R
 import sc.windom.sofill.S
 import sc.windom.sofill.U
-import sc.windom.sofill.Us.U_DEBUG.srcPath
 import sc.windom.sofill.Us.U_FileUtils.getSizeRecursively
+import sc.windom.sofill.Us.thisSourceFilePath
 import sc.windom.sofill.compose.components.CommonTopAppBar
 import sc.windom.sofill.compose.components.WaitUI
 import sc.windom.sofill.compose.theme.CascadeMaterialTheme
@@ -73,7 +73,7 @@ import java.io.File
 // TODO: 添加更多可清理内容
 class ManageSpaceActivity : AppCompatActivity() {
     private val TAG = "ManageSpaceActivity.kt"
-    private val srcPath = srcPath(TAG)
+    private val srcPath = thisSourceFilePath(TAG)
     private lateinit var thisActivity: AppCompatActivity
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

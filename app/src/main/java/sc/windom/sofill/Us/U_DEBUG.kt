@@ -2,13 +2,14 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午5:41
- * updated: 2024/7/8 上午5:41
+ * lastModified: 2024/7/10 下午10:47
+ * updated: 2024/7/10 下午10:47
  */
 
 package sc.windom.sofill.Us
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
@@ -35,15 +36,6 @@ object U_DEBUG {
         sb.append("Apk: ").append(BuildConfig.VERSION_NAME).append(" (")
             .append(BuildConfig.VERSION_CODE).append(")\n")
         return sb.toString()
-    }
-    /**
-     * 将类的全名转换为使用斜杠的路径形式，并附加给定的文件名。
-     */
-    fun Any.srcPath(fileName: String): String {
-        val className = this::class.java.name
-        val packageName = className.substring(0, className.lastIndexOf('.'))
-        val slashedPackageName = packageName.replace('.', '/')
-        return "$slashedPackageName/$fileName"
     }
     @JvmStatic
     fun prettyConsoleMessage(consoleMessage: ConsoleMessage): String {
@@ -128,4 +120,15 @@ object U_DEBUG {
             Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID)
         return androidId
     }
+}
+
+/**
+ * 将活动类的全名转换为使用斜杠的路径形式，并附加给定的文件名。
+ */
+@JvmStatic
+fun Activity.thisSourceFilePath(fileName: String): String {
+    val className = this::class.java.name
+    val packageName = className.substring(0, className.lastIndexOf('.'))
+    val slashedPackageName = packageName.replace('.', '/')
+    return "$slashedPackageName/$fileName"
 }

@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/7/10 下午9:01
- * updated: 2024/7/10 下午9:02
+ * lastModified: 2024/7/10 下午11:00
+ * updated: 2024/7/10 下午11:00
  */
 package org.b3log.siyuan
 
@@ -22,6 +22,8 @@ import androidx.activity.ComponentActivity
 import com.tencent.bugly.crashreport.BuglyLog
 import org.apache.commons.io.FileUtils
 import sc.windom.sofill.U
+import sc.windom.sofill.pioneer.SillotActivity
+import sc.windom.sofill.pioneer.SillotActivityType
 import java.io.File
 
 
@@ -32,6 +34,8 @@ import java.io.File
  * @version 1.1.0.4, Feb 13, 2024
  * @since 1.0.0
  */
+@SillotActivity(SillotActivityType.Launcher)
+@SillotActivity(SillotActivityType.UseInVisible)
 class BootActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         BuglyLog.i("boot", "create boot activity")
