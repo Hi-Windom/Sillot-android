@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/7/10 下午9:34
- * updated: 2024/7/10 下午9:34
+ * lastModified: 2024/7/11 下午10:33
+ * updated: 2024/7/11 下午10:33
  */
 package org.b3log.siyuan;
 
@@ -102,6 +102,8 @@ package org.b3log.siyuan;
  import sc.windom.sofill.U;
  import sc.windom.sofill.S;
  import sc.windom.namespace.SillotMatrix.R;
+ import sc.windom.sofill.annotations.SillotActivity;
+ import sc.windom.sofill.annotations.SillotActivityType;
 
  /**
  * 主程序.
@@ -110,6 +112,9 @@ package org.b3log.siyuan;
  * @version 1.1.0.3, Apr 24, 2024
  * @since 1.0.0
  */
+ @SillotActivity(TYPE = SillotActivityType.Main)
+ @SillotActivity(TYPE = SillotActivityType.Launcher)
+ @SillotActivity(TYPE = SillotActivityType.UseVisible)
 public class MainActivity extends ComponentActivity implements com.blankj.utilcode.util.Utils.OnAppStatusChangedListener {
     private final String TAG = "MainActivity-SiYuan";
     private Activity thisActivity;

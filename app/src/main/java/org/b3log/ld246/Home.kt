@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/10 下午9:51
- * updated: 2024/7/10 下午9:51
+ * lastModified: 2024/7/11 下午10:33
+ * updated: 2024/7/11 下午10:33
  */
 
 package org.b3log.ld246
@@ -114,6 +114,8 @@ import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_Uri
 import sc.windom.sofill.Us.thisSourceFilePath
 import sc.windom.sofill.android.HWs
+import sc.windom.sofill.annotations.SillotActivity
+import sc.windom.sofill.annotations.SillotActivityType
 import sc.windom.sofill.api.MyRetrofit.createRetrofit
 import sc.windom.sofill.api.ld246.ApiServiceNotification
 import sc.windom.sofill.compose.FullScreenWebView
@@ -134,6 +136,9 @@ import sc.windom.sofill.pioneer.saveValue
 /**
  * 设计目标：android:launchMode="singleInstancePerTask"
  */
+@SillotActivity(SillotActivityType.Main)
+@SillotActivity(SillotActivityType.Launcher)
+@SillotActivity(SillotActivityType.UseVisible)
 class HomeActivity : ComponentActivity() {
     private val TAG = "Home.kt"
     private val srcPath = thisSourceFilePath(TAG)

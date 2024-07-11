@@ -3,8 +3,8 @@
   ~ Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
   ~ Copyright (c) 2024.
   ~
-  ~ lastModified: 2024/7/9 下午7:29
-  ~ updated: 2024/7/9 下午7:29
+  ~ lastModified: 2024/7/11 下午11:14
+  ~ updated: 2024/7/11 下午11:14
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -473,6 +473,9 @@
         <!--                <action android:name="android.service.notification.NotificationListenerService" />-->
         <!--            </intent-filter>-->
         <!--        </service>-->
+
+        <!--  将应用主入口活动必置于此处，确保是入口类型活动的最前（小米系统侧边栏等情景也会是入口）  -->
+
         <!--        汐洛链滴社区客户端主入口-->
         <activity
                 android:name="org.b3log.ld246.HomeActivity"
@@ -644,6 +647,28 @@
                    https://github.com/siyuan-note/siyuan/issues/9455
                -->
         </activity>
+
+        <!--  入口活动，务必置于入口类型活动的最后，使其作为OriginOS侧边栏显示的活动（小米系统无效）  -->
+        <!-- https://github.com/Hi-Windom/Sillot-android/issues/93 -->
+        <activity
+                android:name="sc.windom.sillot.AppActivity"
+                android:taskAffinity="sc.windom.sillot"
+                android:launchMode="singleInstancePerTask"
+                android:icon="@drawable/icon"
+                android:label="@string/activity_name_SillotHome"
+                android:autoRemoveFromRecents="true"
+                android:noHistory="true"
+                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
+                android:exported="true"
+                android:hardwareAccelerated="true"
+                android:theme="@style/Theme.SiYuan.Boot">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
         <activity
                 android:name="cn.jpush.android.ui.PopWinActivity"
                 android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"

@@ -61,3 +61,18 @@ singleInstancePerTask允许在同一设备上存在多个实例，只要它们�
   android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
 </activity>
 ```
+
+### 入口类型活动
+
+> 本节无任何参考资料，纯实践得出的结论
+
+```xml
+ <intent-filter>
+    <action android:name="android.intent.action.MAIN" />
+
+    <category android:name="android.intent.category.LAUNCHER" />
+</intent-filter>
+```
+如果存在多个入口类型活动：
+
+最前的入口类型活动是应用主活动（小米系统侧边栏等情景也会是入口）。最后的入口类型活动是OriginOS侧边栏显示的活动

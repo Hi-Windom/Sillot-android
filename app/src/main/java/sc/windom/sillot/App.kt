@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 下午11:48
- * updated: 2024/7/8 下午11:48
+ * lastModified: 2024/7/11 下午10:38
+ * updated: 2024/7/11 下午10:38
  */
 
 package sc.windom.sillot
@@ -12,6 +12,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.Looper
@@ -38,10 +39,13 @@ import sc.windom.gibbet.services.BootService
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_Phone.setPreferredDisplayMode
+import sc.windom.sofill.annotations.SillotActivity
+import sc.windom.sofill.annotations.SillotActivityType
 import java.lang.StringBuilder
 import java.net.InetAddress
 import java.net.UnknownHostException
 import java.util.LinkedHashMap
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.also
 import kotlin.collections.set
 import kotlin.jvm.javaClass
@@ -95,6 +99,13 @@ class App : Application() {
             get() = Looper.getMainLooper().thread.id == Thread.currentThread().id
 
         var KernelService: BootService? = null
+        @JvmField
+        val currentIntentRef = AtomicReference<Intent>()
+    }
+
+    fun startTargetActivity() {
+        val intent = currentIntentRef.get()
+        startActivity(intent)
     }
 
     override fun onCreate() {
@@ -119,6 +130,18 @@ class App : Application() {
                     "onActivityStarted() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
                 refCount++
+                val annotations = activity.javaClass.getAnnotationsByType(SillotActivity::class.java)
+
+                // 遍历注解并处理每个注解
+                annotations.forEach { annotation ->
+                    BuglyLog.d(
+                        TAG,
+                        "the activity's annotation.TYPE ${annotation.TYPE}"
+                    )
+                    if (annotation.TYPE == SillotActivityType.Main) {
+                        currentIntentRef.set(activity.intent)
+                    }
+                }
             }
 
             override fun onActivityDestroyed(activity: Activity) {

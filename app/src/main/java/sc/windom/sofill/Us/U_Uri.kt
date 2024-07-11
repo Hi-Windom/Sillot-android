@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/9 上午7:00
- * updated: 2024/7/9 上午7:00
+ * lastModified: 2024/7/11 下午10:54
+ * updated: 2024/7/11 下午10:54
  */
 
 package sc.windom.sofill.Us
@@ -76,15 +76,15 @@ object U_Uri {
     @JvmStatic
     fun openURLUseSB(context: Context, url: String) {
         val uri = Uri.parse(url)
-        val webIntent = Intent(context, WebViewActivity::class.java);
+        val webIntent = Intent(context, WebViewActivity::class.java)
         webIntent.setData(uri)
         webIntent.addFlags(
             Intent.FLAG_ACTIVITY_NEW_TASK
                     or Intent.FLAG_ACTIVITY_NEW_DOCUMENT
                     or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
-        );
-        webIntent.addFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
-        startActivity(webIntent);
+        )
+        webIntent.addFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT)
+        startActivity(webIntent)
     }
 
 }

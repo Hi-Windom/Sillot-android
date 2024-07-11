@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/10 下午10:39
- * updated: 2024/7/10 下午10:39
+ * lastModified: 2024/7/11 下午10:34
+ * updated: 2024/7/11 下午10:34
  */
 
 @file:Suppress("CompositionLocalNaming", "CompositionLocalNaming")
@@ -101,6 +101,8 @@ import sc.windom.sofill.Us.U_Uri
 import sc.windom.sofill.Us.thisSourceFilePath
 import sc.windom.sofill.android.webview.WebPoolsPro
 import sc.windom.sofill.android.webview.WebPoolsPro.Companion.instance
+import sc.windom.sofill.annotations.SillotActivity
+import sc.windom.sofill.annotations.SillotActivityType
 import sc.windom.sofill.compose.ApkButtons
 import sc.windom.sofill.compose.AudioButtons
 import sc.windom.sofill.compose.LockScreenOrientation
@@ -114,7 +116,6 @@ import sc.windom.sofill.compose.components.WaitUI
 import sc.windom.sofill.compose.partialCom.DdMenuI
 import sc.windom.sofill.compose.partialCom.NetworkAware
 import sc.windom.sofill.compose.theme.CascadeMaterialTheme
-import sc.windom.sofill.pioneer.SillotActivity
 import java.io.IOException
 import java.util.Objects
 
@@ -124,7 +125,7 @@ import java.util.Objects
 // TODO: 缓存清理
 // TODO: 如果是 workspaceParentDir 目录下的文件支持删除
 // TODO: 文件被删除时处理异常
-@SillotActivity
+@SillotActivity(SillotActivityType.UseVisible)
 class MainPro : ComponentActivity() {
     private val TAG = "MainPro.kt"
     private val srcPath = thisSourceFilePath(TAG)
