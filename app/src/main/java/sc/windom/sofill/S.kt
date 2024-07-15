@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/7 下午6:35
- * updated: 2024/7/7 下午6:35
+ * lastModified: 2024/7/15 上午10:16
+ * updated: 2024/7/15 上午10:16
  */
 
 @file:Suppress("CompositionLocalNaming", "CompositionLocalNaming")
@@ -24,7 +24,6 @@ import sc.windom.sofill.Ss.S_Webview
 import sc.windom.sofill.Ss.S_packageName
 
 object S {
-    const val gitRepoUrl = "https://github.com/Hi-Windom/Sillot-android"
     const val emailAdress = "694357845@qq.com"
     const val QQ = "694357845"
     const val TTK = "AsyncTTk" // 抖音
@@ -37,8 +36,6 @@ object S {
     const val KEY_AES_TOKEN_ld246 = "AES_KEY_TOKEN_ld246"
     const val KEY_TOKEN_Sillot_Gibbet = "TOKEN_Sillot_Gibbet"
     const val KEY_AES_TOKEN_Sillot_Gibbet = "AES_KEY_TOKEN_Sillot_Gibbet"
-
-    const val HOST_ld246 = "ld246.com"
 
 
     const val SILLOT_GIBBET_notificationId = 58131

@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/11 上午6:35
- * updated: 2024/7/11 上午6:35
+ * lastModified: 2024/7/15 上午11:01
+ * updated: 2024/7/15 上午11:01
  */
 
 import org.jetbrains.kotlin.gradle.dsl.jvm.JvmTargetValidationMode
@@ -40,7 +40,11 @@ android {
         compose true
         buildConfig true
     }
-
+    sourceSets{
+        main{
+            jniLibs.srcDirs "jnilibs" // TODO
+        }
+    }
 
     defaultConfig {
         applicationId "sc.windom.sillot" // applicationId 是应用程序在设备上的唯一标识符，决定了应用程序的安装位置和包名。

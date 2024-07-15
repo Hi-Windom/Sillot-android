@@ -2,19 +2,21 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/10 下午9:36
- * updated: 2024/7/10 下午9:36
+ * lastModified: 2024/7/15 上午10:19
+ * updated: 2024/7/15 上午10:19
  */
 
 package sc.windom.sofill.Us
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
 import android.content.DialogInterface
 import android.graphics.Bitmap
 import android.net.Uri
 import android.net.http.SslError
 import android.util.Log
+import android.view.View
 import android.webkit.ConsoleMessage
 import android.webkit.JsPromptResult
 import android.webkit.JsResult
@@ -31,12 +33,45 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.runtime.MutableState
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.kongzue.dialogx.dialogs.PopNotification
+import com.kongzue.dialogx.interfaces.OnDialogButtonClickListener
+import sc.windom.sofill.Ss.S_Uri
 import sc.windom.sofill.Ss.S_Webview
+import sc.windom.sofill.Ss.S_packageName
+import sc.windom.sofill.U.compareVersions
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 object U_Webview {
+}
+
+@JvmStatic
+fun Context.getWebViewVer(): String {
+    var webViewVer = ""
+    val packageManager = this.packageManager
+    val webViewPackageInfo = packageManager.getPackageInfo(S_packageName.GoogleWebview, 0)
+    webViewVer = webViewPackageInfo.versionName
+    Log.w("U_Webview", webViewVer)
+    return webViewVer
+}
+@JvmStatic
+fun Activity.checkWebViewVer(minVer: String) {
+    val webViewVer = getWebViewVer()
+    val result = compareVersions(webViewVer, minVer)
+    Log.w("U_Webview", "checkWebViewVer result : $result")
+    if (result < 0) {
+        PopNotification.show("系统 WebView 版本 $webViewVer 太低, 请升级至 $minVer+").noAutoDismiss().onPopNotificationClickListener =
+            object : OnDialogButtonClickListener<PopNotification?> {
+                override fun onClick(
+                    p0: PopNotification?,
+                    p1: View?
+                ): Boolean {
+                    U_Uri.openURLUseDefaultApp(S_Uri.URL_Sillot_docs_uprade_webview)
+                    return true
+                }
+            }
+    }
 }
 
 fun WebView.injectVConsole(resultCallback: ValueCallback<String?>? = null) {

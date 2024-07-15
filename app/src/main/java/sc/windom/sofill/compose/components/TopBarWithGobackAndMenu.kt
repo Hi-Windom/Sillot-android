@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午5:39
- * updated: 2024/7/8 上午5:39
+ * lastModified: 2024/7/15 上午10:55
+ * updated: 2024/7/15 上午10:55
  */
 
 package sc.windom.sofill.compose.components
@@ -56,6 +56,7 @@ import me.saket.cascade.CascadeDropdownMenu
 import me.saket.cascade.rememberCascadeState
 import sc.windom.namespace.SillotMatrix.R
 import sc.windom.sofill.S
+import sc.windom.sofill.Ss.S_Uri
 import sc.windom.sofill.U
 import sc.windom.sofill.U.disableScreenshot
 import sc.windom.sofill.U.enableScreenshot
@@ -264,12 +265,12 @@ fun TopRightMenu(
                 DropdownMenuItem(
                     text = { Text("反馈此页") },
                     leadingIcon = { Icon(Icons.TwoTone.BugReport, contentDescription = null) },
-                    onClick = { onDismiss();U_Uri.openUrl("${S.gitRepoUrl}/issues/new") },
+                    onClick = { onDismiss();U_Uri.openUrl("${S_Uri.gitRepoUrl}/issues/new") },
                 )
                 DropdownMenuItem(
                     text = { Text("查看源码") },
                     leadingIcon = { Icon(Icons.TwoTone.Code, contentDescription = null) },
-                    onClick = { onDismiss();U_Uri.openUrl("${S.gitRepoUrl}/blob/HEAD/app/src/main/java/${srcPath}") },
+                    onClick = { onDismiss();U_Uri.openUrl("${S_Uri.gitRepoUrl}/blob/HEAD/app/src/main/java/${srcPath}") },
                 )
             },
         )

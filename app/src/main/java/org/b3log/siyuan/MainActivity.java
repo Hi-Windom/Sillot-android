@@ -2,12 +2,13 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/7/11 下午10:33
- * updated: 2024/7/11 下午10:33
+ * lastModified: 2024/7/15 上午9:28
+ * updated: 2024/7/15 上午9:28
  */
 package org.b3log.siyuan;
 
  import static org.b3log.siyuan.MainActivityHelperKt.onDragInsertIntoWebView;
+ import static sc.windom.sofill.Us.U_WebviewKt.checkWebViewVer;
  import static sc.windom.sofill.Us.U_WebviewKt.showJSAlert;
  import static sc.windom.sofill.android.webview.WebViewThemeKt.applySystemThemeToWebView;
 
@@ -31,6 +32,7 @@ package org.b3log.siyuan;
  import android.view.ViewGroup;
 
  import sc.windom.sillot.App;
+ import sc.windom.sofill.Ss.S_Webview;
  import sc.windom.sofill.Us.U_DEBUG;
  import sc.windom.sofill.Us.U_Layout;
  import sc.windom.sofill.Us.U_Permission;
@@ -601,6 +603,7 @@ public class MainActivity extends ComponentActivity implements com.blankj.utilco
         waitFotKernelHttpServing();
         WebView.setWebContentsDebuggingEnabled(true);
         webView.loadUrl("http://127.0.0.1:58131/appearance/boot/index.html?v=" + Utils.version);
+        checkWebViewVer(thisActivity, S_Webview.getMinVersion());
     }
 
      /**

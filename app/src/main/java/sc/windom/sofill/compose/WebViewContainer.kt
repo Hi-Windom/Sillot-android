@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午5:41
- * updated: 2024/7/8 上午5:41
+ * lastModified: 2024/7/15 上午9:42
+ * updated: 2024/7/15 上午9:42
  */
 
 package sc.windom.sofill.compose
@@ -119,6 +119,7 @@ import sc.windom.sofill.Ss.S_Webview
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_Uri.askIntentForSUS
 import sc.windom.sofill.Us.applyDefault
+import sc.windom.sofill.Us.checkWebViewVer
 import sc.windom.sofill.Us.fixQQAppLaunchButton
 import sc.windom.sofill.Us.injectVConsole
 import sc.windom.sofill.Us.thisWebChromeClient
@@ -378,6 +379,7 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
     ) { /* Handle the result if needed */ }
     LaunchedEffect(originUrl) {
         gotoUrl.value = originUrl
+        activity.checkWebViewVer(S_Webview.minVersion)
     }
     val menuOptions = listOf(
         MenuOption("关于", Icons.Filled.Info, state = MenuOptionState.Disabled) { /* 点击事件 */ },

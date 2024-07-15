@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 下午11:48
- * updated: 2024/7/8 下午11:48
+ * lastModified: 2024/7/15 上午9:25
+ * updated: 2024/7/15 上午9:25
  */
 
 package sc.windom.gibbet.services
@@ -48,14 +48,14 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.io.filefilter.DirectoryFileFilter
 import org.apache.commons.io.filefilter.TrueFileFilter
 import org.b3log.siyuan.Utils
-import sc.windom.gibbet.workers.CheckHttpServerWorker
-import sc.windom.gibbet.workers.SyncDataWorker
 import org.json.JSONArray
 import org.json.JSONObject
+import sc.windom.gibbet.workers.CheckHttpServerWorker
+import sc.windom.gibbet.workers.SyncDataWorker
 import sc.windom.sillot.App
 import sc.windom.sofill.S
-import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_Thread.runOnUiThread
+import sc.windom.sofill.Us.getWebViewVer
 import sc.windom.sofill.android.webview.WebPoolsPro
 import java.io.File
 import java.net.InetAddress
@@ -141,7 +141,7 @@ class BootService : Service() {
         webView?.setBackgroundColor(Color.parseColor(S.ColorStringHex.bgColor_light))
         val ws = webView?.getSettings()
         userAgent = ws?.userAgentString
-        webViewVer = ws?.let { U.checkWebViewVer(it) }
+        webViewVer = this.getWebViewVer()
     }
 
     private val bootHandler: Handler = object : Handler(Looper.getMainLooper()) {

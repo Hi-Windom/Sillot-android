@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/7 下午5:20
- * updated: 2024/7/7 下午5:20
+ * lastModified: 2024/7/15 上午10:54
+ * updated: 2024/7/15 上午10:54
  */
 
 package org.b3log.ld246
@@ -38,7 +38,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Scale
 import coil.size.Size
-import sc.windom.sofill.S
+import sc.windom.sofill.Ss.S_Uri
 import sc.windom.sofill.dataClass.ld246_User
 
 @Composable
@@ -74,7 +74,7 @@ fun UserPage(user: ld246_User, _openURL: (url: String)-> Unit) {
                                 Lcc.startActivity(
                                     Intent(
                                         Intent.ACTION_VIEW,
-                                        Uri.parse("https://${S.HOST_ld246}/member/${user.userName}")
+                                        Uri.parse("https://${S_Uri.HOST_ld246}/member/${user.userName}")
                                     )
                                 )
                             }
@@ -136,25 +136,25 @@ private fun UserProfileScreen(user: ld246_User, _openURL: (url: String)-> Unit) 
                 ProfileInfoItem(
                     "编号",
                     it
-                ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}") }
+                ) { _openURL("https://${S_Uri.HOST_ld246}/member/${user.userName}") }
             }
             user.userArticleCount?.let {
                 ProfileInfoItem(
                     "帖子",
                     it
-                ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}/articles") }
+                ) { _openURL("https://${S_Uri.HOST_ld246}/member/${user.userName}/articles") }
             }
             user.userCommentCount?.let {
                 ProfileInfoItem(
                     "回帖",
                     it
-                ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}/comments") }
+                ) { _openURL("https://${S_Uri.HOST_ld246}/member/${user.userName}/comments") }
             }
             user.userComment2Count?.let {
                 ProfileInfoItem(
                     "评论",
                     it
-                ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}/comment2s") }
+                ) { _openURL("https://${S_Uri.HOST_ld246}/member/${user.userName}/comment2s") }
             }
         }
         // 右侧列
@@ -163,25 +163,25 @@ private fun UserProfileScreen(user: ld246_User, _openURL: (url: String)-> Unit) 
                 ProfileInfoItem(
                     "积分",
                     it
-                ) { _openURL("https://${S.HOST_ld246}/member/${user.userName}/points") }
+                ) { _openURL("https://${S_Uri.HOST_ld246}/member/${user.userName}/points") }
             }
             user.userGeneralRank?.let {
                 ProfileInfoItem(
                     "综合贡献点",
                     it
-                ) { _openURL("https://${S.HOST_ld246}/top/general") }
+                ) { _openURL("https://${S_Uri.HOST_ld246}/top/general") }
             }
             user.userCurrentCheckinStreak?.let {
                 ProfileInfoItem(
                     "最近连签",
                     it
-                ) { _openURL("https://${S.HOST_ld246}/activity/checkin") }
+                ) { _openURL("https://${S_Uri.HOST_ld246}/activity/checkin") }
             }
             user.userLongestCheckinStreak?.let {
                 ProfileInfoItem(
                     "最长连签",
                     it
-                ) { _openURL("https://${S.HOST_ld246}/activity/checkin") }
+                ) { _openURL("https://${S_Uri.HOST_ld246}/activity/checkin") }
             }
         }
     }

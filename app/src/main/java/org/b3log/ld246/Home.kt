@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/11 下午10:33
- * updated: 2024/7/11 下午10:33
+ * lastModified: 2024/7/15 上午10:54
+ * updated: 2024/7/15 上午10:54
  */
 
 package org.b3log.ld246
@@ -188,7 +188,7 @@ class HomeActivity : ComponentActivity() {
         thisActivity = this
 
         // 创建Retrofit实例
-        retrofit = createRetrofit("https://${S.HOST_ld246}/")
+        retrofit = createRetrofit("https://${S_Uri.HOST_ld246}/")
         // 创建API服务实例
         apiService = retrofit?.create(ApiServiceNotification::class.java)
         // 获取OnBackPressedDispatcher
@@ -664,7 +664,7 @@ class HomeActivity : ComponentActivity() {
                 .clickable {
                     // SelectableHtmlText 需要响应内容的点击事件，因此打开文章得扩大到整个卡片。
                     _openURL(
-                        "https://${S.HOST_ld246}/article/${notification.dataId}",
+                        "https://${S_Uri.HOST_ld246}/article/${notification.dataId}",
                         uriHandler
                     )
                 }) {
@@ -673,7 +673,7 @@ class HomeActivity : ComponentActivity() {
                         .fillMaxWidth()
                         .clickable {
                             _openURL(
-                                "https://${S.HOST_ld246}/member/${notification.authorName}",
+                                "https://${S_Uri.HOST_ld246}/member/${notification.authorName}",
                                 uriHandler
                             )
                         }
@@ -705,7 +705,7 @@ class HomeActivity : ComponentActivity() {
                             .fillMaxWidth()
                             .clickable {
                                 _openURL(
-                                    "https://${S.HOST_ld246}/article/${notification.dataId}",
+                                    "https://${S_Uri.HOST_ld246}/article/${notification.dataId}",
                                     uriHandler
                                 )
                             }

@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午5:48
- * updated: 2024/7/8 上午5:48
+ * lastModified: 2024/7/15 上午9:16
+ * updated: 2024/7/15 上午9:16
  */
 
 package sc.windom.sofill
@@ -32,14 +32,11 @@ import android.util.Log
 import android.view.ViewConfiguration
 import android.view.Window
 import android.view.WindowManager
-import android.webkit.WebSettings
 import android.webkit.WebView
 import com.blankj.utilcode.util.ActivityUtils.startActivity
 import com.kongzue.dialogx.dialogs.PopNotification
-import com.kongzue.dialogx.dialogs.PopTip
 import com.tencent.mmkv.MMKV
 import org.b3log.siyuan.MainActivity
-import org.b3log.siyuan.Utils
 import sc.windom.potter.videoPlayer.SimplePlayer
 import sc.windom.sofill.Us.Toast
 import sc.windom.sofill.Us.U_DEBUG
@@ -284,30 +281,34 @@ object U {
         return signalStrengthLevel
     }
 
-    fun checkWebViewVer(ws: WebSettings): String {
-        val ua = ws.userAgentString
-        var webViewVer = ""
-        if (ua.contains("Chrome/")) {
-            val minVer = 95
-            try {
-                val chromeVersion = ua.split("Chrome/".toRegex()).dropLastWhile { it.isEmpty() }
-                    .toTypedArray()[1].split(" ".toRegex()).dropLastWhile { it.isEmpty() }
-                    .toTypedArray()[0]
-                if (chromeVersion.contains(".")) {
-                    val chromeVersionParts =
-                        chromeVersion.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }
-                            .toTypedArray()
-                    webViewVer = chromeVersionParts[0]
-                    if (webViewVer.toInt() < minVer) {
-                        PopTip.show("WebView version $webViewVer is too low, please upgrade to $minVer+")
-                    }
-                }
-            } catch (e: java.lang.Exception) {
-                Utils.LogError("boot", "check webview version failed", e)
-                PopTip.show("Check WebView version failed: " + e.message)
-            }
+    /**
+     * 比较两个版本字符串的大小。
+     *
+     * @param version1 要比较的第一个版本字符串。
+     * @param version2 要比较的第二个版本字符串。
+     * @return 如果第一个版本字符串小于、等于或大于第二个版本字符串，则分别返回小于零、零或大于零的整数。
+     *
+     * 该函数根据点分隔符将版本字符串分割成各个部分，然后逐部分进行数值比较。如果数值部分相等，
+     * 则继续比较下一部分。如果一个版本字符串比另一个拥有更多的部分，且所有之前的部分都相等，
+     * 则拥有更多部分的版本字符串被认为是更大的。如果某部分无法转换为整数，则默认为零。
+     */
+    @JvmStatic
+    fun compareVersions(version1: String, version2: String): Int {
+        val parts1 = version1.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        val parts2 = version2.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+
+        for (i in 0 until Math.min(parts1.size, parts2.size)) {
+            val num1 = parts1[i].toIntOrNull() ?: 0
+            val num2 = parts2[i].toIntOrNull() ?: 0
+            if (num1 < num2) return -1
+            if (num1 > num2) return 1
         }
-        return webViewVer
+
+        return when {
+            parts1.size < parts2.size -> -1
+            parts1.size > parts2.size -> 1
+            else -> 0
+        }
     }
 
     fun replaceScheme_deepDecode(url: String, old: String, new: String): String {

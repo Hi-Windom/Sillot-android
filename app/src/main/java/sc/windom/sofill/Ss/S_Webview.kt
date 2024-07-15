@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午11:59
- * updated: 2024/7/8 上午11:59
+ * lastModified: 2024/7/15 上午10:01
+ * updated: 2024/7/15 上午10:01
  */
 
 package sc.windom.sofill.Ss
@@ -11,6 +11,12 @@ package sc.windom.sofill.Ss
 import java.util.Date
 
 object S_Webview {
+    /**
+     * 根据 [chromium schedule](https://chromiumdash.appspot.com/schedule) 中版本的功能冻结（Feature Freeze）日期，
+     * 然后在 [apkmirror](https://www.apkmirror.com/) 搜索，根据日期确定版本号，截取 x.y.z
+     */
+    @JvmStatic
+    val minVersion = "120.0.5707"
     val UA_edge_android = "Mozilla/5.0 (Linux; Android 12; K) " +
             "AppleWebKit/537.36 (KHTML, like Gecko) " +
             "Chrome/120.0.0.0 " +
