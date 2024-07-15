@@ -3,8 +3,8 @@
   ~ Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
   ~ Copyright (c) 2024.
   ~
-  ~ lastModified: 2024/7/11 下午11:14
-  ~ updated: 2024/7/11 下午11:14
+  ~ lastModified: 2024/7/16 上午1:17
+  ~ updated: 2024/7/16 上午1:17
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -481,7 +481,7 @@
                 android:name="org.b3log.ld246.HomeActivity"
                 android:taskAffinity="org.b3log.ld246.HomeActivity"
                 android:launchMode="singleInstancePerTask"
-                android:icon="@drawable/icon"
+                android:icon="@drawable/ld246"
                 android:label="@string/activity_name_ld246Home"
                 android:autoRemoveFromRecents="false"
                 android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
@@ -578,13 +578,13 @@
         <!--        <activity-->
         <!--            android:name=".sillot.ui.MainActivity"-->
         <!--            android:icon="@drawable/icon"-->
-        <!--            android:label="@string/activity_name_Sithw"-->
+        <!--            android:label="@string/activity_name_Siow"-->
         <!--            android:autoRemoveFromRecents="false"-->
         <!--            android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"-->
         <!--            android:exported="true"-->
         <!--            android:hardwareAccelerated="true"-->
         <!--            android:noHistory="false"-->
-        <!--            android:taskAffinity=".sillot.sithw.task"-->
+        <!--            android:taskAffinity=".sillot.siow.task"-->
         <!--            android:theme="@style/Theme.SiYuan.Boot">-->
         <!--            <intent-filter>-->
         <!--                <action android:name="android.intent.action.MAIN" />-->
@@ -596,7 +596,7 @@
         <!--                <category android:name="android.intent.category.DEFAULT" />-->
         <!--                <category android:name="android.intent.category.BROWSABLE" />-->
 
-        <!--                <data android:scheme="sithw" />-->
+        <!--                <data android:scheme="siow" />-->
         <!--            </intent-filter>-->
         <!--            &lt;!&ndash; shortcutId | android:name 不能重复&ndash;&gt;-->
         <!--            <meta-data-->

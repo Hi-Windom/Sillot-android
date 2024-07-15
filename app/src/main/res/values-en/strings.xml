@@ -3,16 +3,16 @@
   ~ Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
   ~ Copyright (c) 2024.
   ~
-  ~ lastModified: 2024/7/8 上午9:21
-  ~ updated: 2024/7/8 上午9:21
+  ~ lastModified: 2024/7/16 上午1:16
+  ~ updated: 2024/7/16 上午1:16
   -->
 
 <resources>
-    <string name="activity_name_SillotHome">汐洛</string>
-    <string name="activity_name_Sithw">司华</string>
+    <string name="activity_name_SillotHome">Sillot</string>
+    <string name="activity_name_Siow">Siow</string>
     <string name="activity_name_Boot">Sillot Gibbet</string>
     <string name="activity_name_USB_AUDIO_EXCLUSIVE">汐洛音乐播放器</string>
-    <string name="activity_name_ld246Home">汐洛链滴社区客户端</string>
+    <string name="activity_name_ld246Home">ld246 liuyun</string>
     <string name="activity_name_MainPro">Sillot MainPro</string>
     <string name="activity_name_ManageSpaceActivity">Sillot Storage Cleaning Assistant</string>
     <string name="activity_name_WebViewActivity">Sillot Browser</string>
