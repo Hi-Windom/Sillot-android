@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/15 上午10:01
- * updated: 2024/7/15 上午10:01
+ * lastModified: 2024/7/15 上午11:07
+ * updated: 2024/7/15 上午11:07
  */
 
 package sc.windom.sofill.Ss
@@ -16,7 +16,7 @@ object S_Webview {
      * 然后在 [apkmirror](https://www.apkmirror.com/) 搜索，根据日期确定版本号，截取 x.y.z
      */
     @JvmStatic
-    val minVersion = "120.0.5707"
+    val minVersion = "114.0.5707"
     val UA_edge_android = "Mozilla/5.0 (Linux; Android 12; K) " +
             "AppleWebKit/537.36 (KHTML, like Gecko) " +
             "Chrome/120.0.0.0 " +
