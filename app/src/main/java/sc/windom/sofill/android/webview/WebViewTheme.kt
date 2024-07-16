@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/17 04:49
+ * updated: 2024/7/17 04:49
+ */
+
 package sc.windom.sofill.android.webview
 
 import android.app.Activity
@@ -12,9 +20,10 @@ import sc.windom.sofill.Us.U_Layout.statusBarHeight
 
 
 /**
- * 推荐在三处调用，将良好的沉浸式状态栏体验带到 webView：
+ * 推荐在四处调用，将良好的沉浸式状态栏体验带到 webView：
  * 在 [WebViewLayoutManager] 的 onConfigurationChangedCallback、 onLayoutChangedCallback，
- * [android.webkit.WebChromeClient] 的 onPageFinished 中调用.
+ * 在 [android.webkit.WebChromeClient] 的 onPageFinished 中调用.
+ * 在 [android.app.Activity] 的 onForeground 中调用
  *
  * `webView.rootView.setBackgroundColor(statusBarBelowColor)` 与 [WebViewLayoutManager] 进行联动（键盘弹出时延时重置布局并不总是理想，有时候还是会漏出布局底色露馅，
  * 一般来说 statusBarBelowColor 与网页背景色是一致的，因此不容易被发现）。

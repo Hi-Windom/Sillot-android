@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/7/17 04:25
- * updated: 2024/7/17 04:25
+ * lastModified: 2024/7/17 04:46
+ * updated: 2024/7/17 04:46
  */
 package org.b3log.siyuan;
 
@@ -788,6 +788,7 @@ public class MainActivity extends FragmentActivity implements com.blankj.utilcod
         startSyncData();
         if (null != webView) {
             webView.evaluateJavascript("javascript:window.reconnectWebSocket()", null);
+            applySystemThemeToWebView(thisActivity, webView);
         }
     }
 
