@@ -2,13 +2,12 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/7/9 下午10:23
- * updated: 2024/7/9 下午10:23
+ * lastModified: 2024/7/16 23:04
+ * updated: 2024/7/16 23:04
  */
 package org.b3log.siyuan;
 
 import static androidx.core.app.ActivityCompat.startActivityForResult;
-import static com.blankj.utilcode.util.ActivityUtils.startActivity;
 import static com.blankj.utilcode.util.ViewUtils.runOnUiThread;
 
 import static sc.windom.sofill.Ss.S_Webview.jsCode_gibbetBiometricAuth;
@@ -280,7 +279,7 @@ public final class JSAndroid {
                 Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 intent.setData(Uri.parse("package:" + activity.getPackageName()));
-                startActivity(intent);
+                activity.startActivity(intent);
             } else {
                 activity.requestPermissionLauncher.launch(permissionsToRequest);
             }
