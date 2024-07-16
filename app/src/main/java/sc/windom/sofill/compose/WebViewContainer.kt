@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/15 上午9:42
- * updated: 2024/7/15 上午9:42
+ * lastModified: 2024/7/17 04:29
+ * updated: 2024/7/17 04:29
  */
 
 package sc.windom.sofill.compose
@@ -108,7 +108,6 @@ import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.dialogs.PopTip
 import com.kongzue.dialogx.dialogs.TipDialog
 import com.kongzue.dialogx.dialogs.WaitDialog
-import com.tencent.mmkv.MMKV
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -131,6 +130,7 @@ import sc.windom.sofill.compose.theme.disabledColor
 import sc.windom.sofill.dataClass.MenuOption
 import sc.windom.sofill.dataClass.MenuOptionState
 import sc.windom.sofill.pioneer.getSavedValue
+import sc.windom.sofill.pioneer.mmkv
 import java.io.File
 import kotlin.math.roundToInt
 
@@ -279,7 +279,7 @@ fun GoToOption(
     var url by remember { mutableStateOf(ourl) } // 用于存储用户输入的 URL
     var surl by remember { mutableStateOf(ourl) } // 用于存储搜索的 URL
     val keyboardController = LocalSoftwareKeyboardController.current // 用于控制键盘
-    val SE = MMKV.defaultMMKV().getSavedValue(
+    val SE = mmkv.getSavedValue(
         "WebViewContainer@selectedOption_搜索引擎",
         S_Webview.searchEngines.keys.first()
     )
@@ -587,7 +587,6 @@ private fun WebViewPage(
     canGoForward: MutableState<Boolean>
 ) {
     val TAG = "WebViewPage"
-    val mmkv = MMKV.defaultMMKV()
     val sliderState_webViewTextZoom =
         mmkv.getSavedValue("WebViewContainer@sliderState_webViewTextZoom", 100)
     val downloader: MutableState<Ketch> = mutableStateOf(

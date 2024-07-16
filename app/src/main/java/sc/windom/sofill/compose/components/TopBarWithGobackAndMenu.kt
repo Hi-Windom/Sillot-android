@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/15 上午10:55
- * updated: 2024/7/15 上午10:55
+ * lastModified: 2024/7/17 04:30
+ * updated: 2024/7/17 04:30
  */
 
 package sc.windom.sofill.compose.components
@@ -51,7 +51,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import com.tencent.mmkv.MMKV
 import me.saket.cascade.CascadeDropdownMenu
 import me.saket.cascade.rememberCascadeState
 import sc.windom.namespace.SillotMatrix.R
@@ -64,6 +63,7 @@ import sc.windom.sofill.Us.Toast
 import sc.windom.sofill.Us.U_DEBUG
 import sc.windom.sofill.Us.U_Phone.toggleFullScreen
 import sc.windom.sofill.Us.U_Uri
+import sc.windom.sofill.pioneer.mmkv
 import sc.windom.sofill.pioneer.rememberSaveableMMKV
 
 
@@ -123,7 +123,6 @@ fun TopRightMenu(
 ) {
     val state = rememberCascadeState()
     val Lcc = LocalContext.current
-    val mmkv: MMKV = MMKV.defaultMMKV()
     val isFullScreen = rememberSaveableMMKV(mmkv, "${srcPath}_@isFullScreen", false) { _, it ->
         val activity = Lcc as Activity
         activity.toggleFullScreen(it.value)

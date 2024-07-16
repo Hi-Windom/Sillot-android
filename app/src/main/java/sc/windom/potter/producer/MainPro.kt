@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/11 下午10:34
- * updated: 2024/7/11 下午10:34
+ * lastModified: 2024/7/17 04:28
+ * updated: 2024/7/17 04:28
  */
 
 @file:Suppress("CompositionLocalNaming", "CompositionLocalNaming")
@@ -82,7 +82,6 @@ import com.kongzue.dialogx.dialogs.InputDialog
 import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.interfaces.OnMenuButtonClickListener
 import com.tencent.bugly.crashreport.BuglyLog
-import com.tencent.mmkv.MMKV
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -116,6 +115,7 @@ import sc.windom.sofill.compose.components.WaitUI
 import sc.windom.sofill.compose.partialCom.DdMenuI
 import sc.windom.sofill.compose.partialCom.NetworkAware
 import sc.windom.sofill.compose.theme.CascadeMaterialTheme
+import sc.windom.sofill.pioneer.mmkv
 import java.io.IOException
 import java.util.Objects
 
@@ -129,7 +129,6 @@ import java.util.Objects
 class MainPro : ComponentActivity() {
     private val TAG = "MainPro.kt"
     private val srcPath = thisSourceFilePath(TAG)
-    private var mmkv: MMKV = MMKV.defaultMMKV()
     private lateinit var thisActivity: Activity
     private var in2_intent: Intent? = null
     private var webView: WebView? = null

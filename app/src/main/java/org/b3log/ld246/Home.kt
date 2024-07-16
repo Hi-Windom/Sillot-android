@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/15 上午10:54
- * updated: 2024/7/15 上午10:54
+ * lastModified: 2024/7/17 04:28
+ * updated: 2024/7/17 04:28
  */
 
 package org.b3log.ld246
@@ -96,7 +96,6 @@ import com.kongzue.dialogx.dialogs.InputDialog
 import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.dialogs.PopTip
 import com.tencent.bugly.crashreport.BuglyLog
-import com.tencent.mmkv.MMKV
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.StateFlow
@@ -128,6 +127,7 @@ import sc.windom.sofill.dataClass.ld246_Response
 import sc.windom.sofill.dataClass.ld246_Response_Data_Notification
 import sc.windom.sofill.dataClass.ld246_User
 import sc.windom.sofill.pioneer.getSavedValue
+import sc.windom.sofill.pioneer.mmkv
 import sc.windom.sofill.pioneer.rememberSaveableMMKV
 import sc.windom.sofill.pioneer.rememberSerializableMMKV
 import sc.windom.sofill.pioneer.savableStateFlowMMKV
@@ -143,7 +143,6 @@ class HomeActivity : ComponentActivity() {
     private val TAG = "Home.kt"
     private val srcPath = thisSourceFilePath(TAG)
     private lateinit var thisActivity: Activity
-    private var mmkv: MMKV = MMKV.defaultMMKV()
     private var exitTime: Long = 0
     private var openUrlExternal: Boolean =
         mmkv.getSavedValue("${S.AppQueryIDs.汐洛}_@openUrlExternal", false) // 全局同步配置

@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/7/16 23:04
- * updated: 2024/7/16 23:04
+ * lastModified: 2024/7/17 04:27
+ * updated: 2024/7/17 04:27
  */
 package org.b3log.siyuan;
 
@@ -12,8 +12,9 @@ import static com.blankj.utilcode.util.ViewUtils.runOnUiThread;
 
 import static sc.windom.sofill.Ss.S_Webview.jsCode_gibbetBiometricAuth;
 import static sc.windom.sofill.Us.U_Phone.toggleFullScreen;
-import static sc.windom.sofill.android.BiometricKt.newBiometricPrompt;
 import static sc.windom.sofill.android.webview.WebViewThemeKt.applySystemThemeToWebView;
+import static sc.windom.sofill.pioneer.StoreKt.mmkv;
+import static sc.windom.sofill.pioneer.StoreKt.mmkvGibbet;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -36,8 +37,6 @@ import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.widget.LinearLayout;
 
-import androidx.annotation.NonNull;
-import androidx.biometric.BiometricManager;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.ShareCompat;
 import androidx.core.content.ContextCompat;
@@ -52,6 +51,7 @@ import com.kongzue.dialogx.interfaces.OnDialogButtonClickListener;
 import com.kongzue.dialogx.util.TextInfo;
 import com.tencent.bugly.crashreport.BuglyLog;
 import com.tencent.bugly.crashreport.CrashReport;
+import com.tencent.mmkv.MMKV;
 
 import sc.windom.sillot.App;
 
@@ -69,8 +69,8 @@ import sc.windom.sofill.S;
 import sc.windom.sofill.U;
 import sc.windom.sofill.Us.U_Permission;
 import sc.windom.sofill.Us.U_Phone;
+import sc.windom.sofill.Us.U_Safe;
 import sc.windom.sofill.Us.U_Uri;
-import sc.windom.sofill.android.BiometricCallback;
 import sc.windom.sofill.android.permission.Ps;
 import sc.windom.namespace.SillotMatrix.BuildConfig;
 
@@ -291,20 +291,20 @@ public final class JSAndroid {
     @JavascriptInterface
     public void setKV(final String key, final String value) {
         BuglyLog.d(TAG, "setKV() invoked");
-        activity.mmkvJS.encode(key, value);
+        mmkvGibbet.encode(key, value);
     }
 
     @JavascriptInterface
     public String getKV(final String key) {
         BuglyLog.d(TAG, "getKV() invoked");
-        return activity.mmkvJS.getString(key, null);
+        return mmkvGibbet.getString(key, null);
     }
 
     @JavascriptInterface
     public Boolean getKVBoolean(final String key) {
         BuglyLog.d(TAG, "getKVBoolean() invoked");
-        if (activity.mmkvJS.containsKey(key)) {
-            return activity.mmkvJS.getBoolean(key, false);
+        if (mmkvGibbet.containsKey(key)) {
+            return mmkvGibbet.getBoolean(key, false);
         } else {
             return null;
         }
@@ -315,64 +315,39 @@ public final class JSAndroid {
         BuglyLog.d(TAG, "showBiometricPrompt() invoked");
         // 在主线程中执行
         mainHandler.post(() -> {
-        // 在 MainActivity 中调用 showBiometricPrompt 方法
-        try {
-            newBiometricPrompt(activity, "指纹解锁", "", "取消", new BiometricCallback() {
-                @Override
-                public void onAuthenticationSuccess() {
-                    // 认证成功的处理逻辑
-                    String accessAuthCode = activity.mmkv.decodeString("accessAuthCode");
-                    if (accessAuthCode == null) {
-                        TipDialog.show("抱歉出错了 ＞︿＜", WaitDialog.TYPE.WARNING);
-                        return;
-                    }
-                    TipDialog.show("Success!", WaitDialog.TYPE.SUCCESS, 200);
-                    // 在这里调用 WebView 方法
-                    String jsCode = jsCode_gibbetBiometricAuth(accessAuthCode, captcha);
-                    BuglyLog.d("evaluateJavascript", jsCode);
-                    activity.webView.evaluateJavascript(jsCode, null);
-                    activity.mmkv.putString("AppCheckInState","unlockScreen");
-                }
+            // 在 MainActivity 中调用 showBiometricPrompt 方法
+            try {
+                U_Safe.INSTANCE.checkBiometric(
+                        activity,
+                        () -> {
+                            // 认证成功的处理逻辑
+                            String accessAuthCode = mmkvGibbet.decodeString("accessAuthCode");
+                            if (accessAuthCode == null) {
+                                PopTip.show("出错了，请尝试使用授权码解锁");
+                                return null;
+                            }
+                            TipDialog.show("Success!", WaitDialog.TYPE.SUCCESS, 200);
+                            mmkvGibbet.putString("AppCheckInState", "unlockScreen");
+                            // 在这里调用 WebView 方法
+                            String jsCode = jsCode_gibbetBiometricAuth(accessAuthCode, captcha);
+                            BuglyLog.d("evaluateJavascript", jsCode);
+                            activity.webView.evaluateJavascript(jsCode, null);
+                            return null;
+                        },
+                        () -> {
+                            // 认证失败的处理逻辑
+                            TipDialog.show("指纹不匹配 ＞︿＜", WaitDialog.TYPE.ERROR);
+                            return null;
+                        },
+                        (CharSequence, state) -> {
+                            // 认证错误的处理逻辑（一般是用户点击了取消）
+                            return null;
+                        }
+                );
 
-                @Override
-                public void onAuthenticationFailed() {
-                    // 认证失败的处理逻辑
-                    TipDialog.show("指纹不匹配!", WaitDialog.TYPE.ERROR);
-                }
-
-                @Override
-                public void onAuthenticationError(@NonNull CharSequence errString) {
-                    // 认证错误的处理逻辑（一般是用户点击了取消）
-
-                    BiometricManager biometricManager = BiometricManager.from(activity);
-                    switch (biometricManager.canAuthenticate()) {
-                        case BiometricManager.BIOMETRIC_SUCCESS:
-                            BuglyLog.d("BiometricManager","应用可以进行生物识别技术进行身份验证。");
-                            return;
-                        case BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE:
-                            BuglyLog.e("BiometricManager","该设备上没有搭载可用的生物特征功能。");
-                           PopTip.show("该设备上没有搭载可用的生物特征功能");
-                            return;
-                        case BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE:
-                            BuglyLog.e("BiometricManager","生物识别功能当前不可用。");
-                           PopTip.show("生物识别功能当前不可用");
-                            return;
-                        case BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED:
-                            BuglyLog.e("BiometricManager","用户没有录入生物识别数据。");
-                           PopTip.show("用户没有录入生物识别数据");
-                            return;
-                    }
-
-                   PopTip.show("用户取消了指纹解锁");
-                }
-
-            });
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         });
 
     }
@@ -603,7 +578,7 @@ public final class JSAndroid {
         }
         BuglyLog.d("openExternal final url ", url);
 
-        final boolean openURLUseDefaultApp = activity.mmkv.getBoolean("Gibbet@openURLUseDefaultApp", false);
+        final boolean openURLUseDefaultApp = mmkv.getBoolean("Gibbet@openURLUseDefaultApp", false);
         if (openURLUseDefaultApp) {
             U_Uri.openURLUseDefaultApp(url);
         } else {

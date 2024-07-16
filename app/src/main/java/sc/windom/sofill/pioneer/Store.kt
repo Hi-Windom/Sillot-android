@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 下午8:13
- * updated: 2024/7/8 下午8:13
+ * lastModified: 2024/7/17 04:36
+ * updated: 2024/7/17 04:36
  */
 
 package sc.windom.sofill.pioneer
@@ -200,4 +200,15 @@ inline fun <reified T> MMKV.saveValue(key: String, value: T) {
     }
 }
 
+/**
+ * 使用前确保 MMKV 已初始化
+ */
+@JvmField
+val mmkv = MMKV.defaultMMKV()
+
+/**
+ * 使用前确保 MMKV 已初始化
+ */
+@JvmField
+val mmkvGibbet = MMKV.mmkvWithID("Sillot-Gibbet")
 

@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/6 下午8:57
- * updated: 2024/7/6 下午8:57
+ * lastModified: 2024/7/17 04:32
+ * updated: 2024/7/17 04:32
  */
 
 package sc.windom.sofill.compose
@@ -29,8 +29,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tencent.mmkv.MMKV
 import sc.windom.sofill.Ss.S_Webview
+import sc.windom.sofill.pioneer.mmkv
 import sc.windom.sofill.pioneer.rememberSaveableMMKV
 import kotlin.math.roundToInt
 
@@ -38,17 +38,17 @@ import kotlin.math.roundToInt
 @Composable
 fun SettingScreen(thisWebView: MutableState<WebView?>) {
     val selectedOption_搜索引擎 = rememberSaveableMMKV(
-        mmkv = MMKV.defaultMMKV(),
+        mmkv = mmkv,
         key = "WebViewContainer@selectedOption_搜索引擎",
         defaultValue = S_Webview.searchEngines.keys.first()
     )
     val switchState_使用系统自带下载器下载文件 = rememberSaveableMMKV(
-        mmkv = MMKV.defaultMMKV(),
+        mmkv = mmkv,
         key = "WebViewContainer@switchState_使用系统自带下载器下载文件",
         defaultValue = false
     )
     var sliderState_webViewTextZoom = rememberSaveableMMKV(
-        mmkv = MMKV.defaultMMKV(),
+        mmkv = mmkv,
         key = "WebViewContainer@sliderState_webViewTextZoom",
         defaultValue = 100
     )

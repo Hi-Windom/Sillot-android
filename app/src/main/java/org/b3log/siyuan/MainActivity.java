@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/7/17 03:03
- * updated: 2024/7/17 03:03
+ * lastModified: 2024/7/17 04:25
+ * updated: 2024/7/17 04:25
  */
 package org.b3log.siyuan;
 
@@ -11,6 +11,7 @@ package org.b3log.siyuan;
  import static sc.windom.sofill.Us.U_WebviewKt.checkWebViewVer;
  import static sc.windom.sofill.Us.U_WebviewKt.showJSAlert;
  import static sc.windom.sofill.android.webview.WebViewThemeKt.applySystemThemeToWebView;
+ import static sc.windom.sofill.pioneer.StoreKt.mmkvGibbet;
 
  import android.annotation.SuppressLint;
  import android.app.Activity;
@@ -134,8 +135,6 @@ public class MainActivity extends FragmentActivity implements com.blankj.utilcod
          REQUEST_CAMERA = S_REQUEST_CODE.REQUEST_CAMERA;
     }
     private long exitTime;
-    public MMKV mmkv;
-    public MMKV mmkvJS;
     public ActivityResultLauncher<String[]> requestPermissionLauncher;
     public int requestPermissionAll_works = 0;
 
@@ -300,8 +299,6 @@ public class MainActivity extends FragmentActivity implements com.blankj.utilcod
         setContentView(R.layout.activity_main);
         U_Layout.applyStatusBarConfigurationV2(this, false); // 可以伸到状态栏和导航栏的位置（沉浸式）
         bindBootService();
-        mmkv = MMKV.defaultMMKV();
-        mmkvJS = MMKV.mmkvWithID("GibbetJS");
         // 注册 EventBus
         EventBus.getDefault().register(this);
         // 获取OnBackPressedDispatcher
@@ -514,7 +511,7 @@ public class MainActivity extends FragmentActivity implements com.blankj.utilcod
                 final String url = uri.toString();
                 BuglyLog.w(TAG, "[WebViewClient] shouldOverrideUrlLoading <- "+url);
                 if (url.contains("127.0.0.1")) {
-                    var AppCheckInState = mmkv.getString("AppCheckInState", "");
+                    var AppCheckInState = mmkvGibbet.getString("AppCheckInState", "");
                     if (AppCheckInState.equals("lockScreen")) {
                         try {
                             String encodedUrl = URLEncoder.encode(url, "UTF-8");
@@ -855,11 +852,11 @@ public class MainActivity extends FragmentActivity implements com.blankj.utilcod
             // 使用runOnUiThread确保在主线程中获取WebView的URL
             String webViewUrl = webView.getUrl();
             if (webViewUrl != null && webViewUrl.contains("/check-auth?")) {
-                mmkv.putString("AppCheckInState","lockScreen");
+                mmkvGibbet.putString("AppCheckInState","lockScreen");
                 result.set(true);
                 BuglyLog.d(TAG, "exit() AppCheckInState->lockScreen");
             } else {
-                mmkv.putString("AppCheckInState","unlockScreen");
+                mmkvGibbet.putString("AppCheckInState","unlockScreen");
                 result.set(false);
                 BuglyLog.d(TAG, "exit() AppCheckInState->unlockScreen");
             }

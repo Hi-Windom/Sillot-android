@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/11 上午12:51
- * updated: 2024/7/11 上午12:51
+ * lastModified: 2024/7/17 04:31
+ * updated: 2024/7/17 04:31
  */
 
 package sc.windom.sofill.compose
@@ -20,7 +20,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import com.tencent.bugly.crashreport.BuglyLog
-import com.tencent.mmkv.MMKV
 import sc.windom.sofill.Ss.S_Uri
 import sc.windom.sofill.Us.thisSourceFilePath
 import sc.windom.sofill.compose.components.WaitUI
@@ -29,7 +28,6 @@ import sc.windom.sofill.compose.theme.CascadeMaterialTheme
 class WebViewActivity: ComponentActivity() {
     private val TAG = "MainPro.kt"
     private val srcPath = thisSourceFilePath(TAG)
-    private var mmkv: MMKV = MMKV.defaultMMKV()
     private lateinit var thisActivity: Activity
     private var in2_intent: Intent? = null
     private var FullScreenWebView_url: MutableState<String?> = mutableStateOf(null)
