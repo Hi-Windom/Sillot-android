@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/7/15 上午9:28
- * updated: 2024/7/15 上午9:28
+ * lastModified: 2024/7/16 14:22
+ * updated: 2024/7/16 14:22
  */
 package org.b3log.siyuan;
 
@@ -317,7 +317,7 @@ public class MainActivity extends ComponentActivity implements com.blankj.utilco
                         PopTip.show( "再按一次退出汐洛绞架");
                         exitTime = System.currentTimeMillis();
                     } else {
-                        HWs.getInstance().vibratorWaveform(getApplicationContext(), new long[]{0, 30, 25, 40, 25, 10}, new int[]{2, 4, 3, 2, 2, 2}, -1);
+                        Objects.requireNonNull(HWs.getInstance()).vibratorWaveform(getApplicationContext(), new long[]{0, 30, 25, 40, 25, 10}, new int[]{2, 4, 3, 2, 2, 2}, -1);
                         if (webView != null) {
                             webView.evaluateJavascript("javascript:window.location.href = 'siyuan://api/system/exit';", null);
                         }
@@ -325,7 +325,7 @@ public class MainActivity extends ComponentActivity implements com.blankj.utilco
                 } else {
                     webView.evaluateJavascript("javascript:window.goBack ? window.goBack() : window.history.back()", null);
                 }
-                HWs.getInstance().vibratorWaveform(getApplicationContext(), new long[]{0, 30, 25, 40, 25}, new int[]{9, 2, 1, 7, 2}, -1);
+                Objects.requireNonNull(HWs.getInstance()).vibratorWaveform(getApplicationContext(), new long[]{0, 30, 25, 40, 25}, new int[]{9, 2, 1, 7, 2}, -1);
             }
         });
 
@@ -392,7 +392,7 @@ public class MainActivity extends ComponentActivity implements com.blankj.utilco
                 applySystemThemeToWebView(thisActivity, webView);
                 return null;
             });
-            if (!U.getPHONE().isPad(this)) {
+            if (!U_Phone.isPad(this)) {
                 webViewLayoutManager.setDelayResetLayoutWhenImeShow(120);
                 // showKeyboardToolbar 不知道在哪已经实现了随键盘呼出（有延时，大概率是在前端），这里依旧调用是因为响应更快
                 webViewLayoutManager.setJSonImeShow("showKeyboardToolbar();");
@@ -562,14 +562,11 @@ public class MainActivity extends ComponentActivity implements com.blankj.utilco
                 BuglyLog.d(TAG, "[WebViewClient] onPageFinished: " + url);
                 view.evaluateJavascript("javascript:document.body.classList.add(\"body--mobile\")", null);
                 bootLogo.postDelayed(() -> {
-                    bootLogo.setVisibility(View.GONE);
                     bootProgressBar.setVisibility(View.GONE);
                     bootDetailsText.setVisibility(View.GONE);
                     bootLogo.setVisibility(View.GONE);
-                }, 186);
-
-                // autoWebViewDarkMode 决定是否自动在 webview 中应用暗黑模式。如果前端已经有暗黑模式配置，此项应为 false（默认值）
-                applySystemThemeToWebView(thisActivity, webView);
+                    applySystemThemeToWebView(thisActivity, webView);
+                }, 58);
             }
 
             @Override
