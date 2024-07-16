@@ -3,8 +3,8 @@
   ~ Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
   ~ Copyright (c) 2024.
   ~
-  ~ lastModified: 2024/7/16 上午1:17
-  ~ updated: 2024/7/16 上午1:17
+  ~ lastModified: 2024/7/16 23:59
+  ~ updated: 2024/7/16 23:59
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -64,7 +64,9 @@
     <uses-permission android:name="android.permission.NFC" />
 
     <!-- 位置权限 -->
+    <!-- 用于访问GPS定位 -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- 允许程序访问CellID或WiFi热点来获取粗略的位置 -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <!-- SMS权限 -->
