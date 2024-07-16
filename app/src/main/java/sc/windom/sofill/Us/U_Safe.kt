@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 下午12:07
- * updated: 2024/7/8 下午12:07
+ * lastModified: 2024/7/17 03:04
+ * updated: 2024/7/17 03:04
  */
 
 package sc.windom.sofill.Us
@@ -11,8 +11,8 @@ package sc.windom.sofill.Us
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
+import androidx.fragment.app.FragmentActivity
 import com.kongzue.dialogx.dialogs.TipDialog
 import com.kongzue.dialogx.dialogs.WaitDialog
 import sc.windom.sofill.android.BiometricCallback
@@ -21,7 +21,7 @@ import sc.windom.sofill.android.newBiometricPrompt
 object U_Safe {
     private val TAG = "sc.windom.sofill.Us.U_Safe"
     fun checkBiometric(
-        activity: AppCompatActivity,
+        activity: FragmentActivity,
         onSuccess: () -> Unit,
         onFailure: () -> Unit,
         onError: (CharSequence, state: Int) -> Unit

@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/7/16 14:22
- * updated: 2024/7/16 14:22
+ * lastModified: 2024/7/17 03:03
+ * updated: 2024/7/17 03:03
  */
 package org.b3log.siyuan;
 
@@ -58,7 +58,6 @@ package org.b3log.siyuan;
  import android.widget.ProgressBar;
  import android.widget.TextView;
 
- import androidx.activity.ComponentActivity;
  import androidx.activity.OnBackPressedCallback;
  import androidx.activity.OnBackPressedDispatcher;
  import androidx.activity.result.ActivityResultLauncher;
@@ -66,6 +65,7 @@ package org.b3log.siyuan;
  import androidx.annotation.NonNull;
  import androidx.core.app.ActivityCompat;
  import androidx.core.content.ContextCompat;
+ import androidx.fragment.app.FragmentActivity;
  import androidx.work.Constraints;
  import androidx.work.NetworkType;
  import androidx.work.OneTimeWorkRequest;
@@ -117,7 +117,7 @@ package org.b3log.siyuan;
  @SillotActivity(TYPE = SillotActivityType.Main)
  @SillotActivity(TYPE = SillotActivityType.Launcher)
  @SillotActivity(TYPE = SillotActivityType.UseVisible)
-public class MainActivity extends ComponentActivity implements com.blankj.utilcode.util.Utils.OnAppStatusChangedListener {
+public class MainActivity extends FragmentActivity implements com.blankj.utilcode.util.Utils.OnAppStatusChangedListener {
     private final String TAG = "MainActivity-SiYuan";
     private Activity thisActivity;
     public WebView webView;

@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/11 下午10:40
- * updated: 2024/7/11 下午10:40
+ * lastModified: 2024/7/17 03:05
+ * updated: 2024/7/17 03:05
  */
 
 package sc.windom.potter
@@ -14,7 +14,6 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,6 +54,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.fragment.app.FragmentActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -74,10 +74,10 @@ import java.io.File
 
 // TODO: 添加更多可清理内容
 @SillotActivity(SillotActivityType.UseVisible)
-class ManageSpaceActivity : AppCompatActivity() {
+class ManageSpaceActivity : FragmentActivity() {
     private val TAG = "ManageSpaceActivity.kt"
     private val srcPath = thisSourceFilePath(TAG)
-    private lateinit var thisActivity: AppCompatActivity
+    private lateinit var thisActivity: FragmentActivity
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         thisActivity = this
