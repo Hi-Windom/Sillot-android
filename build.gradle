@@ -10,7 +10,7 @@ import groovy.json.JsonSlurper
 buildscript {
     ext {
         siyuanVersionCode = 239
-        siyuanVersionName = "3.1.1"
+        siyuanVersionName = "3.1.2"
     }
     def  kotlin_v = '2.0.0'  // 2.0+ 不需要手动对齐 Compose Compiler 版本  REF https://developer.android.com/jetpack/androidx/releases/compose-kotlin?hl=zh-cn
     // kotlin_v 设为 1.9+ 会报错 Inconsistent JVM-target compatibility detected for tasks 'compileDebugJavaWithJavac' (17) and 'kaptGenerateStubsDebugKotlin' (1.8).
