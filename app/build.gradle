@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/16 12:36
- * updated: 2024/7/16 12:36
+ * lastModified: 2024/7/20 05:34
+ * updated: 2024/7/20 05:34
  */
 
 import org.jetbrains.kotlin.gradle.dsl.jvm.JvmTargetValidationMode
@@ -13,7 +13,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id "io.sentry.android.gradle"
     id 'io.realm.kotlin'
     id "org.jetbrains.kotlin.plugin.compose"
     id "com.google.devtools.ksp"

@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/11 下午11:33
- * updated: 2024/7/11 下午11:33
+ * lastModified: 2024/7/20 05:34
+ * updated: 2024/7/20 05:34
  */
 import groovy.json.JsonSlurper
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
@@ -38,7 +38,6 @@ buildscript {
 }
 // 确保版本一致性，在 module 级别无需声明版本
 plugins {
-    id "io.sentry.android.gradle" version "3.5.0" apply false
     id 'io.realm.kotlin' version '2.0.0' apply false // 需要适配 kotlin 版本
     id "com.google.devtools.ksp" version("2.0.0-1.0.22") apply false  // 使用 ksp 而不是 kapt ； 需要手动对齐 kotlin 版本
     id "org.jetbrains.kotlin.plugin.compose" version "$kotlin_version" apply false // https://developer.android.com/develop/ui/compose/compiler?hl=zh-cn
