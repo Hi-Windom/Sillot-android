@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/20 11:25
+ * updated: 2024/7/20 11:25
+ */
+
 package sc.windom.sofill.Us
 
 import android.content.ClipData
@@ -80,6 +88,24 @@ object U_FuckOtherApp {
             Toast.makeText(context.applicationContext, tip, Toast.LENGTH_SHORT).show() // 启动后弹出，否则会被吞掉。因为跳转了，使用 applicationContext 才能显示
         } else {
             PopTip.show("抖音未安装")
+        }
+    }
+
+    /**
+     * @param context 能够获取到 applicationContext 的都可以，传入 applicationContext 也没问题
+     * @param blockURL: 格式为 siyuan://blocks/xxx
+     * @param tip 提示
+     */
+    fun launchSiyuan(context: Context, blockURL: String, tip: CharSequence? = null) {
+        val intent: Intent? =
+            context.packageManager.getLaunchIntentForPackage(S.AppQueryIDs.SiYuan)
+
+        if (intent != null) {
+            intent.putExtra("blockURL", blockURL)
+            startActivity(intent)
+            tip?.let{ Toast.makeText(context.applicationContext, it, Toast.LENGTH_SHORT).show() } // 启动后弹出，否则会被吞掉。因为跳转了，使用 applicationContext 才能显示
+        } else {
+            PopTip.show("思源笔记未安装")
         }
     }
 }

@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/17 04:28
- * updated: 2024/7/17 04:28
+ * lastModified: 2024/7/20 11:01
+ * updated: 2024/7/20 11:01
  */
 
 @file:Suppress("CompositionLocalNaming", "CompositionLocalNaming")
@@ -276,7 +276,12 @@ class MainPro : ComponentActivity() {
         val coroutineScope = rememberCoroutineScope()
         val targetIntent = rememberSaveable { mutableStateOf(in2_intent) }
         var head_title by rememberSaveable { mutableStateOf("汐洛中转站") }
-        val token: MutableState<String?> = rememberSaveable {
+        val Gibbet_kernel_API_token: MutableState<String?> = rememberSaveable {
+            mutableStateOf(
+                null
+            )
+        }
+        val siyuan_kernel_API_token: MutableState<String?> = rememberSaveable {
             mutableStateOf(
                 null
             )
@@ -322,8 +327,11 @@ class MainPro : ComponentActivity() {
                 "汐洛中转站"
             }
             BuglyLog.i(TAG, "$head_title @ $in2_intent")
-            token.value = U.getDecryptedToken(
-                mmkv, S.KEY_TOKEN_Sillot_Gibbet, S.KEY_AES_TOKEN_Sillot_Gibbet
+            Gibbet_kernel_API_token.value = U.getDecryptedToken(
+                mmkv, S.KEY_TOKEN_Sillot_Gibbet_kernel_API, S.KEY_AES_TOKEN_Sillot_Gibbet_kernel_API
+            )
+            siyuan_kernel_API_token.value = U.getDecryptedToken(
+                mmkv, S.KEY_TOKEN_siyuan_kernel_API, S.KEY_AES_TOKEN_siyuan_kernel_API
             )
             when (in2_intent?.action) {
                 Intent.ACTION_SEND -> {
@@ -413,7 +421,10 @@ class MainPro : ComponentActivity() {
                     fileUri.value,
                     isMenuVisible,
                     additionalMenuItem = {
-                        AddDropdownMenu(token, onDismiss = {
+                        AddDropdownMenu(
+                            Gibbet_kernel_API_token,
+                            siyuan_kernel_API_token,
+                            onDismiss = {
                             isMenuVisible.value = false
                         })
                     }) {
@@ -464,7 +475,7 @@ class MainPro : ComponentActivity() {
                                     .height(200.dp)
                                     .padding(10.dp)
                             )
-                            SendBtnPart(sharedText, token)
+                            SendBtnPart(sharedText, Gibbet_kernel_API_token, siyuan_kernel_API_token)
                         }
                     }
                 } else if (isLandscape) {
@@ -539,7 +550,8 @@ class MainPro : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun AddDropdownMenu(
-        token: MutableState<String?>,
+        Gibbet_kernel_API_token: MutableState<String?>,
+        siyuan_kernel_API_token: MutableState<String?>,
         onDismiss: () -> Unit,
     ) {
         DdMenuI(
@@ -548,7 +560,7 @@ class MainPro : ComponentActivity() {
             cb = {
                 onDismiss()
                 val deToken = U.getDecryptedToken(
-                    mmkv, S.KEY_TOKEN_Sillot_Gibbet, S.KEY_AES_TOKEN_Sillot_Gibbet
+                    mmkv, S.KEY_TOKEN_Sillot_Gibbet_kernel_API, S.KEY_AES_TOKEN_Sillot_Gibbet_kernel_API
                 )
                 InputDialog("🛸 API TOKEN",
                     "可在汐洛绞架 设置 - 关于 中找到 API Token，固定以 'token ' 开头\n\n温馨提示：应用存储 Token 时进行了一定的处理，且不会传输到网络，但用户仍需注意防止 Token 泄露！建议使用前先阅读源代码",
@@ -556,7 +568,7 @@ class MainPro : ComponentActivity() {
                     "取消",
                     deToken?.let { deToken } ?: run { "token " }).setCancelable(false)
                     .setOkButton { baseDialog, v, inputStr ->
-                        token.value = inputStr
+                        Gibbet_kernel_API_token.value = inputStr
                         // 生成AES密钥
                         val aesKey = U.generateAesKey()
                         // 注意：这里需要将SecretKey转换为可以存储的格式，例如转换为字节数组然后进行Base64编码
@@ -564,8 +576,43 @@ class MainPro : ComponentActivity() {
                         // 加密Token
                         val encryptedToken = U.encryptAes(inputStr, aesKey)
                         // 将加密后的Token存储到MMKV中
-                        mmkv.encode(S.KEY_AES_TOKEN_Sillot_Gibbet, encodedKey)
-                        mmkv.encode(S.KEY_TOKEN_Sillot_Gibbet, encryptedToken)
+                        mmkv.encode(S.KEY_AES_TOKEN_Sillot_Gibbet_kernel_API, encodedKey)
+                        mmkv.encode(S.KEY_TOKEN_Sillot_Gibbet_kernel_API, encryptedToken)
+                        PopNotification.show(
+                            "TOKEN已更新（${
+                                U.displayTokenLimiter(
+                                    inputStr, "token ".length + 4, 4
+                                )
+                            }）"
+                        ).noAutoDismiss()
+                        false
+                    }.show(thisActivity)
+            },
+        )
+        DdMenuI(
+            text = { Text("思源笔记内核 API TOKEN") },
+            icon = { Icon(Icons.TwoTone.Token, contentDescription = null) },
+            cb = {
+                onDismiss()
+                val deToken = U.getDecryptedToken(
+                    mmkv, S.KEY_TOKEN_siyuan_kernel_API, S.KEY_AES_TOKEN_siyuan_kernel_API
+                )
+                InputDialog("🛸 API TOKEN",
+                    "可在思源笔记 设置 - 关于 中找到 API Token，固定以 'token ' 开头\n\n温馨提示：应用存储 Token 时进行了一定的处理，且不会传输到网络，但用户仍需注意防止 Token 泄露！建议使用前先阅读源代码",
+                    "确定",
+                    "取消",
+                    deToken?.let { deToken } ?: run { "token " }).setCancelable(false)
+                    .setOkButton { baseDialog, v, inputStr ->
+                        siyuan_kernel_API_token.value = inputStr
+                        // 生成AES密钥
+                        val aesKey = U.generateAesKey()
+                        // 注意：这里需要将SecretKey转换为可以存储的格式，例如转换为字节数组然后进行Base64编码
+                        val encodedKey = Base64.encodeToString(aesKey.encoded, Base64.DEFAULT)
+                        // 加密Token
+                        val encryptedToken = U.encryptAes(inputStr, aesKey)
+                        // 将加密后的Token存储到MMKV中
+                        mmkv.encode(S.KEY_AES_TOKEN_siyuan_kernel_API, encodedKey)
+                        mmkv.encode(S.KEY_TOKEN_siyuan_kernel_API, encryptedToken)
                         PopNotification.show(
                             "TOKEN已更新（${
                                 U.displayTokenLimiter(
@@ -580,7 +627,11 @@ class MainPro : ComponentActivity() {
     }
 
     @Composable
-    fun SendBtnPart(markdown: String?, token: MutableState<String?>) {
+    fun SendBtnPart(
+        markdown: String?,
+        Gibbet_kernel_API_token: MutableState<String?>,
+        siyuan_kernel_API_token: MutableState<String?>,
+    ) {
         val isLandscape =
             LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE // 是否横屏（宽高比）
         Button(modifier = Modifier
@@ -591,15 +642,9 @@ class MainPro : ComponentActivity() {
             ),
             enabled = true,
             onClick = {
-                if (token.value.isNullOrEmpty()) {
+                if (siyuan_kernel_API_token.value.isNullOrEmpty() || siyuan_kernel_API_token.value == "token ") {
                     PopNotification.show("TOKEN为空，请在右上角设置 TOKEN 后重试")
                         .noAutoDismiss()
-                    return@Button
-                }
-                if (bootService == null) {
-                    PopNotification.show(
-                        R.drawable.icon, "汐洛绞架内核尚未就绪", "请稍后再试"
-                    ).noAutoDismiss()
                     return@Button
                 }
                 if (markdown != null) {
@@ -607,7 +652,7 @@ class MainPro : ComponentActivity() {
                         U.FileUtils.getDirectoriesInPath(thisActivity.workspaceParentDir())
                     val filteredDirectories = directories.filter { it != "home" }
                     if (filteredDirectories.isNotEmpty()) {
-                        gibbetPro.runSendMD2siyuan(markdown, token)
+                        gibbetPro.runSendMD2siyuan(markdown, siyuan_kernel_API_token)
                     } else {
                         PopNotification.show(
                             R.drawable.icon,
@@ -643,7 +688,7 @@ class MainPro : ComponentActivity() {
                     val filteredDirectories = directories.filter { it != "home" }
                     if (filteredDirectories.isNotEmpty()) {
                         lifecycleScope.launch { // 使用 lifecycleScope 在生命周期内启动协程
-                            gibbetPro.sendMD2siyuanWithoutToken(markdown)
+                            gibbetPro.sendMD2GibbetWithoutToken(markdown)
                         }
                     } else {
                         PopNotification.show(

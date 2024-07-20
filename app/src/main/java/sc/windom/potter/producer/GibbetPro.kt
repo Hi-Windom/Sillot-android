@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午5:50
- * updated: 2024/7/8 上午5:50
+ * lastModified: 2024/7/20 11:32
+ * updated: 2024/7/20 11:32
  */
 
 package sc.windom.potter.producer
@@ -20,7 +20,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mobile.Mobile
 import sc.windom.sillot.App
+import sc.windom.sofill.S
 import sc.windom.sofill.U
+import sc.windom.sofill.Us.U_FuckOtherApp
 import sc.windom.sofill.api.MyRetrofit.createRetrofit
 import sc.windom.sofill.api.siyuan.SiyuanNoteAPI
 import sc.windom.sofill.api.siyuan.siyuan
@@ -48,18 +50,29 @@ class GibbetPro {
         }
 
     fun sendMD2siyuan(markdownContent: String, token: MutableState<String?>) {
-        val retrofit = createRetrofit("http://0.0.0.0:58131/")
+        val retrofit = createRetrofit("http://0.0.0.0:${S.DefaultHTTPPort_siyuan_kernel}/")
         val api = retrofit.create(SiyuanNoteAPI::class.java)
         val helpInfo =
             "请注意：（1）TOKEN是否正确；（2）当前工作空间是否存在有效笔记本；（3）笔记本是否被关闭了"
+        val helpInfo2 =
+            "请注意：（1）思源笔记是否正在运行；"
         token.value?.let { _token ->
-            siyuan.Works.getNotebooks(api, _token) { notebooks, info ->
+            siyuan.Works.getNotebooks(api, _token) { notebooks, info, code ->
                 if (notebooks.isNullOrEmpty()) {
-                    // 处理笔记本列表为空的情况
-                    thisActivity.runOnUiThread {
-                        PopNotification.show(
-                            TAG, "No notebooks received. reason:\n$info\n$helpInfo"
-                        ).noAutoDismiss()
+                    if (code == null) {
+                        thisActivity.runOnUiThread {
+                            PopNotification.show(
+                                TAG,
+                                "$info\n$helpInfo2"
+                            ).noAutoDismiss()
+                        }
+                    } else {
+                        // 处理笔记本列表为空的情况
+                        thisActivity.runOnUiThread {
+                            PopNotification.show(
+                                TAG, "No notebooks received. reason:\n$info\n$helpInfo"
+                            ).noAutoDismiss()
+                        }
                     }
                 } else {
                     // 处理获取到的笔记本列表
@@ -86,17 +99,32 @@ class GibbetPro {
                                 }"
                             )
 
-                            siyuan.Works.createNote(api, payload, token) { success, info ->
+                            siyuan.Works.createNote(api, payload, token) { success, info, createNote_response ->
                                 if (success) {
                                     // 处理创建笔记成功的情况
                                     BuglyLog.i(TAG, "Note creation succeeded. $info")
+                                    createNote_response?.body()?.data?.let {
+                                        U_FuckOtherApp.launchSiyuan(
+                                            App.application,
+                                            "siyuan://blocks/$it",
+                                        )
+                                    }
                                 } else {
-                                    // 处理创建笔记失败的情况
-                                    thisActivity.runOnUiThread {
-                                        PopNotification.show(
-                                            TAG,
-                                            "Note creation failed. reason:\n$info\n$helpInfo"
-                                        ).noAutoDismiss()
+                                    if (createNote_response == null) {
+                                        thisActivity.runOnUiThread {
+                                            PopNotification.show(
+                                                TAG,
+                                                "\n$info\n$helpInfo2"
+                                            ).noAutoDismiss()
+                                        }
+                                    } else {
+                                        // 处理创建笔记失败的情况
+                                        thisActivity.runOnUiThread {
+                                            PopNotification.show(
+                                                TAG,
+                                                "Note creation failed. reason:\n$info\n$helpInfo"
+                                            ).noAutoDismiss()
+                                        }
                                     }
                                 }
                             }
@@ -109,7 +137,7 @@ class GibbetPro {
         }
     }
 
-    fun sendMD2siyuanWithoutToken(md: String) {
+    fun sendMD2GibbetWithoutToken(md: String) {
         val helpInfo =
             "请注意：（1）内核是否存活；（2）当前工作空间是否存在有效笔记本；（3）笔记本是否被关闭了"
 
@@ -156,7 +184,10 @@ class GibbetPro {
                                 Path = "/来自汐洛受赏 ${U.dateFormat_full1.format(Date())}",
                                 Markdown = md
                             )
-                            val paramsJSON = kotlinx.serialization.json.Json.encodeToString(ICreateDocWithMdRequest.serializer(), payload)
+                            val paramsJSON = kotlinx.serialization.json.Json.encodeToString(
+                                ICreateDocWithMdRequest.serializer(),
+                                payload
+                            )
                             BuglyLog.i(TAG, paramsJSON)
 
                             val response2 = Mobile.createDocWithMd(paramsJSON)

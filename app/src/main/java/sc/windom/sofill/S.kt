@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/15 上午10:16
- * updated: 2024/7/15 上午10:16
+ * lastModified: 2024/7/20 11:27
+ * updated: 2024/7/20 11:27
  */
 
 @file:Suppress("CompositionLocalNaming", "CompositionLocalNaming")
@@ -29,13 +29,16 @@ object S {
     const val TTK = "AsyncTTk" // 抖音
 
     const val DefaultHTTPPort = 58131
+    const val DefaultHTTPPort_siyuan_kernel = 6806
     const val initCrashReportID = "26ae2b5fb4"
     const val initBaiduPushID = "6Ef26UV3UyM5b7NyiwiGAnM0"
 
     const val KEY_TOKEN_ld246 = "TOKEN_ld246"
     const val KEY_AES_TOKEN_ld246 = "AES_KEY_TOKEN_ld246"
-    const val KEY_TOKEN_Sillot_Gibbet = "TOKEN_Sillot_Gibbet"
-    const val KEY_AES_TOKEN_Sillot_Gibbet = "AES_KEY_TOKEN_Sillot_Gibbet"
+    const val KEY_TOKEN_Sillot_Gibbet_kernel_API = "TOKEN_Sillot_Gibbet_kernel_API"
+    const val KEY_AES_TOKEN_Sillot_Gibbet_kernel_API = "AES_KEY_TOKEN_Sillot_Gibbet_kernel_API"
+    const val KEY_TOKEN_siyuan_kernel_API = "TOKEN_siyuan_kernel_API"
+    const val KEY_AES_TOKEN_siyuan_kernel_API = "AES_KEY_TOKEN_siyuan_kernel_API"
 
 
     const val SILLOT_GIBBET_notificationId = 58131

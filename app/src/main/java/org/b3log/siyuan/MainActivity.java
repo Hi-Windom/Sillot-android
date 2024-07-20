@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/7/17 04:46
- * updated: 2024/7/17 04:46
+ * lastModified: 2024/7/20 12:24
+ * updated: 2024/7/20 12:24
  */
 package org.b3log.siyuan;
 
@@ -58,6 +58,7 @@ package org.b3log.siyuan;
  import android.widget.ImageView;
  import android.widget.ProgressBar;
  import android.widget.TextView;
+ import android.widget.Toast;
 
  import androidx.activity.OnBackPressedCallback;
  import androidx.activity.OnBackPressedDispatcher;
@@ -164,15 +165,33 @@ public class MainActivity extends FragmentActivity implements com.blankj.utilcod
     public void onNewIntent(final Intent intent) {
         BuglyLog.w(TAG, "onNewIntent() invoked");
         super.onNewIntent(intent);
-        if (null != webView) {
-            final String blockURL = intent.getStringExtra("blockURL");
-            if (!StringUtils.isEmpty(blockURL)) {
-                webView.evaluateJavascript("javascript:window.openFileByURL('" + blockURL + "')", null);
-            }
-        }
+        init(intent);
     }
 
-    private void androidFeedback() {
+     @Override
+     protected void onSaveInstanceState(Bundle outState) {
+         BuglyLog.d(TAG, "outState: " + outState);
+         if (outState.isEmpty()) return; // avoid crash
+         super.onSaveInstanceState(outState);
+         // 可添加额外需要保存可序列化的数据
+     }
+
+     private void init(final Intent intent) {
+        if (null == intent) {
+            return;
+        }
+        BuglyLog.w(TAG, "init() invoked");
+        final String blockURL = intent.getStringExtra("blockURL");
+        if (!StringUtils.isEmpty(blockURL) && null != webView) {
+            BuglyLog.w(TAG, blockURL);
+            webView.evaluateJavascript(
+                    "javascript:window.openFileByURL('" + blockURL + "')",
+                    value -> Toast.makeText(getApplicationContext(), blockURL, Toast.LENGTH_SHORT).show()
+            );
+        }
+     }
+
+     private void androidFeedback() {
         String[] menuOptions = {
                 "电子邮件",
                 "QQ",
@@ -344,7 +363,7 @@ public class MainActivity extends FragmentActivity implements com.blankj.utilcod
                         // 处理未被允许的权限
                     }
                 });
-
+        init(getIntent());
     }
 
 
