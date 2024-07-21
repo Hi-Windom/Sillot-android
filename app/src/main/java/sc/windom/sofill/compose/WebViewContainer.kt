@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/21 15:42
- * updated: 2024/7/21 15:42
+ * lastModified: 2024/7/21 16:50
+ * updated: 2024/7/21 16:50
  */
 
 package sc.windom.sofill.compose
@@ -717,7 +717,7 @@ private fun WebViewPage(
 
 
 private fun handlePageFinished(activity: Activity, view: WebView, url: String) {
-    applySystemThemeToWebView(activity, view)
+    applySystemThemeToWebView(activity, view, true)
     if (url.startsWith("https://xui.ptlogin2.qq.com/")) {
         view.fixQQAppLaunchButton()
     }
