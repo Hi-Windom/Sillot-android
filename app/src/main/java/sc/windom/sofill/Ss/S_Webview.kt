@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/15 上午11:07
- * updated: 2024/7/15 上午11:07
+ * lastModified: 2024/7/21 16:11
+ * updated: 2024/7/21 16:11
  */
 
 package sc.windom.sofill.Ss
@@ -27,7 +27,8 @@ object S_Webview {
     val searchEngines = mapOf(
         "必应" to "www.bing.com/?q=", // 一般都会重定向到国内版
         "必应中国" to "cn.bing.com/?q=",
-        "秘塔AI搜索" to "metaso.cn/?q=",
+        "秘塔 AI" to "metaso.cn/?q=",
+//        "360 AI" to "so.chat.360.cn/?q=", // 401 Unauthorized, 但是在其他浏览器内可以正常使用，原因不明
         "DuckDuckGo（需要科学上网）" to "duckduckgo.com/?q=",
 //  需要登录      "Yandex" to "yandex.ee/?q=",
     )

@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/15 上午10:19
- * updated: 2024/7/15 上午10:19
+ * lastModified: 2024/7/21 16:07
+ * updated: 2024/7/21 16:07
  */
 
 package sc.windom.sofill.Us
@@ -15,9 +15,11 @@ import android.content.DialogInterface
 import android.graphics.Bitmap
 import android.net.Uri
 import android.net.http.SslError
+import android.os.Message
 import android.util.Log
 import android.view.View
 import android.webkit.ConsoleMessage
+import android.webkit.GeolocationPermissions
 import android.webkit.JsPromptResult
 import android.webkit.JsResult
 import android.webkit.PermissionRequest
@@ -88,6 +90,29 @@ fun WebView.injectVConsole(resultCallback: ValueCallback<String?>? = null) {
     this.evaluateJavascript(js, resultCallback)
 }
 
+fun WebView.injectEruda(resultCallback: ValueCallback<String?>? = null) {
+    val js = """
+                    (function () {
+                        if (window.eruda) return;
+                        var define;
+                        if (window.define) {
+                            define = window.define;
+                            window.define = null;
+                        }
+                        var script = document.createElement('script'); 
+                        script.src = '//cdn.jsdelivr.net/npm/eruda'; 
+                        document.body.appendChild(script); 
+                        script.onload = function () { 
+                            eruda.init();
+                            if (define) {
+                                window.define = define;
+                            }
+                        }
+                    })();
+                """
+    this.evaluateJavascript(js, resultCallback)
+}
+
 fun WebView.fixQQAppLaunchButton(resultCallback: ValueCallback<String?>? = null) {
     val js = """
         let e = document.querySelector("#onekey");
@@ -121,13 +146,49 @@ fun thisWebChromeClient(activity: Activity): WebChromeClient {
         override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
             consoleMessage?.let { it1 ->
                 Log.d(
-                    "$TAG [WebChromeClient] ", "onConsoleMessage -> " +
+                    TAG, "onConsoleMessage -> " +
                             U_DEBUG.prettyConsoleMessage(
                                 it1
                             )
                 )
             }
             return true // 屏蔽默认日志输出避免刷屏
+        }
+
+        override fun onProgressChanged(view: WebView?, newProgress: Int) {
+            // TODO 进度条 https://github.com/Hi-Windom/Sillot-android/issues/148
+            super.onProgressChanged(view, newProgress)
+        }
+
+        override fun onCreateWindow(
+            view: WebView?,
+            isDialog: Boolean,
+            isUserGesture: Boolean,
+            resultMsg: Message?
+        ): Boolean {
+            Log.d(TAG, "onCreateWindow -> $isDialog $isUserGesture $resultMsg")
+            return super.onCreateWindow(view, isDialog, isUserGesture, resultMsg)
+        }
+
+        override fun onCloseWindow(window: WebView?) {
+            Log.d(TAG, "onCloseWindow -> $window")
+            super.onCloseWindow(window)
+        }
+
+        /**
+         * 此方法仅针对源自诸如 https 等安全来源的请求调用。在非安全来源上，地理定位请求将自动被拒绝。
+         */
+        override fun onGeolocationPermissionsShowPrompt(
+            origin: String?,
+            callback: GeolocationPermissions.Callback?
+        ) {
+            Log.d(TAG, "onGeolocationPermissionsShowPrompt -> $origin $callback")
+            super.onGeolocationPermissionsShowPrompt(origin, callback)
+        }
+
+        override fun onRequestFocus(view: WebView?) {
+            Log.d(TAG, "onRequestFocus -> $view")
+            super.onRequestFocus(view)
         }
 
         override fun onJsAlert(
@@ -237,7 +298,7 @@ fun thisWebViewClient(
             oldScale: Float,
             newScale: Float
         ) {
-            Log.d(TAG, "onScaleChanged ->")
+            Log.d(TAG, "onScaleChanged invoked")
             super.onScaleChanged(view, oldScale, newScale)
         }
 
@@ -246,15 +307,18 @@ fun thisWebViewClient(
             request: WebResourceRequest?,
             error: WebResourceError?
         ) {
-            Log.e(TAG, "onReceivedError -> $error")
+            Log.e(TAG, "onReceivedError -> code=${error?.errorCode} description=${error?.description}")
             super.onReceivedError(view, request, error)
         }
 
+        @SuppressLint("WebViewClientOnReceivedSslError")
         override fun onReceivedSslError(
             view: WebView?,
             handler: SslErrorHandler?,
             error: SslError?
         ) {
+            Log.w(TAG, "onReceivedSslError invoked")
+            handler?.proceed() // 请谨慎使用，仅当您信任该网站时才这样做
             error?.let {
                 val msg = when (error.getPrimaryError()) {
                     SslError.SSL_DATE_INVALID -> "证书日期无效"
@@ -266,6 +330,7 @@ fun thisWebViewClient(
                     else -> "SSL证书错误,错误码：" + error.getPrimaryError()
                 }
                 Log.w(TAG, "onReceivedSslError -> $msg")
+
                 if (error.getPrimaryError() != SslError.SSL_UNTRUSTED) {
                     super.onReceivedSslError(view, handler, error)
                 }
@@ -278,7 +343,8 @@ fun thisWebViewClient(
             errorResponse: WebResourceResponse?
         ) {
             errorResponse?.let {
-                Log.w(TAG, errorResponse.toString())
+                Log.e(TAG, "onReceivedHttpError -> ${it.statusCode} ${it.mimeType}  ?by ${request?.url} ${request?.method} \n" +
+                        " responseHeaders=${it.responseHeaders} \n requestHeaders=${request?.requestHeaders}")
             }
             super.onReceivedHttpError(view, request, errorResponse)
         }

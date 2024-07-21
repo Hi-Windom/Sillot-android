@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/17 04:29
- * updated: 2024/7/17 04:29
+ * lastModified: 2024/7/21 15:42
+ * updated: 2024/7/21 15:42
  */
 
 package sc.windom.sofill.compose
@@ -49,6 +49,7 @@ import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Cookie
 import androidx.compose.material.icons.filled.DesktopWindows
+import androidx.compose.material.icons.filled.Handyman
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreHoriz
@@ -59,7 +60,6 @@ import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.TravelExplore
 import androidx.compose.material.icons.filled.Webhook
 import androidx.compose.material3.BottomAppBar
@@ -120,6 +120,7 @@ import sc.windom.sofill.Us.U_Uri.askIntentForSUS
 import sc.windom.sofill.Us.applyDefault
 import sc.windom.sofill.Us.checkWebViewVer
 import sc.windom.sofill.Us.fixQQAppLaunchButton
+import sc.windom.sofill.Us.injectEruda
 import sc.windom.sofill.Us.injectVConsole
 import sc.windom.sofill.Us.thisWebChromeClient
 import sc.windom.sofill.Us.thisWebViewClient
@@ -411,14 +412,15 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
         ) {
             // 切换用户代理字符串
             thisWebView.value?.settings?.apply {
-                if (userAgentString.contains("Mobile")) {
-                    // 设置为桌面版用户代理
-                    userAgentString = S_Webview.UA_win10
-                    PopTip.show("已切换到桌面版网页")
-                } else {
-                    // 设置为移动端用户代理
-                    userAgentString = S_Webview.UA_edge_android
-                    PopTip.show("已切换到移动端网页")
+                userAgentString = when {
+                    "Mobile" in userAgentString || "Android" in userAgentString -> {
+                        PopTip.show("已切换到桌面版网页")
+                        S_Webview.UA_win10
+                    }
+                    else -> {
+                        PopTip.show("已切换到移动端网页")
+                        S_Webview.UA_edge_android
+                    }
                 }
             }
             thisWebView.value?.reload()
@@ -430,10 +432,12 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
             showGoToOption.value = true
         },
         MenuOption(
-            "翻译",
-            Icons.Filled.Translate,
-            state = MenuOptionState.Disabled
-        ) { /* 点击事件 */ },
+            "开发者工具",
+            Icons.Filled.Handyman,
+        ) {
+            thisWebView.value?.injectVConsole()
+            thisWebView.value?.injectEruda()
+        },
         MenuOption("分享", Icons.Filled.Share) {
             val sendIntent: Intent = Intent().apply {
                 action = Intent.ACTION_SEND
@@ -717,7 +721,6 @@ private fun handlePageFinished(activity: Activity, view: WebView, url: String) {
     if (url.startsWith("https://xui.ptlogin2.qq.com/")) {
         view.fixQQAppLaunchButton()
     }
-    view.injectVConsole()
 }
 
 @OptIn(DelicateCoroutinesApi::class)
