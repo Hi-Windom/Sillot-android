@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/15 上午9:25
- * updated: 2024/7/15 上午9:25
+ * lastModified: 2024/7/30 17:26
+ * updated: 2024/7/30 17:26
  */
 
 package sc.windom.gibbet.services
@@ -139,7 +139,7 @@ class BootService : Service() {
         webView =
             webViewKey?.let { WebPoolsPro.instance?.acquireWebView(it) }
         webView?.setBackgroundColor(Color.parseColor(S.ColorStringHex.bgColor_light))
-        val ws = webView?.getSettings()
+        val ws = webView?.settings
         userAgent = ws?.userAgentString
         webViewVer = this.getWebViewVer()
     }
