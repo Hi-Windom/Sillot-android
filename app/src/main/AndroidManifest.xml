@@ -3,8 +3,8 @@
   ~ Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
   ~ Copyright (c) 2024.
   ~
-  ~ lastModified: 2024/7/31 08:26
-  ~ updated: 2024/7/31 08:26
+  ~ lastModified: 2024/7/31 23:48
+  ~ updated: 2024/7/31 23:48
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -321,6 +321,8 @@
                 android:name="sc.windom.sofill.compose.WebViewActivity"
                 android:taskAffinity="sc.windom.potter.producer.WebViewActivity.task"
                 android:label="@string/activity_name_WebViewActivity"
+                android:autoRemoveFromRecents="false"
+                android:noHistory="false"
                 android:screenOrientation="fullSensor"
                 android:supportsPictureInPicture="true"
                 android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
@@ -389,7 +391,6 @@
         <activity
                 android:name="sc.windom.potter.videoPlayer.SimplePlayer"
                 android:exported="true"
-                android:hardwareAccelerated="true"
                 android:supportsPictureInPicture="true"
                 android:taskAffinity=".sillot.task.background"
                 android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode">
@@ -458,11 +459,10 @@
                 android:launchMode="singleInstancePerTask"
                 android:icon="@drawable/ld246"
                 android:label="@string/activity_name_ld246Home"
-                android:autoRemoveFromRecents="false"
                 android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
                 android:screenOrientation="portrait"
                 android:exported="true"
-                android:hardwareAccelerated="true"
+                android:autoRemoveFromRecents="false"
                 android:noHistory="false"
                 android:theme="@style/Theme.SiYuan.Boot">
             <intent-filter>
@@ -527,7 +527,6 @@
         <!--            android:autoRemoveFromRecents="false"-->
         <!--            android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"-->
         <!--            android:exported="true"-->
-        <!--            android:hardwareAccelerated="true"-->
         <!--            android:noHistory="false"-->
         <!--            android:taskAffinity=".sillot.task"-->
         <!--            android:theme="@style/Theme.SiYuan.Boot">-->
@@ -557,7 +556,6 @@
         <!--            android:autoRemoveFromRecents="false"-->
         <!--            android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"-->
         <!--            android:exported="true"-->
-        <!--            android:hardwareAccelerated="true"-->
         <!--            android:noHistory="false"-->
         <!--            android:taskAffinity=".sillot.siow.task"-->
         <!--            android:theme="@style/Theme.SiYuan.Boot">-->
@@ -587,7 +585,6 @@
                 android:autoRemoveFromRecents="true"
                 android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
                 android:exported="true"
-                android:hardwareAccelerated="true"
                 android:noHistory="true"
                 android:taskAffinity="org.b3log.siyuan.BootActivity"
                 android:launchMode="singleInstancePerTask"
@@ -610,7 +607,6 @@
                 android:name="org.b3log.siyuan.MainActivity"
                 android:autoRemoveFromRecents="false"
                 android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
-                android:hardwareAccelerated="true"
                 android:taskAffinity="org.b3log.siyuan.MainActivity"
                 android:launchMode="singleInstancePerTask"
                 android:windowSoftInputMode="stateHidden|adjustResize">
@@ -635,7 +631,6 @@
                 android:noHistory="true"
                 android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
                 android:exported="true"
-                android:hardwareAccelerated="true"
                 android:theme="@style/Theme.SiYuan.Boot">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
