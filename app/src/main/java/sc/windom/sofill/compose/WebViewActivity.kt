@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/17 04:31
- * updated: 2024/7/17 04:31
+ * lastModified: 2024/7/31 23:33
+ * updated: 2024/7/31 23:33
  */
 
 package sc.windom.sofill.compose
@@ -11,7 +11,6 @@ package sc.windom.sofill.compose
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.webkit.WebView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
@@ -22,16 +21,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import com.tencent.bugly.crashreport.BuglyLog
 import sc.windom.sofill.Ss.S_Uri
 import sc.windom.sofill.Us.thisSourceFilePath
+import sc.windom.sofill.android.webview.WebPoolsPro
 import sc.windom.sofill.compose.components.WaitUI
 import sc.windom.sofill.compose.theme.CascadeMaterialTheme
 
-class WebViewActivity: ComponentActivity() {
-    private val TAG = "MainPro.kt"
+class WebViewActivity : ComponentActivity() {
+    private val TAG = "WebViewActivity.kt"
     private val srcPath = thisSourceFilePath(TAG)
     private lateinit var thisActivity: Activity
     private var in2_intent: Intent? = null
     private var FullScreenWebView_url: MutableState<String?> = mutableStateOf(null)
-    private var webView: WebView? = null
     private var created = mutableStateOf(false)
     override fun onSaveInstanceState(outState: Bundle) {
         BuglyLog.d(TAG, "outState: $outState")
@@ -114,7 +113,7 @@ class WebViewActivity: ComponentActivity() {
             }
         }
         if (!FullScreenWebView_url.value.isNullOrBlank() && showFullScreenWebView.value) {
-            FullScreenWebView(thisActivity, FullScreenWebView_url.value!!) {
+            FullScreenWebView(thisActivity, FullScreenWebView_url.value!!, WebPoolsPro.key_SB) {
                 showFullScreenWebView.value = false
                 thisActivity.finish()
             }

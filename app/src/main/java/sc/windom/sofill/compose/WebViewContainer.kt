@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/21 16:50
- * updated: 2024/7/21 16:50
+ * lastModified: 2024/7/31 23:33
+ * updated: 2024/7/31 23:33
  */
 
 package sc.windom.sofill.compose
@@ -17,6 +17,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Environment
 import android.util.Log
+import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.webkit.URLUtil
 import android.webkit.WebResourceRequest
@@ -34,7 +35,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -119,11 +119,12 @@ import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_Uri.askIntentForSUS
 import sc.windom.sofill.Us.applyDefault
 import sc.windom.sofill.Us.checkWebViewVer
-import sc.windom.sofill.Us.fixQQAppLaunchButton
 import sc.windom.sofill.Us.injectEruda
 import sc.windom.sofill.Us.injectVConsole
 import sc.windom.sofill.Us.thisWebChromeClient
 import sc.windom.sofill.Us.thisWebViewClient
+import sc.windom.sofill.android.webview.WebPoolsPro
+import sc.windom.sofill.android.webview.WebViewLayoutManager
 import sc.windom.sofill.android.webview.applySystemThemeToWebView
 import sc.windom.sofill.compose.theme.activeColor
 import sc.windom.sofill.compose.theme.defaultColor
@@ -135,12 +136,9 @@ import sc.windom.sofill.pioneer.mmkv
 import java.io.File
 import kotlin.math.roundToInt
 
-private val thisWebView: MutableState<WebView?> = mutableStateOf(null)
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingBottomSheet(showSettings: MutableState<Boolean>) {
+fun SettingBottomSheet(showSettings: MutableState<Boolean>, thisWebView: MutableState<WebView?>) {
     val scope = rememberCoroutineScope()
     val skipPartiallyExpanded by rememberSaveable { mutableStateOf(true) }
     val bottomSheetState =
@@ -361,12 +359,20 @@ fun GoToOption(
 }
 
 /**
- * 入口函数
+ * 入口函数，可以直接调用而不必依赖于 [WebViewActivity]
+ * @see sc.windom.sofill.Us.U_Uri.openURLUseSB
  */
+@SuppressLint("UnrememberedMutableState")
 @Composable
-fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Unit) {
+fun FullScreenWebView(
+    activity: Activity,
+    originUrl: String,
+    webViewKey: String,
+    onDismiss: () -> Unit
+) {
     val TAG = "FullScreenWebView"
     val uriHandler = LocalUriHandler.current
+    val thisWebView: MutableState<WebView?> = remember { mutableStateOf(null) }
     val gotoUrl: MutableState<String?> = rememberSaveable { mutableStateOf(originUrl) }
     val currentUrl = rememberSaveable { mutableStateOf("") }
     val canGoBack = rememberSaveable { mutableStateOf(false) }
@@ -378,6 +384,33 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
     val openBrowserSettingsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { /* Handle the result if needed */ }
+    val sliderState_webViewTextZoom =
+        mmkv.getSavedValue("WebViewContainer@sliderState_webViewTextZoom", 100)
+    val downloader: MutableState<Ketch> = mutableStateOf(
+        Ketch.init(
+            activity, downloadConfig = DownloadConfig(
+                connectTimeOutInMs = 30000L, //Default: 10000L
+                readTimeOutInMs = 30000L //Default: 10000L
+            )
+        )
+    ) // 文件下载器
+    val filePath: MutableState<String> = rememberSaveable { mutableStateOf("") } // 下载的文件完整路径
+    val showDownloaderPage: MutableState<Boolean> = rememberSaveable { mutableStateOf(false) }
+    val progressFloat: MutableState<Float> = rememberSaveable { mutableFloatStateOf(0f) }
+    val speedText: MutableState<String> = rememberSaveable { mutableStateOf("") }
+    val sizeText: MutableState<String> = rememberSaveable { mutableStateOf("") }
+    val timeText: MutableState<String> = rememberSaveable { mutableStateOf("") }
+    if (showDownloaderPage.value) {
+        DownloaderPage(
+            showDownloaderPage,
+            progressFloat,
+            speedText,
+            sizeText,
+            timeText,
+            filePath,
+        )
+    }
+
     LaunchedEffect(originUrl) {
         gotoUrl.value = originUrl
         activity.checkWebViewVer(S_Webview.minVersion)
@@ -417,6 +450,7 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
                         PopTip.show("已切换到桌面版网页")
                         S_Webview.UA_win10
                     }
+
                     else -> {
                         PopTip.show("已切换到移动端网页")
                         S_Webview.UA_edge_android
@@ -461,7 +495,84 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
 
     DisposableEffect(Unit) {
         // 在 Composition 销毁时
+        thisWebView.value?.let { WebPoolsPro.instance?.recycle(it, webViewKey) }
         onDispose { }
+    }
+
+    LaunchedEffect(Unit) {
+        thisWebView.value = WebPoolsPro.instance?.acquireWebView(webViewKey)
+            ?: WebPoolsPro.instance?.createWebView(activity, webViewKey)
+        thisWebView.value?.let {
+            val webViewLayoutManager = WebViewLayoutManager.assistActivity(activity, it)
+//            webViewLayoutManager.onConfigurationChangedCallback = { newConfig ->
+//                Log.w(TAG, "新配置屏幕方向: " + newConfig.orientation)
+//                applySystemThemeToWebView(activity, this);
+//            }
+//            webViewLayoutManager.onLayoutChangedCallback = {
+//                applySystemThemeToWebView(activity, this);
+//            }
+            webViewLayoutManager.delayResetLayoutWhenImeShow = 250
+            val cm = CookieManager.getInstance()
+            cm.setAcceptCookie(true)
+            cm.setAcceptThirdPartyCookies(it, true)
+            it.settings.applyDefault(sliderState_webViewTextZoom)
+            it.webViewClient = thisWebViewClient(
+                activity,
+                currentUrl,
+                canGoBack,
+                canGoForward,
+                ::handleUrlLoading,
+                ::handlePageFinished
+            )
+            it.webChromeClient = thisWebChromeClient(activity)
+            it.setDownloadListener { url, userAgent, contentDisposition, mimeType, contentLength ->
+                val switchState_使用系统自带下载器下载文件 = mmkv.getSavedValue(
+                    "WebViewContainer@switchState_使用系统自带下载器下载文件",
+                    false
+                )
+                if (switchState_使用系统自带下载器下载文件) {
+                    activity.startDownload(
+                        url,
+                        mimeType,
+                        contentLength,
+                        contentDisposition,
+                        userAgent
+                    )
+                } else {
+                    activity.startDownload2(
+                        url,
+                        mimeType,
+                        contentLength,
+                        contentDisposition,
+                        downloader,
+                        showDownloaderPage,
+                        progressFloat,
+                        speedText,
+                        sizeText,
+                        timeText,
+                        filePath,
+                    )
+                }
+            }
+            it.setFindListener(object : FindListener {
+                override fun onFindResultReceived(
+                    activeMatchOrdinal: Int,
+                    numberOfMatches: Int,
+                    isDoneCounting: Boolean
+                ) {
+                    if (isDoneCounting) {
+                        val thisNo = activeMatchOrdinal + 1
+                        Log.d(TAG, "numberOfMatches: $numberOfMatches, activeMatchOrdinal: $thisNo")
+                        if (numberOfMatches > 0) {
+                            PopTip.show("$thisNo / $numberOfMatches")
+                        } else {
+                            PopTip.show("未共找到匹配项")
+                        }
+                    }
+                }
+            })
+        }
+
     }
 
     // 菜单面板
@@ -474,7 +585,7 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
     }
 
     // 设置面板
-    SettingBottomSheet(showSettings)
+    SettingBottomSheet(showSettings, thisWebView)
 
     // GOTO面板
     MaterialBottomMenu(showGoToOption, true) {
@@ -491,14 +602,14 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
     }
 
     Scaffold(
-        modifier = Modifier.imePadding(), // 布局适配软键盘，一般来说不需要嵌套声明
+// 与 WebViewLayoutManager 冲突       modifier = Modifier.imePadding(), // 布局适配软键盘，一般来说不需要嵌套声明
         content = { padding ->
             Box(
                 modifier = Modifier
                     .padding(padding)
                     .fillMaxSize()
             ) {
-                WebViewPage(activity, gotoUrl, currentUrl, canGoBack, canGoForward)
+                thisWebView.value?.let { WebViewPage(activity, gotoUrl, it) }
             }
 
         },
@@ -581,109 +692,42 @@ fun FullScreenWebView(activity: Activity, originUrl: String, onDismiss: () -> Un
     )
 }
 
-@SuppressLint("SetJavaScriptEnabled", "UnrememberedMutableState")
+@SuppressLint("SetJavaScriptEnabled")
 @Composable
 private fun WebViewPage(
     activity: Activity,
     gotoUrl: MutableState<String?>,
-    currentUrl: MutableState<String>,
-    canGoBack: MutableState<Boolean>,
-    canGoForward: MutableState<Boolean>
+    webView: WebView
 ) {
     val TAG = "WebViewPage"
-    val sliderState_webViewTextZoom =
-        mmkv.getSavedValue("WebViewContainer@sliderState_webViewTextZoom", 100)
-    val downloader: MutableState<Ketch> = mutableStateOf(
-        Ketch.init(
-            activity, downloadConfig = DownloadConfig(
-                connectTimeOutInMs = 30000L, //Default: 10000L
-                readTimeOutInMs = 30000L //Default: 10000L
-            )
-        )
-    ) // 文件下载器
-    val filePath: MutableState<String> = rememberSaveable { mutableStateOf("") } // 下载的文件完整路径
-    val showDownloaderPage: MutableState<Boolean> = rememberSaveable { mutableStateOf(false) }
-    val progressFloat: MutableState<Float> = rememberSaveable { mutableFloatStateOf(0f) }
-    val speedText: MutableState<String> = rememberSaveable { mutableStateOf("") }
-    val sizeText: MutableState<String> = rememberSaveable { mutableStateOf("") }
-    val timeText: MutableState<String> = rememberSaveable { mutableStateOf("") }
-    if (showDownloaderPage.value) {
-        DownloaderPage(
-            showDownloaderPage,
-            progressFloat,
-            speedText,
-            sizeText,
-            timeText,
-            filePath,
-        )
-    }
-    // 使用AndroidView嵌入WebView
-    AndroidView(modifier = Modifier.fillMaxSize(), factory = {
-        WebView(it).apply {
-            thisWebView.value = this
-            val cm = CookieManager.getInstance()
-            cm.setAcceptCookie(true)
-            cm.setAcceptThirdPartyCookies(this, true)
-            val ws = this.settings
-            ws.applyDefault(sliderState_webViewTextZoom)
-            this.webViewClient = thisWebViewClient(
-                activity,
-                currentUrl,
-                canGoBack,
-                canGoForward,
-                ::handleUrlLoading,
-                ::handlePageFinished
-            )
-            this.webChromeClient = thisWebChromeClient(activity)
-            this.setDownloadListener { url, userAgent, contentDisposition, mimeType, contentLength ->
-                val switchState_使用系统自带下载器下载文件 = mmkv.getSavedValue(
-                    "WebViewContainer@switchState_使用系统自带下载器下载文件",
-                    false
-                )
-                if (switchState_使用系统自带下载器下载文件) {
-                    activity.startDownload(
-                        url,
-                        mimeType,
-                        contentLength,
-                        contentDisposition,
-                        userAgent
-                    )
-                } else {
-                    activity.startDownload2(
-                        url,
-                        mimeType,
-                        contentLength,
-                        contentDisposition,
-                        downloader,
-                        showDownloaderPage,
-                        progressFloat,
-                        speedText,
-                        sizeText,
-                        timeText,
-                        filePath,
-                    )
-                }
+//    Log.w(TAG, "${activity.hashCode()} ${webView.hashCode()}")
+    /** 使用AndroidView嵌入WebView
+     * - <1> factory 不会受页面重组的影响，即使后面布局重组依然不会重新触发 factory。
+     * 确保 view 没有任何父视图引用，避免报错 `The specified child already has a parent. You must call removeView() on the child's parent first.`
+     * - <2> update 中会在布局绘制完成和重组时候调用，所以一般情况下会执行两次
+     * - <3> 要选择启用视图重用，请调用接受 onReset 回调的 AndroidView 的重载版本，并为该回调提供非空实现。由于丢弃和重新创建视图实例的成本很高，重用视图可以带来显著的性能提升
+     * - <4> 当视图从组合中永久移除时，onRelease 将会被调用（同样在 UI 线程上）。一旦此回调返回，Compose 将永远不会尝试重用之前的视图实例，无论是否提供了 onReset 实现。
+     * 如果将来再次需要该视图，将会创建一个新的实例，并通过调用工厂方法开始一个新的生命周期。
+     */
+    AndroidView(
+        modifier = Modifier.fillMaxSize(),
+        factory = {
+            Log.w(TAG, "AndroidView factory invoked")
+            // 移除 WebView 从其父视图（如果有的话）
+            val parent = webView.parent
+            if (parent is ViewGroup) {
+                parent.removeView(webView)
             }
-            this.setFindListener(object : FindListener {
-                override fun onFindResultReceived(
-                    activeMatchOrdinal: Int,
-                    numberOfMatches: Int,
-                    isDoneCounting: Boolean
-                ) {
-                    if (isDoneCounting) {
-                        val thisNo = activeMatchOrdinal + 1
-                        Log.d(TAG, "numberOfMatches: $numberOfMatches, activeMatchOrdinal: $thisNo")
-                        if (numberOfMatches > 0) {
-                            PopTip.show("$thisNo / $numberOfMatches")
-                        } else {
-                            PopTip.show("未共找到匹配项")
-                        }
-                    }
-                }
-            })
+            webView
+        },
+        onReset = {
+            Log.w(TAG, "AndroidView onReset invoked")
+        },
+        onRelease = {
+            Log.w(TAG, "AndroidView onRelease invoked")
         }
-    }, update = {
-        Log.w(TAG, "update -> ${gotoUrl.value}")
+    ) {
+        Log.w(TAG, "AndroidView update -> ${gotoUrl.value}")
         gotoUrl.value?.let { it1 ->
             when {
                 it1 == "action?=Logout" -> {
@@ -691,7 +735,7 @@ private fun WebViewPage(
                     CookieManager.getInstance().apply {
                         removeAllCookies { success ->
                             if (success) {
-                                thisWebView.value?.clearCache(true)
+                                webView.clearCache(true)
                                 PopTip.show("<(￣︶￣)↗[success]")
                             } else {
                                 PopTip.show(" ￣へ￣ [failed]")
@@ -707,20 +751,22 @@ private fun WebViewPage(
                 }
 
                 else -> {
-                    it.loadUrl(it1)
+                    webView.loadUrl(it1)
                 }
             }
         }
         gotoUrl.value = null // 避免重组副作用
-    })
+    }
+
 }
 
 
 private fun handlePageFinished(activity: Activity, view: WebView, url: String) {
     applySystemThemeToWebView(activity, view, true)
-    if (url.startsWith("https://xui.ptlogin2.qq.com/")) {
-        view.fixQQAppLaunchButton()
-    }
+    // 根源问题已修复，不再需要处理
+//    if (url.startsWith("https://xui.ptlogin2.qq.com/")) {
+//        view.fixQQAppLaunchButton()
+//    }
 }
 
 @OptIn(DelicateCoroutinesApi::class)
@@ -807,9 +853,11 @@ fun DownloaderPage(
                 )
             }
         }
-        Text(if (clearSize) "下载进度 ${
-            (progressFloat.value * 100).roundToInt()
-        }%\n" else "正在下载")
+        Text(
+            if (clearSize) "下载进度 ${
+                (progressFloat.value * 100).roundToInt()
+            }%\n" else "正在下载"
+        )
         Text("下载路径 ${filePath.value}", modifier = Modifier.padding(20.dp, 2.dp))
         if (progressFloat.value == 1f) {
             Button(
@@ -818,7 +866,8 @@ fun DownloaderPage(
                     .padding(10.dp, 18.dp),
                 onClick = {
                     val file = File(filePath.value)
-                    val fileUri: Uri = FileProvider.getUriForFile(Lcc, BuildConfig.PROVIDER_AUTHORITIES, file)
+                    val fileUri: Uri =
+                        FileProvider.getUriForFile(Lcc, BuildConfig.PROVIDER_AUTHORITIES, file)
                     Intent(Lcc, MainPro::class.java).let {
                         it.data = fileUri
                         it.flags = Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION

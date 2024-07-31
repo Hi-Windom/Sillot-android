@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/10 下午10:47
- * updated: 2024/7/10 下午10:47
+ * lastModified: 2024/7/30 20:57
+ * updated: 2024/7/30 20:57
  */
 
 package sc.windom.sofill.Us
@@ -59,11 +59,10 @@ object U_DEBUG {
         return "$messageLevel ${consoleMessage.message()} $lineNumberAndSource"
     }
     /**
-     * 检查当前应用程序是否为内测版或公测版，并且是否处于调试模式。
+     * 检查当前应用程序是否允许调试。
      *
      *
-     * 该方法首先检查应用程序的标签（名称）是否包含“内测版”或“公测版”，然后检查应用程序是否设置了可调试标志。
-     * 如果应用程序的标签包含“内测版”或“公测版”并且应用程序是可调试的，则返回true。
+     * 该方法首先检查应用程序的标签（名称）是否等于“汐洛”（即不包含“内测版”等内容），然后检查应用程序是否设置了可调试标志。
      *
      * @param context 应用程序上下文，用于获取包管理器和应用程序信息。
      * @return 如果应用程序是内测版或公测版并且处于调试模式，则返回true，否则返回false。
@@ -81,7 +80,7 @@ object U_DEBUG {
         // 获取应用名称
         val appName =
             if (appInfo != null) packageManager.getApplicationLabel(appInfo).toString() else ""
-        val isDebugPackage = appName.contains("内测版") || appName.contains("公测版")
+        val isDebugPackage = appName != "汐洛"
         val isDebugMode =
             appInfo != null && (appInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
         return isDebugPackage && isDebugMode

@@ -3,8 +3,8 @@
   ~ Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
   ~ Copyright (c) 2024.
   ~
-  ~ lastModified: 2024/7/20 05:34
-  ~ updated: 2024/7/20 05:34
+  ~ lastModified: 2024/7/31 08:26
+  ~ updated: 2024/7/31 08:26
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -258,7 +258,9 @@
             android:enableOnBackInvokedCallback="true"
             android:requestLegacyExternalStorage="true"
             tools:ignore="HardcodedDebugMode">
-
+        <!-- ref  https://chromium.googlesource.com/chromium/src.git/+/master/android_webview/browser/safe_browsing/README.md -->
+        <meta-data android:name="android.webkit.WebView.EnableSafeBrowsing"
+                android:value="false" />
         <activity
                 android:name="sc.windom.potter.producer.MainPro"
                 android:taskAffinity="sc.windom.potter.producer.MainPro.task"

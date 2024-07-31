@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/17 04:28
- * updated: 2024/7/17 04:28
+ * lastModified: 2024/7/31 23:34
+ * updated: 2024/7/31 23:34
  */
 
 package org.b3log.ld246
@@ -113,6 +113,7 @@ import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_Uri
 import sc.windom.sofill.Us.thisSourceFilePath
 import sc.windom.sofill.android.HWs
+import sc.windom.sofill.android.webview.WebPoolsPro
 import sc.windom.sofill.annotations.SillotActivity
 import sc.windom.sofill.annotations.SillotActivityType
 import sc.windom.sofill.api.MyRetrofit.createRetrofit
@@ -325,7 +326,11 @@ class HomeActivity : ComponentActivity() {
         // 不是最佳实践，但是先凑合
         // 试试 ModalBottomSheet（已经有过实践）或者 BottomDrawer（非模态，应该可以实现最小化收起）
         if (!FullScreenWebView_url.value.isNullOrBlank() && showFullScreenWebView.value) {
-            FullScreenWebView(thisActivity, FullScreenWebView_url.value!!) {
+            FullScreenWebView(
+                thisActivity,
+                FullScreenWebView_url.value!!,
+                WebPoolsPro.key_NoActivity_Shared
+            ) {
                 showFullScreenWebView.value = false
             }
         } else {

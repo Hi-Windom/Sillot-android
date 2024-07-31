@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/21 16:07
- * updated: 2024/7/21 16:07
+ * lastModified: 2024/7/31 23:29
+ * updated: 2024/7/31 23:29
  */
 
 package sc.windom.sofill.Us
@@ -113,6 +113,10 @@ fun WebView.injectEruda(resultCallback: ValueCallback<String?>? = null) {
     this.evaluateJavascript(js, resultCallback)
 }
 
+/**
+ * 修复QQ授权登录界面“一键登录”按钮不显示的问题。**这是临时性修复，问题根源需要去解决，多半是 webview 布局出现了问题（肉眼观察不出来）**
+ * @see [sc.windom.sofill.android.webview.WebViewLayoutManager]
+ */
 fun WebView.fixQQAppLaunchButton(resultCallback: ValueCallback<String?>? = null) {
     val js = """
         let e = document.querySelector("#onekey");

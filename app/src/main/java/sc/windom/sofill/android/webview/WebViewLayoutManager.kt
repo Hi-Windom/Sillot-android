@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/7/31 23:33
+ * updated: 2024/7/31 23:33
+ */
+
 package sc.windom.sofill.android.webview
 
 import android.annotation.SuppressLint
@@ -28,9 +36,11 @@ import splitties.systemservices.inputMethodManager
 
 
 /**
- * Android small window mode soft keyboard black occlusion [siyuan-note/siyuan-android#7](https://github.com/siyuan-note/siyuan-android/pull/7)
  *
- * 优化注册工具栏显示/隐藏跟随软键盘状态 [Hi-Windom/Sillot-android#84](https://github.com/Hi-Windom/Sillot-android/issues/84)
+ * **Android small window mode soft keyboard black occlusion [siyuan-note/siyuan-android#7](https://github.com/siyuan-note/siyuan-android/pull/7)**
+ *
+ * **优化注册工具栏显示/隐藏跟随软键盘状态 [Hi-Windom/Sillot-android#84](https://github.com/Hi-Windom/Sillot-android/issues/84)**
+ *
  *
  * 基于 [Yingyi](https://ld246.com/member/shuoying) 的 AndroidBug5497Workaround 改进，将原软键盘监听集成，统一调整布局。
  * 本方案不使用 com.blankj.utilcode.util 的 KeyboardUtils.fixAndroidBug5497、 KeyboardUtils.registerSoftInputChangedListener 和 BarUtils.getNavBarHeight()，
@@ -52,16 +62,23 @@ import splitties.systemservices.inputMethodManager
  * 已知问题：小窗模式下，点击原光标地方呼出键盘时 isImeVisible 为 false，这个目前看来无法解决。
  *
  * @since v0.35
- * @suppress 前端是否提供了键盘工具条，如果没有一般不需要赋值 JSonIme* ，不过建议保留 delayResetLayoutWhenImeShow 提供更好的视觉效果。
- * 如果手机端键盘工具条有而平板端没有，请自行判断设备。
- * @constructor - 在 Java 中（this指代当前activity）：
+ * @suppress
+ * - <1> Compose 中使用需要移除 `Modifier.imePadding()` ，否则布局调整冲突。
+ * 推荐在此托管而不是使用 `Modifier.imePadding()` ，因为 `Modifier.imePadding()` 只能适配键盘而不会调整 webview 布局，实测无法解决汐洛绞架伺服页面等依赖 vh 的布局。
+ * - <2> 前端是否提供了键盘工具条，如果没有一般不需要赋值 `JSonIme*` ，不过仍建议尝试合适的 `delayResetLayoutWhenImeShow` 提供更好的视觉效果。
+ * - <3> 如果手机端键盘工具条有而平板端没有，请自行判断设备。
+ * @constructor
+ * - 在 Java 中：
  * ```java
- * WebViewLayoutManager.assistActivity(this, webView).setDelayResetLayoutWhenImeShow(200);
+ * WebViewLayoutManager.assistActivity(activity, webView).setDelayResetLayoutWhenImeShow(200);
+ * ```
+ * - 在 Kotlin 中：
+ * ```kotlin
+ * WebViewLayoutManager.assistActivity(activity, webView).delayResetLayoutWhenImeShow = 200
  * ```
  * @sample WebViewLayoutManager.assistActivity
- * @author https://ld246.com/member/soltus, GLM-4
+ * @author <a href="https://github.com/Soltus">Soltus</a>, GLM-4
  * @see [applySystemThemeToWebView]
- * @see <p>Compose 中使用 Modifier.imePadding() 即可，无需托管此处</p>
  * @property delayResetLayoutWhenImeShow 收窄布局延时执行时间。键盘弹起到最后高度需要一个过程，因此收窄布局应当延时执行（不包括小窗和多窗口模式），延时多久没有标准，推荐赋值为 120-186
  * @property JSonImeShow 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
  * @property JSonImeHide 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
@@ -70,11 +87,18 @@ import splitties.systemservices.inputMethodManager
  * @property softInputMode 覆盖清单中声明，默认值为 SOFT_INPUT_ADJUST_PAN，
  * @property onConfigurationChangedCallback 配置发生变化时的回调函数，如果赋值该项则不应在 activity 中重写 onConfigurationChanged 方法，否则回调无效。
  * @property onLayoutChangedCallback 布局变化的回调函数
+ * - 在 Java 中：
  * ```java
  * webViewLayoutManager.setOnConfigurationChangedCallback((newConfig)->{
  *   Log.w(TAG, "新配置屏幕方向: " + newConfig.orientation);
  *   return null; // java 中调用必须 return null
  * });
+ * ```
+ * - 在 Kotlin 中：
+ * ```kotlin
+ * webViewLayoutManager.onConfigurationChangedCallback = { newConfig ->
+ *   Log.w(TAG, "新配置屏幕方向: " + newConfig.orientation)
+ * }
  * ```
  * @property onLayoutChangedCallback 布局发生变化时的回调函数
  * 可以动态设置，例如 SOFT_INPUT_ADJUST_RESIZE ，注意同步修改 delayResetLayoutWhenImeShow
@@ -160,6 +184,13 @@ class WebViewLayoutManager private constructor(
         // 使用 let 函数来确保 this 的正确性（指向类）
         this.let {
             synchronized(lock) { // 使用锁来同步代码块
+                if (webView.layoutParams == null) {
+                    Log.w(
+                        TAG,
+                        "restLayout@$traker, webView.layoutParams == null ! skip restLayout()"
+                    )
+                    return
+                }
                 val newHight =
                     view.getRootViewHeight() - if (it.imeHeight == 0) view.navigationBarHeightV else 0 // 兼容经典导航键、小米系统小窗底部小白条、实体键盘，
                 // logInfo()

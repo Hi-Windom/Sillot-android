@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/17 04:32
- * updated: 2024/7/17 04:32
+ * lastModified: 2024/7/31 23:30
+ * updated: 2024/7/31 23:30
  */
 
 package sc.windom.sofill.compose
@@ -34,7 +34,9 @@ import sc.windom.sofill.pioneer.mmkv
 import sc.windom.sofill.pioneer.rememberSaveableMMKV
 import kotlin.math.roundToInt
 
-
+/**
+ * TODO：根据 webViewKey 隔离设置（目前是全局设置）
+ */
 @Composable
 fun SettingScreen(thisWebView: MutableState<WebView?>) {
     val selectedOption_搜索引擎 = rememberSaveableMMKV(
