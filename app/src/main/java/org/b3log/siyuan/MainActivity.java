@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/7/20 12:24
- * updated: 2024/7/20 12:24
+ * lastModified: 2024/8/1 06:25
+ * updated: 2024/8/1 06:25
  */
 package org.b3log.siyuan;
 
@@ -252,12 +252,12 @@ public class MainActivity extends FragmentActivity implements com.blankj.utilcod
 
     void bindBootService() {
         if (bootService == null){
-            webView = Objects.requireNonNull(WebPoolsPro.getInstance()).createWebView(this, "Sillot-Gibbet");
+            webView = Objects.requireNonNull(WebPoolsPro.getInstance()).createWebView(this, WebPoolsPro.key_SG);
             instanceId = UUID.randomUUID().toString();
             Intent intent = new Intent(getApplicationContext(), BootService.class);
             intent.putExtra("INSTANCE_ID", instanceId); // 绑定服务时传递instanceId
             S.getINTENT();
-            intent.putExtra(S_Intent.EXTRA_WEB_VIEW_KEY, "Sillot-Gibbet");
+            intent.putExtra(S_Intent.EXTRA_WEB_VIEW_KEY, WebPoolsPro.key_SG);
             bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE); // TODO: 双开共存时内核固定端口冲突
         } else {
             performActionWithService();

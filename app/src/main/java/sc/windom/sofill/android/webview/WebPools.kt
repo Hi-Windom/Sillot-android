@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/31 22:57
- * updated: 2024/7/31 22:57
+ * lastModified: 2024/8/1 06:25
+ * updated: 2024/8/1 06:25
  */
 
 package sc.windom.sofill.android.webview
@@ -152,12 +152,12 @@ class WebPoolsPro private constructor() {
                 }
             }
 
-        @JvmStatic
-        val key_SB = "Sillot-Browser"
+        const val key_SG = "Sillot-Gibbet"
+        const val key_SB = "Sillot-Browser"
 
         /**
          * 共享 webview 节省内存，使用时注意串扰
          */
-        val key_NoActivity_Shared = "NoActivity ld246"
+        const val key_NoActivity_Shared = "NoActivity ld246"
     }
 }
