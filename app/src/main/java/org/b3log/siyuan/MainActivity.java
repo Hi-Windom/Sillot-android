@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/8/1 06:25
- * updated: 2024/8/1 06:25
+ * lastModified: 2024/8/1 06:34
+ * updated: 2024/8/1 06:34
  */
 package org.b3log.siyuan;
 
@@ -33,6 +33,7 @@ package org.b3log.siyuan;
  import android.view.ViewGroup;
 
  import sc.windom.sillot.App;
+ import sc.windom.sofill.Ss.S_LoveKt;
  import sc.windom.sofill.Ss.S_Webview;
  import sc.windom.sofill.Us.U_DEBUG;
  import sc.windom.sofill.Us.U_Layout;
@@ -201,11 +202,11 @@ public class MainActivity extends FragmentActivity implements com.blankj.utilcod
                 .setMessage("请选择反馈渠道")
                 .setOnMenuItemClickListener((dialog, text, index) -> {
                     if (text.equals("电子邮件")) {
-                        U.getFuckOtherApp().sendEmail(this.getPackageManager(), "694357845@qq.com", "汐洛安卓反馈", U_DEBUG.getDeviceInfoString());
+                        U.getFuckOtherApp().sendEmail(this.getPackageManager(), S_LoveKt.QQMail, "汐洛安卓反馈", U_DEBUG.getDeviceInfoString());
                     } else if (text.equals("QQ")) {
-                        U.getFuckOtherApp().launchQQAndCopyToClipboard(this, "694357845", "开发者 QQ 号已复制");
+                        U.getFuckOtherApp().launchQQAndCopyToClipboard(this, S_LoveKt.QQ, "开发者 QQ 号已复制");
                     } else if (text.equals("抖音")) {
-                        U.getFuckOtherApp().launchTikTopAndCopyToClipboard(this, "AsyncTTk", "开发者抖音号已复制");
+                        U.getFuckOtherApp().launchTikTopAndCopyToClipboard(this, S_LoveKt.抖音, "开发者抖音号已复制");
                     }
                     return false;
                 });
