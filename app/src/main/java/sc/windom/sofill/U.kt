@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/15 上午9:16
- * updated: 2024/7/15 上午9:16
+ * lastModified: 2024/8/3 00:20
+ * updated: 2024/8/3 00:20
  */
 
 package sc.windom.sofill
@@ -44,7 +44,6 @@ import sc.windom.sofill.Us.U_DOSC
 import sc.windom.sofill.Us.U_DialogX
 import sc.windom.sofill.Us.U_FileUtils
 import sc.windom.sofill.Us.U_FuckOtherApp
-import sc.windom.sofill.Us.U_Layout
 import sc.windom.sofill.Us.U_Permission
 import sc.windom.sofill.Us.U_Phone
 import sc.windom.sofill.Us.U_Pro
@@ -87,9 +86,6 @@ object U {
 
     @JvmStatic
     val DOSC = U_DOSC
-
-    @JvmStatic
-    val LAYOUT = U_Layout
 
     @JvmStatic
     val PRO = U_Pro

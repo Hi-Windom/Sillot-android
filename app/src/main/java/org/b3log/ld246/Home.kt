@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/31 23:34
- * updated: 2024/7/31 23:34
+ * lastModified: 2024/8/3 03:48
+ * updated: 2024/8/3 03:48
  */
 
 package org.b3log.ld246
@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -352,6 +353,7 @@ class HomeActivity : ComponentActivity() {
                         }
                     }
                 }, modifier = Modifier
+                    .imePadding()
                     .background(Color.Gray)
                     .nestedScroll(pullToRefreshState.nestedScrollConnection)
             ) {

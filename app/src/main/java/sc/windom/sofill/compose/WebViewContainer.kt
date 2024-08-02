@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/31 23:33
- * updated: 2024/7/31 23:33
+ * lastModified: 2024/8/3 07:20
+ * updated: 2024/8/3 07:20
  */
 
 package sc.windom.sofill.compose
@@ -30,7 +30,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -62,7 +61,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.TravelExplore
 import androidx.compose.material.icons.filled.Webhook
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -503,15 +501,6 @@ fun FullScreenWebView(
         thisWebView.value = WebPoolsPro.instance?.acquireWebView(webViewKey)
             ?: WebPoolsPro.instance?.createWebView(activity, webViewKey)
         thisWebView.value?.let {
-            val webViewLayoutManager = WebViewLayoutManager.assistActivity(activity, it)
-//            webViewLayoutManager.onConfigurationChangedCallback = { newConfig ->
-//                Log.w(TAG, "新配置屏幕方向: " + newConfig.orientation)
-//                applySystemThemeToWebView(activity, this);
-//            }
-//            webViewLayoutManager.onLayoutChangedCallback = {
-//                applySystemThemeToWebView(activity, this);
-//            }
-            webViewLayoutManager.delayResetLayoutWhenImeShow = 250
             val cm = CookieManager.getInstance()
             cm.setAcceptCookie(true)
             cm.setAcceptThirdPartyCookies(it, true)
@@ -602,7 +591,9 @@ fun FullScreenWebView(
     }
 
     Scaffold(
-// 与 WebViewLayoutManager 冲突       modifier = Modifier.imePadding(), // 布局适配软键盘，一般来说不需要嵌套声明
+        modifier = Modifier
+//            .imePadding() // 布局适配软键盘，一般来说不需要嵌套声明 // 与 WebViewLayoutManager 冲突
+            .fillMaxSize(),
         content = { padding ->
             Box(
                 modifier = Modifier
@@ -614,77 +605,68 @@ fun FullScreenWebView(
 
         },
         bottomBar = {
-            BottomAppBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 58.dp,
-                contentPadding = PaddingValues(2.dp),
+            // 去掉了 BottomAppBar 包裹，因为与 WebViewLayoutManager 冲突，IconButton 能正常点击但是图标显示会错位，就很抓马的bug
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(0.dp)
-                    .height(36.dp)
-                    .zIndex(999f)
+                    .zIndex(999f),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(0.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                IconButton(
+                    onClick = { thisWebView.value?.goBack() },
+                    enabled = canGoBack.value
                 ) {
+                    Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                }
+                IconButton(
+                    onClick = { thisWebView.value?.goForward() },
+                    enabled = canGoForward.value
+                ) {
+                    Icon(Icons.Filled.ArrowForward, contentDescription = "Forward")
+                }
+                IconButton(onClick = { expanded.value = !expanded.value }) {
+                    if (expanded.value) Icon(
+                        Icons.Filled.MoreVert,
+                        contentDescription = "More"
+                    ) else Icon(Icons.Filled.MoreHoriz, contentDescription = "More")
+                }
+                if (inSearchInWebpage.value) {
                     IconButton(
-                        onClick = { thisWebView.value?.goBack() },
-                        enabled = canGoBack.value
+                        onClick = {
+                            thisWebView.value?.clearMatches()
+                            inSearchInWebpage.value = false
+                        }
                     ) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Filled.Clear, contentDescription = "退出页面搜索")
                     }
                     IconButton(
-                        onClick = { thisWebView.value?.goForward() },
-                        enabled = canGoForward.value
+                        onClick = { thisWebView.value?.findNext(true) }
                     ) {
-                        Icon(Icons.Filled.ArrowForward, contentDescription = "Forward")
+                        Icon(
+                            Icons.Filled.ArrowBackIos,
+                            contentDescription = "上一个（页面搜索结果）"
+                        )
                     }
-                    IconButton(onClick = { expanded.value = !expanded.value }) {
-                        if (expanded.value) Icon(
-                            Icons.Filled.MoreVert,
-                            contentDescription = "More"
-                        ) else Icon(Icons.Filled.MoreHoriz, contentDescription = "More")
+                    IconButton(
+                        onClick = { thisWebView.value?.findNext(true) }
+                    ) {
+                        Icon(
+                            Icons.Filled.ArrowForwardIos,
+                            contentDescription = "上一个（页面搜索结果）"
+                        )
                     }
-                    if (inSearchInWebpage.value) {
-                        IconButton(
-                            onClick = {
-                                thisWebView.value?.clearMatches()
-                                inSearchInWebpage.value = false
-                            }
-                        ) {
-                            Icon(Icons.Filled.Clear, contentDescription = "退出页面搜索")
-                        }
-                        IconButton(
-                            onClick = { thisWebView.value?.findNext(true) }
-                        ) {
-                            Icon(
-                                Icons.Filled.ArrowBackIos,
-                                contentDescription = "上一个（页面搜索结果）"
-                            )
-                        }
-                        IconButton(
-                            onClick = { thisWebView.value?.findNext(true) }
-                        ) {
-                            Icon(
-                                Icons.Filled.ArrowForwardIos,
-                                contentDescription = "上一个（页面搜索结果）"
-                            )
-                        }
-                    } else {
-                        IconButton(
-                            onClick = { thisWebView.value?.evaluateJavascript("window.scrollTo(0, 0)") { } }
-                        ) {
-                            Icon(Icons.Filled.ArrowUpward, contentDescription = "页面顶部")
-                        }
-                        IconButton(
-                            onClick = { thisWebView.value?.evaluateJavascript("window.scrollTo(0, document.body.scrollHeight)") { } }
-                        ) {
-                            Icon(Icons.Filled.ArrowDownward, contentDescription = "页面底部")
-                        }
+                } else {
+                    IconButton(
+                        onClick = { thisWebView.value?.evaluateJavascript("window.scrollTo(0, 0)") { } }
+                    ) {
+                        Icon(Icons.Filled.ArrowUpward, contentDescription = "页面顶部")
+                    }
+                    IconButton(
+                        onClick = { thisWebView.value?.evaluateJavascript("window.scrollTo(0, document.body.scrollHeight)") { } }
+                    ) {
+                        Icon(Icons.Filled.ArrowDownward, contentDescription = "页面底部")
                     }
                 }
             }
@@ -718,6 +700,18 @@ private fun WebViewPage(
             if (parent is ViewGroup) {
                 parent.removeView(webView)
             }
+            val webViewLayoutManager = WebViewLayoutManager.assistActivity(activity, webView, true)
+            webViewLayoutManager.onConfigurationChangedCallback = { newConfig ->
+                Log.w(TAG, "新配置屏幕方向: " + newConfig.orientation)
+                applySystemThemeToWebView(activity, webView, true)
+            }
+            webViewLayoutManager.onLayoutChangedCallback = { _ ->
+                applySystemThemeToWebView(activity, webView, true)
+            }
+            webViewLayoutManager.onImeInsetsCallback = { _ ->
+                applySystemThemeToWebView(activity, webView, true)
+            }
+            webViewLayoutManager.delayResetLayoutWhenImeShow = 250
             webView
         },
         onReset = {
@@ -757,7 +751,6 @@ private fun WebViewPage(
         }
         gotoUrl.value = null // 避免重组副作用
     }
-
 }
 
 

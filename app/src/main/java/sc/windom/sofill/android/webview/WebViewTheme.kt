@@ -2,25 +2,32 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/21 17:00
- * updated: 2024/7/21 17:00
+ * lastModified: 2024/8/3 07:30
+ * updated: 2024/8/3 07:30
  */
 
 package sc.windom.sofill.android.webview
 
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.graphics.Bitmap
+import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
+import android.view.PixelCopy
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsetsController
 import android.webkit.WebView
+import android.widget.FrameLayout
+import androidx.core.view.isVisible
 import sc.windom.sofill.U.isLightColor
-import sc.windom.sofill.Us.U_Layout.statusBarHeight
+import sc.windom.sofill.Us.statusBarHeight
 
 
 /**
- * 推荐在四处调用，将良好的沉浸式状态栏体验带到 webView：
+ * 推荐在四处调用，将良好的沉浸式状态栏与导航栏体验带到 webView：
  * 在 [WebViewLayoutManager] 的 onConfigurationChangedCallback、 onLayoutChangedCallback，
  * 在 [android.webkit.WebChromeClient] 的 onPageFinished 中调用.
  * 在 [android.app.Activity] 的 onForeground 中调用
@@ -39,16 +46,15 @@ fun applySystemThemeToWebView(
     isRoot: Boolean = false,
 ) {
     Handler(Looper.getMainLooper()).postDelayed({
-        val statusBarBelowColor = activity.setStatusBarColorFromBelowStatusBar(webView, isRoot)
-        statusBarBelowColor?.let {
-            if (isRoot) webView.setBackgroundColor(it)
-            else webView.rootView.setBackgroundColor(it)
+        if (webView.isVisible) {
+            activity.setNavigationBarColorFromBelowNavigationBar(webView, isRoot)
+            activity.setStatusBarColorFromBelowStatusBar(webView, isRoot)
         }
-    }, 0) // 延时只有调试的时候需要
+    }, 0) // 延时只有调试的时候需要设置延时
 }
 
+@SuppressLint("BlockedPrivateApi")
 private fun Activity.setStatusBarIconColorAccordingToColor(color: Int) {
-    // 根据状态栏颜色决定状态栏图标颜色（深色或浅色）
     val lightIcons = color.isLightColor()
     window.insetsController?.setSystemBarsAppearance(
         if (lightIcons) WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS else 0,
@@ -56,18 +62,71 @@ private fun Activity.setStatusBarIconColorAccordingToColor(color: Int) {
     )
 }
 
-private fun Activity.setStatusBarColorFromBelowStatusBar(view: View, isRoot: Boolean): Int? {
-    // 获取状态栏下方的颜色
-    val statusBarBelowColor = getDominantColorFromBelowStatusBar(view, isRoot)
-    // 设置状态栏颜色
-    if (statusBarBelowColor != null) {
-        window.statusBarColor = statusBarBelowColor
+private fun Activity.setStatusBarColorFromBelowStatusBar(view: View, isRoot: Boolean) {
+    getDominantColorFromBelowStatusBar(view, isRoot) { color ->
+        color?.let {
+            view.setBackgroundColor(it)
+            val frameLayout = this.findViewById<FrameLayout>(android.R.id.content)
+            frameLayout.getChildAt(0).setBackgroundColor(it)
+            window.statusBarColor = it
+            setStatusBarIconColorAccordingToColor(it)
+        }
     }
-    // 根据状态栏颜色调整图标颜色（深色或浅色）
-    statusBarBelowColor?.let { setStatusBarIconColorAccordingToColor(it) }
-    return statusBarBelowColor
 }
 
+@SuppressLint("BlockedPrivateApi")
+private fun Activity.setNavigationBarIconColorAccordingToColor(color: Int) {
+    val lightIcons = color.isLightColor()
+    window.insetsController?.setSystemBarsAppearance(
+        if (lightIcons) WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS else 0,
+        WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+    )
+}
+
+private fun Activity.setNavigationBarColorFromBelowNavigationBar(view: View, isRoot: Boolean) {
+    getDominantColorFromBelowStatusBar(view, isRoot) { color ->
+        color?.let {
+            window.navigationBarColor = it
+            setNavigationBarIconColorAccordingToColor(it)
+        }
+    }
+}
+
+private fun Activity.getDominantColorFromBelowStatusBar(view: View, isRoot: Boolean, callback: (Int?) -> Unit) {
+    val _view = if (isRoot) view else view.rootView
+    val statusBarHeight = _view?.statusBarHeight ?: return
+
+    val decorView = _view as? ViewGroup ?: return
+    val statusBarBelowView = decorView.findViewById<View>(android.R.id.content) ?: return
+    // 创建位图以存储状态栏下方的视图内容
+    val bitmap = Bitmap.createBitmap(statusBarBelowView.width, statusBarBelowView.height - statusBarHeight, Bitmap.Config.ARGB_8888)
+
+    // 设置源矩形区域为状态栏下方的区域
+    val sourceRect = Rect(0, statusBarHeight, statusBarBelowView.width, statusBarBelowView.height)
+
+    try {
+        PixelCopy.request(
+            window,
+            sourceRect,
+            bitmap,
+            { copyResult ->
+                if (copyResult == PixelCopy.SUCCESS) {
+                    val dominantColor = bitmap.getPixel(0, statusBarHeight) // 获取状态栏下方的颜色
+                    bitmap.recycle() // 回收位图
+                    return@request callback(dominantColor)
+                } else {
+                    // PixelCopy失败
+                    return@request callback(null)
+                }
+            },
+            Handler(Looper.getMainLooper())
+        )
+    } catch (e: Exception) {
+        Log.e("applySystemThemeToWebView", "getDominantColorFromBelowStatusBar failed: ${e.message}")
+    }
+}
+
+@Deprecated("该方法已过时，并且特殊情况下有问题")
 private fun getDominantColorFromBelowStatusBar(view: View, isRoot: Boolean): Int? {
     val _view = if (isRoot) view else view.rootView
     // 获取状态栏高度，如果view或其rootView为null，则返回null

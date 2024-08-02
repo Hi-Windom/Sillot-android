@@ -2,12 +2,14 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/8/2 18:47
- * updated: 2024/8/2 18:47
+ * lastModified: 2024/8/3 02:06
+ * updated: 2024/8/3 02:06
  */
 package org.b3log.siyuan;
 
  import static org.b3log.siyuan.MainActivityHelperKt.onDragInsertIntoWebView;
+ import static sc.windom.sofill.Us.U_LayoutKt.applyStatusBarConfigurationV2;
+ import static sc.windom.sofill.Us.U_LayoutKt.getStatusBarHeight;
  import static sc.windom.sofill.Us.U_WebviewKt.checkWebViewVer;
  import static sc.windom.sofill.Us.U_WebviewKt.showJSAlert;
  import static sc.windom.sofill.android.webview.WebViewThemeKt.applySystemThemeToWebView;
@@ -36,7 +38,6 @@ package org.b3log.siyuan;
  import sc.windom.sofill.Ss.S_LoveKt;
  import sc.windom.sofill.Ss.S_Webview;
  import sc.windom.sofill.Us.U_DEBUG;
- import sc.windom.sofill.Us.U_Layout;
  import sc.windom.sofill.Us.U_Permission;
  import sc.windom.sofill.Us.U_Phone;
  import sc.windom.sofill.android.webview.WebViewLayoutManager;
@@ -312,7 +313,7 @@ public class MainActivity extends FragmentActivity implements com.blankj.utilcod
         super.onCreate(savedInstanceState);
         thisActivity = this;
         setContentView(R.layout.activity_main);
-        U_Layout.applyStatusBarConfigurationV2(this, false); // 可以伸到状态栏和导航栏的位置（沉浸式）
+        applyStatusBarConfigurationV2(this, false); // 可以伸到状态栏和导航栏的位置（沉浸式）
         bindBootService();
         // 注册 EventBus
         EventBus.getDefault().register(this);
@@ -388,30 +389,34 @@ public class MainActivity extends FragmentActivity implements com.blankj.utilcod
             }
 
             // 避免和状态栏之间存在留白
-            ((ViewGroup) webView.getParent()).setPadding(0, U_Layout.getStatusBarHeight(webView), 0, 0);
+            ((ViewGroup) webView.getParent()).setPadding(0, getStatusBarHeight(webView), 0, 0);
 
             // 注册工具栏显示/隐藏跟随软键盘状态
             // Fix https://github.com/siyuan-note/siyuan/issues/9765
             // Fix https://github.com/siyuan-note/siyuan/issues/9726
             // https://github.com/Hi-Windom/Sillot-android/issues/84
             WebViewLayoutManager webViewLayoutManager = WebViewLayoutManager.assistActivity(this, webView);
-            webViewLayoutManager.setOnConfigurationChangedCallback((newConfig)->{
+            webViewLayoutManager.onConfigurationChangedCallback = ((newConfig)->{
                 BuglyLog.w(TAG, "新配置屏幕方向: " + newConfig.orientation);
-                applySystemThemeToWebView(this, webView);
+                applySystemThemeToWebView(thisActivity, webView);
                 return null;
             });
-            webViewLayoutManager.setOnLayoutChangedCallback((frameLayout)->{
+            webViewLayoutManager.onLayoutChangedCallback = ((frameLayout)->{
+                applySystemThemeToWebView(thisActivity, webView);
+                return null;
+            });
+            webViewLayoutManager.onImeInsetsCallback = ((insets)->{
                 applySystemThemeToWebView(thisActivity, webView);
                 return null;
             });
             if (!U_Phone.isPad(this)) {
-                webViewLayoutManager.setDelayResetLayoutWhenImeShow(120);
+                webViewLayoutManager.delayResetLayoutWhenImeShow = 120;
                 // showKeyboardToolbar 不知道在哪已经实现了随键盘呼出（有延时，大概率是在前端），这里依旧调用是因为响应更快
-                webViewLayoutManager.setJSonImeShow("showKeyboardToolbar();");
-                webViewLayoutManager.setJSonImeHide("hideKeyboardToolbar();");
+                webViewLayoutManager.JSonImeShow = "showKeyboardToolbar();";
+                webViewLayoutManager.JSonImeHide = "hideKeyboardToolbar();";
                 // 锁定方便悬浮键盘不自动收起
-                webViewLayoutManager.setJSonImeShow0Height("window.Sillot.android.LockKeyboardToolbar=true;hideKeyboardToolbar();showKeyboardToolbar();");
-                webViewLayoutManager.setJSonImeHide0Height("window.Sillot.android.LockKeyboardToolbar=false;hideKeyboardToolbar();");
+                webViewLayoutManager.JSonImeShow0Height = "window.Sillot.android.LockKeyboardToolbar=true;hideKeyboardToolbar();showKeyboardToolbar();";
+                webViewLayoutManager.JSonImeHide0Height = "window.Sillot.android.LockKeyboardToolbar=false;hideKeyboardToolbar();";
             }
 
             // 使用 Chromium 调试 WebView

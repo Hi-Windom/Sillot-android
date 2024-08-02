@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/31 23:33
- * updated: 2024/7/31 23:33
+ * lastModified: 2024/8/3 07:31
+ * updated: 2024/8/3 07:31
  */
 
 package sc.windom.sofill.android.webview
@@ -25,13 +25,12 @@ import androidx.annotation.RequiresApi
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import sc.windom.sofill.U.isInSpecialMode
-import sc.windom.sofill.Us.U_Layout.adjustLayoutMarginForSystemBars
-import sc.windom.sofill.Us.U_Layout.displayMetrics
-import sc.windom.sofill.Us.U_Layout.getRootViewHeight
-import sc.windom.sofill.Us.U_Layout.navigationBarHeightH
-import sc.windom.sofill.Us.U_Layout.navigationBarHeightV
-import sc.windom.sofill.Us.U_Layout.statusBarHeight
-import sc.windom.sofill.Us.U_Layout.visibleRect
+import sc.windom.sofill.Us.adjustLayoutMarginForSystemBars
+import sc.windom.sofill.Us.displayMetrics
+import sc.windom.sofill.Us.navigationBarHeightH
+import sc.windom.sofill.Us.navigationBarHeightV
+import sc.windom.sofill.Us.statusBarHeight
+import sc.windom.sofill.Us.visibleRect
 import splitties.systemservices.inputMethodManager
 
 
@@ -64,7 +63,7 @@ import splitties.systemservices.inputMethodManager
  * @since v0.35
  * @suppress
  * - <1> Compose 中使用需要移除 `Modifier.imePadding()` ，否则布局调整冲突。
- * 推荐在此托管而不是使用 `Modifier.imePadding()` ，因为 `Modifier.imePadding()` 只能适配键盘而不会调整 webview 布局，实测无法解决汐洛绞架伺服页面等依赖 vh 的布局。
+ * Compose 中 `Modifier.imePadding()` 只能适配键盘而不会调整 webview 布局，实测无法解决汐洛绞架伺服页面等依赖 vh 的布局，因此仍需托管。
  * - <2> 前端是否提供了键盘工具条，如果没有一般不需要赋值 `JSonIme*` ，不过仍建议尝试合适的 `delayResetLayoutWhenImeShow` 提供更好的视觉效果。
  * - <3> 如果手机端键盘工具条有而平板端没有，请自行判断设备。
  * @constructor
@@ -102,26 +101,47 @@ import splitties.systemservices.inputMethodManager
  * ```
  * @property onLayoutChangedCallback 布局发生变化时的回调函数
  * 可以动态设置，例如 SOFT_INPUT_ADJUST_RESIZE ，注意同步修改 delayResetLayoutWhenImeShow
+ * @property onImeInsetsCallback 软键盘显示隐藏时的回调函数（不支持小窗模式和悬浮键盘）
+ * @param activity 活动，通过 [WebViewLayoutManager.assistActivity] 指定
+ * @param webView WebView，通过 [WebViewLayoutManager.assistActivity] 指定
+ * @param inCompose 是否 Compose 布局，通过 [WebViewLayoutManager.assistActivity] 指定
  */
 @SuppressLint("WrongConstant", "ObsoleteSdkInt")
 @RequiresApi(Build.VERSION_CODES.S)
 class WebViewLayoutManager private constructor(
     private val activity: Activity,
-    private val webView: WebView
+    private val webView: WebView,
+    private val inCompose: Boolean
 ) {
     private val TAG = "WebViewLayoutManager"
+    @JvmField
     var delayResetLayoutWhenImeShow: Long =
         0 // 默认与 android:windowSoftInputMode="adjustResize" 行为保持一致
+    @JvmField
     var JSonImeShow = ""
+    @JvmField
     var JSonImeHide = ""
+    @JvmField
     var JSonImeShow0Height = ""
+    @JvmField
     var JSonImeHide0Height = ""
+    @JvmField
     var softInputMode =
         WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN
+    @JvmField
     var onConfigurationChangedCallback: ((Configuration) -> Unit)? = null
+    @JvmField
     var onLayoutChangedCallback: ((frameLayout: FrameLayout) -> Unit)? = null
+    @JvmField
+    var onImeInsetsCallback: ((insets: WindowInsetsCompat) -> Unit)? = null
+    /**
+     * insets监听中判断新旧值可以避免两次调用 restLayout ，但是不能这么做，原因见 [restLayout]
+     */
     private var isImeVisible = false // 支持悬浮键盘
     private var currentImeVisible = false // 记录上次的状态，用于识别从悬浮键盘切换至非悬浮键盘
+    /**
+     * insets监听中判断新旧值可以避免两次调用 restLayout ，但是不能这么做，原因见 [restLayout]
+     */
     private var imeHeight = 0 // 不等于实际键盘高度， 悬浮键盘的值为 0
     private var currentImeHeight = 0 // 记录上次的状态，用于识别从悬浮键盘切换至非悬浮键盘
     private var lastLayoutWidth = 0
@@ -135,9 +155,12 @@ class WebViewLayoutManager private constructor(
         val frameLayout = activity.findViewById<FrameLayout>(android.R.id.content)
         this.view = frameLayout.getChildAt(0)
         ViewCompat.setOnApplyWindowInsetsListener(this.view) { v: View?, insets: WindowInsetsCompat ->
+            if (this.imeHeight != insets.getInsets(WindowInsets.Type.ime()).bottom) {
+                // 此监听器触发条件非常宽松，因此判断 Ime 相关（不支持小窗模式和悬浮键盘）以免死循环发生。
+                onImeInsetsCallback?.invoke(insets)
+            }
             this.isImeVisible = insets.isVisible(WindowInsets.Type.ime()) // 不支持小窗模式
             this.imeHeight = insets.getInsets(WindowInsets.Type.ime()).bottom
-            // 此监听器触发条件非常宽松，不直接提供 onWindowInsetsListenerCallback 以免死循环发生。
             restLayout("WindowInsets")
             insets
         }
@@ -172,58 +195,83 @@ class WebViewLayoutManager private constructor(
                 }
             })
         }
+        val display = activity.displayMetrics
+        Log.d(
+            TAG,
+            "StatusBarHeight: ${view.statusBarHeight}" +
+                    ", display.widthPixels: ${display.widthPixels}, display.heightPixels: ${display.heightPixels}"
+        )
     }
 
     private val lock = Any() // 定义一个锁对象
 
     /**
-     * 重置布局
-     * @param traker 跟踪调用者
+     * 重置布局。requestLayout() 会触发 OnApplyWindowInset，不过不必担心死循环，函数内已判断仅当需要重置布局时才重置布局。
+     * 而且，同一个 ime inset 两次调用 requestLayout() 是必要的，因为要支持悬浮键盘和小窗模式。
+     * @param tracker 跟踪调用者
      */
-    private fun restLayout(traker: String) {
-        // 使用 let 函数来确保 this 的正确性（指向类）
+    private fun restLayout(tracker: String) {
+        // 使用 let 函数来确保 this 的正确性（指向当前 Class ）
         this.let {
             synchronized(lock) { // 使用锁来同步代码块
+                if (webView.parent == null) {
+                    Log.w(
+                        TAG,
+                        "restLayout@$tracker, webView.parent == null"
+                    )
+                    if (view.layoutParams != null) {
+                        // 重置默认布局
+                        view.layoutParams.height = view.rootView.height
+                        view.adjustLayoutMarginForSystemBars()
+                        view.requestLayout()
+                    }
+                    return
+                }
                 if (webView.layoutParams == null) {
                     Log.w(
                         TAG,
-                        "restLayout@$traker, webView.layoutParams == null ! skip restLayout()"
+                        "restLayout@$tracker, webView.layoutParams == null -> skip restLayout()"
                     )
                     return
                 }
-                val newHight =
-                    view.getRootViewHeight() - if (it.imeHeight == 0) view.navigationBarHeightV else 0 // 兼容经典导航键、小米系统小窗底部小白条、实体键盘，
-                // logInfo()
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    Log.w(TAG, "${inputMethodManager.currentInputMethodInfo}") // 输入法信息
-                }
+                val _view = if (inCompose) view else view
+                // 兼容经典导航键、小米系统小窗底部小白条、实体键盘
+                val newHight = _view.rootView.height - if (it.imeHeight == 0) _view.navigationBarHeightV else 0
                 val isInSpecialMode_lock =
                     it.imeHeight == 0 && activity.isInSpecialMode() // 小窗和多窗口模式
                 val fromFloating2Normal_lock =
                     it.currentImeVisible && it.currentImeHeight == 0 && it.imeHeight != 0 // 从悬浮键盘切换至非悬浮键盘
-                val ImeHequalsNavBarH = it.imeHeight == view.navigationBarHeightV // 小米系统上会遇到
+                val ImeHequalsNavBarH = it.imeHeight == _view.navigationBarHeightV // 小米系统上会遇到
                 val isIme0H = it.imeHeight == 0 || ImeHequalsNavBarH
                 it.currentImeVisible = it.isImeVisible
                 it.currentImeHeight = it.imeHeight
                 Log.w(
                     TAG,
-                    "restLayout@$traker, view.height:${view.height}, newHight: $newHight, currentImeVisible: ${it.currentImeVisible}, " +
-                            "isImeVisible: ${it.isImeVisible}, imeHeight:${it.imeHeight}, isInSpecialMode: ${activity.isInSpecialMode()},  " +
-                            "view.navigationBarHeightV: ${view.navigationBarHeightV}, lastNavigationBarHeightV: ${it.lastNavigationBarHeightV}, " +
-                            "view.navigationBarHeightH: ${view.navigationBarHeightH}, lastNavigationBarHeightH: ${it.lastNavigationBarHeightH}, fromFloating2Normal_lock: $fromFloating2Normal_lock"
+                    "restLayout@$tracker, currentImeVisible: ${it.currentImeVisible}, " +
+                            "isImeVisible: ${it.isImeVisible}, isInSpecialMode: ${activity.isInSpecialMode()}, " +
+                            "fromFloating2Normal_lock: $fromFloating2Normal_lock"
                 )
+                Log.i(
+                    TAG,
+                    "imeHeight:${it.imeHeight}}, newHight: $newHight, \n" +
+                            "view.navigationBarHeightV: ${_view.navigationBarHeightV}, lastNavigationBarHeightV: ${it.lastNavigationBarHeightV}, " +
+                            "view.navigationBarHeightH: ${_view.navigationBarHeightH}, lastNavigationBarHeightH: ${it.lastNavigationBarHeightH}"
+                )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    Log.i(TAG, "${inputMethodManager.currentInputMethodInfo}") // 输入法信息
+                }
+//                logInfo()
                 if (this.isImeVisible) {
                     // 键盘弹起到最后高度需要一个过程，因此收窄布局应当延时执行（不包括小窗和多窗口模式），延时多久没有标准
                     // （如果声明了 android:windowSoftInputMode="adjustResize" 则无效，因为系统已经自动调整了布局）
                     Handler(Looper.getMainLooper()).postDelayed(
                         {
-                            view.layoutParams.height =
+                            _view.layoutParams.height =
                                 newHight - if (isInSpecialMode_lock || fromFloating2Normal_lock) 0 else it.imeHeight
+                            _view.adjustLayoutMarginForSystemBars() // 调整布局边距，兼容传统虚拟导航键
                             webView.layoutParams.height = -1 // 这里不能改，必须MATCH_PARENT
-                            view.adjustLayoutMarginForSystemBars() // 调整布局边距，兼容传统虚拟导航键
                             webView.layoutParams.width = -1
-                            view.requestLayout()
-                            webView.requestLayout()
+                            _view.requestLayout() // 触发 view 及其所有子视图（包括 webView ）的布局重新计算过程
                         },
                         if (isInSpecialMode_lock || fromFloating2Normal_lock) 0 else it.delayResetLayoutWhenImeShow
                     )
@@ -244,26 +292,24 @@ class WebViewLayoutManager private constructor(
                     } else {
                         webView.evaluateJavascript(it.JSonImeHide, null)
                     }
-                    view.layoutParams.height = newHight
+                    _view.layoutParams.height = newHight
+                    _view.adjustLayoutMarginForSystemBars() // 调整布局边距，兼容传统虚拟导航键
                     webView.layoutParams.height = -1 // 这里不能改，必须MATCH_PARENT
-                    view.adjustLayoutMarginForSystemBars() // 调整布局边距，兼容传统虚拟导航键
                     webView.layoutParams.width = -1
-                    view.requestLayout()
-                    webView.requestLayout()
+                    _view.requestLayout() // 触发 view 及其所有子视图（包括 webView ）的布局重新计算过程
                 }
             }
         }
     }
-
 
     /**
      * 打印日志信息，调试时使用
      */
     private fun logInfo() {
         val rect = view.visibleRect
-        val display = activity.displayMetrics
         Log.d(
             TAG,
+            "\n------------------------------------------------\n" +
             "[Top] rect: ${rect.top} | rootView: ${view.rootView.top} | view: ${view.top} | webView: ${webView.top}"
         )
         Log.d(
@@ -272,11 +318,11 @@ class WebViewLayoutManager private constructor(
         )
         Log.d(
             TAG,
-            "[Width] rect: ${rect.width()} | rootView: ${view.rootView.width} | view: ${view.width} | webView: ${webView.width}"
+            "[Bottom] rect: ${rect.bottom} | rootView: ${view.rootView.bottom} | view: ${view.bottom} | webView: ${webView.bottom}"
         )
         Log.d(
             TAG,
-            "[Bottom] rect: ${rect.bottom} | rootView: ${view.rootView.bottom} | view: ${view.bottom} | webView: ${webView.bottom}"
+            "[Width] rect: ${rect.width()} | rootView: ${view.rootView.width} | view: ${view.width} | webView: ${webView.width}"
         )
         Log.d(
             TAG,
@@ -285,20 +331,22 @@ class WebViewLayoutManager private constructor(
         Log.d(
             TAG,
             "[Left] rect: ${rect.left} | rootView: ${view.rootView.left} | view: ${view.left} | webView: ${webView.left}"
-        )
-        Log.d(
-            TAG,
-            "StatusBarHeight: ${view.statusBarHeight}" +
-                    ", display.widthPixels: ${display.widthPixels}, display.heightPixels: ${display.heightPixels}"
                     + "\n------------------------------------------------\n"
         )
     }
 
 
     companion object {
+        /**
+         * 绑定使用
+         * @param activity 活动
+         * @param webView WebView
+         * @param inCompose 是否 Compose 布局。[WebViewLayoutManager] 不能与 `Modifier.imePadding()` 同时使用！
+         */
         @JvmStatic
-        fun assistActivity(activity: Activity, webView: WebView): WebViewLayoutManager {
-            return WebViewLayoutManager(activity, webView)
+        @JvmOverloads // 自动生成带有默认参数的重载函数供 java 使用
+        fun assistActivity(activity: Activity, webView: WebView, inCompose: Boolean = false): WebViewLayoutManager {
+            return WebViewLayoutManager(activity, webView, inCompose)
         }
     }
 }
