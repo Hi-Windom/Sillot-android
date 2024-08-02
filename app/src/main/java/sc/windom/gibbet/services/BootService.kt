@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/30 17:26
- * updated: 2024/7/30 17:26
+ * lastModified: 2024/8/2 18:48
+ * updated: 2024/8/2 18:48
  */
 
 package sc.windom.gibbet.services
@@ -68,6 +68,10 @@ import java.util.function.Consumer
 
 class BootService : Service() {
     private val TAG = "services/BootService.kt"
+    @JvmField
+    val checkHttpServerWorkerName = "CheckHttpServerWork"
+    @JvmField
+    val workManager = WorkManager.getInstance(this)
     var server: AsyncHttpServer? = null
     var serverPort = S.DefaultHTTPPort
     var webView: WebView? = null
@@ -117,21 +121,17 @@ class BootService : Service() {
     }
 
     private fun works() {
-        // 初始化 UI 元素
         BuglyLog.d(TAG, "-> 初始化 UI 元素")
         init_webView()
 
-        // 拉起内核
         BuglyLog.d(TAG, "-> 拉起内核")
         startKernel()
 
-        // 周期同步数据
-        BuglyLog.d(TAG, "-> 周期同步数据")
-        scheduleSyncDataWork()
+//        BuglyLog.d(TAG, "-> 周期同步数据")
+//        scheduleSyncDataWork()
 
-        // 内核心跳检测
         BuglyLog.d(TAG, "-> 内核心跳检测")
-        scheduleCheckHttpServerWork()
+        CheckHttpServerWork()
     }
 
     private fun init_webView() {
@@ -475,6 +475,9 @@ class BootService : Service() {
             )
     }
 
+    /**
+     * 目前看似乎没有必要，同步感知可以及时同步
+     */
     private fun scheduleSyncDataWork() {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED) // 确保在网络连接时运行
@@ -487,8 +490,8 @@ class BootService : Service() {
                 .setInitialDelay(10, TimeUnit.MINUTES) // 在加入队列后至少经过 10 分钟后再运行
                 .build()
 
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "SyncDataWork",
+        workManager.enqueueUniquePeriodicWork(
+            "scheduleSyncDataWork",
             ExistingPeriodicWorkPolicy.KEEP, // 如果已经存在，则保持
             periodicWorkRequest
         )
@@ -496,9 +499,8 @@ class BootService : Service() {
 
     /**
      * 这种方法并不是官方推荐的，因为它可能会导致任务之间的延迟，并且在高频率下可能会对系统资源造成压力。
-     * 实际上如果不显示前台WIFI悬浮窗的话这个很快就会失效。
      */
-    private fun scheduleCheckHttpServerWork() {
+    private fun CheckHttpServerWork() {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
@@ -509,18 +511,18 @@ class BootService : Service() {
             .build()
 
         // 将任务加入到WorkManager中，并设置一个UniqueWork名称
-        WorkManager.getInstance(this).enqueueUniqueWork(
-            "CheckHttpServerWork",
+        workManager.enqueueUniqueWork(
+            checkHttpServerWorkerName,
             ExistingWorkPolicy.REPLACE, // 每次都替换之前的任务
             oneTimeWorkRequest
         )
 
         // 任务完成后，延迟10秒再次启动同一个任务
-        WorkManager.getInstance(this).getWorkInfoByIdLiveData(oneTimeWorkRequest.id)
+        workManager.getWorkInfoByIdLiveData(oneTimeWorkRequest.id)
             .observeForever { workInfo ->
                 if (workInfo != null && workInfo.state == WorkInfo.State.SUCCEEDED) {
                     Handler(Looper.getMainLooper()).postDelayed({
-                        scheduleCheckHttpServerWork()
+                        CheckHttpServerWork()
                     }, 10000)
                 }
             }

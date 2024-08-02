@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 下午12:03
- * updated: 2024/7/8 下午12:03
+ * lastModified: 2024/8/2 18:07
+ * updated: 2024/8/2 18:07
  */
 
 package sc.windom.gibbet.workers
@@ -18,24 +18,30 @@ import com.koushikdutta.async.http.AsyncHttpResponse
 import com.koushikdutta.async.http.body.JSONObjectBody
 import org.b3log.siyuan.Utils
 import org.json.JSONObject
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
 
 class SyncDataWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
     private val TAG = "workers/SyncDataWorker.kt"
     override fun doWork(): Result {
+        val latch = CountDownLatch(1)
+        var workResult: Result? = null
         // 实现数据同步的逻辑
-        syncData()
-        // 返回Result.success()表示工作成功完成
-        return Result.success()
+        syncData { result ->
+            workResult = result
+            latch.countDown()
+        }
+        latch.await() // 等待直到latch的计数变为0
+        return workResult ?: Result.failure()
     }
     // 虑在多线程环境中的同步问题。可以使用AtomicBoolean来确保同步状态的更新是原子的
     private val syncing = AtomicBoolean(false)
 
-    private fun syncData() {
+    private fun syncData(callback: (Result) -> Unit) {
         try {
             if (syncing.get()) {
                 Log.i(TAG, "data is syncing...")
-                return
+                callback(Result.failure())
             }
             syncing.set(true)
 
@@ -44,13 +50,17 @@ class SyncDataWorker(context: Context, params: WorkerParameters) : Worker(contex
             AsyncHttpClient.getDefaultInstance().executeJSONObject(req, object :
                 AsyncHttpClient.JSONObjectCallback() {
                 override fun onCompleted(e: Exception?, source: AsyncHttpResponse?, result: JSONObject?) {
-                    if (e != null) {
+                    if (e == null) {
+                        callback(Result.success())
+                    } else {
                         Utils.LogError(TAG, "data sync failed", e)
+                        callback(Result.failure())
                     }
                 }
             })
         } catch (e: Throwable) {
             Utils.LogError(TAG, "data sync failed", e)
+            callback(Result.failure())
         } finally {
             syncing.set(false)
         }

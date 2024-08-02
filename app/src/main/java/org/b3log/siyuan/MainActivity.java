@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/8/1 06:34
- * updated: 2024/8/1 06:34
+ * lastModified: 2024/8/2 18:47
+ * updated: 2024/8/2 18:47
  */
 package org.b3log.siyuan;
 
@@ -69,10 +69,6 @@ package org.b3log.siyuan;
  import androidx.core.app.ActivityCompat;
  import androidx.core.content.ContextCompat;
  import androidx.fragment.app.FragmentActivity;
- import androidx.work.Constraints;
- import androidx.work.NetworkType;
- import androidx.work.OneTimeWorkRequest;
- import androidx.work.WorkManager;
 
  import com.blankj.utilcode.util.AppUtils;
  import com.blankj.utilcode.util.StringUtils;
@@ -81,12 +77,11 @@ package org.b3log.siyuan;
  import com.kongzue.dialogx.dialogs.PopTip;
  import com.tencent.bugly.crashreport.BuglyLog;
  import com.tencent.bugly.crashreport.CrashReport;
- import com.tencent.mmkv.MMKV;
 
  import sc.windom.sofill.android.HWs;
 
  import sc.windom.gibbet.services.BootService;
- import sc.windom.gibbet.workers.SyncDataWorker;
+
  import org.greenrobot.eventbus.EventBus;
  import org.greenrobot.eventbus.Subscribe;
  import org.greenrobot.eventbus.ThreadMode;
@@ -805,7 +800,6 @@ public class MainActivity extends FragmentActivity implements com.blankj.utilcod
     @Override
     public void onForeground(Activity activity) {
         BuglyLog.w(TAG, "onForeground() invoked");
-        startSyncData();
         if (null != webView) {
             webView.evaluateJavascript("javascript:window.reconnectWebSocket()", null);
             applySystemThemeToWebView(thisActivity, webView);
@@ -815,7 +809,7 @@ public class MainActivity extends FragmentActivity implements com.blankj.utilcod
     @Override
     public void onBackground(Activity activity) {
         BuglyLog.w(TAG, "onBackground() invoked");
-        startSyncData();
+        Toast.makeText(this.getApplicationContext(), "汐洛绞架进入后台运行", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -898,17 +892,5 @@ public class MainActivity extends FragmentActivity implements com.blankj.utilcod
         );
         startActivity(intent);
        android.os.Process.killProcess(android.os.Process.myPid()); // 暂时无法解决杀死其他任务栈的冲突，不加这句无法重启内核
-    }
-
-    public void startSyncData() {
-        Constraints constraints = new Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED) // 确保在网络连接时运行
-                .setRequiresBatteryNotLow(false) // 低电量时也运行
-                .build();
-        OneTimeWorkRequest syncDataWork = new OneTimeWorkRequest.Builder(SyncDataWorker.class)
-                .setConstraints(constraints)
-//                .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST) // 加急工作。如果配额允许，它将立即开始在后台运行。但是可能会在 Android 12 上抛出运行时异常，并且在启动受到限制时可能会抛出异常。
-                .build();
-        WorkManager.getInstance(this).enqueue(syncDataWork);
     }
 }
