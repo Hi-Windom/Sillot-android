@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/3 10:19
- * updated: 2024/8/3 10:19
+ * lastModified: 2024/8/4 04:44
+ * updated: 2024/8/4 04:44
  */
 
 package sc.windom.sofill.android.webview
@@ -35,20 +35,33 @@ import splitties.systemservices.inputMethodManager
 
 
 /**
+ * # Android 12+ 最好用最完善的 WebView 布局托管方案,
  *
- * **Android small window mode soft keyboard black occlusion [siyuan-note/siyuan-android#7](https://github.com/siyuan-note/siyuan-android/pull/7)**
- *
- * **优化注册工具栏显示/隐藏跟随软键盘状态 [Hi-Windom/Sillot-android#84](https://github.com/Hi-Windom/Sillot-android/issues/84)**
- *
+ * ```
+ * 可与 flowus obsidian 等软件的效果媲美.
+ * ```
  *
  * 基于 [Yingyi](https://ld246.com/member/shuoying) 的 AndroidBug5497Workaround 改进，将原软键盘监听集成，统一调整布局。
+ *
+ * ```
  * 本方案不使用 com.blankj.utilcode.util 的 KeyboardUtils.fixAndroidBug5497、 KeyboardUtils.registerSoftInputChangedListener 和 BarUtils.getNavBarHeight()，
- * 因为这些方法对安卓12+来说都已经过时，不兼容小窗模式、不识别悬浮键盘，getNavBarHeight获取的值错误等。本方案使用 WindowInsets 的 isVisible(Type.ime()) 方法来检查输入法是否可见（Android 11+）。
+ * 因为这些方法对 Android 12+ 来说都已经过时，不兼容小窗模式、不识别悬浮键盘，getNavBarHeight获取的值错误等。
+ * ```
+ *
+ * 本方案使用 WindowInsets 的 isVisible(Type.ime()) 方法来检查输入法是否可见（Android 11+）。
+ *
  * 如果在清单文件的 activity 节点声明了 android:windowSoftInputMode="adjustResize"，则普通键盘弹起时无需重新布局，
+ *
+ * ```
  * 但有个小缺陷：系统自动重新布局是与输入法弹起同时进行的，会导致用户能短暂看到布局底色。因此，推荐声明为 android:windowSoftInputMode="adjustPan"
- * 本方案会自动调整布局，这样不受系统自动重新布局影响，可以通过指定 delayResetLayoutWhenImeShow （默认值 0 ） 来避免用户短暂看到布局底色。
- * 如果需要支持安卓11以下设备，可以考虑在代码中根据API级别动态设置 getWindow().setSoftInputMode 替代在清单文件中声明，并使用其他支持安卓11以下设备的方案替代本方案
- * 此外，推荐进一步声明为 android:windowSoftInputMode="stateHidden|adjustPan"，stateHidden 与 isImeVisible = false 初始化保持一致性。
+ * ```
+ *
+ * 本方案会自动调整布局，这样不受系统自动重新布局影响，可以通过指定 [delayResetLayoutWhenImeShow] （默认值 0 ） 来避免用户短暂看到布局底色。
+ * 此外，推荐进一步声明为 android:windowSoftInputMode="stateHidden|adjustPan"，stateHidden 与 [isImeVisible] = false 初始化保持一致性。
+ *
+ * ```
+ * 如果需要支持安卓11以下设备，可以考虑在代码中根据API级别动态设置 getWindow().setSoftInputMode 替代在清单文件中声明，并使用其他支持安卓11以下设备的方案替代本方案。
+ * ```
  *
  * 测试场景覆盖以下状态的排列组合：
  * - 设备与系统：[Xiaomi HyperOS Phone @Android14，vivo OriginOS4 Phone @Android14，Lenovo ZUI14 Pad @Android12]
@@ -56,15 +69,15 @@ import splitties.systemservices.inputMethodManager
  * - 导航方式：[全面屏手势，经典导航键]
  * - 屏幕方向：[竖屏，左横屏，右横屏]
  * - 特殊操作：[无，改变屏幕方向，悬浮键盘与非悬浮键盘之间切换，平板端使用蓝牙键盘模式]
- * - 输入法：[Jovi输入法Pro，QQ输入法，百度输入法，微信输入法，搜狗输入法，讯飞输入法]
+ * - 输入法：[Jovi输入法Pro，QQ输入法，百度输入法，微信输入法，搜狗输入法，讯飞输入法, 雨燕输入法]
  *
- * 已知问题：小窗模式下，点击原光标地方呼出键盘时 isImeVisible 为 false，这个目前看来无法解决。
+ * 已知问题：小窗模式下，点击原光标地方呼出键盘时 [isImeVisible] 为 false，这个目前看来无法解决。
  *
  * @since v0.35
  * @suppress
  * - <1> Compose 中使用需要移除 `Modifier.imePadding()` ，否则布局调整冲突。
  * Compose 中 `Modifier.imePadding()` 只能适配键盘而不会调整 webview 布局，实测无法解决汐洛绞架伺服页面等依赖 vh 的布局，因此仍需托管。
- * - <2> 前端是否提供了键盘工具条，如果没有一般不需要赋值 `JSonIme*` ，不过仍建议尝试合适的 `delayResetLayoutWhenImeShow` 提供更好的视觉效果。
+ * - <2> 前端是否提供了键盘工具条，如果没有一般不需要赋值 `JSonIme*` ，不过仍建议尝试合适的 [delayResetLayoutWhenImeShow] 提供更好的视觉效果。
  * - <3> 如果手机端键盘工具条有而平板端没有，请自行判断设备。
  * @constructor
  * - 在 Java 中：
@@ -107,6 +120,8 @@ import splitties.systemservices.inputMethodManager
  * @param webView WebView，通过 [WebViewLayoutManager.assistActivity] 指定
  * @param inCompose 是否 Compose 布局，通过 [WebViewLayoutManager.assistActivity] 指定
  */
+//  [Android small window mode soft keyboard black occlusion](https://github.com/siyuan-note/siyuan-android/pull/7)
+//  [优化注册工具栏显示/隐藏跟随软键盘状态](https://github.com/Hi-Windom/Sillot-android/issues/84)
 @SuppressLint("WrongConstant", "ObsoleteSdkInt")
 @RequiresApi(Build.VERSION_CODES.S)
 class WebViewLayoutManager private constructor(
