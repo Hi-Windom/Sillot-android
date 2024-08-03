@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/3 07:31
- * updated: 2024/8/3 07:31
+ * lastModified: 2024/8/3 10:19
+ * updated: 2024/8/3 10:19
  */
 
 package sc.windom.sofill.android.webview
@@ -78,7 +78,8 @@ import splitties.systemservices.inputMethodManager
  * @sample WebViewLayoutManager.assistActivity
  * @author <a href="https://github.com/Soltus">Soltus</a>, GLM-4
  * @see [applySystemThemeToWebView]
- * @property delayResetLayoutWhenImeShow 收窄布局延时执行时间。键盘弹起到最后高度需要一个过程，因此收窄布局应当延时执行（不包括小窗和多窗口模式），延时多久没有标准，推荐赋值为 120-186
+ * @property delayResetLayoutWhenImeShow 收窄布局延时执行时间。键盘弹起到最后高度需要一个过程，因此收窄布局应当延时执行（不包括小窗和多窗口模式），
+ * 延时多久没有标准，考虑到不同机型和输入法的表现差异，不宜设置太小，否则会导致键盘弹起时短暂看到布局底色，推荐赋值范围 131-186。
  * @property JSonImeShow 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
  * @property JSonImeHide 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
  * @property JSonImeShow0Height 键盘显示时执行的JavaScript代码（注意不支持 Optional Chaining 等写法）
