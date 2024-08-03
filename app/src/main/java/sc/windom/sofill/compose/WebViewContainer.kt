@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/3 07:20
- * updated: 2024/8/3 07:20
+ * lastModified: 2024/8/3 09:56
+ * updated: 2024/8/3 09:56
  */
 
 package sc.windom.sofill.compose
@@ -711,7 +711,7 @@ private fun WebViewPage(
             webViewLayoutManager.onImeInsetsCallback = { _ ->
                 applySystemThemeToWebView(activity, webView, true)
             }
-            webViewLayoutManager.delayResetLayoutWhenImeShow = 250
+            webViewLayoutManager.delayResetLayoutWhenImeShow = 186
             webView
         },
         onReset = {
