@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/3 00:15
- * updated: 2024/8/3 00:15
+ * lastModified: 2024/8/4 18:55
+ * updated: 2024/8/4 18:55
  */
 
 package sc.windom.sofill.Us
@@ -121,6 +121,7 @@ fun View.adjustLayoutMarginForSystemBars() {
     val systemBarInsets = getSystemBarInsets()
     layoutParams?.let { layoutParams ->
         if (layoutParams is ViewGroup.MarginLayoutParams) {
+            layoutParams.topMargin = 0 // 可能解决偶发从其他界面返回时顶部布局有问题，尚未得到验证
             layoutParams.bottomMargin = systemBarInsets.bottom
             layoutParams.leftMargin = systemBarInsets.left
             layoutParams.rightMargin = systemBarInsets.right
