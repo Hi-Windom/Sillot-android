@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/4 04:44
- * updated: 2024/8/4 04:44
+ * lastModified: 2024/8/4 18:41
+ * updated: 2024/8/4 18:41
  */
 
 package sc.windom.sofill.android.webview
@@ -35,20 +35,18 @@ import splitties.systemservices.inputMethodManager
 
 
 /**
- * # Android 12+ 最好用最完善的 WebView 布局托管方案,
+ * # Android 12+ 最好用最完善的 WebView 布局托管方案
  *
  * ```
- * 可与 flowus obsidian 等软件的效果媲美.
+ * 可与 flowus obsidian 等软件的效果媲美. 耗时两个月打磨优化, 唯一缺点是太过完美 (bushi
  * ```
  *
- * 基于 [Yingyi](https://ld246.com/member/shuoying) 的 AndroidBug5497Workaround 改进，将原软键盘监听集成，统一调整布局。
+ * 本方案使用 WindowInsets 的 isVisible(Type.ime()) 方法来检查输入法是否可见（Android 11+）。
  *
  * ```
  * 本方案不使用 com.blankj.utilcode.util 的 KeyboardUtils.fixAndroidBug5497、 KeyboardUtils.registerSoftInputChangedListener 和 BarUtils.getNavBarHeight()，
  * 因为这些方法对 Android 12+ 来说都已经过时，不兼容小窗模式、不识别悬浮键盘，getNavBarHeight获取的值错误等。
  * ```
- *
- * 本方案使用 WindowInsets 的 isVisible(Type.ime()) 方法来检查输入法是否可见（Android 11+）。
  *
  * 如果在清单文件的 activity 节点声明了 android:windowSoftInputMode="adjustResize"，则普通键盘弹起时无需重新布局，
  *
@@ -66,12 +64,13 @@ import splitties.systemservices.inputMethodManager
  * 测试场景覆盖以下状态的排列组合：
  * - 设备与系统：[Xiaomi HyperOS Phone @Android14，vivo OriginOS4 Phone @Android14，Lenovo ZUI14 Pad @Android12]
  * - 布局模式：[普通，小窗，多窗口]
- * - 导航方式：[全面屏手势，经典导航键]
+ * - 导航方式：[全面屏手势隐藏导航条，全面屏手势显示导航条, 经典导航键]
  * - 屏幕方向：[竖屏，左横屏，右横屏]
- * - 特殊操作：[无，改变屏幕方向，悬浮键盘与非悬浮键盘之间切换，平板端使用蓝牙键盘模式]
+ * - 特殊操作：[无，改变屏幕方向，悬浮键盘与非悬浮键盘之间切换，平板端使用蓝牙键盘模式, 调整小窗大小，切换多窗口位置 (上下可能存在不同, 左右不影响)]
  * - 输入法：[Jovi输入法Pro，QQ输入法，百度输入法，微信输入法，搜狗输入法，讯飞输入法, 雨燕输入法]
  *
- * 已知问题：小窗模式下，点击原光标地方呼出键盘时 [isImeVisible] 为 false，这个目前看来无法解决。
+ * 参考引用：
+ * - [Yingyi](https://ld246.com/member/shuoying) 的 AndroidBug5497Workaround 。
  *
  * @since v0.35
  * @suppress
@@ -256,40 +255,42 @@ class WebViewLayoutManager private constructor(
                 val isInSpecialMode_lock =
                     it.imeHeight == 0 && activity.isInSpecialMode() // 小窗和多窗口模式
                 val fromFloating2Normal_lock =
-                    it.currentImeVisible && it.currentImeHeight == 0 && it.imeHeight != 0 // 从悬浮键盘切换至非悬浮键盘
+                    it.currentImeVisible && it.currentImeHeight == 0 && it.imeHeight != 0 // 从悬浮键盘切换至非悬浮键盘\
+                val fromNormal2Floating_lock =
+                    it.currentImeVisible && it.currentImeHeight != 0 && it.imeHeight == 0 // 从非悬浮键盘切换至悬浮键盘
                 val ImeHequalsNavBarH = it.imeHeight == _view.navigationBarHeightV // 小米系统上会遇到
                 val isIme0H = it.imeHeight == 0 || ImeHequalsNavBarH
-                it.currentImeVisible = it.isImeVisible
-                it.currentImeHeight = it.imeHeight
                 Log.w(
                     TAG,
-                    "restLayout@$tracker, currentImeVisible: ${it.currentImeVisible}, " +
-                            "isImeVisible: ${it.isImeVisible}, isInSpecialMode: ${activity.isInSpecialMode()}, " +
-                            "fromFloating2Normal_lock: $fromFloating2Normal_lock"
-                )
-                Log.i(
-                    TAG,
-                    "imeHeight:${it.imeHeight}}, newHight: $newHight, \n" +
-                            "view.navigationBarHeightV: ${_view.navigationBarHeightV}, lastNavigationBarHeightV: ${it.lastNavigationBarHeightV}, " +
-                            "view.navigationBarHeightH: ${_view.navigationBarHeightH}, lastNavigationBarHeightH: ${it.lastNavigationBarHeightH}"
+                    "[ restLayout @$tracker ] currentImeVisible: ${it.currentImeVisible}, currentImeHeight: ${it.currentImeHeight}, " +
+                            "isImeVisible: ${it.isImeVisible}, imeHeight:${it.imeHeight}, isInSpecialMode: ${activity.isInSpecialMode()}, " +
+                            "从悬浮键盘切换至非悬浮键盘: $fromFloating2Normal_lock, 从非悬浮键盘切换至悬浮键盘: $fromNormal2Floating_lock"
                 )
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    Log.i(TAG, "${inputMethodManager.currentInputMethodInfo}") // 输入法信息
+                    inputMethodManager.currentInputMethodInfo?.let {
+                        // it.packageName + it.serviceName = it.id
+                        Log.i(TAG, "[ ime ] packageName: ${it.packageName}, serviceName: ${it.serviceName}")
+                    }
                 }
-//                logInfo()
+                logInfo()
+
+                it.currentImeVisible = it.isImeVisible
+                it.currentImeHeight = it.imeHeight
+
                 if (this.isImeVisible) {
                     // 键盘弹起到最后高度需要一个过程，因此收窄布局应当延时执行（不包括小窗和多窗口模式），延时多久没有标准
                     // （如果声明了 android:windowSoftInputMode="adjustResize" 则无效，因为系统已经自动调整了布局）
                     Handler(Looper.getMainLooper()).postDelayed(
                         {
                             _view.layoutParams.height =
-                                newHight - if (isInSpecialMode_lock || fromFloating2Normal_lock) 0 else it.imeHeight
+                                newHight - if (isInSpecialMode_lock || fromNormal2Floating_lock) 0 else it.imeHeight
                             _view.adjustLayoutMarginForSystemBars() // 调整布局边距，兼容传统虚拟导航键
                             webView.layoutParams.height = -1 // 这里不能改，必须MATCH_PARENT
                             webView.layoutParams.width = -1
                             _view.requestLayout() // 触发 view 及其所有子视图（包括 webView ）的布局重新计算过程
+                            Log.i(TAG, "requestLayout done, new height of view: ${_view.layoutParams.height}, isImeVisible == ${this.isImeVisible}")
                         },
-                        if (isInSpecialMode_lock || fromFloating2Normal_lock) 0 else it.delayResetLayoutWhenImeShow
+                        if (isInSpecialMode_lock || fromFloating2Normal_lock || fromNormal2Floating_lock) 0 else it.delayResetLayoutWhenImeShow
                     )
                     Handler(Looper.getMainLooper()).postDelayed(
                         {
@@ -299,7 +300,7 @@ class WebViewLayoutManager private constructor(
                                 webView.evaluateJavascript(it.JSonImeShow, null)
                             }
                         },
-                        if (isInSpecialMode_lock || fromFloating2Normal_lock) 0 else it.delayResetLayoutWhenImeShow + 20
+                        if (isInSpecialMode_lock || fromFloating2Normal_lock || fromNormal2Floating_lock) 0 else it.delayResetLayoutWhenImeShow + 20
                     )
                 } else {
                     // 填充布局应当立即执行，如果前端键盘工具条有动画可以延时收起
@@ -313,6 +314,7 @@ class WebViewLayoutManager private constructor(
                     webView.layoutParams.height = -1 // 这里不能改，必须MATCH_PARENT
                     webView.layoutParams.width = -1
                     _view.requestLayout() // 触发 view 及其所有子视图（包括 webView ）的布局重新计算过程
+                    Log.i(TAG, "requestLayout done, isImeVisible == ${this.isImeVisible}")
                 }
             }
         }
@@ -347,7 +349,12 @@ class WebViewLayoutManager private constructor(
         Log.d(
             TAG,
             "[Left] rect: ${rect.left} | rootView: ${view.rootView.left} | view: ${view.left} | webView: ${webView.left}"
-                    + "\n------------------------------------------------\n"
+        )
+        Log.d(
+            TAG,
+                    "view.navigationBarHeightV: ${view.navigationBarHeightV}, lastNavigationBarHeightV: ${this.lastNavigationBarHeightV}, " +
+                    "view.navigationBarHeightH: ${view.navigationBarHeightH}, lastNavigationBarHeightH: ${this.lastNavigationBarHeightH}"
+                            + "\n------------------------------------------------\n"
         )
     }
 
