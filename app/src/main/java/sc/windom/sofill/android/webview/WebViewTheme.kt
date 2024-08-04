@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/3 07:30
- * updated: 2024/8/3 07:30
+ * lastModified: 2024/8/4 23:20
+ * updated: 2024/8/4 23:20
  */
 
 package sc.windom.sofill.android.webview
@@ -20,7 +20,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsetsController
 import android.webkit.WebView
-import android.widget.FrameLayout
 import androidx.core.view.isVisible
 import sc.windom.sofill.U.isLightColor
 import sc.windom.sofill.Us.statusBarHeight
@@ -37,7 +36,7 @@ import sc.windom.sofill.Us.statusBarHeight
  * @suppress 不可能一直监听状态栏下方区域颜色是否变化，这样的开销没必要。因此如果切换主题不触发页面重载，即不经过onPageFinished，可以通过其他方式手动触发一下，问题不大。
  * 或者可以通过 JSAndroid 调用触发
  * @param isRoot webview 是否是根布局。无论是否是根布局我们都假设 webview 顶部与状态栏无缝衔接。当沉浸式异常时可以尝试设置为 true
- *
+ * @see [WebViewLayoutManager]
  */
 @JvmOverloads // 自动生成带有默认参数的重载函数供 java 使用
 fun applySystemThemeToWebView(
@@ -47,8 +46,13 @@ fun applySystemThemeToWebView(
 ) {
     Handler(Looper.getMainLooper()).postDelayed({
         if (webView.isVisible) {
-            activity.setNavigationBarColorFromBelowNavigationBar(webView, isRoot)
-            activity.setStatusBarColorFromBelowStatusBar(webView, isRoot)
+            activity.getDominantColorFromBelowStatusBar(webView, isRoot) { color ->
+                color?.let {
+                    if (isRoot) webView.setBackgroundColor(it) else webView.rootView.setBackgroundColor(it)
+                    activity.setNavigationBarIconColorAccordingToColor(it)
+                    activity.setStatusBarIconColorAccordingToColor(it)
+                }
+            }
         }
     }, 0) // 延时只有调试的时候需要设置延时
 }
@@ -56,40 +60,21 @@ fun applySystemThemeToWebView(
 @SuppressLint("BlockedPrivateApi")
 private fun Activity.setStatusBarIconColorAccordingToColor(color: Int) {
     val lightIcons = color.isLightColor()
+    window.statusBarColor = color
     window.insetsController?.setSystemBarsAppearance(
         if (lightIcons) WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS else 0,
         WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
     )
 }
 
-private fun Activity.setStatusBarColorFromBelowStatusBar(view: View, isRoot: Boolean) {
-    getDominantColorFromBelowStatusBar(view, isRoot) { color ->
-        color?.let {
-            view.setBackgroundColor(it)
-            val frameLayout = this.findViewById<FrameLayout>(android.R.id.content)
-            frameLayout.getChildAt(0).setBackgroundColor(it)
-            window.statusBarColor = it
-            setStatusBarIconColorAccordingToColor(it)
-        }
-    }
-}
-
 @SuppressLint("BlockedPrivateApi")
 private fun Activity.setNavigationBarIconColorAccordingToColor(color: Int) {
     val lightIcons = color.isLightColor()
+    window.navigationBarColor = color
     window.insetsController?.setSystemBarsAppearance(
         if (lightIcons) WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS else 0,
         WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
     )
-}
-
-private fun Activity.setNavigationBarColorFromBelowNavigationBar(view: View, isRoot: Boolean) {
-    getDominantColorFromBelowStatusBar(view, isRoot) { color ->
-        color?.let {
-            window.navigationBarColor = it
-            setNavigationBarIconColorAccordingToColor(it)
-        }
-    }
 }
 
 private fun Activity.getDominantColorFromBelowStatusBar(view: View, isRoot: Boolean, callback: (Int?) -> Unit) {
