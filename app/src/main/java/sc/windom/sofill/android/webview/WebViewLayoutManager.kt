@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/5 00:17
- * updated: 2024/8/5 00:17
+ * lastModified: 2024/8/5 01:07
+ * updated: 2024/8/5 01:07
  */
 
 package sc.windom.sofill.android.webview
@@ -70,6 +70,9 @@ import splitties.systemservices.inputMethodManager
  * - ime 的特殊操作：[无，悬浮键盘与非悬浮键盘之间切换，平板端使用蓝牙键盘模式，键盘调节（例如修改高度）]
  * - 输入法：[Jovi输入法Pro，QQ输入法，百度输入法，微信输入法，搜狗输入法，讯飞输入法，雨燕输入法]
  *
+ * 已知问题：
+ * - 微信输入法切换屏幕方向后会收起软键盘，初步判断事微信输入法的问题
+ *
  * 参考引用：
  * - [Yingyi](https://ld246.com/member/shuoying) 的 AndroidBug5497Workaround 。
  *
@@ -82,6 +85,7 @@ import splitties.systemservices.inputMethodManager
  * - 如果有，最好在 `JSonIme*` 中第一行JS语句通过变量等方式锁定或解锁，因为一次键盘弹出或收起会多次调用 [restLayout] 是很正常的，参考JS代码：
  * ```js
  * window.Sillot.android.LockKeyboardToolbar=true;
+ * hideKeyboardToolbar();
  * showKeyboardToolbar();
  * ```
  * ```js
@@ -348,18 +352,11 @@ class WebViewLayoutManager private constructor(
                 if (webView.layoutParams == null) {
                     Log.w(
                         TAG,
-                        "[${callId}] restLayout@$tracker, webView.layoutParams == null -> skip restLayout()"
+                        "[${callId}] restLayout@$tracker, webView.layoutParams == null -> break restLayout()"
                     )
                     return
                 }
                 val nochange = (tracker == it.TRAKER_INSETS) && (it.currentImeVisible == it.isImeVisible) && (it.currentImeHeight == it.imeHeight)
-                if (nochange) {
-                    Log.i(
-                        TAG,
-                        "[${callId}] restLayout@$tracker, nochange -> skip restLayout()"
-                    )
-                    return
-                }
 
                 /**
                  * 兼容经典导航键、小米系统小窗底部小白条、实体键盘
@@ -415,21 +412,28 @@ class WebViewLayoutManager private constructor(
                     // （如果声明了 android:windowSoftInputMode="adjustResize" 则无效，因为系统已经自动调整了布局）
                     val delayTime: Long = if (it.currentImeVisible || isInSpecialMode_lock ||
                         fromFloating2Normal_lock || fromNormal2Floating_lock) 0 else it.delayResetLayoutWhenImeShow
-                    Handler(Looper.getMainLooper()).postDelayed(
-                        {
-                            view.layoutParams.height =
-                                newHight - if (isInSpecialMode_lock || fromNormal2Floating_lock) 0 else it.imeHeight
-                            view.adjustLayoutMarginForSystemBars() // 调整布局边距，兼容传统虚拟导航键
-                            webView.layoutParams.height = -1 // 这里不能改，必须MATCH_PARENT
-                            webView.layoutParams.width = -1
-                            view.requestLayout() // 触发 view 及其所有子视图（包括 webView ）的布局重新计算过程
-                            Log.i(
-                                TAG,
-                                "[${callId}] requestLayout done, new height of view: ${view.layoutParams.height}"
-                            )
-                        },
-                        delayTime
-                    )
+                    if (nochange) {
+                        Log.i(
+                            TAG,
+                            "[${callId}] requestLayout skip, nochange"
+                        )
+                    } else {
+                        Handler(Looper.getMainLooper()).postDelayed(
+                            {
+                                view.layoutParams.height =
+                                    newHight - if (isInSpecialMode_lock || fromNormal2Floating_lock) 0 else it.imeHeight
+                                view.adjustLayoutMarginForSystemBars() // 调整布局边距，兼容传统虚拟导航键
+                                webView.layoutParams.height = -1 // 这里不能改，必须MATCH_PARENT
+                                webView.layoutParams.width = -1
+                                view.requestLayout() // 触发 view 及其所有子视图（包括 webView ）的布局重新计算过程
+                                Log.i(
+                                    TAG,
+                                    "[${callId}] requestLayout done, new height of view: ${view.layoutParams.height}"
+                                )
+                            },
+                            delayTime
+                        )
+                    }
                     Handler(Looper.getMainLooper()).postDelayed(
                         {
                             if (isIme0H) {
@@ -446,16 +450,23 @@ class WebViewLayoutManager private constructor(
                     } else {
                         webView.evaluateJavascript(it.JSonImeHide, null)
                     }
-                    // 填充布局应当立即执行
-                    view.layoutParams.height = newHight
-                    view.adjustLayoutMarginForSystemBars() // 调整布局边距，兼容传统虚拟导航键
-                    webView.layoutParams.height = -1 // 这里不能改，必须MATCH_PARENT
-                    webView.layoutParams.width = -1
-                    view.requestLayout() // 触发 view 及其所有子视图（包括 webView ）的布局重新计算过程
-                    Log.i(
-                        TAG,
-                        "[${callId}] requestLayout done, new height of view: ${view.layoutParams.height}"
-                    )
+                    if (nochange) {
+                        Log.i(
+                            TAG,
+                            "[${callId}] skip requestLayout skip, nochange"
+                        )
+                    } else {
+                        // 填充布局应当立即执行
+                        view.layoutParams.height = newHight
+                        view.adjustLayoutMarginForSystemBars() // 调整布局边距，兼容传统虚拟导航键
+                        webView.layoutParams.height = -1 // 这里不能改，必须MATCH_PARENT
+                        webView.layoutParams.width = -1
+                        view.requestLayout() // 触发 view 及其所有子视图（包括 webView ）的布局重新计算过程
+                        Log.i(
+                            TAG,
+                            "[${callId}] requestLayout done, new height of view: ${view.layoutParams.height}"
+                        )
+                    }
                 }
             }
         }

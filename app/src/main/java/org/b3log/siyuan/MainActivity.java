@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/8/5 00:19
- * updated: 2024/8/5 00:19
+ * lastModified: 2024/8/5 01:07
+ * updated: 2024/8/5 01:07
  */
 package org.b3log.siyuan;
 
@@ -411,12 +411,11 @@ public class MainActivity extends FragmentActivity implements com.blankj.utilcod
             });
             if (!U_Phone.isPad(this)) {
                 webViewLayoutManager.delayResetLayoutWhenImeShow = 10;
-                // showKeyboardToolbar 不知道在哪已经实现了随键盘呼出（有延时，大概率是在前端），这里依旧调用是因为响应更快
-                // https://github.com/siyuan-note/siyuan/issues/11098?utm_source=ld246.com 这里也锁定键盘不自动收起
-                webViewLayoutManager.JSonImeShow = "window.Sillot.android.LockKeyboardToolbar=true;showKeyboardToolbar();";
+                // https://github.com/siyuan-note/siyuan/issues/11098?utm_source=ld246.com 这里也锁定键盘不自动收起，而且JS中 show 之前的 hide 也不能删
+                webViewLayoutManager.JSonImeShow = "window.Sillot.android.LockKeyboardToolbar=true;hideKeyboardToolbar();showKeyboardToolbar();";
                 webViewLayoutManager.JSonImeHide = "window.Sillot.android.LockKeyboardToolbar=false;hideKeyboardToolbar();";
-                // 锁定方便悬浮键盘不自动收起
-                webViewLayoutManager.JSonImeShow0Height = "window.Sillot.android.LockKeyboardToolbar=true;showKeyboardToolbar();";
+                // LockKeyboardToolbar 锁定方便悬浮键盘不自动收起
+                webViewLayoutManager.JSonImeShow0Height = "window.Sillot.android.LockKeyboardToolbar=true;hideKeyboardToolbar();showKeyboardToolbar();";
                 webViewLayoutManager.JSonImeHide0Height = "window.Sillot.android.LockKeyboardToolbar=false;hideKeyboardToolbar();";
             }
 
