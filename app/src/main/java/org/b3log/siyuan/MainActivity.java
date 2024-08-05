@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/8/5 01:07
- * updated: 2024/8/5 01:07
+ * lastModified: 2024/8/5 18:09
+ * updated: 2024/8/5 18:09
  */
 package org.b3log.siyuan;
 
@@ -615,7 +615,6 @@ public class MainActivity extends FragmentActivity implements com.blankj.utilcod
         ws.setUserAgentString("SiYuan-Sillot/" + Utils.version + " https://b3log.org/siyuan Android " + ws.getUserAgentString());
 
         waitFotKernelHttpServing();
-        WebView.setWebContentsDebuggingEnabled(true);
         webView.loadUrl("http://127.0.0.1:58131/appearance/boot/index.html?v=" + Utils.version);
         checkWebViewVer(thisActivity, S_Webview.getMinVersion());
     }
