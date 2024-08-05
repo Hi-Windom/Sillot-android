@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/5 18:51
- * updated: 2024/8/5 18:51
+ * lastModified: 2024/8/5 20:27
+ * updated: 2024/8/5 20:27
  */
 
 package sc.windom.sofill.Us
@@ -279,12 +279,20 @@ fun thisWebViewClient(
             return handleUrlLoading.invoke(activity, request)
         }
 
+        /**
+         * 如果网页存在重定向，onPageFinished 的时候 progress 不一定为 100。
+         * [android.webkit.WebChromeClient.onProgressChanged]方法监听也是一样的
+         */
         override fun onPageFinished(view: WebView, url: String) {
-            Log.d(TAG, "onPageFinished -> $url")
+            view.progress.let {
+                Log.d(TAG, "onPageFinished -> $url Progress == $it")
+                if (it == 100) {
+                    canGoBack.value = view.canGoBack()
+                    canGoForward.value = view.canGoForward()
+                    handlePageFinished?.invoke(activity, view, url)
+                }
+            }
             super.onPageFinished(view, url)
-            canGoBack.value = view.canGoBack()
-            canGoForward.value = view.canGoForward()
-            handlePageFinished?.invoke(activity, view, url)
         }
 
         override fun onPageStarted(
@@ -312,11 +320,11 @@ fun thisWebViewClient(
         }
 
         override fun onReceivedError(
-            view: WebView?,
-            request: WebResourceRequest?,
-            error: WebResourceError?
+            view: WebView,
+            request: WebResourceRequest,
+            error: WebResourceError
         ) {
-            Log.e(TAG, "onReceivedError -> code=${error?.errorCode} description=${error?.description}")
+            Log.e(TAG, "onReceivedError -> code=${error.errorCode} description=${error.description}")
             super.onReceivedError(view, request, error)
         }
 

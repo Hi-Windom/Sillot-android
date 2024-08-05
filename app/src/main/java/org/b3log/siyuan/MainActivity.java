@@ -2,12 +2,13 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/8/5 18:52
- * updated: 2024/8/5 18:52
+ * lastModified: 2024/8/5 20:24
+ * updated: 2024/8/5 20:24
  */
 package org.b3log.siyuan;
 
  import static org.b3log.siyuan.MainActivityHelperKt.onDragInsertIntoWebView;
+ import static sc.windom.gibbet.services.BootServiceKt.waitForKernelHttpServingWithCoroutines;
  import static sc.windom.sofill.Us.U_LayoutKt.applyStatusBarConfigurationV2;
  import static sc.windom.sofill.Us.U_LayoutKt.getStatusBarHeight;
  import static sc.windom.sofill.Us.U_WebviewKt.checkWebViewVer;
@@ -100,7 +101,6 @@ package org.b3log.siyuan;
  import java.util.UUID;
  import java.util.concurrent.atomic.AtomicReference;
 
- import mobile.Mobile;
  import sc.windom.sofill.U;
  import sc.windom.sofill.S;
  import sc.windom.namespace.SillotMatrix.R;
@@ -477,8 +477,6 @@ public class MainActivity extends FragmentActivity implements com.blankj.utilcod
                  */
             @Override
             public void onProgressChanged(WebView webView, int progress) {
-                // 增加Javascript异常监控
-                CrashReport.setJavascriptMonitor(webView, true);
                 super.onProgressChanged(webView, progress);
             }
 
@@ -574,17 +572,23 @@ public class MainActivity extends FragmentActivity implements com.blankj.utilcod
                 return false;
             }
 
+            /**
+             * 如果网页存在重定向，onPageFinished 的时候 progress 不一定为 100。
+             *  {@link android.webkit.WebChromeClient} 的 onProgressChanged 方法监听也是一样的
+             */
             @Override
             public void onPageFinished(WebView view, String url) {
-                // 页面加载完成时调用
-                BuglyLog.d(TAG, "[WebViewClient] onPageFinished: " + url);
-                view.evaluateJavascript("javascript:document.body.classList.add(\"body--mobile\")", null);
-                bootLogo.postDelayed(() -> {
-                    bootProgressBar.setVisibility(View.GONE);
-                    bootDetailsText.setVisibility(View.GONE);
-                    bootLogo.setVisibility(View.GONE);
-                    applySystemThemeToWebView(thisActivity, webView);
-                }, 58);
+                int progress = view.getProgress();
+                BuglyLog.d(TAG, "[WebViewClient] onPageFinished: " + url + " Progress == " + progress);
+                if (progress == 100) {
+                    view.evaluateJavascript("javascript:document.body.classList.add(\"body--mobile\")", null);
+                    applySystemThemeToWebView(thisActivity, view);
+                    bootLogo.postDelayed(() -> {
+                        bootProgressBar.setVisibility(View.GONE);
+                        bootDetailsText.setVisibility(View.GONE);
+                        bootLogo.setVisibility(View.GONE);
+                    }, 20);
+                }
             }
 
             @Override
@@ -593,6 +597,7 @@ public class MainActivity extends FragmentActivity implements com.blankj.utilcod
                 if (error != null) {
                     BuglyLog.e("WebViewClient", "onReceivedError: " + error.getDescription());
                 }
+                super.onReceivedError(view, request, error);
             }
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
@@ -609,29 +614,12 @@ public class MainActivity extends FragmentActivity implements com.blankj.utilcod
         U_WebviewKt.applyDefault(ws, 100,
                 "SiYuan-Sillot/" + Utils.version + " https://b3log.org/siyuan Android " + ws.getUserAgentString());
 
-        waitFotKernelHttpServing();
+        // 使用loadDataWithBaseURL方法加载HTML内容 并不能解决小米手机禁用APP的网络无法加载的问题，因为 HTML 脚本里依旧有 http 请求。
         webView.loadUrl("http://127.0.0.1:58131/appearance/boot/index.html?v=" + Utils.version);
+        waitForKernelHttpServingWithCoroutines();
         checkWebViewVer(thisActivity, S_Webview.getMinVersion());
-    }
-
-     /**
-     * 等待内核 HTTP 服务伺服。
-     */
-    private void waitFotKernelHttpServing() {
-        while (true) {
-            sleep(100);
-            if (Mobile.isHttpServing()) {
-                break;
-            }
-        }
-    }
-
-    private void sleep(final long time) {
-        try {
-            Thread.sleep(time);
-        } catch (final Exception e) {
-            Utils.LogError("runtime", "sleep failed", e);
-        }
+        // 增加Javascript异常监控
+        CrashReport.setJavascriptMonitor(webView, true);
     }
 
      // 用于保存拍照图片的 uri

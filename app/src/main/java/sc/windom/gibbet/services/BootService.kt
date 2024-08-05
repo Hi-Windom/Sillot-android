@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/2 18:48
- * updated: 2024/8/2 18:48
+ * lastModified: 2024/8/5 19:36
+ * updated: 2024/8/5 19:36
  */
 
 package sc.windom.gibbet.services
@@ -43,6 +43,8 @@ import com.tencent.bugly.crashreport.BuglyLog
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.ObservableEmitter
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import mobile.Mobile
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.filefilter.DirectoryFileFilter
@@ -526,5 +528,15 @@ class BootService : Service() {
                     }, 10000)
                 }
             }
+    }
+}
+
+/**
+ * 使用协程等待内核 HTTP 服务启动。
+ */
+@JvmStatic
+fun waitForKernelHttpServingWithCoroutines() = runBlocking {
+    while (!Mobile.isHttpServing()) {
+        delay(20)
     }
 }
