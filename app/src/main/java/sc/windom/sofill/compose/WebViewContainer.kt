@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/3 09:56
- * updated: 2024/8/3 09:56
+ * lastModified: 2024/8/5 17:35
+ * updated: 2024/8/5 17:35
  */
 
 package sc.windom.sofill.compose
@@ -658,15 +658,39 @@ fun FullScreenWebView(
                         )
                     }
                 } else {
-                    IconButton(
-                        onClick = { thisWebView.value?.evaluateJavascript("window.scrollTo(0, 0)") { } }
+                    // 已弃用  thisWebView.value?.evaluateJavascript("window.scrollTo(0, 0)") { }
+                    IconButtonPro(Icons.Filled.ArrowUpward, contentDescription = "向上翻页",
+                        onDoubleTap = {
+                            thisWebView.value?.pageUp(true).let {
+                                if (it == false) PopTip.show("没有足够的内容可以滚动")
+                            }
+                        },
+                        onLongPress = {
+                            thisWebView.value?.pageUp(true).let {
+                                if (it == false) PopTip.show("没有足够的内容可以滚动")
+                            }
+                        },
                     ) {
-                        Icon(Icons.Filled.ArrowUpward, contentDescription = "页面顶部")
+                        thisWebView.value?.pageUp(false).let {
+                            if (it == false) PopTip.show("没有足够的内容可以滚动")
+                        }
                     }
-                    IconButton(
-                        onClick = { thisWebView.value?.evaluateJavascript("window.scrollTo(0, document.body.scrollHeight)") { } }
+                    // 已弃用 thisWebView.value?.evaluateJavascript("window.scrollTo(0, document.body.scrollHeight)") { }
+                    IconButtonPro(Icons.Filled.ArrowDownward, contentDescription = "向下翻页",
+                        onDoubleTap = {
+                            thisWebView.value?.pageDown(true).let {
+                                if (it == false) PopTip.show("没有足够的内容可以滚动")
+                            }
+                        },
+                        onLongPress = {
+                            thisWebView.value?.pageDown(true).let {
+                                if (it == false) PopTip.show("没有足够的内容可以滚动")
+                            }
+                        },
                     ) {
-                        Icon(Icons.Filled.ArrowDownward, contentDescription = "页面底部")
+                        thisWebView.value?.pageDown(false).let {
+                            if (it == false) PopTip.show("没有足够的内容可以滚动")
+                        }
                     }
                 }
             }
