@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/8/5 18:09
- * updated: 2024/8/5 18:09
+ * lastModified: 2024/8/5 18:52
+ * updated: 2024/8/5 18:52
  */
 package org.b3log.siyuan;
 
@@ -40,6 +40,7 @@ package org.b3log.siyuan;
  import sc.windom.sofill.Us.U_DEBUG;
  import sc.windom.sofill.Us.U_Permission;
  import sc.windom.sofill.Us.U_Phone;
+ import sc.windom.sofill.Us.U_WebviewKt;
  import sc.windom.sofill.android.webview.WebViewLayoutManager;
  import sc.windom.sofill.Ss.S_Events;
  import sc.windom.sofill.Ss.S_Intent;
@@ -605,14 +606,8 @@ public class MainActivity extends FragmentActivity implements com.blankj.utilcod
         webView.addJavascriptInterface(JSAndroid, "JSAndroid");
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
         final WebSettings ws = webView.getSettings();
-        ws.setJavaScriptEnabled(true);
-        ws.setDomStorageEnabled(true);
-        ws.setCacheMode(WebSettings.LOAD_NO_CACHE);
-        ws.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-        ws.setTextZoom(100);
-        ws.setUseWideViewPort(true);
-        ws.setLoadWithOverviewMode(true);
-        ws.setUserAgentString("SiYuan-Sillot/" + Utils.version + " https://b3log.org/siyuan Android " + ws.getUserAgentString());
+        U_WebviewKt.applyDefault(ws, 100,
+                "SiYuan-Sillot/" + Utils.version + " https://b3log.org/siyuan Android " + ws.getUserAgentString());
 
         waitFotKernelHttpServing();
         webView.loadUrl("http://127.0.0.1:58131/appearance/boot/index.html?v=" + Utils.version);

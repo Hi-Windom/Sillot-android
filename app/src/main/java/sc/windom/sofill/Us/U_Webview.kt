@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/31 23:29
- * updated: 2024/7/31 23:29
+ * lastModified: 2024/8/5 18:51
+ * updated: 2024/8/5 18:51
  */
 
 package sc.windom.sofill.Us
@@ -126,7 +126,12 @@ fun WebView.fixQQAppLaunchButton(resultCallback: ValueCallback<String?>? = null)
 }
 
 @SuppressLint("SetJavaScriptEnabled")
-fun WebSettings.applyDefault(webViewTextZoom: Int = 100, ua: String = S_Webview.UA_edge_android) {
+@JvmStatic
+@JvmOverloads
+fun WebSettings.applyDefault(
+    webViewTextZoom: Int = 100,
+    ua: String = S_Webview.UA_edge_android
+) {
     apply {
         javaScriptEnabled = true
         allowUniversalAccessFromFileURLs = true

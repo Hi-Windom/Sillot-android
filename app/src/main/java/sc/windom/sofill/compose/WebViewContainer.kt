@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/5 17:35
- * updated: 2024/8/5 17:35
+ * lastModified: 2024/8/5 18:41
+ * updated: 2024/8/5 18:41
  */
 
 package sc.windom.sofill.compose
@@ -560,6 +560,24 @@ fun FullScreenWebView(
                     }
                 }
             })
+            it.setOnLongClickListener { view ->
+                val result = (view as? WebView)?.hitTestResult
+                result?.let {
+                    Log.d(TAG, "OnLongClick -> it.type: ${it.type}, it.extra: ${it.extra}")
+                    when (it.type) {
+                        WebView.HitTestResult.IMAGE_TYPE -> { false } // 图片
+                        WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE -> { // 图片链接
+                            false
+                        }
+                        WebView.HitTestResult.SRC_ANCHOR_TYPE -> { false } // 链接
+                        WebView.HitTestResult.PHONE_TYPE -> { false } // 电话
+                        WebView.HitTestResult.EMAIL_TYPE -> { false } // 电子邮件
+                        WebView.HitTestResult.GEO_TYPE -> { false } // 地图
+                        WebView.HitTestResult.EDIT_TEXT_TYPE -> { false } // 编辑区文本。选中文本是未知类型
+                        else -> false
+                    }
+                } == true
+            }
         }
 
     }
