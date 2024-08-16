@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/16 18:18
- * updated: 2024/8/16 18:18
+ * lastModified: 2024/8/16 20:08
+ * updated: 2024/8/16 20:08
  */
 
 package sc.windom.sillot
@@ -17,6 +17,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.os.Process
+import android.util.Log
 import androidx.work.Constraints
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
@@ -40,6 +41,7 @@ import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.annotations.Ignore
 import io.realm.kotlin.types.annotations.PrimaryKey
 import kotlinx.coroutines.DelicateCoroutinesApi
+import org.b3log.siyuan.MainActivity
 import sc.windom.gibbet.MG.ForegroundPushManager
 import sc.windom.sillot.workers.ActivityRunInBgWorker
 import sc.windom.sofill.S
@@ -49,12 +51,9 @@ import sc.windom.sofill.android.lifecycle.AppMonitor
 import sc.windom.sofill.annotations.SillotActivity
 import sc.windom.sofill.annotations.SillotActivityType
 import java.lang.StringBuilder
-import java.net.InetAddress
-import java.net.UnknownHostException
 import java.util.LinkedHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.also
 import kotlin.collections.set
 import kotlin.jvm.javaClass
 import kotlin.let
@@ -69,53 +68,71 @@ val realmConfig = RealmConfiguration.Builder(setOf(ProviderCache::class))
 // 获取Realm实例
 val realm = Realm.open(realmConfig)
 
-
+/**
+ * 在Kotlin中，`by lazy` 是一种委托属性，它确保了属性的值只在首次访问时计算一次，并在后续访问时返回相同的值。而直接访问 companion object 中的属性则是直接访问那个属性。
+ * 具体来说，`App.instance` 和 `appIns` 的区别如下：
+ * 1. **延迟初始化 (`by lazy`)**:
+ *    - `val app by lazy { App.application }` 这行代码意味着 `app` 属性会在首次访问时被初始化。如果 `App.application` 的初始化过程很昂贵（比如需要加载资源或者进行网络请求），使用 `by lazy` 可以延迟这个初始化过程直到真正需要它的时候。此外，`by lazy` 还确保了线程安全，即在多线程环境中，`app` 属性的初始化只会发生一次。
+ * 2. **直接访问**:
+ *    - `val appIns by lazy { App.instance }` 这行代码也是延迟初始化，但是它延迟的是对 `App.instance` 的访问，而不是 `App.instance` 自身的初始化。`App.instance` 是在 `App` 类的 `onCreate` 方法中初始化的（通常是在应用启动时），因此 `App.instance` 总是会在应用的生命周期早期就被初始化，而 `appIns` 则是首次访问这个属性时才会进行赋值。
+ * 以下是具体的区别：
+ * - **初始化时机**:
+ *   - `App.instance` 在 `App` 类的 `onCreate` 方法中被初始化，通常是在应用启动时。
+ *   - `appIns` 在首次访问该属性时被初始化。
+ * - **线程安全**:
+ *   - `App.instance` 的初始化通常在主线程中完成，由系统保证线程安全。
+ *   - `appIns` 的初始化由 `by lazy` 代理确保线程安全。
+ * - **性能考量**:
+ *   - 如果 `App.instance` 的初始化非常轻量级，那么使用 `appIns` 可能不会带来明显的性能优势，因为 `App.instance` 已经在应用启动时初始化了。
+ *   - 如果 `App.instance` 的初始化非常耗时，那么使用 `appIns` 可以确保只有当真正需要时才进行初始化。
+ * - **代码意图**:
+ *   - 直接使用 `App.instance` 通常表明你希望直接访问应用实例。
+ *   - 使用 `appIns` 可能表明你希望延迟对应用实例的访问，直到真正需要的时候。
+ * 在大多数情况下，如果你只是想要访问 `App` 的单例实例，直接使用 `App.instance` 就足够了。使用 `by lazy` 只有在你确实需要延迟访问时才有意义。
+ * 当然，`app` 更简洁，这也是一个优势。
+ *
+ */
 val app by lazy { App.application }
+val appIns by lazy { App.instance }
 
+/**
+ * 汐洛 APP
+ */
 class App : Application() {
-    var TAG = "App"
+    val TAG = "App"
 
     companion object {
-        @Volatile
-        private var instance: App? = null
-
         @JvmStatic
-        fun getInstance(): App { // 兼容 java 代码，在 kotlin 也需用这个
-            return instance ?: synchronized(this) {
-                instance ?: App().also { instance = it }
-            }
-
-//            1. `instance ?:`：这是一个Elvis操作符，用于判断`instance`是否为`null`。如果`instance`不为`null`，则直接返回当前的`instance`。如果`instance`为`null`，则执行右边的代码块。
-//            2. `synchronized(this) { ... }`：这是一个同步代码块，它确保在多线程环境中，只有一个线程能够进入这个代码块执行。`this`指的是`App`类的伴生对象，也就是`Companion`对象。这个同步块是必要的，因为在多线程情况下，可能会有多个线程同时尝试创建`App`的实例，同步块确保了这种情况下的线程安全。
-//            3. `instance ?: App().also { instance = it }`：这是同步代码块中的代码。首先，它再次检查`instance`是否为`null`（这是必要的，因为可能在等待进入同步块的时候，另一个线程已经创建了实例）。如果`instance`仍然为`null`，则创建一个新的`App`实例，并使用`also`函数将其赋值给`instance`。`also`函数返回它接收的参数，因此这里返回的是新创建的`App`实例。
-        }
+        lateinit var instance: App
+            private set
 
         lateinit var application: Application
-            private set // 确保application只能在App类内部被设置
-
-        fun getByName(ip: String?): InetAddress? {
-            return try {
-                InetAddress.getByName(ip)
-            } catch (unused: UnknownHostException) {
-                null
-            }
-        }
+            private set
 
         val isMainThread: Boolean
             get() = Looper.getMainLooper().thread.id == Thread.currentThread().id
 
-        @JvmField
-        val currentIntentRef = AtomicReference<Intent>()
     }
 
+    @JvmField
+    val currentIntentRef = AtomicReference<Intent>()
+
     fun startTargetActivity() {
-        val intent = currentIntentRef.get()
+        var intent = currentIntentRef.get()
+        if (intent == null) {
+            intent = Intent(this, MainActivity::class.java)
+            intent.addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK
+                        or Intent.FLAG_ACTIVITY_NEW_DOCUMENT
+                        or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+            )
+        }
+        Log.d("App", "startTargetActivity @ $intent")
         startActivity(intent)
     }
 
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate() {
-        BuglyLog.w(TAG, "new one")
         super.onCreate()
         var refCount = 0
         val workManager = WorkManager.getInstance(this)
@@ -126,14 +143,14 @@ class App : Application() {
         initAppMonitor()
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityPaused(activity: Activity) {
-                BuglyLog.w(
+                Log.w(
                     TAG,
                     "onActivityPaused() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
             }
 
             override fun onActivityStarted(activity: Activity) {
-                BuglyLog.w(
+                Log.w(
                     TAG,
                     "onActivityStarted() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -144,7 +161,7 @@ class App : Application() {
 
                 // 遍历注解并处理每个注解
                 annotations.forEach { annotation ->
-                    BuglyLog.d(
+                    Log.d(
                         TAG,
                         "onActivityStarted() invoked -> the activity's annotation.TYPE ${annotation.TYPE}"
                     )
@@ -155,14 +172,14 @@ class App : Application() {
             }
 
             override fun onActivityDestroyed(activity: Activity) {
-                BuglyLog.w(
+                Log.w(
                     TAG,
                     "onActivityDestroyed() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
             }
 
             override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
-                BuglyLog.w(
+                Log.w(
                     TAG,
                     "onActivitySaveInstanceState() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -170,7 +187,7 @@ class App : Application() {
 
             @SuppressLint("RestrictedApi")
             override fun onActivityStopped(activity: Activity) {
-                BuglyLog.w(
+                Log.w(
                     TAG,
                     "onActivityStopped() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -181,7 +198,7 @@ class App : Application() {
                 // 检查活动是否是MatrixModel的实例
                 if (activity is MatrixModel) {
                     val matrixModel = activity.getMatrixModel()
-                    BuglyLog.w("App", "Matrix_model: $matrixModel")
+                    Log.w("App", "Matrix_model: $matrixModel")
                     val constraints = Constraints.Builder()
                         .build()
                     val data = Data.Builder()
@@ -207,14 +224,14 @@ class App : Application() {
             }
 
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-                BuglyLog.w(
+                Log.w(
                     TAG,
                     "onActivityCreated() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
             }
 
             override fun onActivityResumed(activity: Activity) {
-                BuglyLog.w(
+                Log.w(
                     TAG,
                     "onActivityResumed() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -222,7 +239,7 @@ class App : Application() {
             }
 
             override fun onActivityPreDestroyed(activity: Activity) {
-                BuglyLog.w(
+                Log.w(
                     TAG,
                     "onActivityPreDestroyed() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -230,7 +247,7 @@ class App : Application() {
             }
 
             override fun onActivityPreCreated(activity: Activity, savedInstanceState: Bundle?) {
-                BuglyLog.w(
+                Log.w(
                     TAG,
                     "onActivityPreCreated() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -239,7 +256,7 @@ class App : Application() {
             }
 
             override fun onActivityPreStarted(activity: Activity) {
-                BuglyLog.w(
+                Log.w(
                     TAG,
                     "onActivityPreStarted() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -248,7 +265,7 @@ class App : Application() {
             }
 
             override fun onActivityPreStopped(activity: Activity) {
-                BuglyLog.w(
+                Log.w(
                     TAG,
                     "onActivityPreStopped() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -256,7 +273,7 @@ class App : Application() {
             }
 
             override fun onActivityPrePaused(activity: Activity) {
-                BuglyLog.w(
+                Log.w(
                     TAG,
                     "onActivityPrePaused() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -264,7 +281,7 @@ class App : Application() {
             }
 
             override fun onActivityPreResumed(activity: Activity) {
-                BuglyLog.w(
+                Log.w(
                     TAG,
                     "onActivityPreResumed() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -272,7 +289,7 @@ class App : Application() {
             }
 
             override fun onActivityPostCreated(activity: Activity, savedInstanceState: Bundle?) {
-                BuglyLog.w(
+                Log.w(
                     TAG,
                     "onActivityPostCreated() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -280,7 +297,7 @@ class App : Application() {
             }
 
             override fun onActivityPostDestroyed(activity: Activity) {
-                BuglyLog.w(
+                Log.w(
                     TAG,
                     "onActivityPostDestroyed() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -288,7 +305,7 @@ class App : Application() {
             }
 
             override fun onActivityPostPaused(activity: Activity) {
-                BuglyLog.w(
+                Log.w(
                     TAG,
                     "onActivityPostPaused() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -296,7 +313,7 @@ class App : Application() {
             }
 
             override fun onActivityPostSaveInstanceState(activity: Activity, outState: Bundle) {
-                BuglyLog.w(
+                Log.w(
                     TAG,
                     "onActivityPostSaveInstanceState() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -304,7 +321,7 @@ class App : Application() {
             }
 
             override fun onActivityPostResumed(activity: Activity) {
-                BuglyLog.w(
+                Log.w(
                     TAG,
                     "onActivityPostResumed() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -312,7 +329,7 @@ class App : Application() {
             }
 
             override fun onActivityPostStarted(activity: Activity) {
-                BuglyLog.w(
+                Log.w(
                     TAG,
                     "onActivityPostStarted() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -320,7 +337,7 @@ class App : Application() {
             }
 
             override fun onActivityPostStopped(activity: Activity) {
-                BuglyLog.w(
+                Log.w(
                     TAG,
                     "onActivityPostStopped() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -328,7 +345,7 @@ class App : Application() {
             }
 
             override fun onActivityPreSaveInstanceState(activity: Activity, outState: Bundle) {
-                BuglyLog.w(
+                Log.w(
                     TAG,
                     "onActivityPreSaveInstanceState() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
@@ -350,7 +367,7 @@ class App : Application() {
 
     override fun onLowMemory() {
         super.onLowMemory()
-        BuglyLog.w(
+        Log.w(
             TAG,
             "onLowMemory() invoked"
         )
@@ -358,7 +375,9 @@ class App : Application() {
 
     override fun attachBaseContext(base: Context?) { // 在onCreate方法之前。这个方法的目的是将应用程序的上下文与它的基类上下文关联起来。
         super.attachBaseContext(base)
+        Log.w(TAG, "new app base on $base")
         application = this
+        instance = this
         val strategy = UserStrategy(this)
         val sb = StringBuilder()
         sb.append(Build.BRAND).append("-").append(Build.MODEL).append(" (")
@@ -417,12 +436,12 @@ class App : Application() {
         AppMonitor.registerAppStatusCallback(object : AppMonitor.OnAppStatusCallback {
             override fun onAppForeground(activity: Activity) {
                 //App 切换到前台
-                BuglyLog.d(funTAG, "onAppForeground(Activity = $activity)")
+                Log.d(funTAG, "onAppForeground(Activity = $activity)")
             }
 
             override fun onAppBackground(activity: Activity) {
                 //App 切换到后台
-                BuglyLog.d(funTAG, "onAppBackground(Activity = $activity)")
+                Log.d(funTAG, "onAppBackground(Activity = $activity)")
             }
 
         })
@@ -434,7 +453,7 @@ class App : Application() {
                 aliveActivityCount: Int
             ) {
                 //Activity 的存活状态或数量发生变化
-                BuglyLog.d(
+                Log.d(
                     funTAG,
                     "onAliveStatusChanged(Activity = $activity, isAliveState = $isAliveState, aliveActivityCount = $aliveActivityCount)"
                 )
@@ -446,7 +465,7 @@ class App : Application() {
                 activeActivityCount: Int
             ) {
                 //Activity 的活跃状态或数量发生变化
-                BuglyLog.d(
+                Log.d(
                     funTAG,
                     "onActiveStatusChanged(Activity = $activity, isActiveState = $isActiveState, activeActivityCount = $activeActivityCount)"
                 )
@@ -458,12 +477,12 @@ class App : Application() {
         AppMonitor.registerScreenStatusCallback(object : AppMonitor.OnScreenStatusCallback {
             override fun onScreenStatusChanged(isScreenOn: Boolean) {
                 //屏幕状态发生变化（开屏或关屏）
-                BuglyLog.d(funTAG, "onScreenStatusChanged(isScreenOn = $isScreenOn)")
+                Log.d(funTAG, "onScreenStatusChanged(isScreenOn = $isScreenOn)")
             }
 
             override fun onUserPresent() {
                 //解锁：当设备唤醒后，用户在（解锁键盘消失）时回调
-                BuglyLog.d(funTAG, "onUserPresent()")
+                Log.d(funTAG, "onUserPresent()")
             }
 
         })

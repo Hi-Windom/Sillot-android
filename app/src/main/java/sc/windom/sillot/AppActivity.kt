@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/16 上午12:43
- * updated: 2024/7/16 上午12:43
+ * lastModified: 2024/8/16 20:32
+ * updated: 2024/8/16 20:32
  */
 
 package sc.windom.sillot
@@ -12,7 +12,6 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import com.tencent.bugly.crashreport.BuglyLog
-import org.b3log.siyuan.MainActivity
 import sc.windom.sofill.Us.thisSourceFilePath
 import sc.windom.sofill.annotations.SillotActivity
 import sc.windom.sofill.annotations.SillotActivityType
@@ -48,17 +47,8 @@ class AppActivity : ComponentActivity() {
     }
 
     private fun init(in2intent: Intent?) {
-        var intent = App.currentIntentRef.get()
-        if (intent == null) {
-            intent = Intent(this, MainActivity::class.java)
-            intent.addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK
-                        or Intent.FLAG_ACTIVITY_NEW_DOCUMENT
-                        or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
-            )
-        }
-        BuglyLog.d(TAG, "startActivity @ ${intent}")
-        startActivity(intent)
+        BuglyLog.d(TAG, "in2intent: $in2intent")
+        appIns.startTargetActivity()
         finishAndRemoveTask()
     }
 }

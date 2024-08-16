@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午5:50
- * updated: 2024/7/8 上午5:50
+ * lastModified: 2024/8/16 19:47
+ * updated: 2024/8/16 19:47
  */
 
 package org.b3log.siyuan
@@ -21,9 +21,9 @@ import com.kongzue.dialogx.dialogs.PopTip
 import com.tencent.bugly.crashreport.BuglyLog
 import org.b3log.siyuan.json.testmoshi
 import org.b3log.siyuan.realm.TestRealm
-import sc.windom.sofill.android.HWs
 import sc.windom.namespace.SillotMatrix.R
 import sc.windom.sillot.App
+import sc.windom.sofill.android.HWs
 
 
 class SillotHomeActivity : AppCompatActivity() {
@@ -35,7 +35,7 @@ class SillotHomeActivity : AppCompatActivity() {
                 throw Exception(event.keyCode.toString())
             } catch (e: Exception) {
                 BuglyLog.e(TAG,"捕获到异常：${e.message}")
-                App.getInstance().reportException(e)
+                App.instance.reportException(e)
                 return false
             }
         }
