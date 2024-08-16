@@ -84,3 +84,4 @@ signings.gradle
 # 构建产物
 *.dm
 output-*.json
+*.salive
