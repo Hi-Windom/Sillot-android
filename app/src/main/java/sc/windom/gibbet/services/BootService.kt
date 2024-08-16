@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/15 04:21
- * updated: 2024/8/15 04:21
+ * lastModified: 2024/8/16 18:54
+ * updated: 2024/8/16 18:54
  */
 
 package sc.windom.gibbet.services
@@ -544,13 +544,13 @@ class BootService : Service() {
             oneTimeWorkRequest
         )
 
-        // 任务完成后，延迟10秒再次启动同一个任务
+        // 任务完成后，延迟一段时间再次启动同一个任务
         workManager.getWorkInfoByIdLiveData(oneTimeWorkRequest.id)
             .observeForever { workInfo ->
                 if (workInfo != null) {
                     Handler(Looper.getMainLooper()).postDelayed({
                         CheckHttpServerWork()
-                    }, 10000)
+                    }, 60000)
                 }
             }
     }
