@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/15 00:28
- * updated: 2024/8/15 00:28
+ * lastModified: 2024/8/16 21:05
+ * updated: 2024/8/16 21:05
  */
 
 package sc.windom.sofill.android.webview
@@ -347,11 +347,6 @@ class WebViewLayoutManager private constructor(
         // 后已经可以做到准确识别键盘是否显示和键盘高度，但仍需要通过监听布局变化以识别小窗模式和多窗口模式
         monitor.viewTreeObserver.addOnGlobalLayoutListener {
             bug("OnGlobalLayout")
-            if (edgeToEdge) applyViewColorToSystemBar(
-                activity,
-                webView,
-                "edgeToEdge (OnGlobalLayout)",
-            )
             setViewOnGlobalLayout?.invoke()
             val currentWidth = monitor.width
             val currentHeight = monitor.height
@@ -368,6 +363,11 @@ class WebViewLayoutManager private constructor(
                 lastOrientation = currentOrientation
                 activity.window.setSoftInputMode(softInputMode)
                 restLayout(TRAKER_LAYOUT)
+                if (edgeToEdge) applyViewColorToSystemBar(
+                    activity,
+                    webView,
+                    "edgeToEdge (OnGlobalLayout)",
+                )
                 onLayoutChangedCallback?.invoke(monitor)
             }
         }
