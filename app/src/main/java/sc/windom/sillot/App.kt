@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/11 下午10:38
- * updated: 2024/7/11 下午10:38
+ * lastModified: 2024/8/16 18:18
+ * updated: 2024/8/16 18:18
  */
 
 package sc.windom.sillot
@@ -17,6 +17,11 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.os.Process
+import androidx.work.Constraints
+import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
 import cn.jpush.android.api.JPushInterface
 import com.blankj.utilcode.util.Utils
 import com.kongzue.dialogx.DialogX
@@ -34,17 +39,20 @@ import io.realm.kotlin.RealmConfiguration
 import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.annotations.Ignore
 import io.realm.kotlin.types.annotations.PrimaryKey
+import kotlinx.coroutines.DelicateCoroutinesApi
 import sc.windom.gibbet.MG.ForegroundPushManager
-import sc.windom.gibbet.services.BootService
+import sc.windom.sillot.workers.ActivityRunInBgWorker
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_Phone.setPreferredDisplayMode
+import sc.windom.sofill.android.lifecycle.AppMonitor
 import sc.windom.sofill.annotations.SillotActivity
 import sc.windom.sofill.annotations.SillotActivityType
 import java.lang.StringBuilder
 import java.net.InetAddress
 import java.net.UnknownHostException
 import java.util.LinkedHashMap
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.also
 import kotlin.collections.set
@@ -84,8 +92,6 @@ class App : Application() {
 
         lateinit var application: Application
             private set // 确保application只能在App类内部被设置
-        @SuppressLint("StaticFieldLeak")
-        lateinit var bootService: BootService // 在 activity 中 get / set
 
         fun getByName(ip: String?): InetAddress? {
             return try {
@@ -98,7 +104,6 @@ class App : Application() {
         val isMainThread: Boolean
             get() = Looper.getMainLooper().thread.id == Thread.currentThread().id
 
-        var KernelService: BootService? = null
         @JvmField
         val currentIntentRef = AtomicReference<Intent>()
     }
@@ -108,14 +113,17 @@ class App : Application() {
         startActivity(intent)
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate() {
         BuglyLog.w(TAG, "new one")
         super.onCreate()
         var refCount = 0
+        val workManager = WorkManager.getInstance(this)
         Utils.init(this)
         JPushInterface.setDebugMode(true)
         JPushInterface.init(this)
         MMKV.initialize(this)
+        initAppMonitor()
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityPaused(activity: Activity) {
                 BuglyLog.w(
@@ -130,13 +138,15 @@ class App : Application() {
                     "onActivityStarted() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
                 refCount++
-                val annotations = activity.javaClass.getAnnotationsByType(SillotActivity::class.java)
+
+                val annotations =
+                    activity.javaClass.getAnnotationsByType(SillotActivity::class.java)
 
                 // 遍历注解并处理每个注解
                 annotations.forEach { annotation ->
                     BuglyLog.d(
                         TAG,
-                        "the activity's annotation.TYPE ${annotation.TYPE}"
+                        "onActivityStarted() invoked -> the activity's annotation.TYPE ${annotation.TYPE}"
                     )
                     if (annotation.TYPE == SillotActivityType.Main) {
                         currentIntentRef.set(activity.intent)
@@ -158,6 +168,7 @@ class App : Application() {
                 )
             }
 
+            @SuppressLint("RestrictedApi")
             override fun onActivityStopped(activity: Activity) {
                 BuglyLog.w(
                     TAG,
@@ -166,6 +177,32 @@ class App : Application() {
                 refCount--
                 if (refCount == 0) {
                     ForegroundPushManager.showNotification(this@App)
+                }
+                // 检查活动是否是MatrixModel的实例
+                if (activity is MatrixModel) {
+                    val matrixModel = activity.getMatrixModel()
+                    BuglyLog.w("App", "Matrix_model: $matrixModel")
+                    val constraints = Constraints.Builder()
+                        .build()
+                    val data = Data.Builder()
+                        .putString("activity", activity.javaClass.name)
+                        .putString("matrixModel", matrixModel)
+                        .build()
+                    // 创建一个OneTimeWorkRequest
+                    val oneTimeWorkRequest =
+                        OneTimeWorkRequest.Builder(ActivityRunInBgWorker::class.java)
+                            .setConstraints(constraints)
+                            .setInputData(data)
+                            .setInitialDelay(2, TimeUnit.SECONDS) // 在频繁切换活动时至少要2秒延时才能来得及取消
+                            .build()
+
+                    // 将任务加入到WorkManager中，并设置一个UniqueWork名称
+                    workManager.enqueueUniqueWork(
+                        "${activity.javaClass.name}进入后台运行提醒",
+                        ExistingWorkPolicy.REPLACE, // 每次都替换之前的任务
+                        oneTimeWorkRequest
+                    )
+
                 }
             }
 
@@ -206,6 +243,7 @@ class App : Application() {
                     TAG,
                     "onActivityPreStarted() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
+                workManager.cancelUniqueWork("${activity.javaClass.name}进入后台运行提醒")
                 super.onActivityPreStarted(activity)
             }
 
@@ -369,6 +407,66 @@ class App : Application() {
             // 主动上传到 bugly
             CrashReport.postCatchedException(it)
         }
+    }
+
+    private fun initAppMonitor() {
+        val funTAG = "$TAG initAppMonitor"
+        //初始化
+        AppMonitor.initialize(this, true)
+        //注册监听 App 状态变化（前台，后台）
+        AppMonitor.registerAppStatusCallback(object : AppMonitor.OnAppStatusCallback {
+            override fun onAppForeground(activity: Activity) {
+                //App 切换到前台
+                BuglyLog.d(funTAG, "onAppForeground(Activity = $activity)")
+            }
+
+            override fun onAppBackground(activity: Activity) {
+                //App 切换到后台
+                BuglyLog.d(funTAG, "onAppBackground(Activity = $activity)")
+            }
+
+        })
+        //注册监听 Activity 状态变化
+        AppMonitor.registerActivityStatusCallback(object : AppMonitor.OnActivityStatusCallback {
+            override fun onAliveStatusChanged(
+                activity: Activity,
+                isAliveState: Boolean,
+                aliveActivityCount: Int
+            ) {
+                //Activity 的存活状态或数量发生变化
+                BuglyLog.d(
+                    funTAG,
+                    "onAliveStatusChanged(Activity = $activity, isAliveState = $isAliveState, aliveActivityCount = $aliveActivityCount)"
+                )
+            }
+
+            override fun onActiveStatusChanged(
+                activity: Activity,
+                isActiveState: Boolean,
+                activeActivityCount: Int
+            ) {
+                //Activity 的活跃状态或数量发生变化
+                BuglyLog.d(
+                    funTAG,
+                    "onActiveStatusChanged(Activity = $activity, isActiveState = $isActiveState, activeActivityCount = $activeActivityCount)"
+                )
+            }
+
+        })
+
+        //注册监听屏幕状态变化（开屏、关屏、解锁）
+        AppMonitor.registerScreenStatusCallback(object : AppMonitor.OnScreenStatusCallback {
+            override fun onScreenStatusChanged(isScreenOn: Boolean) {
+                //屏幕状态发生变化（开屏或关屏）
+                BuglyLog.d(funTAG, "onScreenStatusChanged(isScreenOn = $isScreenOn)")
+            }
+
+            override fun onUserPresent() {
+                //解锁：当设备唤醒后，用户在（解锁键盘消失）时回调
+                BuglyLog.d(funTAG, "onUserPresent()")
+            }
+
+        })
     }
 
 }

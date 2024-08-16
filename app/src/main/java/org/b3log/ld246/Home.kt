@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/3 03:48
- * updated: 2024/8/3 03:48
+ * lastModified: 2024/8/12 23:06
+ * updated: 2024/8/12 23:06
  */
 
 package org.b3log.ld246
@@ -19,7 +19,6 @@ import android.text.style.URLSpan
 import android.util.Base64
 import android.view.MotionEvent
 import android.widget.TextView
-import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -107,6 +106,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
+import sc.windom.sillot.MatrixModel
 import sc.windom.sofill.S
 import sc.windom.sofill.Ss.S_Uri
 import sc.windom.sofill.Ss.S_Webview
@@ -141,10 +141,13 @@ import sc.windom.sofill.pioneer.saveValue
 @SillotActivity(SillotActivityType.Main)
 @SillotActivity(SillotActivityType.Launcher)
 @SillotActivity(SillotActivityType.UseVisible)
-class HomeActivity : ComponentActivity() {
+class HomeActivity : MatrixModel() {
     private val TAG = "Home.kt"
     private val srcPath = thisSourceFilePath(TAG)
     private lateinit var thisActivity: Activity
+    override fun getMatrixModel(): String {
+        return "链滴流云"
+    }
     private var exitTime: Long = 0
     private var openUrlExternal: Boolean =
         mmkv.getSavedValue("${S.AppQueryIDs.汐洛}_@openUrlExternal", false) // 全局同步配置

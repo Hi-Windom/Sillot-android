@@ -35,7 +35,8 @@ package org.b3log.siyuan;
  import android.view.View;
  import android.view.ViewGroup;
 
- import sc.windom.sillot.App;
+ import mobile.Mobile;
+ import sc.windom.sillot.MatrixModel;
  import sc.windom.sofill.Ss.S_LoveKt;
  import sc.windom.sofill.Ss.S_Webview;
  import sc.windom.sofill.Us.U_DEBUG;
@@ -117,9 +118,16 @@ package org.b3log.siyuan;
  @SillotActivity(TYPE = SillotActivityType.Main)
  @SillotActivity(TYPE = SillotActivityType.Launcher)
  @SillotActivity(TYPE = SillotActivityType.UseVisible)
-public class MainActivity extends FragmentActivity implements com.blankj.utilcode.util.Utils.OnAppStatusChangedListener {
+public class MainActivity extends MatrixModel implements com.blankj.utilcode.util.Utils.OnAppStatusChangedListener {
     private final String TAG = "MainActivity-SiYuan";
-    private Activity thisActivity;
+     private final String Matrix_model = "汐洛绞架";
+     @NonNull
+     @Override
+     public String getMatrixModel() {
+         return Matrix_model;
+     }
+
+     private Activity thisActivity;
     public WebView webView;
     private FrameLayout webViewContainer;
     private ImageView bootLogo;
