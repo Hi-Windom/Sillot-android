@@ -620,7 +620,7 @@
         <!-- https://github.com/Hi-Windom/Sillot-android/issues/93 -->
         <activity
                 android:name="sc.windom.sillot.AppActivity"
-                android:taskAffinity="sc.windom.sillot"
+                android:taskAffinity="sc.windom.sillot.AppActivity"
                 android:launchMode="singleInstancePerTask"
                 android:icon="@drawable/icon"
                 android:label="@string/activity_name_SillotHome"
