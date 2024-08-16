@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/20 05:34
- * updated: 2024/7/20 05:34
+ * lastModified: 2024/8/16 16:12
+ * updated: 2024/8/16 16:12
  */
 
 import org.jetbrains.kotlin.gradle.dsl.jvm.JvmTargetValidationMode
@@ -44,6 +44,25 @@ android {
             jniLibs.srcDirs "jnilibs" // TODO
         }
     }
+    splits {
+        // Configures multiple APKs based on ABI.
+        abi {
+
+            // Enables building multiple APKs per ABI.
+            enable true
+
+            // By default all ABIs are included, so use reset() and include to specify
+
+            // Resets the list of ABIs that Gradle should create APKs for to none.
+            reset()
+
+            // Specifies a list of ABIs that Gradle should create APKs for.
+            include "x86_64", "arm64-v8a"
+
+            // Specifies that we do not want to also generate a universal APK that includes all ABIs.
+            universalApk false
+        }
+    }
 
     defaultConfig {
         applicationId "sc.windom.sillot" // applicationId 是应用程序在设备上的唯一标识符，决定了应用程序的安装位置和包名。
@@ -52,10 +71,11 @@ android {
         versionCode vC
         versionName versionSillot // Sillot 版本同步
 
-        ndk {
-            //只接入对应 cpu 类型的 .so 库。
-            abiFilters 'arm64-v8a'
-        }
+        // 与 abi splits 冲突
+//        ndk {
+//            //只接入对应 cpu 类型的 .so 库。
+//            abiFilters 'arm64-v8a'
+//        }
 
         manifestPlaceholders = [
                 JPUSH_PKGNAME : applicationId,
@@ -70,17 +90,19 @@ android {
     android.applicationVariants.configureEach { variant ->
         variant.outputs.configureEach { output ->
             def versionType = variant.buildType.name
-            if (versionType.equalsIgnoreCase("release")) {
-                outputFileName = "Sillot-v${versionSillot}_${genDate()}_syv${siyuanVersionName}.apk"
+            def abi = output.getFilter(com.android.build.OutputFile.ABI)
+            if (abi == null) abi = "all"
+            if (versionType.equalsIgnoreCase("release") || versionType.equalsIgnoreCase("action")) {
+                outputFileName = "Sillot-v${versionSillot}_${genDate()}_syv${siyuanVersionName}-android-${abi}.apk"
             }
             else if (versionType.equalsIgnoreCase("canary")) {
-                outputFileName = "Sillot.canary-v${versionSillot}_syv${siyuanVersionName}.apk"
+                outputFileName = "Sillot-v${versionSillot}_syv${siyuanVersionName}-android-${abi}.apk"
             }
             else if (versionType.equalsIgnoreCase("dev")) {
-                outputFileName = "Sillot.dev-v${versionSillot}_syv${siyuanVersionName}.apk"
+                outputFileName = "Sillot-v${versionSillot}_syv${siyuanVersionName}-android-${abi}.apk"
             }
             else {
-                outputFileName = "Sillot.apk"
+                outputFileName = "Sillot-android-${abi}.apk"
             }
             output.outputFileName = outputFileName
         }
@@ -191,13 +213,7 @@ android {
 
     packagingOptions {
         resources {
-            excludes += ['META-INF/DEPENDENCIES',
-                         'META-INF/LICENSE',
-                         'META-INF/LICENSE.txt',
-                         'META-INF/license.txt',
-                         'META-INF/NOTICE',
-                         'META-INF/NOTICE.txt',
-                         'META-INF/notice.txt',
+            excludes += ['META-INF/*',
                          'plugin.properties']
         }
         jniLibs {
