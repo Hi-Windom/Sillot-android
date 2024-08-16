@@ -1,6 +1,6 @@
 {
   "name": "Sillot-android",
-  "version": "0.35.24080310",
+  "version": "0.35.24081616",
   "description": "同步汐洛版本号，通过汐洛VSCode插件同步，请勿手动修改",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
