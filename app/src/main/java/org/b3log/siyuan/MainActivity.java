@@ -2,12 +2,13 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/8/14 20:03
- * updated: 2024/8/14 20:03
+ * lastModified: 2024/8/16 20:49
+ * updated: 2024/8/16 20:49
  */
 package org.b3log.siyuan;
 
  import static org.b3log.siyuan.MainActivityHelperKt.onDragInsertIntoWebView;
+ import static sc.windom.sofill.Us.U_FileUtils.getMimeTypeForHTTP;
  import static sc.windom.sofill.Us.U_LayoutKt.applyStatusBarConfigurationV2;
  import static sc.windom.sofill.Us.U_WebviewKt.checkWebViewVer;
  import static sc.windom.sofill.Us.U_WebviewKt.showJSAlert;
@@ -510,21 +511,6 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
         }
     }
 
-     private String getMimeTypeForHTTP(String fileName) {
-         if (fileName.endsWith(".html")) {
-             return "text/html";
-         } else if (fileName.endsWith(".js")) {
-             return "application/javascript";
-         } else if (fileName.endsWith(".css")) {
-             return "text/css";
-         } else if (fileName.endsWith(".json")) {
-             return "application/json";
-         } else {
-             // 默认 MIME 类型，或者你可以返回 null 来使用默认处理
-             return "application/octet-stream";
-         }
-     }
-
      @SuppressLint("DefaultLocale")
      private String createProgressDataJson(int progress) {
          String details = "Initializing components..."; // 假设的详情信息
@@ -573,40 +559,6 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
                         }
                     }
                 }
-//                if (url.toString().equals("http://127.0.0.1:58131/api/system/getConf")) {
-//                    if (Mobile.isHttpServing()) {
-//                        try {
-//                            String dataJson = jsonApiSystemGetConfResponse(Mobile.apiSystemGetConf());
-//                            BuglyLog.w(TAG, "shouldInterceptRequest -> " + dataJson);
-//                            InputStream inputStream = new ByteArrayInputStream(dataJson.getBytes(StandardCharsets.UTF_8));
-//                            WebResourceResponse response = new WebResourceResponse("application/json", "UTF-8", inputStream);
-//                            return response;
-//                        } catch (Exception e) {
-//                            BuglyLog.e(TAG, "shouldInterceptRequest -> " + e);
-//                        }
-//                    }
-//                }
-//                if (url.toString().equals("http://127.0.0.1:58131/")) {
-//                    if (Mobile.isHttpServing()) {
-//                        try {
-//                            String f =
-//                                    view.getContext().getApplicationContext().getFilesDir().getAbsolutePath() +
-//                                            "/app/app/stage/build/mobile/index.html";
-//                            BuglyLog.d(TAG, "shouldInterceptRequest -> " + f);
-//                            File file = new File(f);
-//                            if (file.exists()) {
-//                                InputStream inputStream = new FileInputStream(file);
-//                                String mimeType = getMimeTypeForFile(f);
-//                                WebResourceResponse response = new WebResourceResponse(mimeType, "UTF-8", inputStream);
-//                                return response;
-//                            } else {
-//                                BuglyLog.e(TAG, "File not found: " + f);
-//                            }
-//                        } catch (Exception e) {
-//                            BuglyLog.e(TAG, "shouldInterceptRequest -> " + e);
-//                        }
-//                    }
-//                }
                 // 对于其他请求，继续使用默认的处理方式
                 return super.shouldInterceptRequest(view, request);
             }

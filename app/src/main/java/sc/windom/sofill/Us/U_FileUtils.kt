@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/6 11:27
- * updated: 2024/8/6 11:27
+ * lastModified: 2024/8/16 20:49
+ * updated: 2024/8/16 20:49
  */
 
 package sc.windom.sofill.Us
@@ -585,6 +585,24 @@ object U_FileUtils {
         return "${df.format(fileSize)}${units[unitIndex]}"
     }
 
+    @JvmStatic
+    fun getMimeTypeForHTTP(fileName: String): String =
+        with(fileName.lowercase()) {
+            when {
+                endsWith(".html") -> "text/html"
+                endsWith(".js") -> "application/javascript"
+                endsWith(".css") -> "text/css"
+                endsWith(".json") -> "application/json"
+                endsWith(".png") -> "image/png"
+                endsWith(".jpg") || endsWith(".jpeg") -> "image/jpeg"
+                endsWith(".gif") -> "image/gif"
+                endsWith(".bmp") -> "image/bmp"
+                endsWith(".svg") -> "image/svg+xml"
+                endsWith(".pdf") -> "application/pdf"
+                endsWith(".txt") -> "text/plain"
+                else -> "application/octet-stream"
+            }
+        }
 
     /**
      * 对于非文件的链接，返回自定义的MIME类型
