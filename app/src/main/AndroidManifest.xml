@@ -3,8 +3,8 @@
   ~ Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
   ~ Copyright (c) 2024.
   ~
-  ~ lastModified: 2024/8/3 05:38
-  ~ updated: 2024/8/3 05:38
+  ~ lastModified: 2024/8/15 00:50
+  ~ updated: 2024/8/15 00:50
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -461,7 +461,7 @@
                 android:exported="true"
                 android:autoRemoveFromRecents="false"
                 android:noHistory="false"
-                android:theme="@style/Theme.SiYuan.Boot">
+                android:theme="@style/Theme.SiYuan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -526,7 +526,7 @@
         <!--            android:exported="true"-->
         <!--            android:noHistory="false"-->
         <!--            android:taskAffinity=".sillot.task"-->
-        <!--            android:theme="@style/Theme.SiYuan.Boot">-->
+        <!--            android:theme="@style/Theme.SiYuan">-->
         <!--            <intent-filter>-->
         <!--                <action android:name="android.intent.action.MAIN" />-->
 
@@ -555,7 +555,7 @@
         <!--            android:exported="true"-->
         <!--            android:noHistory="false"-->
         <!--            android:taskAffinity=".sillot.siow.task"-->
-        <!--            android:theme="@style/Theme.SiYuan.Boot">-->
+        <!--            android:theme="@style/Theme.SiYuan">-->
         <!--            <intent-filter>-->
         <!--                <action android:name="android.intent.action.MAIN" />-->
 
@@ -628,7 +628,7 @@
                 android:noHistory="true"
                 android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
                 android:exported="true"
-                android:theme="@style/Theme.SiYuan.Boot">
+                android:theme="@style/Theme.SiYuan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -640,7 +640,7 @@
                 android:name="cn.jpush.android.ui.PopWinActivity"
                 android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
                 android:exported="true"
-                android:theme="@style/MyDialogStyle"
+                android:theme="@style/Theme.SiYuan"
                 tools:node="replace">
             <intent-filter>
                 <category android:name="android.intent.category.DEFAULT" />
