@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/7 下午6:42
- * updated: 2024/7/7 下午6:42
+ * lastModified: 2024/8/6 11:27
+ * updated: 2024/8/6 11:27
  */
 
 package sc.windom.sofill.Us
@@ -53,7 +53,9 @@ import java.util.Locale
 
 object U_FileUtils {
 
-    // 将URI数据保存到缓存目录，并返回缓存文件
+    /**
+     * 将URI数据保存到缓存目录，并返回缓存文件
+     */
     fun saveUriToCache(context: Context, uri: Uri, cacheDir: File): File? {
         context.contentResolver.openInputStream(uri)?.use { inputStream ->
             val tempFile = File.createTempFile("cached-", ".tmp", cacheDir)
