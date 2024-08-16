@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/15 00:35
- * updated: 2024/8/15 00:35
+ * lastModified: 2024/8/16 21:11
+ * updated: 2024/8/16 21:11
  */
 
 package sc.windom.sofill.compose
@@ -125,7 +125,6 @@ import sc.windom.sofill.Us.injectVConsole
 import sc.windom.sofill.android.webview.WebPoolsPro
 import sc.windom.sofill.android.webview.WebViewClientManager
 import sc.windom.sofill.android.webview.WebViewLayoutManager
-import sc.windom.sofill.base.Debuggable
 import sc.windom.sofill.compose.theme.activeColor
 import sc.windom.sofill.compose.theme.defaultColor
 import sc.windom.sofill.compose.theme.disabledColor
@@ -868,7 +867,6 @@ private fun WebViewPage(
                 parent.removeView(webView)
             }
             WebViewLayoutManager.assistActivity(activity, webView, activity.window.decorView).apply {
-                debugLevel = Debuggable.DebugLevel.VERBOSE
                 debugTag = TAG
                 delayResetLayoutWhenImeShow = 20
                 setViewOnGlobalLayout = {

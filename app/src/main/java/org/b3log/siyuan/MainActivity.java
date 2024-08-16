@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/8/16 20:49
- * updated: 2024/8/16 20:49
+ * lastModified: 2024/8/16 21:11
+ * updated: 2024/8/16 21:11
  */
 package org.b3log.siyuan;
 
@@ -106,7 +106,6 @@ package org.b3log.siyuan;
  import sc.windom.namespace.SillotMatrix.R;
  import sc.windom.sofill.annotations.SillotActivity;
  import sc.windom.sofill.annotations.SillotActivityType;
- import sc.windom.sofill.base.Debuggable;
 
  /**
  * 主程序.
@@ -401,7 +400,6 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
             // https://github.com/Hi-Windom/Sillot-android/issues/84
             View monitor = this.findViewById(android.R.id.content);
             WebViewLayoutManager webViewLayoutManager = WebViewLayoutManager.assistActivity(this, webView, monitor);
-            webViewLayoutManager.debugLevel = Debuggable.DebugLevel.VERBOSE;
             webViewLayoutManager.setDebugTag(TAG);
             webViewLayoutManager.edgeToEdge = true;
             if (!U_Phone.isPad(this)) {
