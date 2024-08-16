@@ -2,15 +2,18 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/7 下午9:24
- * updated: 2024/7/7 下午9:24
+ * lastModified: 2024/8/15 02:35
+ * updated: 2024/8/15 02:35
  */
 
 package sc.windom.sofill.dataClass
 
+import android.annotation.SuppressLint
 import kotlinx.serialization.Serializable
 
 // 与服务器交互的 dataClass 应避免混淆
+
+@SuppressLint("UnsafeOptInUsageError")
 @Serializable
 data class ld246_Response(
     val msg: String,
@@ -18,6 +21,8 @@ data class ld246_Response(
     val code: Int,
     val data: ld246_Response_Data? = null,
 )
+
+@SuppressLint("UnsafeOptInUsageError")
 @Serializable
 data class ld246_Response_Data(
     val notifications: List<ld246_Response_Data_Notification>? = null, // 理想的字段，其实不存在
@@ -31,6 +36,8 @@ data class ld246_Response_Data(
     val pagination: Pagination? = null,
     val unreadNotificationCount: UnreadNotificationCount? = null,
 )
+
+@SuppressLint("UnsafeOptInUsageError")
 @Serializable
 data class ld246_Response_Data_Notification(
     val dataId: String? = null,
@@ -41,17 +48,22 @@ data class ld246_Response_Data_Notification(
     val title: String? = null,
     val content: String? = null,
 )
+
+@SuppressLint("UnsafeOptInUsageError")
 @Serializable
 data class Pagination(
     val paginationPageCount: Int,
     val paginationPageNums: List<Int>
 )
+
+@SuppressLint("UnsafeOptInUsageError")
 @Serializable
 data class UnreadNotificationCount(
     val unreadReviewNotificationCnt: Int,
     val unreadNotificationCnt: Int,
 )
 
+@SuppressLint("UnsafeOptInUsageError")
 @Serializable
 data class ld246_User(
     val userNickname: String? = null, //

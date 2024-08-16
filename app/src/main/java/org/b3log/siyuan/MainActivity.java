@@ -2,18 +2,15 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/8/5 20:24
- * updated: 2024/8/5 20:24
+ * lastModified: 2024/8/14 20:03
+ * updated: 2024/8/14 20:03
  */
 package org.b3log.siyuan;
 
  import static org.b3log.siyuan.MainActivityHelperKt.onDragInsertIntoWebView;
- import static sc.windom.gibbet.services.BootServiceKt.waitForKernelHttpServingWithCoroutines;
  import static sc.windom.sofill.Us.U_LayoutKt.applyStatusBarConfigurationV2;
- import static sc.windom.sofill.Us.U_LayoutKt.getStatusBarHeight;
  import static sc.windom.sofill.Us.U_WebviewKt.checkWebViewVer;
  import static sc.windom.sofill.Us.U_WebviewKt.showJSAlert;
- import static sc.windom.sofill.android.webview.WebViewThemeKt.applySystemThemeToWebView;
  import static sc.windom.sofill.pioneer.StoreKt.mmkvGibbet;
 
  import android.annotation.SuppressLint;
@@ -49,13 +46,13 @@ package org.b3log.siyuan;
  import sc.windom.sofill.Ss.S_REQUEST_CODE;
  import sc.windom.sofill.android.webview.WebPoolsPro;
  import android.webkit.ConsoleMessage;
- import android.webkit.CookieManager;
  import android.webkit.JsResult;
  import android.webkit.PermissionRequest;
  import android.webkit.ValueCallback;
  import android.webkit.WebChromeClient;
  import android.webkit.WebResourceError;
  import android.webkit.WebResourceRequest;
+ import android.webkit.WebResourceResponse;
  import android.webkit.WebSettings;
  import android.webkit.WebView;
  import android.webkit.WebViewClient;
@@ -72,7 +69,6 @@ package org.b3log.siyuan;
  import androidx.annotation.NonNull;
  import androidx.core.app.ActivityCompat;
  import androidx.core.content.ContextCompat;
- import androidx.fragment.app.FragmentActivity;
 
  import com.blankj.utilcode.util.AppUtils;
  import com.blankj.utilcode.util.StringUtils;
@@ -90,13 +86,15 @@ package org.b3log.siyuan;
  import org.greenrobot.eventbus.Subscribe;
  import org.greenrobot.eventbus.ThreadMode;
 
+ import java.io.ByteArrayInputStream;
  import java.io.ByteArrayOutputStream;
  import java.io.File;
+ import java.io.FileInputStream;
  import java.io.FileOutputStream;
  import java.io.InputStream;
  import java.io.OutputStream;
- import java.io.UnsupportedEncodingException;
  import java.net.URLEncoder;
+ import java.nio.charset.StandardCharsets;
  import java.util.Map;
  import java.util.Objects;
  import java.util.UUID;
@@ -107,6 +105,7 @@ package org.b3log.siyuan;
  import sc.windom.namespace.SillotMatrix.R;
  import sc.windom.sofill.annotations.SillotActivity;
  import sc.windom.sofill.annotations.SillotActivityType;
+ import sc.windom.sofill.base.Debuggable;
 
  /**
  * 主程序.
@@ -218,7 +217,6 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
     }
 
     public BootService bootService;
-    private boolean serviceBound = false;
     private String instanceId; // 用于区分不同实例的ID
 
     final ServiceConnection serviceConnection = new ServiceConnection() {
@@ -227,8 +225,6 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
             BuglyLog.i(TAG, "onServiceConnected invoked");
             BootService.LocalBinder binder = (BootService.LocalBinder) service;
             bootService = binder.getService();
-            serviceBound = true;
-            App.bootService = bootService;
             // 服务绑定后，执行依赖于bootService的代码
             performActionWithService();
         }
@@ -236,16 +232,11 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
             BuglyLog.i(TAG, "onServiceDisconnected invoked");
-            serviceBound = false;
-            bootService.setKernelStarted(false);
-            bootService.stopSelf();
-            bootService = null;
-            App.bootService = null;
             releaseBootService();
         }
     };
 
-    void releaseBootService() {
+    private void releaseBootService() {
         BuglyLog.i(TAG, "releaseBootService invoked");
         // 销毁WebView并从池中移除
         if (webView != null) {
@@ -253,6 +244,12 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
             ViewGroup parent = (ViewGroup) webView.getParent();
             parent.removeView(webView); // 从原来的容器中移除WebView
             Objects.requireNonNull(WebPoolsPro.getInstance()).recycle(webView, "Sillot-Gibbet");
+        }
+        bootService.setKernelStarted(false);
+        bootService.stopSelf();
+        bootService = null;
+        if (serviceConnection != null) {
+            unbindService(serviceConnection);
         }
     }
 
@@ -275,7 +272,7 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
       */
     private void performActionWithService() {
         BuglyLog.w(TAG, "performActionWithService invoked");
-        if (serviceBound && bootService != null) {
+        if (bootService != null) {
             bootService.showWifi(this);
             // 初始化 UI 元素
             BuglyLog.w(TAG, "performActionWithService() -> initUIElements() invoked");
@@ -397,29 +394,17 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
                 }
             }
 
-            // 避免和状态栏之间存在留白
-            ((ViewGroup) webView.getParent()).setPadding(0, getStatusBarHeight(webView), 0, 0);
-
             // 注册工具栏显示/隐藏跟随软键盘状态
             // Fix https://github.com/siyuan-note/siyuan/issues/9765
             // Fix https://github.com/siyuan-note/siyuan/issues/9726
             // https://github.com/Hi-Windom/Sillot-android/issues/84
-            WebViewLayoutManager webViewLayoutManager = WebViewLayoutManager.assistActivity(this, webView);
-            webViewLayoutManager.onConfigurationChangedCallback = ((newConfig)->{
-                BuglyLog.w(TAG, "新配置屏幕方向: " + newConfig.orientation);
-                applySystemThemeToWebView(thisActivity, webView);
-                return null;
-            });
-            webViewLayoutManager.onLayoutChangedCallback = ((frameLayout)->{
-                applySystemThemeToWebView(thisActivity, webView);
-                return null;
-            });
-            webViewLayoutManager.onImeInsetsCallback = ((insets)->{
-                applySystemThemeToWebView(thisActivity, webView);
-                return null;
-            });
+            View monitor = this.findViewById(android.R.id.content);
+            WebViewLayoutManager webViewLayoutManager = WebViewLayoutManager.assistActivity(this, webView, monitor);
+            webViewLayoutManager.debugLevel = Debuggable.DebugLevel.VERBOSE;
+            webViewLayoutManager.setDebugTag(TAG);
+            webViewLayoutManager.edgeToEdge = true;
             if (!U_Phone.isPad(this)) {
-                webViewLayoutManager.delayResetLayoutWhenImeShow = 10;
+                webViewLayoutManager.delayResetLayoutWhenImeShow = 186;
                 // https://github.com/siyuan-note/siyuan/issues/11098?utm_source=ld246.com 这里也锁定键盘不自动收起，而且JS中 show 之前的 hide 也不能删
                 webViewLayoutManager.JSonImeShow = "window.Sillot.android.LockKeyboardToolbar=true;hideKeyboardToolbar();showKeyboardToolbar();";
                 webViewLayoutManager.JSonImeHide = "window.Sillot.android.LockKeyboardToolbar=false;hideKeyboardToolbar();";
@@ -525,19 +510,119 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
         }
     }
 
+     private String getMimeTypeForHTTP(String fileName) {
+         if (fileName.endsWith(".html")) {
+             return "text/html";
+         } else if (fileName.endsWith(".js")) {
+             return "application/javascript";
+         } else if (fileName.endsWith(".css")) {
+             return "text/css";
+         } else if (fileName.endsWith(".json")) {
+             return "application/json";
+         } else {
+             // 默认 MIME 类型，或者你可以返回 null 来使用默认处理
+             return "application/octet-stream";
+         }
+     }
+
+     @SuppressLint("DefaultLocale")
+     private String createProgressDataJson(int progress) {
+         String details = "Initializing components..."; // 假设的详情信息
+         return String.format("{\"data\": {\"progress\": %d, \"details\": \"%s\"}}", progress, details);
+     }
+
     @SuppressLint("SetJavaScriptEnabled")
     void showBootIndex() {
         BuglyLog.w(TAG, "showBootIndex() invoked");
         webViewContainer.setVisibility(View.VISIBLE);
         webView.setWebViewClient(new WebViewClient() {
-            // setWebViewClient 和 setWebChromeClient 并不同，别看走眼了
-            // 对于 POST 请求不会调用此方法
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                Uri url = request.getUrl();
+                BuglyLog.d(TAG, "shouldInterceptRequest -> " + url);
+                // 检查请求的URL是否是我们想要拦截的本地HTML文件
+                if (url.toString().startsWith("http://127.0.0.1:58131/appearance/") || url.toString().startsWith("http://127.0.0.1:58131/stage/")) {
+                    try {
+                        String f =
+                                url.toString().replace("http://127.0.0.1:58131/", view.getContext().getApplicationContext().getFilesDir().getAbsolutePath() +
+                                        "/app/app/").split("\\?")[0];
+                        BuglyLog.d(TAG, "shouldInterceptRequest -> " + f);
+                        File file = new File(f);
+                        if (file.exists()) {
+                            InputStream inputStream = new FileInputStream(file);
+                            String mimeType = getMimeTypeForHTTP(f);
+                            WebResourceResponse response = new WebResourceResponse(mimeType, "UTF-8", inputStream);
+                            return response;
+                        } else {
+                            BuglyLog.e(TAG, "File not found: " + f);
+                        }
+                    } catch (Exception e) {
+                        BuglyLog.e(TAG, "shouldInterceptRequest -> " + e);
+                    }
+                }
+                if (url.toString().equals("http://127.0.0.1:58131/api/system/bootProgress")) {
+                    if (Mobile.isHttpServing()) {
+                        try {
+                            BuglyLog.w(TAG, "shouldInterceptRequest -> isHttpServing return bootProgress 100");
+                            String progressDataJson = createProgressDataJson(100);
+                            InputStream inputStream = new ByteArrayInputStream(progressDataJson.getBytes(StandardCharsets.UTF_8));
+                            WebResourceResponse response = new WebResourceResponse("application/json", "UTF-8", inputStream);
+                            return response;
+                        } catch (Exception e) {
+                            BuglyLog.e(TAG, "shouldInterceptRequest -> " + e);
+                        }
+                    }
+                }
+//                if (url.toString().equals("http://127.0.0.1:58131/api/system/getConf")) {
+//                    if (Mobile.isHttpServing()) {
+//                        try {
+//                            String dataJson = jsonApiSystemGetConfResponse(Mobile.apiSystemGetConf());
+//                            BuglyLog.w(TAG, "shouldInterceptRequest -> " + dataJson);
+//                            InputStream inputStream = new ByteArrayInputStream(dataJson.getBytes(StandardCharsets.UTF_8));
+//                            WebResourceResponse response = new WebResourceResponse("application/json", "UTF-8", inputStream);
+//                            return response;
+//                        } catch (Exception e) {
+//                            BuglyLog.e(TAG, "shouldInterceptRequest -> " + e);
+//                        }
+//                    }
+//                }
+//                if (url.toString().equals("http://127.0.0.1:58131/")) {
+//                    if (Mobile.isHttpServing()) {
+//                        try {
+//                            String f =
+//                                    view.getContext().getApplicationContext().getFilesDir().getAbsolutePath() +
+//                                            "/app/app/stage/build/mobile/index.html";
+//                            BuglyLog.d(TAG, "shouldInterceptRequest -> " + f);
+//                            File file = new File(f);
+//                            if (file.exists()) {
+//                                InputStream inputStream = new FileInputStream(file);
+//                                String mimeType = getMimeTypeForFile(f);
+//                                WebResourceResponse response = new WebResourceResponse(mimeType, "UTF-8", inputStream);
+//                                return response;
+//                            } else {
+//                                BuglyLog.e(TAG, "File not found: " + f);
+//                            }
+//                        } catch (Exception e) {
+//                            BuglyLog.e(TAG, "shouldInterceptRequest -> " + e);
+//                        }
+//                    }
+//                }
+                // 对于其他请求，继续使用默认的处理方式
+                return super.shouldInterceptRequest(view, request);
+            }
+            /**
+             * setWebViewClient 和 setWebChromeClient 并不同，别看走眼了.
+             * 对于 POST 请求不会调用此方法
+             * @param view The WebView that is initiating the callback.
+             * @param request Object containing the details of the request.
+             * @return
+             */
             @Override
             public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request) {
                 final Uri uri = request.getUrl();
                 final String url = uri.toString();
                 BuglyLog.w(TAG, "[WebViewClient] shouldOverrideUrlLoading <- "+url);
-                if (url.contains("127.0.0.1")) {
+                if (url.contains("127.0.0.1:58131")) {
                     var AppCheckInState = mmkvGibbet.getString("AppCheckInState", "");
                     if (AppCheckInState.equals("lockScreen")) {
                         try {
@@ -545,14 +630,17 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
                             String gotourl = "http://127.0.0.1:58131/check-auth?to=" + encodedUrl;
                             BuglyLog.w(TAG,"[WebViewClient] shouldOverrideUrlLoading -> " + gotourl);
                             view.loadUrl(gotourl);
-                        } catch (UnsupportedEncodingException e) {
+                            return true;
+                        } catch (Exception e) {
                             // 编码失败的处理
                             BuglyLog.w(TAG, e.toString());
                         }
-                    } else {
-                        view.loadUrl(url);
                     }
-                    return true;
+                    // 返回 false 则让 WebView 像往常一样继续加载 URL
+                    // https://github.com/Hi-Windom/Sillot/issues/990
+                    // 修复无网络时小米系统无法加载页面的问题，但是不解决被禁用应用访问网络权限无法加载的问题，这是小米系统的问题，无法解决
+                    // 关联 shouldInterceptRequest ，谨慎修改
+                    return false;
                 }
 
                 if (url.contains("siyuan://api/system/exit")) {
@@ -590,7 +678,6 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
                 BuglyLog.d(TAG, "[WebViewClient] onPageFinished: " + url + " Progress == " + progress);
                 if (progress == 100) {
                     view.evaluateJavascript("javascript:document.body.classList.add(\"body--mobile\")", null);
-                    applySystemThemeToWebView(thisActivity, view);
                     bootLogo.postDelayed(() -> {
                         bootProgressBar.setVisibility(View.GONE);
                         bootDetailsText.setVisibility(View.GONE);
@@ -605,7 +692,7 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
                 if (error != null) {
                     BuglyLog.e("WebViewClient", "onReceivedError: " + error.getDescription());
                 }
-                super.onReceivedError(view, request, error);
+                // super.onReceivedError(view, request, error);
             }
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
@@ -617,14 +704,13 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
 
         final JSAndroid JSAndroid = new JSAndroid(this);
         webView.addJavascriptInterface(JSAndroid, "JSAndroid");
-        CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
         final WebSettings ws = webView.getSettings();
         U_WebviewKt.applyDefault(ws, 100,
                 "SiYuan-Sillot/" + Utils.version + " https://b3log.org/siyuan Android " + ws.getUserAgentString());
 
         // 使用loadDataWithBaseURL方法加载HTML内容 并不能解决小米手机禁用APP的网络无法加载的问题，因为 HTML 脚本里依旧有 http 请求。
-        webView.loadUrl("http://127.0.0.1:58131/appearance/boot/index.html?v=" + Utils.version);
-        waitForKernelHttpServingWithCoroutines();
+        webView.loadUrl("127.0.0.1:58131/appearance/boot/index.html?v=" + Utils.version);
+//        waitForKernelHttpServingWithCoroutines();
         checkWebViewVer(thisActivity, S_Webview.getMinVersion());
         // 增加Javascript异常监控
         CrashReport.setJavascriptMonitor(webView, true);
@@ -797,14 +883,12 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
         BuglyLog.w(TAG, "onForeground() invoked");
         if (null != webView) {
             webView.evaluateJavascript("javascript:window.reconnectWebSocket()", null);
-            applySystemThemeToWebView(thisActivity, webView);
         }
     }
 
     @Override
     public void onBackground(Activity activity) {
         BuglyLog.w(TAG, "onBackground() invoked");
-        Toast.makeText(this.getApplicationContext(), "汐洛绞架进入后台运行", Toast.LENGTH_SHORT).show();
     }
 
     @Override

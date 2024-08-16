@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/4 18:55
- * updated: 2024/8/4 18:55
+ * lastModified: 2024/8/13 01:45
+ * updated: 2024/8/13 01:45
  */
 
 package sc.windom.sofill.Us
@@ -14,6 +14,7 @@ import android.content.Context
 import android.graphics.Rect
 import android.os.Build
 import android.util.DisplayMetrics
+import android.view.Surface
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsetsController
@@ -84,6 +85,7 @@ val Activity.displayMetrics: DisplayMetrics
  * 获取导航栏高度，在竖屏时调用
  */
 @JvmStatic
+@Deprecated("使用 View.navigationBarHeight 替代")
 val View.navigationBarHeightV: Int
     @SuppressLint("ObsoleteSdkInt") @RequiresApi(Build.VERSION_CODES.S)
     get() {
@@ -96,6 +98,7 @@ val View.navigationBarHeightV: Int
  * 获取导航栏高度，在横屏时调用
  */
 @JvmStatic
+@Deprecated("使用 View.navigationBarWidth 替代")
 val View.navigationBarHeightH: Int
     @SuppressLint("ObsoleteSdkInt") @RequiresApi(Build.VERSION_CODES.S)
     get() {
@@ -103,40 +106,106 @@ val View.navigationBarHeightH: Int
         val visibleInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
         return maxOf(visibleInsets.left, visibleInsets.right)
     }
+/**
+ * 获取导航栏高度，任意屏幕时调用
+ */
+@JvmStatic
+fun View.navigationBarHeightOrWidth(rotation: Int?): Int {
+    val visibleInsets = getSystemBarInsets()
+    return when (rotation) {
+        Surface.ROTATION_0 -> visibleInsets.bottom // 正常位置
+        Surface.ROTATION_90 -> visibleInsets.right // 顺时针旋转90度
+        Surface.ROTATION_180 -> visibleInsets.top // 旋转180度
+        Surface.ROTATION_270 -> visibleInsets.left // 逆时针旋转90度
+        else -> 0 // 未知旋转角度
+    }
+}
+
+/**
+ * 获取导航栏高度，在竖屏时调用
+ */
+@JvmStatic
+fun View.navigationBarHeight(rotation: Int?): Int {
+    val visibleInsets = getSystemBarInsets()
+    return when (rotation) {
+        Surface.ROTATION_0 -> visibleInsets.bottom // 正常位置
+        Surface.ROTATION_90 -> 0 // 顺时针旋转90度
+        Surface.ROTATION_180 -> visibleInsets.top // 旋转180度
+        Surface.ROTATION_270 -> 0 // 逆时针旋转90度
+        else -> 0 // 未知旋转角度
+    }
+}
+
+/**
+ * 获取导航栏高度，在横屏时调用
+ */
+@JvmStatic
+fun View.navigationBarWidth(rotation: Int?): Int {
+    val visibleInsets = getSystemBarInsets()
+    return when (rotation) {
+        Surface.ROTATION_0 -> 0 // 正常位置
+        Surface.ROTATION_90 -> visibleInsets.right // 顺时针旋转90度
+        Surface.ROTATION_180 -> 0 // 旋转180度
+        Surface.ROTATION_270 -> visibleInsets.left // 逆时针旋转90度
+        else -> 0 // 未知旋转角度
+    }
+}
 
 /**
  * 获取系统栏（状态栏和导航栏）
  */
 @JvmStatic
 fun View.getSystemBarInsets(): Insets {
-    val insets = WindowInsetsCompat.toWindowInsetsCompat(rootWindowInsets)
-    return insets.getInsets(WindowInsetsCompat.Type.systemBars())
+    val insets = rootWindowInsets?.let { WindowInsetsCompat.toWindowInsetsCompat(it) }
+    return insets?.getInsets(WindowInsetsCompat.Type.systemBars()) ?: Insets.NONE
 }
 
 /**
  * 调整布局边距参数以避免被系统栏遮挡。此函数不会让布局立即改变，需要手动调用 [View.requestLayout]
  */
 @JvmStatic
-fun View.adjustLayoutMarginForSystemBars() {
+fun View.adjustLayoutMarginForSystemBars(fitTop: Boolean = false, fitBottom: Boolean = false) {
     val systemBarInsets = getSystemBarInsets()
-    layoutParams?.let { layoutParams ->
-        if (layoutParams is ViewGroup.MarginLayoutParams) {
-            layoutParams.topMargin = 0 // 可能解决偶发从其他界面返回时顶部布局有问题，尚未得到验证
-            layoutParams.bottomMargin = systemBarInsets.bottom
-            layoutParams.leftMargin = systemBarInsets.left
-            layoutParams.rightMargin = systemBarInsets.right
+    layoutParams?.let {
+//        Log.d("adjustLayoutMarginForSystemBars", "fitTop: $fitTop , fitBottom: $fitBottom")
+        if (it is ViewGroup.MarginLayoutParams) {
+            it.topMargin = if (fitTop) systemBarInsets.top else 0
+            it.bottomMargin = if (fitBottom) systemBarInsets.bottom else 0
+            it.leftMargin = systemBarInsets.left
+            it.rightMargin = systemBarInsets.right
         }
     }
 }
 
 /**
- * 获取状态栏高度
+ * 获取状态栏高度, 兼容小窗模式
  */
 @JvmStatic
 val View.statusBarHeight: Int
     get() {
+        return getSystemBarInsets().top
+    }
+
+/**
+ * 通过 visibleRect 获取状态栏高度, 效果尚未测试, 应该比 [getSystemBarInsets] 更稳定
+ */
+@JvmStatic
+val View.statusBarHeightFromRect: Int
+    get() {
+        return visibleRect.top
+    }
+
+/**
+ * 获取状态栏高度
+ */
+@JvmStatic
+@Deprecated("使用 View.statusBarHeight 替代")
+val Activity.statusBarHeight: Int?
+    get() {
+        if (!hasWindowFocus()) return null
         // 获取当前视图的 WindowInsets
-        val insets = WindowInsetsCompat.toWindowInsetsCompat(this.rootWindowInsets ?: return 0)
+        val rootWindowInsets = window.decorView.rootWindowInsets ?: return null
+        val insets = WindowInsetsCompat.toWindowInsetsCompat(rootWindowInsets)
 
         // 获取系统窗口的可见区域
         val visibleInsets = insets.getInsets(WindowInsetsCompat.Type.statusBars())
@@ -144,7 +213,6 @@ val View.statusBarHeight: Int
         // 返回顶部系统窗口的不可见区域高度，这通常是状态栏的高度
         return visibleInsets.top
     }
-
 
 @Deprecated("安卓12+请使用applyStatusBarConfigurationV2")
 @JvmStatic
@@ -187,3 +255,17 @@ fun Activity.applyStatusBarConfigurationV2(fitWindow: Boolean) {
     }
 }
 
+/**
+ * 递归函数，用于设置所有子视图的宽高为MATCH_PARENT
+ */
+fun View.setLayoutParamsToMatchParent() {
+    (this as? ViewGroup)?.let {
+        for (i in 0 until it.childCount) {
+            it.getChildAt(i).apply {
+                layoutParams.height = -1
+                layoutParams.width = -1
+                setLayoutParamsToMatchParent() // 递归调用
+            }
+        }
+    }
+}

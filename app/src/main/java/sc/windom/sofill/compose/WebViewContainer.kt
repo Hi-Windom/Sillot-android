@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/5 18:41
- * updated: 2024/8/5 18:41
+ * lastModified: 2024/8/15 00:35
+ * updated: 2024/8/15 00:35
  */
 
 package sc.windom.sofill.compose
@@ -17,12 +17,13 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Environment
 import android.util.Log
+import android.view.View
 import android.view.ViewGroup
 import android.webkit.CookieManager
+import android.webkit.DownloadListener
 import android.webkit.URLUtil
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
-import android.webkit.WebView.FindListener
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -34,8 +35,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -115,15 +119,13 @@ import sc.windom.potter.producer.MainPro
 import sc.windom.sofill.Ss.S_Webview
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_Uri.askIntentForSUS
-import sc.windom.sofill.Us.applyDefault
 import sc.windom.sofill.Us.checkWebViewVer
 import sc.windom.sofill.Us.injectEruda
 import sc.windom.sofill.Us.injectVConsole
-import sc.windom.sofill.Us.thisWebChromeClient
-import sc.windom.sofill.Us.thisWebViewClient
 import sc.windom.sofill.android.webview.WebPoolsPro
+import sc.windom.sofill.android.webview.WebViewClientManager
 import sc.windom.sofill.android.webview.WebViewLayoutManager
-import sc.windom.sofill.android.webview.applySystemThemeToWebView
+import sc.windom.sofill.base.Debuggable
 import sc.windom.sofill.compose.theme.activeColor
 import sc.windom.sofill.compose.theme.defaultColor
 import sc.windom.sofill.compose.theme.disabledColor
@@ -501,49 +503,14 @@ fun FullScreenWebView(
         thisWebView.value = WebPoolsPro.instance?.acquireWebView(webViewKey)
             ?: WebPoolsPro.instance?.createWebView(activity, webViewKey)
         thisWebView.value?.let {
-            val cm = CookieManager.getInstance()
-            cm.setAcceptCookie(true)
-            cm.setAcceptThirdPartyCookies(it, true)
-            it.settings.applyDefault(sliderState_webViewTextZoom)
-            it.webViewClient = thisWebViewClient(
-                activity,
-                currentUrl,
-                canGoBack,
-                canGoForward,
-                ::handleUrlLoading,
-                ::handlePageFinished
-            )
-            it.webChromeClient = thisWebChromeClient(activity)
-            it.setDownloadListener { url, userAgent, contentDisposition, mimeType, contentLength ->
-                val switchState_使用系统自带下载器下载文件 = mmkv.getSavedValue(
-                    "WebViewContainer@switchState_使用系统自带下载器下载文件",
-                    false
-                )
-                if (switchState_使用系统自带下载器下载文件) {
-                    activity.startDownload(
-                        url,
-                        mimeType,
-                        contentLength,
-                        contentDisposition,
-                        userAgent
-                    )
-                } else {
-                    activity.startDownload2(
-                        url,
-                        mimeType,
-                        contentLength,
-                        contentDisposition,
-                        downloader,
-                        showDownloaderPage,
-                        progressFloat,
-                        speedText,
-                        sizeText,
-                        timeText,
-                        filePath,
-                    )
-                }
-            }
-            it.setFindListener(object : FindListener {
+            val wcm = WebViewClientManager.assistActivity(activity, it)
+            it.settings.textZoom = sliderState_webViewTextZoom
+            wcm.currentUrl = currentUrl
+            wcm.canGoBack = canGoBack
+            wcm.canGoForward = canGoForward
+            wcm.handleUrlLoading = ::handleUrlLoading
+            wcm.handlePageFinished = ::handlePageFinished
+            wcm.findListener = object : WebView.FindListener {
                 override fun onFindResultReceived(
                     activeMatchOrdinal: Int,
                     numberOfMatches: Int,
@@ -559,30 +526,72 @@ fun FullScreenWebView(
                         }
                     }
                 }
-            })
-            it.setOnLongClickListener { view ->
-                val result = (view as? WebView)?.hitTestResult
-                result?.let {
-                    Log.d(TAG, "OnLongClick -> it.type: ${it.type}, it.extra: ${it.extra}")
-                    when (it.type) {
-                        WebView.HitTestResult.IMAGE_TYPE -> { false } // 图片
-                        WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE -> { // 图片链接
-                            false
-                        }
-                        WebView.HitTestResult.SRC_ANCHOR_TYPE -> { false } // 链接
-                        WebView.HitTestResult.PHONE_TYPE -> { false } // 电话
-                        WebView.HitTestResult.EMAIL_TYPE -> { false } // 电子邮件
-                        WebView.HitTestResult.GEO_TYPE -> { false } // 地图
-                        WebView.HitTestResult.EDIT_TEXT_TYPE -> { false } // 编辑区文本。选中文本是未知类型
-                        else -> false
+            }
+            wcm.downloadListener = object: DownloadListener {
+                override fun onDownloadStart(
+                    url: String,
+                    userAgent: String,
+                    contentDisposition: String,
+                    mimeType: String,
+                    contentLength: Long
+                ) {
+                    val switchState_使用系统自带下载器下载文件 = mmkv.getSavedValue(
+                        "WebViewContainer@switchState_使用系统自带下载器下载文件",
+                        false
+                    )
+                    if (switchState_使用系统自带下载器下载文件) {
+                        activity.startDownload(
+                            url,
+                            mimeType,
+                            contentLength,
+                            contentDisposition,
+                            userAgent
+                        )
+                    } else {
+                        activity.startDownload2(
+                            url,
+                            mimeType,
+                            contentLength,
+                            contentDisposition,
+                            downloader,
+                            showDownloaderPage,
+                            progressFloat,
+                            speedText,
+                            sizeText,
+                            timeText,
+                            filePath,
+                        )
                     }
-                } == true
+                }
+            }
+            wcm.onLongClickListener = object : View.OnLongClickListener {
+                override fun onLongClick(view: View?): Boolean {
+                    val result = (view as? WebView)?.hitTestResult
+                    val r = result?.let {
+                        Log.d(TAG, "OnLongClick -> it.type: ${it.type}, it.extra: ${it.extra}")
+                        when (it.type) {
+                            WebView.HitTestResult.IMAGE_TYPE -> { false } // 图片
+                            WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE -> { // 图片链接
+                                false
+                            }
+                            WebView.HitTestResult.SRC_ANCHOR_TYPE -> { false } // 链接
+                            WebView.HitTestResult.PHONE_TYPE -> { false } // 电话
+                            WebView.HitTestResult.EMAIL_TYPE -> { false } // 电子邮件
+                            WebView.HitTestResult.GEO_TYPE -> { false } // 地图
+                            WebView.HitTestResult.EDIT_TEXT_TYPE -> { false } // 编辑区文本。选中文本是未知类型
+                            else -> false
+                        }
+                    } == true
+                    return r
+                }
             }
         }
 
     }
 
-    // 菜单面板
+    /**
+     * 菜单面板
+     */
     MaterialBottomMenu(expanded) {
         Menu(
             menuOptions,
@@ -591,10 +600,14 @@ fun FullScreenWebView(
         )
     }
 
-    // 设置面板
+    /**
+     * 设置面板
+     */
     SettingBottomSheet(showSettings, thisWebView)
 
-    // GOTO面板
+    /**
+     * GOTO面板
+     */
     MaterialBottomMenu(showGoToOption, true) {
         GoToOption(currentUrl.value, onNavigate = { it1 ->
             Log.w(TAG, "goto -> $it1")
@@ -609,16 +622,27 @@ fun FullScreenWebView(
     }
 
     Scaffold(
+        // 布局适配软键盘，一般来说不需要嵌套声明 // 与 WebViewLayoutManager 不再冲突
         modifier = Modifier
-//            .imePadding() // 布局适配软键盘，一般来说不需要嵌套声明 // 与 WebViewLayoutManager 冲突
-            .fillMaxSize(),
+            .imePadding()
+            .navigationBarsPadding()
+            .statusBarsPadding(),
         content = { padding ->
             Box(
                 modifier = Modifier
                     .padding(padding)
                     .fillMaxSize()
             ) {
-                thisWebView.value?.let { WebViewPage(activity, gotoUrl, it) }
+                thisWebView.value?.let {
+                    WebViewPage(activity, gotoUrl, it)
+//                        ToolbarUI(
+//                            thisWebView,
+//                            canGoBack,
+//                            canGoForward,
+//                            expanded,
+//                            inSearchInWebpage
+//                        )
+                }
             }
 
         },
@@ -627,6 +651,7 @@ fun FullScreenWebView(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(40.dp)
                     .padding(0.dp)
                     .zIndex(999f),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -716,6 +741,106 @@ fun FullScreenWebView(
     )
 }
 
+@Composable
+private fun ToolbarUI(
+    thisWebView: MutableState<WebView?>,
+    canGoBack: MutableState<Boolean>,
+    canGoForward: MutableState<Boolean>,
+    expanded: MutableState<Boolean>,
+    inSearchInWebpage: MutableState<Boolean>,
+) {
+    // 去掉了 BottomAppBar 包裹，因为与 WebViewLayoutManager 冲突，IconButton 能正常点击但是图标显示会错位，就很抓马的bug
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(40.dp)
+            .padding(0.dp)
+            .zIndex(999f),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(
+            onClick = { thisWebView.value?.goBack() },
+            enabled = canGoBack.value
+        ) {
+            Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+        }
+        IconButton(
+            onClick = { thisWebView.value?.goForward() },
+            enabled = canGoForward.value
+        ) {
+            Icon(Icons.Filled.ArrowForward, contentDescription = "Forward")
+        }
+        IconButton(onClick = { expanded.value = !expanded.value }) {
+            if (expanded.value) Icon(
+                Icons.Filled.MoreVert,
+                contentDescription = "More"
+            ) else Icon(Icons.Filled.MoreHoriz, contentDescription = "More")
+        }
+        if (inSearchInWebpage.value) {
+            IconButton(
+                onClick = {
+                    thisWebView.value?.clearMatches()
+                    inSearchInWebpage.value = false
+                }
+            ) {
+                Icon(Icons.Filled.Clear, contentDescription = "退出页面搜索")
+            }
+            IconButton(
+                onClick = { thisWebView.value?.findNext(true) }
+            ) {
+                Icon(
+                    Icons.Filled.ArrowBackIos,
+                    contentDescription = "上一个（页面搜索结果）"
+                )
+            }
+            IconButton(
+                onClick = { thisWebView.value?.findNext(true) }
+            ) {
+                Icon(
+                    Icons.Filled.ArrowForwardIos,
+                    contentDescription = "上一个（页面搜索结果）"
+                )
+            }
+        } else {
+            // 已弃用  thisWebView.value?.evaluateJavascript("window.scrollTo(0, 0)") { }
+            IconButtonPro(Icons.Filled.ArrowUpward, contentDescription = "向上翻页",
+                onDoubleTap = {
+                    thisWebView.value?.pageUp(true).let {
+                        if (it == false) PopTip.show("没有足够的内容可以滚动")
+                    }
+                },
+                onLongPress = {
+                    thisWebView.value?.pageUp(true).let {
+                        if (it == false) PopTip.show("没有足够的内容可以滚动")
+                    }
+                },
+            ) {
+                thisWebView.value?.pageUp(false).let {
+                    if (it == false) PopTip.show("没有足够的内容可以滚动")
+                }
+            }
+            // 已弃用 thisWebView.value?.evaluateJavascript("window.scrollTo(0, document.body.scrollHeight)") { }
+            IconButtonPro(Icons.Filled.ArrowDownward, contentDescription = "向下翻页",
+                onDoubleTap = {
+                    thisWebView.value?.pageDown(true).let {
+                        if (it == false) PopTip.show("没有足够的内容可以滚动")
+                    }
+                },
+                onLongPress = {
+                    thisWebView.value?.pageDown(true).let {
+                        if (it == false) PopTip.show("没有足够的内容可以滚动")
+                    }
+                },
+            ) {
+                thisWebView.value?.pageDown(false).let {
+                    if (it == false) PopTip.show("没有足够的内容可以滚动")
+                }
+            }
+        }
+    }
+}
+
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 private fun WebViewPage(
@@ -734,7 +859,7 @@ private fun WebViewPage(
      * 如果将来再次需要该视图，将会创建一个新的实例，并通过调用工厂方法开始一个新的生命周期。
      */
     AndroidView(
-        modifier = Modifier.fillMaxSize(),
+//        modifier = Modifier.fillMaxSize(),
         factory = {
             Log.w(TAG, "AndroidView factory invoked")
             // 移除 WebView 从其父视图（如果有的话）
@@ -742,18 +867,23 @@ private fun WebViewPage(
             if (parent is ViewGroup) {
                 parent.removeView(webView)
             }
-            val webViewLayoutManager = WebViewLayoutManager.assistActivity(activity, webView, true)
-            webViewLayoutManager.onConfigurationChangedCallback = { newConfig ->
-                Log.w(TAG, "新配置屏幕方向: " + newConfig.orientation)
-                applySystemThemeToWebView(activity, webView, true)
+            WebViewLayoutManager.assistActivity(activity, webView, activity.window.decorView).apply {
+                debugLevel = Debuggable.DebugLevel.VERBOSE
+                debugTag = TAG
+                delayResetLayoutWhenImeShow = 20
+                setViewOnGlobalLayout = {
+                    (webView.parent?.parent as? ViewGroup )?.let {
+                        view = it
+                    }
+                }
+                onConfigurationChangedCallback = { newConfig ->
+                    Log.w(TAG, "新配置屏幕方向: " + newConfig.orientation)
+                }
+                onLayoutChangedCallback = { _ ->
+                }
+                onImeInsetsCallback = { _ ->
+                }
             }
-            webViewLayoutManager.onLayoutChangedCallback = { _ ->
-                applySystemThemeToWebView(activity, webView, true)
-            }
-            webViewLayoutManager.onImeInsetsCallback = { _ ->
-                applySystemThemeToWebView(activity, webView, true)
-            }
-            webViewLayoutManager.delayResetLayoutWhenImeShow = 186
             webView
         },
         onReset = {
@@ -797,7 +927,6 @@ private fun WebViewPage(
 
 
 private fun handlePageFinished(activity: Activity, view: WebView, url: String) {
-    applySystemThemeToWebView(activity, view, true)
     // 根源问题已修复，不再需要处理
 //    if (url.startsWith("https://xui.ptlogin2.qq.com/")) {
 //        view.fixQQAppLaunchButton()

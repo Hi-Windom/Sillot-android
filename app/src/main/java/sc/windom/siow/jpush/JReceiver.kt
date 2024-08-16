@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午5:59
- * updated: 2024/7/8 上午5:59
+ * lastModified: 2024/8/15 00:57
+ * updated: 2024/8/15 00:57
  */
 
 package sc.windom.siow.jpush
@@ -16,7 +16,7 @@ import cn.jpush.android.api.CmdMessage
 import cn.jpush.android.api.CustomMessage
 import cn.jpush.android.api.JPushInterface
 import cn.jpush.android.api.NotificationMessage
-import cn.jpush.android.service.JPushMessageService
+import cn.jpush.android.service.JPushMessageReceiver
 
 
 
@@ -26,7 +26,7 @@ class JReceiver : BroadcastReceiver() {
     }
     companion object {
         private const val TAG = "PushMessageReceiver"
-        class JReceiver : JPushMessageService() {
+        class JReceiver : JPushMessageReceiver() {
             override fun onMessage(context: Context, customMessage: CustomMessage) {
                 Log.e(TAG, "[onMessage] $customMessage")
                 val intent = Intent("com.jiguang.demo.message")

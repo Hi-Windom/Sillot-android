@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/5 19:36
- * updated: 2024/8/5 19:36
+ * lastModified: 2024/8/15 04:21
+ * updated: 2024/8/15 04:21
  */
 
 package sc.windom.gibbet.services
@@ -31,34 +31,41 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.PeriodicWorkRequest
-import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.blankj.utilcode.util.ServiceUtils
-import com.koushikdutta.async.AsyncServer
-import com.koushikdutta.async.http.server.AsyncHttpServer
-import com.koushikdutta.async.http.server.AsyncHttpServerRequest
-import com.koushikdutta.async.http.server.AsyncHttpServerResponse
-import com.koushikdutta.async.util.Charsets
 import com.tencent.bugly.crashreport.BuglyLog
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.call
+import io.ktor.server.application.install
+import io.ktor.server.cio.CIO
+import io.ktor.server.cio.CIOApplicationEngine
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.post
+import io.ktor.server.routing.routing
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.ObservableEmitter
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import mobile.Mobile
 import org.apache.commons.io.FileUtils
-import org.apache.commons.io.filefilter.DirectoryFileFilter
-import org.apache.commons.io.filefilter.TrueFileFilter
 import org.b3log.siyuan.Utils
-import org.json.JSONArray
-import org.json.JSONObject
 import sc.windom.gibbet.workers.CheckHttpServerWorker
 import sc.windom.gibbet.workers.SyncDataWorker
-import sc.windom.sillot.App
 import sc.windom.sofill.S
 import sc.windom.sofill.Us.U_Thread.runOnUiThread
 import sc.windom.sofill.Us.getWebViewVer
 import sc.windom.sofill.android.webview.WebPoolsPro
+import sc.windom.sofill.dataClass.ISiyuanFilelockWalk
+import sc.windom.sofill.dataClass.ISiyuanFilelockWalkRes
+import sc.windom.sofill.dataClass.ISiyuanFilelockWalkResFiles
+import sc.windom.sofill.dataClass.ISiyuanFilelockWalkResFilesItem
 import java.io.File
 import java.net.InetAddress
 import java.net.ServerSocket
@@ -66,16 +73,18 @@ import java.nio.charset.StandardCharsets
 import java.util.Locale
 import java.util.TimeZone
 import java.util.concurrent.TimeUnit
-import java.util.function.Consumer
 
 class BootService : Service() {
     private val TAG = "services/BootService.kt"
+
     @JvmField
     val checkHttpServerWorkerName = "CheckHttpServerWork"
+
     @JvmField
     val workManager = WorkManager.getInstance(this)
-    var server: AsyncHttpServer? = null
-    var serverPort = S.DefaultHTTPPort
+    var server: CIOApplicationEngine? = null
+    var serverPort = S.AndroidServerPort
+    val localIPs = Utils.getIPAddressList()
     var webView: WebView? = null
     var webViewVer: String? = null
     var userAgent: String? = null
@@ -107,13 +116,12 @@ class BootService : Service() {
         BuglyLog.i(TAG, "onDestroy() invoked")
         webView?.let { webViewKey?.let { it1 -> WebPoolsPro.instance?.recycle(it, it1) } }
         server?.stop()
-        if(stopKernelOnDestroy) Mobile.stopKernel() else server?.stop()
+        if (stopKernelOnDestroy) Mobile.stopKernel() else server?.stop()
     }
 
     private val binder = LocalBinder()
 
     override fun onBind(intent: Intent): IBinder {
-        App.KernelService = this
         webViewKey = intent.getStringExtra(S.INTENT.EXTRA_WEB_VIEW_KEY)
         return binder
     }
@@ -150,7 +158,7 @@ class BootService : Service() {
         override fun handleMessage(msg: Message) {
             val cmd = msg.getData().getString("cmd")
             if ("startKernel" == cmd) {
-                bootKernel(true)
+                bootKernel()
             } else {
                 BuglyLog.w(TAG, cmd.toString())
             }
@@ -161,7 +169,7 @@ class BootService : Service() {
         return server != null
     }
 
-    fun startHttpServer(isServable: Boolean) {
+    fun startHttpServer() {
         if (isHttpServerRunning()) {
             server?.stop()
             BuglyLog.w(TAG, "startHttpServer() stop exist server")
@@ -173,89 +181,104 @@ class BootService : Service() {
             usAscii.isAccessible = true
             usAscii[Charsets::class.java] = Charsets.UTF_8
         } catch (e: Exception) {
-            Utils.LogError("http", "init charset failed", e)
+            Utils.LogError(TAG, "init charset failed", e)
         }
-        server = AsyncHttpServer()
-        server?.post("/api/walkDir") { request: AsyncHttpServerRequest, response: AsyncHttpServerResponse ->
-            try {
-                val start = System.currentTimeMillis()
-                val requestJSON = request.body.get() as JSONObject
-                val dir = requestJSON.optString("dir")
-                val data = JSONObject()
-                val files = JSONArray()
-                FileUtils.listFilesAndDirs(
-                    File(dir),
-                    TrueFileFilter.INSTANCE,
-                    DirectoryFileFilter.DIRECTORY
-                ).forEach(
-                    Consumer { file: File ->
-                        val path = file.absolutePath
-                        val info = JSONObject()
+        /**
+         * localIPs 多于一个则绑定所有网卡以便通过局域网IP访问；
+         * localIPs 只有一个则绑定回环地址 可能是 127.0.0.1 也可能是 [::1]
+         */
+        val inetAddress: String =
+            if (localIPs.split(',').size > 1) "0.0.0.0" else InetAddress.getLoopbackAddress().hostAddress
+        server = embeddedServer(CIO, port = getAvailablePort(), host = inetAddress) {
+            install(ContentNegotiation) {
+                json(Json {
+                    prettyPrint = true
+                    isLenient = true
+                })
+            }
+            routing {
+                post("/api/walkDir") {
+                    withContext(Dispatchers.IO) { // 使用 IO 协程上下文处理文件系统操作
+                        val start = System.currentTimeMillis()
                         try {
-                            info.put("path", path)
-                            info.put("name", file.getName())
-                            info.put("size", file.length())
-                            info.put("updated", file.lastModified())
-                            info.put("isDir", file.isDirectory())
+//                        BuglyLog.w(TAG, "${call.request.contentLength()} ${call.request.contentType()}")
+                            val requestJSON = call.receive<ISiyuanFilelockWalk>()
+                            val dir = requestJSON.dir
+                            val directory = File(dir)
+                            val filesList =
+                                ISiyuanFilelockWalkResFiles(files = mutableListOf<ISiyuanFilelockWalkResFilesItem>())
+                            directory.walkTopDown().filter { it.isDirectory || it.isFile }
+                                .forEach { file ->
+                                    filesList.files.add(
+                                        ISiyuanFilelockWalkResFilesItem(
+                                            path = file.absolutePath,
+                                            name = file.name,
+                                            size = file.length(),
+                                            updated = file.lastModified(),
+                                            isDir = file.isDirectory
+                                        )
+                                    )
+                                }
+
+                            call.respond(
+                                ISiyuanFilelockWalkRes(
+                                    code = 0,
+                                    msg = "",
+                                    data = filesList
+                                )
+                            )
+                            Utils.LogInfo(
+                                TAG,
+                                "walk dir [$dir] in [${System.currentTimeMillis() - start}] ms"
+                            )
                         } catch (e: Exception) {
-                            Utils.LogError("http", "walk dir failed", e)
+                            Utils.LogError(TAG, "walk dir failed: ${e.message}", e)
+                            call.respond(
+                                ISiyuanFilelockWalkRes(
+                                    code = 0,
+                                    msg = e.stackTraceToString(),
+                                    data = null
+                                )
+                            )
                         }
-                        files.put(info)
-                    })
-                data.put("files", files)
-                val responseJSON = JSONObject().put("code", 0).put("msg", "").put("data", data)
-                response.send(responseJSON)
-                Utils.LogInfo(
-                    "http",
-                    "walk dir [" + dir + "] in [" + (System.currentTimeMillis() - start) + "] ms"
-                )
-            } catch (e: Exception) {
-                Utils.LogError("http", "walk dir failed", e)
-                try {
-                    response.send(JSONObject().put("code", -1).put("msg", e.message))
-                } catch (e2: Exception) {
-                    Utils.LogError("http", "walk dir failed", e2)
+                    }
                 }
             }
         }
-        serverPort = getAvailablePort()
-        val s = AsyncServer.getDefault()
-        if (isServable) {
-            // 绑定所有网卡以便通过局域网IP访问
-            s.listen(null, serverPort, server!!.listenCallback)
-            BuglyLog.w(
-                TAG,
-                "startHttpServer() -> HTTP server is listening on all interfaces, port [$serverPort]"
-            )
-        } else {
-            // 绑定 ipv6 回环地址 [::1] 以防止被远程访问
-            s.listen(InetAddress.getLoopbackAddress(), serverPort, server!!.listenCallback)
-            BuglyLog.w(
-                TAG,
-                "startHttpServer() -> HTTP server is listening on loopback address, port [$serverPort]"
-            )
+        server?.let {
+            it.start(wait = false) // 不等待阻塞
+            val actualPort = it.environment.connectors.first().port
+            val actualHost = it.environment.connectors.first().host
+            Utils.LogInfo(TAG, "HTTP server is listening on ${actualHost}, port [$actualPort]")
         }
-        BuglyLog.w(TAG, "startHttpServer() -> HTTP server is listening on port [$serverPort]")
-        Utils.LogInfo("http", "HTTP server is listening on port [$serverPort]")
     }
 
     private fun getAvailablePort(): Int {
-        var ret = S.DefaultHTTPPort
+        var ret = serverPort
         try {
-            ServerSocket(0).use { socket ->
+            ServerSocket(serverPort).use { socket ->
                 ret = socket.localPort
             }
         } catch (e: Exception) {
-            Utils.LogError("http", "get available port failed", e)
+            Utils.LogError(
+                TAG,
+                "$serverPort not available: ${e.message} \n will try to use a automatically port",
+                e
+            )
+            try {
+                ServerSocket(0).use { socket ->
+                    ret = socket.localPort
+                }
+            } catch (e: Exception) {
+                BuglyLog.e(TAG, "get available port failed ${e.message}")
+                Utils.LogError(TAG, "get available port failed", e)
+            }
         }
         return ret
     }
 
     private fun startKernel() {
         BuglyLog.w(TAG, "startKernel() invoked")
-        if (kernelStarted) {
-            return
-        }
         synchronized(this) {
             if (kernelStarted) {
                 return
@@ -269,14 +292,14 @@ class BootService : Service() {
         }
     }
 
-    fun bootKernel(isServable: Boolean) {
+    fun bootKernel() {
         Mobile.setHttpServerPort(serverPort.toLong())
         if (Mobile.isHttpServing()) {
             Utils.LogInfo(TAG, "kernel HTTP server is running")
             return
         }
         initAppAssets()
-        startHttpServer(isServable)
+        startHttpServer()
         val appDir = filesDir.absolutePath + "/app"
         // As of API 24 (Nougat) and later 获取用户的设备首选语言
         val locales = resources.configuration.getLocales()
@@ -285,9 +308,11 @@ class BootService : Service() {
         val timezone = TimeZone.getDefault().id
         mHandler.post {
             try {
-                val localIPs = Utils.getIPAddressList()
                 val lang = determineLanguage(locale)
-                BuglyLog.d(TAG, "Mobile.startKernel() -> workspaceBaseDir -> $workspaceBaseDir")
+                BuglyLog.d(
+                    TAG,
+                    "Mobile.startKernel() -> [${localIPs}] workspaceBaseDir -> $workspaceBaseDir"
+                )
                 Mobile.startKernel(
                     "android", appDir, workspaceBaseDir, timezone, localIPs, lang,
                     Build.VERSION.RELEASE +
@@ -448,7 +473,7 @@ class BootService : Service() {
             locationPermissionObservable,
             locationPermissionObservable_FOREGROUND_SERVICE_LOCATION,
             overlayPermissionObservable
-        ) { POST_NOTIFICATIONS_Granted: Boolean, locationGranted: Boolean,FOREGROUND_SERVICE_LOCATION_Granted: Boolean, overlayGranted: Boolean ->
+        ) { POST_NOTIFICATIONS_Granted: Boolean, locationGranted: Boolean, FOREGROUND_SERVICE_LOCATION_Granted: Boolean, overlayGranted: Boolean ->
             POST_NOTIFICATIONS_Granted && locationGranted && FOREGROUND_SERVICE_LOCATION_Granted && overlayGranted
         }
             .filter { granted: Boolean? -> granted!! } // 过滤掉未授予权限的情况
@@ -522,7 +547,7 @@ class BootService : Service() {
         // 任务完成后，延迟10秒再次启动同一个任务
         workManager.getWorkInfoByIdLiveData(oneTimeWorkRequest.id)
             .observeForever { workInfo ->
-                if (workInfo != null && workInfo.state == WorkInfo.State.SUCCEEDED) {
+                if (workInfo != null) {
                     Handler(Looper.getMainLooper()).postDelayed({
                         CheckHttpServerWork()
                     }, 10000)

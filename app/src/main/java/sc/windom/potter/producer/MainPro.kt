@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/20 11:01
- * updated: 2024/7/20 11:01
+ * lastModified: 2024/8/12 05:54
+ * updated: 2024/8/12 05:54
  */
 
 @file:Suppress("CompositionLocalNaming", "CompositionLocalNaming")
@@ -90,7 +90,6 @@ import mobile.Mobile
 import org.b3log.ld246.HomeActivity
 import sc.windom.gibbet.services.BootService
 import sc.windom.namespace.SillotMatrix.R
-import sc.windom.sillot.App
 import sc.windom.sofill.S
 import sc.windom.sofill.Ss.S_Uri
 import sc.windom.sofill.U
@@ -164,24 +163,17 @@ class MainPro : ComponentActivity() {
 
     override fun onDestroy() {
         BuglyLog.w(TAG, "onDestroy() invoked")
+        releaseBootService()
         super.onDestroy()
-        // 解绑服务
-        if (serviceBound) {
-            unbindService(serviceConnection)
-            serviceBound = false
-        }
     }
 
     private var bootService: BootService? = null
-    private var serviceBound = false
 
     private val serviceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             val binder = service as BootService.LocalBinder
             bootService = binder.getService()
-            serviceBound = true
             bootService?.let {
-                App.bootService = it
                 it.stopKernelOnDestroy = false
             }
             // 服务绑定后，执行依赖于bootService的代码
@@ -189,9 +181,18 @@ class MainPro : ComponentActivity() {
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
-            bootService = null
-            serviceBound = false
+            releaseBootService()
         }
+    }
+
+    private fun releaseBootService() {
+        BuglyLog.i(TAG, "releaseBootService invoked")
+        bootService?.let {
+            it.kernelStarted = false
+            it.stopSelf()
+            bootService = null
+        }
+        unbindService(serviceConnection);
     }
 
     private fun init(intent: Intent?) {

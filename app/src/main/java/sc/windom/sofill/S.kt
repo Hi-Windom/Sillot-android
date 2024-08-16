@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/20 11:27
- * updated: 2024/7/20 11:27
+ * lastModified: 2024/8/6 09:02
+ * updated: 2024/8/6 09:02
  */
 
 @file:Suppress("CompositionLocalNaming", "CompositionLocalNaming")
@@ -29,6 +29,11 @@ object S {
     const val TTK = "AsyncTTk" // 抖音
 
     const val DefaultHTTPPort = 58131
+
+    /**
+     * 会覆盖 filelock walk.go 的配置，见 [sc.windom.gibbet.services.BootService]
+     */
+    const val AndroidServerPort = 13131
     const val DefaultHTTPPort_siyuan_kernel = 6806
     const val initCrashReportID = "26ae2b5fb4"
     const val initBaiduPushID = "6Ef26UV3UyM5b7NyiwiGAnM0"

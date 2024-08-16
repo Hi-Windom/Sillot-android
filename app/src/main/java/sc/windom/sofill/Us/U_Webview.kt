@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/5 20:27
- * updated: 2024/8/5 20:27
+ * lastModified: 2024/8/7 06:24
+ * updated: 2024/8/7 06:24
  */
 
 package sc.windom.sofill.Us
@@ -12,28 +12,12 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.DialogInterface
-import android.graphics.Bitmap
-import android.net.Uri
-import android.net.http.SslError
-import android.os.Message
 import android.util.Log
 import android.view.View
-import android.webkit.ConsoleMessage
-import android.webkit.GeolocationPermissions
-import android.webkit.JsPromptResult
 import android.webkit.JsResult
-import android.webkit.PermissionRequest
-import android.webkit.SslErrorHandler
 import android.webkit.ValueCallback
-import android.webkit.WebChromeClient
-import android.webkit.WebChromeClient.FileChooserParams
-import android.webkit.WebResourceError
-import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
-import android.webkit.WebViewClient
-import androidx.compose.runtime.MutableState
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.kongzue.dialogx.dialogs.PopNotification
 import com.kongzue.dialogx.interfaces.OnDialogButtonClickListener
@@ -57,6 +41,7 @@ fun Context.getWebViewVer(): String {
     Log.w("U_Webview", webViewVer)
     return webViewVer
 }
+
 @JvmStatic
 fun Activity.checkWebViewVer(minVer: String) {
     val webViewVer = getWebViewVer()
@@ -76,6 +61,9 @@ fun Activity.checkWebViewVer(minVer: String) {
     }
 }
 
+/**
+ * 注入 VConsole 方便调试
+ */
 fun WebView.injectVConsole(resultCallback: ValueCallback<String?>? = null) {
     val js = """
         let script = document.createElement('script');
@@ -90,6 +78,9 @@ fun WebView.injectVConsole(resultCallback: ValueCallback<String?>? = null) {
     this.evaluateJavascript(js, resultCallback)
 }
 
+/**
+ * 注入 Eruda 方便调试
+ */
 fun WebView.injectEruda(resultCallback: ValueCallback<String?>? = null) {
     val js = """
                     (function () {
@@ -131,12 +122,9 @@ fun WebView.fixQQAppLaunchButton(resultCallback: ValueCallback<String?>? = null)
 fun WebSettings.applyDefault(
     webViewTextZoom: Int = 100,
     ua: String = S_Webview.UA_edge_android
-) {
+): WebSettings {
     apply {
         javaScriptEnabled = true
-        allowUniversalAccessFromFileURLs = true
-        allowFileAccessFromFileURLs = true
-        domStorageEnabled = true
         allowFileAccess = true
         allowContentAccess = true
         cacheMode = WebSettings.LOAD_NO_CACHE
@@ -146,226 +134,18 @@ fun WebSettings.applyDefault(
         loadWithOverviewMode =
             false // 设置 WebView 是否以概览模式加载页面，即按宽度缩小内容以适应屏幕。设为 true 实测发现 github 等页面会有个不美观的抽搐过程
         userAgentString = ua
-    }
-}
-
-fun thisWebChromeClient(activity: Activity): WebChromeClient {
-    val TAG = "thisWebChromeClient"
-    return object : WebChromeClient() {
-        override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
-            consoleMessage?.let { it1 ->
-                Log.d(
-                    TAG, "onConsoleMessage -> " +
-                            U_DEBUG.prettyConsoleMessage(
-                                it1
-                            )
-                )
-            }
-            return true // 屏蔽默认日志输出避免刷屏
-        }
-
-        override fun onProgressChanged(view: WebView?, newProgress: Int) {
-            // TODO 进度条 https://github.com/Hi-Windom/Sillot-android/issues/148
-            super.onProgressChanged(view, newProgress)
-        }
-
-        override fun onCreateWindow(
-            view: WebView?,
-            isDialog: Boolean,
-            isUserGesture: Boolean,
-            resultMsg: Message?
-        ): Boolean {
-            Log.d(TAG, "onCreateWindow -> $isDialog $isUserGesture $resultMsg")
-            return super.onCreateWindow(view, isDialog, isUserGesture, resultMsg)
-        }
-
-        override fun onCloseWindow(window: WebView?) {
-            Log.d(TAG, "onCloseWindow -> $window")
-            super.onCloseWindow(window)
-        }
-
         /**
-         * 此方法仅针对源自诸如 https 等安全来源的请求调用。在非安全来源上，地理定位请求将自动被拒绝。
+         * 这个设置具有全局效果，会影响到一个进程中的所有 WebView 实例；
+         * 如果在页面已经开始加载之后才去修改这个设置，WebView 实例会忽略对此设置的更改
          */
-        override fun onGeolocationPermissionsShowPrompt(
-            origin: String?,
-            callback: GeolocationPermissions.Callback?
-        ) {
-            Log.d(TAG, "onGeolocationPermissionsShowPrompt -> $origin $callback")
-            super.onGeolocationPermissionsShowPrompt(origin, callback)
-        }
-
-        override fun onRequestFocus(view: WebView?) {
-            Log.d(TAG, "onRequestFocus -> $view")
-            super.onRequestFocus(view)
-        }
-
-        override fun onJsAlert(
-            view: WebView,
-            url: String?,
-            message: String?,
-            result: JsResult?
-        ): Boolean {
-            activity.showJSAlert(view, url, message, result)
-            return true // 已处理
-        }
-
-        override fun onJsConfirm(
-            view: WebView?,
-            url: String?,
-            message: String?,
-            result: JsResult?
-        ): Boolean {
-            return super.onJsConfirm(view, url, message, result)
-        }
-
-        override fun onJsPrompt(
-            view: WebView?,
-            url: String?,
-            message: String?,
-            defaultValue: String?,
-            result: JsPromptResult?
-        ): Boolean {
-            return super.onJsPrompt(view, url, message, defaultValue, result)
-        }
-
-        override fun onPermissionRequest(request: PermissionRequest?) {
-            Log.d(TAG, "onPermissionRequest -> ${request?.resources}")
-            super.onPermissionRequest(request)
-            request?.grant(request.resources)
-        }
-
-        override fun onPermissionRequestCanceled(request: PermissionRequest?) {
-            super.onPermissionRequestCanceled(request)
-        }
-
-        override fun onShowFileChooser(
-            webView: WebView?,
-            filePathCallback: ValueCallback<Array<Uri>>?,
-            fileChooserParams: FileChooserParams?
-        ): Boolean {
-            return super.onShowFileChooser(
-                webView,
-                filePathCallback,
-                fileChooserParams
-            )
-        }
-    }
-}
-
-fun thisWebViewClient(
-    activity: Activity,
-    currentUrl: MutableState<String>,
-    canGoBack: MutableState<Boolean>,
-    canGoForward: MutableState<Boolean>,
-    handleUrlLoading: ((activity: Activity, request: WebResourceRequest) -> Boolean)? = null,
-    handlePageFinished: ((activity: Activity, view: WebView, url: String) -> Unit)? = null
-): WebViewClient {
-    val TAG = "thisWebViewClient"
-    return object : WebViewClient() {
-        override fun shouldOverrideUrlLoading(
-            view: WebView?,
-            request: WebResourceRequest?
-        ): Boolean {
-            if (view == null || request == null || handleUrlLoading == null) {
-                return super.shouldOverrideUrlLoading(view, request)
-            }
-            val headers = request.requestHeaders
-            if (headers.isNullOrEmpty()) {
-                Log.w("WebViewClient", "Request headers isNullOrEmpty")
-            } else {
-                Log.d("WebViewClient", "Request headers: $headers")
-            }
-            return handleUrlLoading.invoke(activity, request)
-        }
-
+        databaseEnabled = true
+        domStorageEnabled = true
         /**
-         * 如果网页存在重定向，onPageFinished 的时候 progress 不一定为 100。
-         * [android.webkit.WebChromeClient.onProgressChanged]方法监听也是一样的
+         * `window.open()` 允许 JavaScript 打开一个新窗口，默认情况下会拦截此调用。
          */
-        override fun onPageFinished(view: WebView, url: String) {
-            view.progress.let {
-                Log.d(TAG, "onPageFinished -> $url Progress == $it")
-                if (it == 100) {
-                    canGoBack.value = view.canGoBack()
-                    canGoForward.value = view.canGoForward()
-                    handlePageFinished?.invoke(activity, view, url)
-                }
-            }
-            super.onPageFinished(view, url)
-        }
-
-        override fun onPageStarted(
-            view: WebView,
-            url: String,
-            favicon: Bitmap?
-        ) {
-            Log.d(TAG, "onPageStarted -> $url")
-            super.onPageStarted(view, url, favicon)
-            currentUrl.value = url
-        }
-
-        override fun onLoadResource(view: WebView?, url: String?) {
-            Log.d(TAG, "onLoadResource -> $url")
-            super.onLoadResource(view, url)
-        }
-
-        override fun onScaleChanged(
-            view: WebView?,
-            oldScale: Float,
-            newScale: Float
-        ) {
-            Log.d(TAG, "onScaleChanged invoked")
-            super.onScaleChanged(view, oldScale, newScale)
-        }
-
-        override fun onReceivedError(
-            view: WebView,
-            request: WebResourceRequest,
-            error: WebResourceError
-        ) {
-            Log.e(TAG, "onReceivedError -> code=${error.errorCode} description=${error.description}")
-            super.onReceivedError(view, request, error)
-        }
-
-        @SuppressLint("WebViewClientOnReceivedSslError")
-        override fun onReceivedSslError(
-            view: WebView?,
-            handler: SslErrorHandler?,
-            error: SslError?
-        ) {
-            Log.w(TAG, "onReceivedSslError invoked")
-            handler?.proceed() // 请谨慎使用，仅当您信任该网站时才这样做
-            error?.let {
-                val msg = when (error.getPrimaryError()) {
-                    SslError.SSL_DATE_INVALID -> "证书日期无效"
-                    SslError.SSL_EXPIRED -> "证书已过期。"
-                    SslError.SSL_IDMISMATCH -> "主机名不匹配。"
-                    SslError.SSL_INVALID -> "发生一般错误"
-                    SslError.SSL_NOTYETVALID -> "证书尚未生效。"
-                    SslError.SSL_UNTRUSTED -> "证书颁发机构不受信任。" // 可能是自定义证书
-                    else -> "SSL证书错误,错误码：" + error.getPrimaryError()
-                }
-                Log.w(TAG, "onReceivedSslError -> $msg")
-
-                if (error.getPrimaryError() != SslError.SSL_UNTRUSTED) {
-                    super.onReceivedSslError(view, handler, error)
-                }
-            }
-        }
-
-        override fun onReceivedHttpError(
-            view: WebView?,
-            request: WebResourceRequest?,
-            errorResponse: WebResourceResponse?
-        ) {
-            errorResponse?.let {
-                Log.e(TAG, "onReceivedHttpError -> ${it.statusCode} ${it.mimeType}  ?by ${request?.url} ${request?.method} \n" +
-                        " responseHeaders=${it.responseHeaders} \n requestHeaders=${request?.requestHeaders}")
-            }
-            super.onReceivedHttpError(view, request, errorResponse)
-        }
+        javaScriptCanOpenWindowsAutomatically = true
     }
+    return this
 }
 
 @JvmStatic

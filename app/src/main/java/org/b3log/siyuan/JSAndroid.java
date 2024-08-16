@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/7/17 04:27
- * updated: 2024/7/17 04:27
+ * lastModified: 2024/8/15 00:28
+ * updated: 2024/8/15 00:28
  */
 package org.b3log.siyuan;
 
@@ -12,7 +12,7 @@ import static com.blankj.utilcode.util.ViewUtils.runOnUiThread;
 
 import static sc.windom.sofill.Ss.S_Webview.jsCode_gibbetBiometricAuth;
 import static sc.windom.sofill.Us.U_Phone.toggleFullScreen;
-import static sc.windom.sofill.android.webview.WebViewThemeKt.applySystemThemeToWebView;
+import static sc.windom.sofill.android.webview.WebViewThemeKt.applyViewColorToSystemBar;
 import static sc.windom.sofill.pioneer.StoreKt.mmkv;
 import static sc.windom.sofill.pioneer.StoreKt.mmkvGibbet;
 
@@ -51,7 +51,6 @@ import com.kongzue.dialogx.interfaces.OnDialogButtonClickListener;
 import com.kongzue.dialogx.util.TextInfo;
 import com.tencent.bugly.crashreport.BuglyLog;
 import com.tencent.bugly.crashreport.CrashReport;
-import com.tencent.mmkv.MMKV;
 
 import sc.windom.sillot.App;
 
@@ -603,7 +602,7 @@ public final class JSAndroid {
     public void changeStatusBarColor(final String color, final int appearanceMode) {
         BuglyLog.d(TAG, "changeStatusBarColor() invoked");
         activity.runOnUiThread(() -> {
-            applySystemThemeToWebView(activity, activity.webView);
+            applyViewColorToSystemBar(activity, activity.webView, TAG);
         });
     }
 
