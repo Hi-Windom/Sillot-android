@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/13 01:45
- * updated: 2024/8/13 01:45
+ * lastModified: 2024/8/17 11:17
+ * updated: 2024/8/17 11:17
  */
 
 package sc.windom.sofill.Us
@@ -22,20 +22,6 @@ import android.view.WindowManager
 import androidx.annotation.RequiresApi
 import androidx.core.graphics.Insets
 import androidx.core.view.WindowInsetsCompat
-
-/**
- * 获取根视图的高度
- */
-fun View.getRootViewHeight(): Int {
-    return this.rootView.height
-}
-
-/**
- * 获取根视图的宽度
- */
-fun View.getRootViewWidth(): Int {
-    return this.rootView.width
-}
 
 /**
  * 计算可用高度
