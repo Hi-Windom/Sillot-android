@@ -3,8 +3,8 @@
   ~ Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
   ~ Copyright (c) 2024.
   ~
-  ~ lastModified: 2024/8/15 00:50
-  ~ updated: 2024/8/15 00:50
+  ~ lastModified: 2024/8/17 12:48
+  ~ updated: 2024/8/17 12:48
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -576,16 +576,23 @@
 
         <!--        思源笔记入口-->
         <activity
-                android:name="org.b3log.siyuan.BootActivity"
+                android:name="org.b3log.siyuan.MainActivity"
+                android:exported="true"
                 android:icon="@drawable/icon_siyuan"
                 android:label="@string/activity_name_Boot"
-                android:autoRemoveFromRecents="true"
+                android:autoRemoveFromRecents="false"
+                android:noHistory="false"
                 android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
-                android:exported="true"
-                android:noHistory="true"
-                android:taskAffinity="org.b3log.siyuan.BootActivity"
+                android:taskAffinity="org.b3log.siyuan.MainActivity"
                 android:launchMode="singleInstancePerTask"
-                android:theme="@style/Theme.SiYuan.Boot">
+                android:windowSoftInputMode="stateHidden|adjustResize">
+            <!-- android:windowSoftInputMode="adjustResize"
+               是为了解决软键盘遮挡 https://github.com/siyuan-note/siyuan-android/pull/7
+
+                   不要添加 android:launchMode="singleInstance" 否则无法从相册中选择上传
+                   Supports inserting pictures from photo gallery on the Android
+                   https://github.com/siyuan-note/siyuan/issues/9455
+               -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -599,21 +606,6 @@
 
                 <data android:scheme="siyuan" />
             </intent-filter>
-        </activity>
-        <activity
-                android:name="org.b3log.siyuan.MainActivity"
-                android:autoRemoveFromRecents="false"
-                android:configChanges="mcc|mnc|keyboard|keyboardHidden|screenLayout|orientation|screenSize|smallestScreenSize|uiMode"
-                android:taskAffinity="org.b3log.siyuan.MainActivity"
-                android:launchMode="singleInstancePerTask"
-                android:windowSoftInputMode="stateHidden|adjustResize">
-            <!-- android:windowSoftInputMode="adjustResize"
-               是为了解决软键盘遮挡 https://github.com/siyuan-note/siyuan-android/pull/7
-
-                   不要添加 android:launchMode="singleInstance" 否则无法从相册中选择上传
-                   Supports inserting pictures from photo gallery on the Android
-                   https://github.com/siyuan-note/siyuan/issues/9455
-               -->
         </activity>
 
         <!--  入口活动，务必置于入口类型活动的最后，使其作为OriginOS侧边栏显示的活动（小米系统无效）  -->

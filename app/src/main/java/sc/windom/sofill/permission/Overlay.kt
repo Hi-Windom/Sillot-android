@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午5:47
- * updated: 2024/7/8 上午5:47
+ * lastModified: 2024/8/17 13:25
+ * updated: 2024/8/17 13:25
  */
 
 package sc.windom.sofill.permission
@@ -18,9 +18,9 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import sc.windom.sofill.S
 import org.b3log.siyuan.OnSiYuanMainRequestEvent
 import org.greenrobot.eventbus.EventBus
+import sc.windom.sofill.Ss.REQUEST_OVERLAY
 import sc.windom.sofill.Us.Toast
 
 
@@ -39,7 +39,7 @@ class Overlay : AppCompatActivity() {
                 // 发送事件，将权限请求的结果发送出去
                 EventBus.getDefault().post(
                     OnSiYuanMainRequestEvent(
-                        S.REQUEST_CODE.REQUEST_OVERLAY,
+                        REQUEST_OVERLAY,
                         RESULT_OK,
                         "showwifi"
                     )
@@ -48,7 +48,7 @@ class Overlay : AppCompatActivity() {
                 Toast.Show(appContext, "未获取显示悬浮窗权限")
                 EventBus.getDefault().post(
                     OnSiYuanMainRequestEvent(
-                        S.REQUEST_CODE.REQUEST_OVERLAY,
+                        REQUEST_OVERLAY,
                         RESULT_CANCELED,
                         ""
                     )

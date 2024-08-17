@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/16 20:08
- * updated: 2024/8/16 20:08
+ * lastModified: 2024/8/17 12:42
+ * updated: 2024/8/17 12:42
  */
 
 package sc.windom.sillot
@@ -47,6 +47,7 @@ import sc.windom.sillot.workers.ActivityRunInBgWorker
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_Phone.setPreferredDisplayMode
+import sc.windom.sofill.Us.addFlagsForMatrixModel
 import sc.windom.sofill.android.lifecycle.AppMonitor
 import sc.windom.sofill.annotations.SillotActivity
 import sc.windom.sofill.annotations.SillotActivityType
@@ -118,17 +119,19 @@ class App : Application() {
     val currentIntentRef = AtomicReference<Intent>()
 
     fun startTargetActivity() {
-        var intent = currentIntentRef.get()
-        if (intent == null) {
-            intent = Intent(this, MainActivity::class.java)
-            intent.addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK
-                        or Intent.FLAG_ACTIVITY_NEW_DOCUMENT
-                        or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
-            )
+        if (currentIntentRef.get() == null) {
+            Intent(this, MainActivity::class.java).apply {
+                addFlagsForMatrixModel()
+            }.also {
+                Log.d("App", "startTargetActivity @ new $it")
+                startActivity(it)
+            }
+        } else {
+            currentIntentRef.get().let {
+                Log.d("App", "startTargetActivity @ $it")
+                startActivity(it)
+            }
         }
-        Log.d("App", "startTargetActivity @ $intent")
-        startActivity(intent)
     }
 
     @OptIn(DelicateCoroutinesApi::class)
@@ -429,7 +432,7 @@ class App : Application() {
     }
 
     private fun initAppMonitor() {
-        val funTAG = "$TAG initAppMonitor"
+        val funTAG = "$TAG AppMonitor"
         //初始化
         AppMonitor.initialize(this, true)
         //注册监听 App 状态变化（前台，后台）

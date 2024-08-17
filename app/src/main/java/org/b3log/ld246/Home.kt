@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/12 23:06
- * updated: 2024/8/12 23:06
+ * lastModified: 2024/8/17 11:10
+ * updated: 2024/8/17 11:10
  */
 
 package org.b3log.ld246
@@ -136,7 +136,7 @@ import sc.windom.sofill.pioneer.savableStateFlowMMKV
 import sc.windom.sofill.pioneer.saveValue
 
 /**
- * 设计目标：android:launchMode="singleInstancePerTask"
+ * 链滴流云主活动
  */
 @SillotActivity(SillotActivityType.Main)
 @SillotActivity(SillotActivityType.Launcher)

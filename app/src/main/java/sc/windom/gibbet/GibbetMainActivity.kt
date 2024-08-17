@@ -2,13 +2,13 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午5:39
- * updated: 2024/7/8 上午5:39
+ * lastModified: 2024/8/17 11:57
+ * updated: 2024/8/17 11:57
  */
 
 package sc.windom.gibbet
 
-import androidx.appcompat.app.AppCompatActivity
+import android.app.Activity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -29,12 +29,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import sc.windom.namespace.SillotMatrix.R
+import sc.windom.sillot.MatrixModel
+import sc.windom.sofill.Us.thisSourceFilePath
+import sc.windom.sofill.annotations.SillotActivity
+import sc.windom.sofill.annotations.SillotActivityType
 
 /**
  * 汐洛绞架，暂时与思源汐洛版共存，逐步迁移过来
  * 充分适配 Pad 端
  */
-class GibbetMainActivity : AppCompatActivity() {
+@SillotActivity(SillotActivityType.Main)
+@SillotActivity(SillotActivityType.Launcher)
+@SillotActivity(SillotActivityType.UseVisible)
+class GibbetMainActivity : MatrixModel(){
+    private val TAG = "Home.kt"
+    private val srcPath = thisSourceFilePath(TAG)
+    private lateinit var thisActivity: Activity
+    override fun getMatrixModel(): String {
+        return "汐洛绞架 preview"
+    }
 }
 
 @Composable

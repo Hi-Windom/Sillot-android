@@ -2,14 +2,17 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/8/15 00:28
- * updated: 2024/8/15 00:28
+ * lastModified: 2024/8/17 13:26
+ * updated: 2024/8/17 13:26
  */
 package org.b3log.siyuan;
 
 import static androidx.core.app.ActivityCompat.startActivityForResult;
 import static com.blankj.utilcode.util.ViewUtils.runOnUiThread;
 
+import static sc.windom.gibbet.GibbetMainActivityHelperKt.coldRestart;
+import static sc.windom.sofill.Ss.S_REQUEST_CODEKt.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS;
+import static sc.windom.sofill.Ss.S_REQUEST_CODEKt.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT;
 import static sc.windom.sofill.Ss.S_Webview.jsCode_gibbetBiometricAuth;
 import static sc.windom.sofill.Us.U_Phone.toggleFullScreen;
 import static sc.windom.sofill.android.webview.WebViewThemeKt.applyViewColorToSystemBar;
@@ -64,7 +67,6 @@ import java.util.HashSet;
 import java.util.concurrent.FutureTask;
 
 import mobile.Mobile;
-import sc.windom.sofill.S;
 import sc.windom.sofill.U;
 import sc.windom.sofill.Us.U_Permission;
 import sc.windom.sofill.Us.U_Phone;
@@ -193,7 +195,7 @@ public final class JSAndroid {
                         activity.runOnUiThread(() -> {
                             Intent battery = new Intent("sc.windom.sillot.intent.permission.Battery");
                             battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivityForResult(activity, battery, S.getREQUEST_CODE().REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT, null);
+                            startActivityForResult(activity, battery, REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT, null);
                         });
                         return false;
                     }).setCancelButton((baseDialog, v) -> false).setOtherButton((baseDialog, v) -> {
@@ -204,7 +206,7 @@ public final class JSAndroid {
             } else {
                 Intent battery = new Intent("sc.windom.sillot.intent.permission.Battery");
                 battery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivityForResult(activity, battery, S.getREQUEST_CODE().REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, null);
+                startActivityForResult(activity, battery, REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, null);
             }
         }
         BuglyLog.w(TAG, "requestPermissionActivity()  return true");
@@ -418,15 +420,13 @@ public final class JSAndroid {
     @JavascriptInterface
     public void exitSillotAndroid() {
         BuglyLog.d(TAG, "exitSillotAndroid() invoked");
-        activity.runOnUiThread(() -> {
-            activity.exit();
-        });
+        activity.runOnUiThread(activity::exit);
     }
     @JavascriptInterface
     public void androidReboot() {
         BuglyLog.d(TAG, "androidReboot() invoked");
         runOnUiThread(() -> {
-            activity.coldRestart();
+            coldRestart(activity, activity.getClass(), activity.webView);
         });
     }
 

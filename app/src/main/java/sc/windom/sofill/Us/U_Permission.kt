@@ -1,3 +1,11 @@
+/*
+ * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+ * Copyright (c) 2024.
+ *
+ * lastModified: 2024/8/17 13:39
+ * updated: 2024/8/17 13:39
+ */
+
 package sc.windom.sofill.Us
 
 import android.Manifest
@@ -6,14 +14,13 @@ import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Environment
 import android.os.PowerManager
 import android.provider.Settings
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.kongzue.dialogx.dialogs.PopTip
-import sc.windom.sofill.S
+import sc.windom.sofill.Ss.REQUEST_CODE_MANAGE_STORAGE
 
 object U_Permission {
     /**
@@ -70,7 +77,7 @@ object U_Permission {
             ActivityCompat.startActivityForResult(
                 activity,
                 intent,
-                S.REQUEST_CODE.REQUEST_CODE_MANAGE_STORAGE,
+                REQUEST_CODE_MANAGE_STORAGE,
                 null
             )
         }
@@ -78,14 +85,7 @@ object U_Permission {
 
     @JvmStatic
     fun canManageAllFiles(context: Context): Boolean { // 管理所有文件
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            Environment.isExternalStorageManager()
-        } else context.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) ==
-                PackageManager.PERMISSION_GRANTED &&
-                context.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
-                PackageManager.PERMISSION_GRANTED
-        // On older versions, we assume that the READ_EXTERNAL_STORAGE and WRITE_EXTERNAL_STORAGE
-        // permissions are sufficient to manage all files.
+        return  Environment.isExternalStorageManager()
     }
 
     @JvmStatic
@@ -118,25 +118,16 @@ object U_Permission {
 
     @JvmStatic
     fun canShowOnTop(context: Context?): Boolean { // 悬浮窗
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Settings.canDrawOverlays(context)
-        } else true
-        // Assuming it's allowed on older versions
+        return Settings.canDrawOverlays(context)
     }
 
     @JvmStatic
     fun canPopInBackground(context: Context?): Boolean { // 后台弹出界面
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Settings.canDrawOverlays(context)
-        } else true
-        // Assuming it's allowed on older versions
+        return Settings.canDrawOverlays(context)
     }
 
     @JvmStatic
     fun canRequestPackageInstalls(context: Context): Boolean { // 安装未知应用
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.packageManager.canRequestPackageInstalls()
-        } else true
-        // Assuming it's allowed on older versions
+        return context.packageManager.canRequestPackageInstalls()
     }
 }

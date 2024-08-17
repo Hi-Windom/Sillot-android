@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/16 18:54
- * updated: 2024/8/16 18:54
+ * lastModified: 2024/8/17 13:24
+ * updated: 2024/8/17 13:24
  */
 
 package sc.windom.gibbet.services
@@ -59,6 +59,10 @@ import org.b3log.siyuan.Utils
 import sc.windom.gibbet.workers.CheckHttpServerWorker
 import sc.windom.gibbet.workers.SyncDataWorker
 import sc.windom.sofill.S
+import sc.windom.sofill.Ss.REQUEST_FOREGROUND_SERVICE_LOCATION
+import sc.windom.sofill.Ss.REQUEST_LOCATION
+import sc.windom.sofill.Ss.REQUEST_OVERLAY
+import sc.windom.sofill.Ss.REQUEST_POST_NOTIFICATIONS
 import sc.windom.sofill.Us.U_Thread.runOnUiThread
 import sc.windom.sofill.Us.getWebViewVer
 import sc.windom.sofill.android.webview.WebPoolsPro
@@ -412,7 +416,7 @@ class BootService : Service() {
                         ActivityCompat.requestPermissions(
                             activity,
                             arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                            S.REQUEST_CODE.REQUEST_POST_NOTIFICATIONS
+                            REQUEST_POST_NOTIFICATIONS
                         )
                     }
                 }
@@ -429,7 +433,7 @@ class BootService : Service() {
                     ActivityCompat.requestPermissions(
                         activity,
                         arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                        S.REQUEST_CODE.REQUEST_LOCATION
+                        REQUEST_LOCATION
                     )
                 }
             }
@@ -446,7 +450,7 @@ class BootService : Service() {
                         ActivityCompat.requestPermissions(
                             activity,
                             arrayOf(Manifest.permission.FOREGROUND_SERVICE_LOCATION),
-                            S.REQUEST_CODE.REQUEST_FOREGROUND_SERVICE_LOCATION
+                            REQUEST_FOREGROUND_SERVICE_LOCATION
                         )
                     }
                 }
@@ -462,7 +466,7 @@ class BootService : Service() {
                     ActivityCompat.startActivityForResult(
                         activity,
                         intent,
-                        S.REQUEST_CODE.REQUEST_OVERLAY,
+                        REQUEST_OVERLAY,
                         null
                     )
                 }

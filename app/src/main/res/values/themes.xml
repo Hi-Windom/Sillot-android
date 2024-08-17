@@ -1,23 +1,23 @@
+<!--
+  ~ Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
+  ~ Copyright (c) 2024.
+  ~
+  ~ lastModified: 2024/8/17 13:34
+  ~ updated: 2024/8/17 13:34
+  -->
+
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Theme.SiYuan" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Primary brand color. -->
         <item name="colorPrimary">@color/SCC_Pink_Firole</item>
         <item name="colorPrimaryVariant">@color/purple_700</item>
         <item name="colorOnPrimary">@color/white</item>
-        <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/teal_200</item>
         <item name="colorSecondaryVariant">@color/teal_700</item>
         <item name="colorOnSecondary">@color/black</item>
-        <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
         <item name="android:windowAnimationStyle">@null</item>
-        <!-- When there is a problem with the layout, you can highlight the windowBackground here for debugging. -->
         <item name="android:windowBackground">@color/white</item>
-    </style>
-
-    <style name="Theme.SiYuan.Boot" parent="Theme.SiYuan">
-        <item name="android:windowBackground">@color/dark</item>
     </style>
 </resources>

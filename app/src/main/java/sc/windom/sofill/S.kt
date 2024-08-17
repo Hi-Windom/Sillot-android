@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/6 09:02
- * updated: 2024/8/6 09:02
+ * lastModified: 2024/8/17 13:23
+ * updated: 2024/8/17 13:23
  */
 
 @file:Suppress("CompositionLocalNaming", "CompositionLocalNaming")
@@ -18,7 +18,6 @@ import sc.windom.sofill.Ss.S_DEBUG
 import sc.windom.sofill.Ss.S_Events
 import sc.windom.sofill.Ss.S_File
 import sc.windom.sofill.Ss.S_Intent
-import sc.windom.sofill.Ss.S_REQUEST_CODE
 import sc.windom.sofill.Ss.S_Uri
 import sc.windom.sofill.Ss.S_Webview
 import sc.windom.sofill.Ss.S_packageName
@@ -61,10 +60,6 @@ object S {
 
     @JvmStatic
     val ACTIVITY = S_Activity
-
-    // REQUEST CODE
-    @JvmStatic
-    val REQUEST_CODE = S_REQUEST_CODE
 
     @JvmStatic
     val API = S_API

@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/17 11:03
- * updated: 2024/8/17 11:03
+ * lastModified: 2024/8/17 13:24
+ * updated: 2024/8/17 13:24
  */
 
 package sc.windom.sofill
@@ -34,6 +34,7 @@ import com.kongzue.dialogx.dialogs.PopNotification
 import com.tencent.mmkv.MMKV
 import org.b3log.siyuan.MainActivity
 import sc.windom.potter.videoPlayer.SimplePlayer
+import sc.windom.sofill.Ss.REQUEST_CODE_INSTALL_PERMISSION
 import sc.windom.sofill.Us.Toast
 import sc.windom.sofill.Us.U_DEBUG
 import sc.windom.sofill.Us.U_DOSC
@@ -45,6 +46,7 @@ import sc.windom.sofill.Us.U_Phone
 import sc.windom.sofill.Us.U_Pro
 import sc.windom.sofill.Us.U_Safe
 import sc.windom.sofill.Us.U_Uri
+import sc.windom.sofill.Us.addFlagsForMatrixModel
 import java.io.File
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -193,9 +195,12 @@ object U {
      * @param blockURL: 格式为 siyuan://blocks/xxx
      */
     fun startMainActivityWithBlock(blockURL: String, applicationContext: Context) {
-        val intent = Intent(applicationContext, MainActivity::class.java)
-        intent.putExtra("blockURL", blockURL)
-        startActivity(intent)
+        Intent(applicationContext, MainActivity::class.java).apply {
+            if (!MainActivity.isInstanceCreated) addFlagsForMatrixModel()
+            putExtra("blockURL", blockURL)
+        }.also {
+            startActivity(it)
+        }
     }
 
     fun getSignalStrengthLevel(signalStrength: Int): String {
@@ -406,7 +411,7 @@ object U {
                 val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
                 activity.startActivityForResult(
                     intent,
-                    S.REQUEST_CODE.REQUEST_CODE_INSTALL_PERMISSION
+                    REQUEST_CODE_INSTALL_PERMISSION
                 )
                 return
             }

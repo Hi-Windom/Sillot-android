@@ -2,12 +2,22 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/8/16 21:11
- * updated: 2024/8/16 21:11
+ * lastModified: 2024/8/17 13:30
+ * updated: 2024/8/17 13:30
  */
 package org.b3log.siyuan;
 
- import static org.b3log.siyuan.MainActivityHelperKt.onDragInsertIntoWebView;
+ import static sc.windom.gibbet.GibbetMainActivityHelperKt.androidFeedback;
+ import static sc.windom.gibbet.GibbetMainActivityHelperKt.coldRestart;
+ import static sc.windom.gibbet.GibbetMainActivityHelperKt.handleKeyEvent;
+ import static sc.windom.gibbet.GibbetMainActivityHelperKt.handleOnBack;
+ import static sc.windom.gibbet.GibbetMainActivityHelperKt.onDragInsertIntoWebView;
+ import static sc.windom.gibbet.GibbetMainActivityHelperKt.openCamera;
+ import static sc.windom.gibbet.GibbetMainActivityHelperKt.setSillotGibbetCheckInState;
+ import static sc.windom.sofill.Ss.S_REQUEST_CODEKt.REQUEST_CAMERA;
+ import static sc.windom.sofill.Ss.S_REQUEST_CODEKt.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT;
+ import static sc.windom.sofill.Ss.S_REQUEST_CODEKt.REQUEST_OVERLAY;
+ import static sc.windom.sofill.Ss.S_REQUEST_CODEKt.REQUEST_SELECT_FILE;
  import static sc.windom.sofill.Us.U_FileUtils.getMimeTypeForHTTP;
  import static sc.windom.sofill.Us.U_LayoutKt.applyStatusBarConfigurationV2;
  import static sc.windom.sofill.Us.U_WebviewKt.checkWebViewVer;
@@ -18,7 +28,6 @@ package org.b3log.siyuan;
  import android.app.Activity;
  import android.content.ClipData;
  import android.content.ComponentName;
- import android.content.ContentValues;
  import android.content.Context;
  import android.content.Intent;
  import android.content.ServiceConnection;
@@ -35,7 +44,6 @@ package org.b3log.siyuan;
 
  import mobile.Mobile;
  import sc.windom.sillot.MatrixModel;
- import sc.windom.sofill.Ss.S_LoveKt;
  import sc.windom.sofill.Ss.S_Webview;
  import sc.windom.sofill.Us.U_DEBUG;
  import sc.windom.sofill.Us.U_Permission;
@@ -44,7 +52,6 @@ package org.b3log.siyuan;
  import sc.windom.sofill.android.webview.WebViewLayoutManager;
  import sc.windom.sofill.Ss.S_Events;
  import sc.windom.sofill.Ss.S_Intent;
- import sc.windom.sofill.Ss.S_REQUEST_CODE;
  import sc.windom.sofill.android.webview.WebPoolsPro;
  import android.webkit.ConsoleMessage;
  import android.webkit.JsResult;
@@ -73,13 +80,10 @@ package org.b3log.siyuan;
 
  import com.blankj.utilcode.util.AppUtils;
  import com.blankj.utilcode.util.StringUtils;
- import com.kongzue.dialogx.dialogs.BottomMenu;
  import com.kongzue.dialogx.dialogs.PopNotification;
  import com.kongzue.dialogx.dialogs.PopTip;
  import com.tencent.bugly.crashreport.BuglyLog;
  import com.tencent.bugly.crashreport.CrashReport;
-
- import sc.windom.sofill.android.HWs;
 
  import sc.windom.gibbet.services.BootService;
 
@@ -99,9 +103,7 @@ package org.b3log.siyuan;
  import java.util.Map;
  import java.util.Objects;
  import java.util.UUID;
- import java.util.concurrent.atomic.AtomicReference;
 
- import sc.windom.sofill.U;
  import sc.windom.sofill.S;
  import sc.windom.namespace.SillotMatrix.R;
  import sc.windom.sofill.annotations.SillotActivity;
@@ -126,6 +128,10 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
          return Matrix_model;
      }
 
+     /**
+      * 检查是否已经存在 MainActivity 实例
+      */
+     public static boolean isInstanceCreated = false;
      private Activity thisActivity;
     public WebView webView;
     private FrameLayout webViewContainer;
@@ -133,13 +139,6 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
     private ProgressBar bootProgressBar;
     private TextView bootDetailsText;
     private ValueCallback<Uri[]> uploadMessage;
-    private static final int REQUEST_SELECT_FILE;
-    private static final int REQUEST_CAMERA;
-    static {
-         S.getREQUEST_CODE();
-         REQUEST_SELECT_FILE = S_REQUEST_CODE.REQUEST_SELECT_FILE;
-         REQUEST_CAMERA = S_REQUEST_CODE.REQUEST_CAMERA;
-    }
     private long exitTime;
     public ActivityResultLauncher<String[]> requestPermissionLauncher;
     public int requestPermissionAll_works = 0;
@@ -153,17 +152,13 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
       */
     @SuppressLint("RestrictedApi")
     @Override
-    public boolean dispatchKeyEvent(KeyEvent event) {
-        if (event.getAction() == KeyEvent.ACTION_DOWN) {
-            if (event.getKeyCode() == KeyEvent.KEYCODE_ESCAPE) { // getKeyCode 的数字只能拿来和 KeyEvent 里面的对比，不然没有意义
-                // 处理ESC键按下事件，并不能阻止输入法对ESC的响应，只有输入法退出了才轮到这里。
-                // 除非设置 WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM，那键盘需要自己处理了
-                BuglyLog.e("ESC键被按下",String.valueOf(event.getKeyCode()));
-                // return true; // 返回true表示事件已被处理，不再传递
-            }
+    public boolean dispatchKeyEvent(@NonNull KeyEvent event) {
+        boolean handled = handleKeyEvent(thisActivity, event);
+        if (!handled) {
+            return super.dispatchKeyEvent(event);
+        } else {
+            return true;
         }
-        // 事件未被处理，继续传递事件
-        return super.dispatchKeyEvent(event);
     }
 
     @Override
@@ -195,26 +190,6 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
             );
         }
      }
-
-     private void androidFeedback() {
-        String[] menuOptions = {
-                "电子邮件",
-                "QQ",
-                "抖音"
-        };
-        BottomMenu.show(menuOptions)
-                .setMessage("请选择反馈渠道")
-                .setOnMenuItemClickListener((dialog, text, index) -> {
-                    if (text.equals("电子邮件")) {
-                        U.getFuckOtherApp().sendEmail(this.getPackageManager(), S_LoveKt.QQMail, "汐洛安卓反馈", U_DEBUG.getDeviceInfoString());
-                    } else if (text.equals("QQ")) {
-                        U.getFuckOtherApp().launchQQAndCopyToClipboard(this, S_LoveKt.QQ, "开发者 QQ 号已复制");
-                    } else if (text.equals("抖音")) {
-                        U.getFuckOtherApp().launchTikTopAndCopyToClipboard(this, S_LoveKt.抖音, "开发者抖音号已复制");
-                    }
-                    return false;
-                });
-    }
 
     public BootService bootService;
     private String instanceId; // 用于区分不同实例的ID
@@ -318,6 +293,7 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
         BuglyLog.w(TAG, "onCreate() invoked");
         super.onCreate(savedInstanceState);
         thisActivity = this;
+        isInstanceCreated = true;
         setContentView(R.layout.activity_main);
         applyStatusBarConfigurationV2(this, false); // 可以伸到状态栏和导航栏的位置（沉浸式）
         bindBootService();
@@ -331,20 +307,7 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
             @Override
             public void handleOnBackPressed() {
                 // 在这里处理后退逻辑
-                if (U_Phone.isPad(getApplicationContext())) {
-                    if ((System.currentTimeMillis() - exitTime) > 2000) {
-                        PopTip.show( "再按一次退出汐洛绞架");
-                        exitTime = System.currentTimeMillis();
-                    } else {
-                        Objects.requireNonNull(HWs.getInstance()).vibratorWaveform(getApplicationContext(), new long[]{0, 30, 25, 40, 25, 10}, new int[]{2, 4, 3, 2, 2, 2}, -1);
-                        if (webView != null) {
-                            webView.evaluateJavascript("javascript:window.location.href = 'siyuan://api/system/exit';", null);
-                        }
-                    }
-                } else {
-                    webView.evaluateJavascript("javascript:window.goBack ? window.goBack() : window.history.back()", null);
-                }
-                Objects.requireNonNull(HWs.getInstance()).vibratorWaveform(getApplicationContext(), new long[]{0, 30, 25, 40, 25}, new int[]{9, 2, 1, 7, 2}, -1);
+                exitTime = handleOnBack(getApplicationContext(), webView, exitTime);
             }
         });
 
@@ -436,7 +399,7 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
                         return true;
                     }
 
-                    openCamera();
+                    mCameraUri = openCamera(thisActivity);
                     return true;
                 }
 
@@ -602,7 +565,7 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
                     return true; // 这里返回 true 阻止网页导航
                 }
                 if (url.contains("siyuan://androidFeedback")) {
-                    androidFeedback();
+                    androidFeedback(thisActivity);
                     return true; // 这里返回 true 阻止网页导航
                 }
 
@@ -686,7 +649,7 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
         if (requestCode == REQUEST_CAMERA) {
             // 请求码应该在整个应用中是全局唯一的，但是处理权限请求结果应该是在申请权限的活动中进行。
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                openCamera();
+                mCameraUri = openCamera(thisActivity);
                 return;
             }
 
@@ -695,32 +658,6 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
 
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
-
-
-
-    private boolean shouldShowRequestPermissionRationale(String[] permissions) {
-        for (String permission : permissions) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-
-    private void openCamera() {
-        final Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (captureIntent.resolveActivity(getPackageManager()) != null) {
-            final Uri photoUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, new ContentValues());
-            mCameraUri = photoUri;
-            if (photoUri != null) {
-                captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
-                captureIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                startActivityForResult(captureIntent, REQUEST_CAMERA);
-            }
-        }
-    }
-
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) { // 应该在 onRequestPermissionsResult 处理的别跑来这里啊混蛋！
@@ -784,8 +721,7 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(OnSiYuanMainRequestEvent event) {
         // 检查权限请求的结果
-        S.getREQUEST_CODE();
-        if (event.getRequestCode() == S_REQUEST_CODE.REQUEST_OVERLAY) {
+        if (event.getRequestCode() == REQUEST_OVERLAY) {
             if (event.getResultCode() == RESULT_OK) {
                 // 权限已授予
                 // 在此处执行相应的操作
@@ -800,12 +736,11 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
                 // 在此处执行相应的操作
             }
         } else {
-            S.getREQUEST_CODE();
-            if (event.getRequestCode() == S_REQUEST_CODE.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT) {
+            if (event.getRequestCode() == REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT) {
                 // 不管结果是什么都重启
                 S.getEVENTS();
                 if (event.getCallback().equals(S_Events.INSTANCE.getCALL_MainActivity_siyuan_1())) {
-                    coldRestart();
+                    coldRestart(thisActivity, thisActivity.getClass(), webView);
                 }
             }
         }
@@ -820,7 +755,8 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
 
     @Override
     protected void onDestroy() {
-        BuglyLog.w(TAG, "onDestroy() invoked"); // 大概率不会输出
+        BuglyLog.w(TAG, "onDestroy() invoked");
+        isInstanceCreated = false;
         // 注销 EventBus
         EventBus.getDefault().unregister(this);
         AppUtils.unregisterAppStatusChangedListener(this);
@@ -884,42 +820,9 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
 
     public void exit() {
         runOnUiThread(() -> {
-            setSillotGibbetCheckInState();
+            setSillotGibbetCheckInState(webView);
             finishAndRemoveTask();
 //            System.exit(0);
         });
-    }
-
-    public boolean setSillotGibbetCheckInState() {
-        AtomicReference<Boolean> result = new AtomicReference<>(false);
-        runOnUiThread(() -> {
-            // 使用runOnUiThread确保在主线程中获取WebView的URL
-            String webViewUrl = webView.getUrl();
-            if (webViewUrl != null && webViewUrl.contains("/check-auth?")) {
-                mmkvGibbet.putString("AppCheckInState","lockScreen");
-                result.set(true);
-                BuglyLog.d(TAG, "exit() AppCheckInState->lockScreen");
-            } else {
-                mmkvGibbet.putString("AppCheckInState","unlockScreen");
-                result.set(false);
-                BuglyLog.d(TAG, "exit() AppCheckInState->unlockScreen");
-            }
-        });
-        return result.get();
-    }
-
-    public void coldRestart() {
-        BuglyLog.w(TAG, "coldRestart() invoked");
-        setSillotGibbetCheckInState();
-        // 从任务列表中移除，禁止放在 onDestroy
-        finishAndRemoveTask(); //  这个方法用于结束当前活动，并从任务栈中移除整个任务。这意味着，当前活动所在的任务中所有的活动都会被结束，并且任务本身也会被移除。如果这个任务是最顶层的任务，那么用户将返回到主屏幕。
-        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-        intent.addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK
-                        | Intent.FLAG_ACTIVITY_NEW_DOCUMENT
-                        | Intent.FLAG_ACTIVITY_MULTIPLE_TASK
-        );
-        startActivity(intent);
-       android.os.Process.killProcess(android.os.Process.myPid()); // 暂时无法解决杀死其他任务栈的冲突，不加这句无法重启内核
     }
 }

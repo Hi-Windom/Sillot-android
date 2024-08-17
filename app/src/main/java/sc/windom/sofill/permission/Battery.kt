@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午5:47
- * updated: 2024/7/8 上午5:47
+ * lastModified: 2024/8/17 13:25
+ * updated: 2024/8/17 13:25
  */
 
 package sc.windom.sofill.permission
@@ -19,8 +19,9 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import org.b3log.siyuan.OnSiYuanMainRequestEvent
-import sc.windom.sofill.S
 import org.greenrobot.eventbus.EventBus
+import sc.windom.sofill.S
+import sc.windom.sofill.Ss.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT
 import sc.windom.sofill.Us.Toast
 
 
@@ -40,7 +41,7 @@ class Battery : AppCompatActivity() {
                 // 发送事件，将权限请求的结果发送出去
                 EventBus.getDefault().post(
                     OnSiYuanMainRequestEvent(
-                        S.REQUEST_CODE.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT,
+                        REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT,
                         RESULT_OK,
                         S.EVENTS.CALL_MainActivity_siyuan_1
                     )
@@ -50,7 +51,7 @@ class Battery : AppCompatActivity() {
                 Toast.Show(appContext, "未加入电池优化的白名单")
                 EventBus.getDefault().post(
                     OnSiYuanMainRequestEvent(
-                        S.REQUEST_CODE.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT,
+                        REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_AND_REBOOT,
                         RESULT_CANCELED,
                         S.EVENTS.CALL_MainActivity_siyuan_1
                     )
