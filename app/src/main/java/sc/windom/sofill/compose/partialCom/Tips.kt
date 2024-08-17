@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/7/8 上午5:50
- * updated: 2024/7/8 上午5:50
+ * lastModified: 2024/8/18 07:27
+ * updated: 2024/8/18 07:27
  */
 
 package sc.windom.sofill.compose.partialCom
@@ -23,6 +23,7 @@ import androidx.compose.material.icons.twotone.WifiOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,7 +34,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import sc.windom.sillot.App.Companion.application
 import sc.windom.sofill.S
-import sc.windom.sofill.compose.NetworkViewModel
+import sc.windom.sofill.compose.NetworkViewModelFlow
 
 @Composable
 fun NetworkAware() {
@@ -42,13 +43,13 @@ fun NetworkAware() {
             .zIndex(999f), // 确保在最顶层
         contentAlignment = Alignment.TopCenter
     ) {
-        NetworkAwareContent(NetworkViewModel(application))
+        NetworkAwareContent(NetworkViewModelFlow(application))
     }
 }
 
 @Composable
-fun NetworkAwareContent(viewModel: NetworkViewModel) {
-    val isNetworkAvailable by viewModel.isNetworkAvailable
+fun NetworkAwareContent(viewModel: NetworkViewModelFlow) {
+    val isNetworkAvailable by viewModel.isNetworkAvailable.collectAsState()
     if (!isNetworkAvailable) {
         val openSettingsLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.StartActivityForResult()
