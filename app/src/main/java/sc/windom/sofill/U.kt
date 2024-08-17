@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/3 00:20
- * updated: 2024/8/3 00:20
+ * lastModified: 2024/8/17 11:03
+ * updated: 2024/8/17 11:03
  */
 
 package sc.windom.sofill
@@ -18,7 +18,6 @@ import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.Rect
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
@@ -27,10 +26,7 @@ import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.util.Base64
-import android.util.DisplayMetrics
 import android.util.Log
-import android.view.ViewConfiguration
-import android.view.Window
 import android.view.WindowManager
 import android.webkit.WebView
 import com.blankj.utilcode.util.ActivityUtils.startActivity
@@ -142,63 +138,6 @@ object U {
         return spannableString
     }
 
-    /**
-     * 计算可用高度
-     */
-    private fun computeUsableHeight(window: Window): Int {
-        val rect = getVisibleRect(window)
-        return rect.height()
-    }
-
-    /**
-     * 获取视图的可见区域
-     */
-    private fun getVisibleRect(window: Window): Rect {
-        val rect = Rect()
-        window.decorView.getWindowVisibleDisplayFrame(rect)
-        return rect
-    }
-
-    /**
-     * 获取根视图的高度
-     */
-    private fun getRootViewHeight(window: Window): Int {
-        return window.decorView.rootView.height
-    }
-
-    /**
-     * 获取根视图的宽度
-     */
-    private fun getRootViewWidth(window: Window): Int {
-        return window.decorView.rootView.width
-    }
-
-    /**
-     * 获取显示度量
-     */
-    private fun getDisplayMetrics(activity: Activity): DisplayMetrics {
-        val displayMetrics = DisplayMetrics()
-        val windowManager = activity.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        val windowMetrics = windowManager.currentWindowMetrics
-        val bounds = windowMetrics.bounds
-        displayMetrics.widthPixels = bounds.width()
-        displayMetrics.heightPixels = bounds.height()
-        return displayMetrics
-    }
-
-    /**
-     * 获取导航栏高度
-     */
-    private fun getNavigationBarHeight(activity: Activity): Int {
-        val hasMenuKey = ViewConfiguration.get(activity).hasPermanentMenuKey()
-        return if (!hasMenuKey) {
-            val resourceId =
-                activity.resources.getIdentifier("navigation_bar_height", "dimen", "android")
-            if (resourceId > 0) activity.resources.getDimensionPixelSize(resourceId) else 0
-        } else {
-            0
-        }
-    }
 
     /**
      * 截取webView快照(webView加载的整个内容的大小)，本方法不适用于动态加载的网页
