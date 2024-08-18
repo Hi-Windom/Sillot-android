@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2020-2024.
  *
- * lastModified: 2024/8/17 13:30
- * updated: 2024/8/17 13:30
+ * lastModified: 2024/8/18 07:56
+ * updated: 2024/8/18 07:56
  */
 package org.b3log.siyuan;
 
@@ -821,7 +821,7 @@ public class MainActivity extends MatrixModel implements com.blankj.utilcode.uti
     public void exit() {
         runOnUiThread(() -> {
             setSillotGibbetCheckInState(webView);
-            finishAndRemoveTask();
+            finishAfterTransition();
 //            System.exit(0);
         });
     }

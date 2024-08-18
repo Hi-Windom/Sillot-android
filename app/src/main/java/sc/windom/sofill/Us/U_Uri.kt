@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/17 13:12
- * updated: 2024/8/17 13:12
+ * lastModified: 2024/8/18 08:35
+ * updated: 2024/8/18 08:35
  */
 
 package sc.windom.sofill.Us
@@ -38,7 +38,7 @@ object U_Uri {
             ActivityCompat.startActivityForResult(this, intent, 1, null)
             true
         } catch (e: Exception) {
-            Log.e(TAG, e.toString())
+            Log.e(TAG, e.stackTraceToString())
             false
         }
     }
@@ -98,6 +98,9 @@ fun Intent.addFlagsForMatrixModel(): Intent {
     }
 }
 
+/**
+ * 分屏显示新窗口, 但是在小米系统上会存在一段时间的窗口调整期, 期间窗口不可交互
+ */
 fun Intent.addFlagsForMultiSplit(): Intent {
     this.apply {
         addFlags(

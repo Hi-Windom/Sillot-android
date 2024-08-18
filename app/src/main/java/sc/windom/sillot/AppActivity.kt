@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/16 20:32
- * updated: 2024/8/16 20:32
+ * lastModified: 2024/8/18 08:00
+ * updated: 2024/8/18 08:00
  */
 
 package sc.windom.sillot
@@ -49,6 +49,6 @@ class AppActivity : ComponentActivity() {
     private fun init(in2intent: Intent?) {
         BuglyLog.d(TAG, "in2intent: $in2intent")
         appIns.startTargetActivity()
-        finishAndRemoveTask()
+        finishAfterTransition()
     }
 }
