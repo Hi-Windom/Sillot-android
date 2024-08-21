@@ -2,8 +2,8 @@
  * Sillot T☳Converbenk Matrix 汐洛彖夲肜矩阵：为智慧新彖务服务
  * Copyright (c) 2024.
  *
- * lastModified: 2024/8/17 12:42
- * updated: 2024/8/17 12:42
+ * lastModified: 2024/8/21 11:42
+ * updated: 2024/8/21 11:42
  */
 
 package sc.windom.sillot
@@ -44,6 +44,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import org.b3log.siyuan.MainActivity
 import sc.windom.gibbet.MG.ForegroundPushManager
 import sc.windom.sillot.workers.ActivityRunInBgWorker
+import sc.windom.sillot.workers.ActivityRunInMultiWindowModeWorker
 import sc.windom.sofill.S
 import sc.windom.sofill.U
 import sc.windom.sofill.Us.U_Phone.setPreferredDisplayMode
@@ -112,6 +113,8 @@ class App : Application() {
 
         val isMainThread: Boolean
             get() = Looper.getMainLooper().thread.id == Thread.currentThread().id
+
+        const val activityRunNote1 = "进入后台/多窗口模式运行提醒"
 
     }
 
@@ -209,20 +212,27 @@ class App : Application() {
                         .putString("matrixModel", matrixModel)
                         .build()
                     // 创建一个OneTimeWorkRequest
-                    val oneTimeWorkRequest =
-                        OneTimeWorkRequest.Builder(ActivityRunInBgWorker::class.java)
+                    var oneTimeWorkRequest: OneTimeWorkRequest? = null
+
+                    // 将任务加入到WorkManager中，并设置一个UniqueWork名称
+                    if (activity.isInMultiWindowMode) {
+                        oneTimeWorkRequest = OneTimeWorkRequest.Builder(ActivityRunInMultiWindowModeWorker::class.java)
                             .setConstraints(constraints)
                             .setInputData(data)
                             .setInitialDelay(2, TimeUnit.SECONDS) // 在频繁切换活动时至少要2秒延时才能来得及取消
                             .build()
-
-                    // 将任务加入到WorkManager中，并设置一个UniqueWork名称
+                    } else {
+                        oneTimeWorkRequest = OneTimeWorkRequest.Builder(ActivityRunInBgWorker::class.java)
+                            .setConstraints(constraints)
+                            .setInputData(data)
+                            .setInitialDelay(2, TimeUnit.SECONDS) // 在频繁切换活动时至少要2秒延时才能来得及取消
+                            .build()
+                    }
                     workManager.enqueueUniqueWork(
-                        "${activity.javaClass.name}进入后台运行提醒",
+                        "${activity.javaClass.name}${activityRunNote1}",
                         ExistingWorkPolicy.REPLACE, // 每次都替换之前的任务
                         oneTimeWorkRequest
                     )
-
                 }
             }
 
@@ -263,7 +273,7 @@ class App : Application() {
                     TAG,
                     "onActivityPreStarted() invoked -> Activity : ${activity.javaClass.simpleName}"
                 )
-                workManager.cancelUniqueWork("${activity.javaClass.name}进入后台运行提醒")
+                workManager.cancelUniqueWork("${activity.javaClass.name}${activityRunNote1}")
                 super.onActivityPreStarted(activity)
             }
 
